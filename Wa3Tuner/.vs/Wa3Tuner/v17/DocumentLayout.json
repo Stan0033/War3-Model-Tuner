@@ -1,22 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\",
+  "WorkspaceRootPath": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0033_laptop\\documents\\visual studio 2013\\projects\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|c:\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0033_laptop\\documents\\visual studio 2013\\projects\\wa3tuner\\wa3tuner\\calculator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\calculator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0033_laptop\\documents\\visual studio 2013\\projects\\wa3tuner\\wa3tuner\\mass_create_sequences.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mass_create_sequences.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|c:\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9DCC3D51-0C38-495D-9136-AA40291DD39E}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +18,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,52 +26,27 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Mass_Create_Sequences.xaml",
-              "DocumentMoniker": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\Mass_Create_Sequences.xaml",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Mass_Create_Sequences.xaml",
-              "ToolTip": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\Mass_Create_Sequences.xaml",
-              "RelativeToolTip": "Wa3Tuner\\Mass_Create_Sequences.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2024-12-22T19:06:21.297Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Calculator.cs",
-              "DocumentMoniker": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\Calculator.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Calculator.cs",
-              "ToolTip": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\Calculator.cs",
-              "RelativeToolTip": "Wa3Tuner\\Calculator.cs",
-              "ViewState": "AgIAAJICAAAAAAAAAAAywJMCAAAdAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAF0NAAAAAAAAAAAUwHsNAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-22T18:23:58.77Z",
+              "WhenOpened": "2024-12-22T21:59:42.589Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ViewState": "AgIAANUCAAAAAAAAAAAywO4CAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-22T09:38:34.709Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
               "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "DocumentMoniker": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
               "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\stan0033_laptop\\Documents\\Visual Studio 2013\\Projects\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "ToolTip": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
               "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2024-12-22T06:10:55.684Z",
+              "WhenOpened": "2024-12-22T21:59:32.85Z",
               "EditorCaption": ""
             }
           ]

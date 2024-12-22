@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("Wa3Tuner")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("stan0033")]
 [assembly: AssemblyProduct("Wa3Tuner")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyCopyright("Copyright © stan0033 2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

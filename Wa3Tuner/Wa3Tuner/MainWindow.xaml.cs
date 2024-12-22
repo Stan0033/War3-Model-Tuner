@@ -3398,11 +3398,22 @@ namespace Wa3Tuner
                 animator.Add(newNode);
             }
         }
+        private List<string> GetGAsList(int skip)
+        {
+            List<string> list = new List<string>();
+            for (int i = 0; i< CurrentModel.GeosetAnimations.Count; i++)
+            {
+                if (i == skip) continue;
+                list.Add(CurrentModel.GeosetAnimations[i].ObjectId.ToString());
+            }
+            return list;
+        }
         private void equalizegas_alpha(object sender, RoutedEventArgs e)
         {
+            if (List_GeosetAnims.SelectedItem == null) { return; }
             if (CurrentModel.GeosetAnimations.Count > 1)
             {
-                List<string> list = CurrentModel.GeosetAnimations.Where(y => y.Alpha.Count > 0).Select(x => x.ObjectId).Cast<string>().ToList();
+                List<string> list = GetGAsList(List_GeosetAnims.SelectedIndex);
                 Selector s = new Selector(list, "Based on");
                 s.ShowDialog();
                 if (s.DialogResult == true)
@@ -3437,7 +3448,7 @@ namespace Wa3Tuner
         {
             if (CurrentModel.GeosetAnimations.Count > 1)
             {
-                List<string> list = CurrentModel.GeosetAnimations.Where(y => y.Color.Count > 0).Select(x => x.ObjectId).Cast<string>().ToList();
+                List<string> list = GetGAsList(List_GeosetAnims.SelectedIndex); 
                 Selector s = new Selector(list, "Based on");
                 s.ShowDialog();
                 if (s.DialogResult == true)
