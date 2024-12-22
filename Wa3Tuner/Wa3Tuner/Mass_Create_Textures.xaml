@@ -1,0 +1,24 @@
+﻿<Window x:Class="Wa3Tuner.Mass_Create_Textures"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d"
+        Title="Mass Create Textures" Height="250" Width="400">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Write on each line a texture's path" Grid.Row="0"/>
+        <TextBox Name="box" Grid.Row="1"  TextWrapping="Wrap"
+    AcceptsReturn="True"/>
+        <CheckBox Name="Check_also" Content="Also create materials for them" Grid.Row="2"/>
+        <Button Click="ok" Content="OK" Grid.Row="3"/>
+    </Grid>
+</Window>

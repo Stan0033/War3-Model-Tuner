@@ -1,0 +1,19 @@
+﻿<Window x:Class="Wa3Tuner.resizeSequence_window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d"
+        Title="Resize sequence" Height="150" Width="250">
+    <StackPanel Margin="5">
+        <TextBlock Text="Reisinng" Name="Label_resizing"/>
+        <TextBlock Text="Reisinng" Name="Label_currentEnd"/>
+        <TextBlock Text="New ending track:" Name="Label_newEnd"/>
+        <TextBox Name="box" Margin="5"/>
+        <Button Click="ok">OK</Button>
+    </StackPanel>
+</Window>
