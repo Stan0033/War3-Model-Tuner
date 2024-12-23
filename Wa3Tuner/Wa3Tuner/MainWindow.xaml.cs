@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
  
@@ -216,6 +217,7 @@ namespace Wa3Tuner
             RefreshTextures();
             RefreshMaterialsList();
             RefreshGeosetAnimationsList();
+            RefreshViewPort();
             //   RenderGeosets(Viewport_Main);
         }
         private void RefreshTextures()
@@ -704,7 +706,8 @@ namespace Wa3Tuner
                 {
                     OVerwriteKeyframesForMatchingNodes(CurrentModel, TemporaryModel);
                 }
-                if (choice == 3) {
+                if (choice == 3)
+                {
                     OVerwriteKeyframesForMatchingNodes(CurrentModel, TemporaryModel);
                 }// overwrite, and append
                 if (choice == 4)
@@ -750,7 +753,7 @@ namespace Wa3Tuner
                         _new.Tracks.Add(track);
                         track.Tag = item.Tag;
                     }
-                   
+
                 }
             }
             throw new NotImplementedException();
@@ -766,7 +769,8 @@ namespace Wa3Tuner
         {
             foreach (INode externalNode in temporaryModel.Nodes)
             {
-                if (currentModel.Nodes.Any(x=>x.Name.ToLower() == externalNode.Name.ToLower())){
+                if (currentModel.Nodes.Any(x => x.Name.ToLower() == externalNode.Name.ToLower()))
+                {
                     INode matchingNode = currentModel.Nodes.First(x => x.Name.ToLower() == externalNode.Name.ToLower());
                     matchingNode.Translation.Clear();
                     matchingNode.Rotation.Clear();
@@ -1442,16 +1446,27 @@ namespace Wa3Tuner
             int id = int.Parse(input);
             return CurrentModel.Geosets.First(x => x.ObjectId == id);
         }
+        private List<string> GetGoesetStringItems()
+        {
+            List<string> list = new List<string>();
+            foreach (CGeoset geo in CurrentModel.Geosets)
+            {
+                list.Add($"Geoset {geo.ObjectId} ({geo.Vertices.Count} vertices, {geo.Faces.Count} triangles)");
+            }
+            return list;
+        }
         private void Setpiv(object sender, RoutedEventArgs e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode selected = GetSeletedNode();
-            List<string> ids = CurrentModel.Geosets.Select(x => x.ObjectId.ToString()).ToList();
+
+            List<string> ids = GetGoesetStringItems();
             if (ids.Count == 0) { return; }
             Selector s = new Selector(ids);
             s.ShowDialog();
             if (s.DialogResult == true)
             {
+                int index = s.box.SelectedIndex;
                 CGeoset geo = GetGeoset(s.Selected);
                 CVector3 centroid = Calculator.GetCentroidOfGeoset(geo);
                 selected.PivotPoint = centroid;
@@ -1945,7 +1960,7 @@ namespace Wa3Tuner
         private void DelAllGeosets(object sender, RoutedEventArgs e)
         {
             CurrentModel.Geosets.Clear();
-            RefreshGeosetsList();
+            RefreshGeosetsList(); RefreshViewPort();
         }
 
         private void clearAllnodetrans(object sender, RoutedEventArgs e)
@@ -2248,7 +2263,7 @@ namespace Wa3Tuner
                 CGeoset geo = CurrentModel.Geosets.First(x => x.ObjectId == id);
                 CurrentModel.Geosets.Remove(geo);
             }
-            RefreshGeosetsList();
+            RefreshGeosetsList(); RefreshViewPort();
         }
 
         private void creatematerialfortargettexture(object sender, RoutedEventArgs e)
@@ -2263,7 +2278,7 @@ namespace Wa3Tuner
         }
         private CMaterial GetSelectedMAterial()
         {
-            
+
             return CurrentModel.Materials[List_MAterials.SelectedIndex];
         }
         private void RefreshMaterialsList()
@@ -2405,10 +2420,7 @@ namespace Wa3Tuner
                 if (s.DialogResult == true)
                 {
                     CSequence selected = CurrentModel.Sequences.First(x => x.Name == s.Selected);
-                    if (sequence.IntervalEnd != selected.IntervalStart + 1)
-                    {
-                        MessageBox.Show("These sequences are not back to back"); return;
-                    }
+                    
                     Input i = new Input("", "New name");
 
                     string newName = "";
@@ -2444,7 +2456,7 @@ namespace Wa3Tuner
                                 }
                                 else
                                 {
-                                    MessageBox.Show("Value not ibetween star and end of the sequence"); return;
+                                    MessageBox.Show("Value not between start and end of the sequence"); return;
                                 }
                             }
                             else
@@ -2573,6 +2585,7 @@ namespace Wa3Tuner
                     Calculator.PutOnGroundTogether(all);
                 }
             }
+            RefreshViewPort();
         }
 
         private void MergeGeosets(object sender, RoutedEventArgs e)
@@ -2613,6 +2626,7 @@ namespace Wa3Tuner
             {
                 MessageBox.Show("Select at least 2 geosets");
             }
+            RefreshViewPort();
         }
 
         private void negate(object sender, RoutedEventArgs e)
@@ -2639,7 +2653,7 @@ namespace Wa3Tuner
                     }
                 }
             }
-
+            RefreshViewPort();
         }
 
         private void TranslateGeoserts(object sender, RoutedEventArgs e)
@@ -2661,6 +2675,7 @@ namespace Wa3Tuner
                     }
                 }
             }
+            RefreshViewPort();
         }
 
         private void scalegeosets(object sender, RoutedEventArgs e)
@@ -2682,6 +2697,7 @@ namespace Wa3Tuner
                     }
                 }
             }
+            RefreshViewPort();
         }
 
         private void Centergeosets(object sender, RoutedEventArgs e)
@@ -2700,12 +2716,13 @@ namespace Wa3Tuner
                     Calculator.CenterGeoset(geoset, onX, onZ, onZ);
                 }
             }
+            RefreshViewPort();
         }
 
         private void scaleToFit(object sender, RoutedEventArgs e)
         {
-             if (ListGeosets.SelectedItems.Count == 0) { return; }
-           
+            if (ListGeosets.SelectedItems.Count == 0) { return; }
+
             SCALETOFIT sf = new SCALETOFIT();
             sf.ShowDialog();
             if (sf.DialogResult == true)
@@ -2728,7 +2745,7 @@ namespace Wa3Tuner
                     Calculator.ScaleToFitInExtent(extent, geosets);
                 }
             }
-
+            RefreshViewPort();
         }
 
         private void RotateGeosets(object sender, RoutedEventArgs e)
@@ -2747,6 +2764,7 @@ namespace Wa3Tuner
                     Calculator.RotateGeoset(geoset, x, y, z);
                 }
             }
+            RefreshViewPort();
         }
 
         private void aligngeosets(object sender, RoutedEventArgs e)
@@ -2762,6 +2780,7 @@ namespace Wa3Tuner
                 bool onZ = ax.Check_z.IsChecked == true;
                 Calculator.AlignGeosets(geosets, onX, onY, onZ);
             }
+            RefreshViewPort();
         }
         private CGeoset DuplicateGeogeset(CGeoset inputGeoset, CModel whichModel)
         {
@@ -2891,6 +2910,7 @@ namespace Wa3Tuner
                 if (!onX && !onY && !onZ) { return; }
                 Calculator.PullTogether(geosets, onX, onY, onZ);
             }
+            RefreshViewPort();
         }
 
         private void renamesequence(object sender, RoutedEventArgs e)
@@ -3054,7 +3074,7 @@ namespace Wa3Tuner
                 int from = cSequence.IntervalStart;
                 int to = rw.Result;
                 int oldTo = cSequence.IntervalEnd;
-               
+
                 if (TrackExistsInSEquences(to, cSequence) == false)
                 {
                     MessageBox.Show("The new ending track exists in another sequence"); return;
@@ -3401,7 +3421,7 @@ namespace Wa3Tuner
         private List<string> GetGAsList(int skip)
         {
             List<string> list = new List<string>();
-            for (int i = 0; i< CurrentModel.GeosetAnimations.Count; i++)
+            for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
             {
                 if (i == skip) continue;
                 list.Add(CurrentModel.GeosetAnimations[i].ObjectId.ToString());
@@ -3440,6 +3460,7 @@ namespace Wa3Tuner
 
                     }
                     RefreshGeosetAnimationsList();
+                    RefreshViewPort();
                 }
             }
         }
@@ -3448,7 +3469,7 @@ namespace Wa3Tuner
         {
             if (CurrentModel.GeosetAnimations.Count > 1)
             {
-                List<string> list = GetGAsList(List_GeosetAnims.SelectedIndex); 
+                List<string> list = GetGAsList(List_GeosetAnims.SelectedIndex);
                 Selector s = new Selector(list, "Based on");
                 s.ShowDialog();
                 if (s.DialogResult == true)
@@ -3528,7 +3549,7 @@ namespace Wa3Tuner
                 }
             }
             RefreshGeosetsList();
-
+            RefreshViewPort();
         }
 
         private void ViewNodeTransformations(object sender, RoutedEventArgs e)
@@ -3536,7 +3557,7 @@ namespace Wa3Tuner
             if (ListNodes.SelectedItem != null)
             {
                 INode node = GetSeletedNode();
-                Transformations_viewer tv = new Transformations_viewer(node);
+                Transformations_viewer tv = new Transformations_viewer(node, CurrentModel);
                 tv.ShowDialog();
             }
         }
@@ -3548,7 +3569,7 @@ namespace Wa3Tuner
 
 
                 CGeosetAnimation ga = GetSelectedGeosetAnimation();
-                Transformations_viewer tv = new Transformations_viewer(ga);
+                Transformations_viewer tv = new Transformations_viewer(ga, CurrentModel);
                 tv.ShowDialog();
             }
         }
@@ -3651,25 +3672,26 @@ namespace Wa3Tuner
 
         private void ListNodes_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Translations: {node.Translation.Count},");
-            sb.Append($" Rotations: {node.Rotation.Count}, ");
-            sb.Append($" Scalings: {node.Scaling.Count}, ");
-            sb.Append($" Billboarded: {node.Billboarded}, ");
-            sb.Append($" BillboardedX: {node.BillboardedLockX}, ");
-            sb.Append($" BillboardedY: {node.BillboardedLockY}, ");
-            sb.Append($" BillboardedZ: {node.BillboardedLockZ}, ");
-            sb.Append($" CamAnchored: {node.CameraAnchored}, ");
-            sb.Append($" DontInheritTranslation: {node.DontInheritTranslation}, ");
-            sb.Append($" DontInheritRotation: {node.DontInheritRotation}, ");
-            sb.Append($" DontInheritScaling: {node.DontInheritScaling}, ");
+            sb.AppendLine($"Translations: {node.Translation.Count},");
+            sb.AppendLine($" Rotations: {node.Rotation.Count}, ");
+            sb.AppendLine($" Scalings: {node.Scaling.Count}, ");
+            sb.AppendLine($" Billboarded: {node.Billboarded}, ");
+            sb.AppendLine($" BillboardedX: {node.BillboardedLockX}, ");
+            sb.AppendLine($" BillboardedY: {node.BillboardedLockY}, ");
+            sb.AppendLine($" BillboardedZ: {node.BillboardedLockZ}, ");
+            sb.AppendLine($" CamAnchored: {node.CameraAnchored}, ");
+            sb.AppendLine($" DontInheritTranslation: {node.DontInheritTranslation}, ");
+            sb.AppendLine($" DontInheritRotation: {node.DontInheritRotation}, ");
+            sb.AppendLine($" DontInheritScaling: {node.DontInheritScaling}, ");
             Report_Node_data.Text = sb.ToString();
         }
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.0 (22/12/2024) by stan0033 built using C#, .NET 3.5, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.0.q (23/12/2024) by stan0033 built using C#, .NET 3.5, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
 
         private void EditMatTags(object sender, RoutedEventArgs e)
@@ -3697,14 +3719,14 @@ namespace Wa3Tuner
                 CMaterial material = GetSelectedMAterial();
                 material.SortPrimitivesFarZ = Check_MatSort.IsChecked == true;
             }
-           
+
         }
 
         private void Checked_MatCC(object sender, RoutedEventArgs e)
         {
-            
 
-                   if (List_MAterials.SelectedItem != null)
+
+            if (List_MAterials.SelectedItem != null)
             {
                 CMaterial material = GetSelectedMAterial();
                 material.ConstantColor = Check_MatCC.IsChecked == true;
@@ -3720,8 +3742,297 @@ namespace Wa3Tuner
                 Check_MatFS.IsChecked = material.FullResolution;
                 Check_MatSort.IsChecked = material.SortPrimitivesFarZ;
 
-                    }
+            }
 
         }
+
+        private void Scene_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // Ensure the camera is a PerspectiveCamera
+            if (Scene_Viewport.Camera is PerspectiveCamera camera)
+            {
+                // Get the zoom factor from the mouse wheel delta
+                double zoomFactor = e.Delta > 0 ? 0.9 : 1.1; // Zoom in on scroll up, out on scroll down
+
+                // Calculate the new position by moving the camera along its LookDirection
+                Vector3D lookDirection = camera.LookDirection;
+                Point3D newPosition = camera.Position + lookDirection * zoomFactor;
+
+                // Update the camera position
+                camera.Position = newPosition;
+            }
+        }
+
+
+
+        private void refreshalllists(object sender, RoutedEventArgs e)
+        {
+            RefreshAll();
+        }
+        private void RefreshViewPort()
+        {
+            // Clear existing models in the viewport
+            Viewport3D viewport = Scene_Viewport;
+            viewport.Children.Clear();
+
+            // Initialize bounding box variables
+            Point3D minPoint = new Point3D(double.MaxValue, double.MaxValue, double.MaxValue);
+            Point3D maxPoint = new Point3D(double.MinValue, double.MinValue, double.MinValue);
+
+            // Add a light source
+            DirectionalLight light = new DirectionalLight
+            {
+                Color =  Colors.White,
+                Direction = new Vector3D(-1, -1, -1)
+            };
+            ModelVisual3D lightModel = new ModelVisual3D { Content = light };
+            viewport.Children.Add(lightModel);
+
+            // Render each geoset
+            foreach (CGeoset geo in CurrentModel.Geosets)
+            {
+                MeshGeometry3D mesh = new MeshGeometry3D();
+
+                foreach (CGeosetFace face in geo.Faces)
+                {
+                    // Get vertex positions
+                    Point3D vertex1 = new Point3D(face.Vertex1.Object.Position.X, face.Vertex1.Object.Position.Y, face.Vertex1.Object.Position.Z);
+                    Point3D vertex2 = new Point3D(face.Vertex2.Object.Position.X, face.Vertex2.Object.Position.Y, face.Vertex2.Object.Position.Z);
+                    Point3D vertex3 = new Point3D(face.Vertex3.Object.Position.X, face.Vertex3.Object.Position.Y, face.Vertex3.Object.Position.Z);
+
+                    // Update bounding box
+                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex1);
+                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex2);
+                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex3);
+
+                    // Add vertices
+                    mesh.Positions.Add(vertex1);
+                    mesh.Positions.Add(vertex2);
+                    mesh.Positions.Add(vertex3);
+
+                    // Add triangle indices
+                    int baseIndex = mesh.Positions.Count - 3;
+                    mesh.TriangleIndices.Add(baseIndex);
+                    mesh.TriangleIndices.Add(baseIndex + 1);
+                    mesh.TriangleIndices.Add(baseIndex + 2);
+                }
+
+                // Create a material for the geoset
+                Material material;
+                if (SelectedGeosets_Collection.Contains(geo))
+                {
+                    material = new DiffuseMaterial(new SolidColorBrush(Colors.Yellow));
+                }
+                else{
+                      material = new DiffuseMaterial(new SolidColorBrush(Colors.Gray));
+                }
+                
+
+                // Create a GeometryModel3D
+                GeometryModel3D geometryModel = new GeometryModel3D
+                {
+                    Geometry = mesh,
+                    Material = material
+                };
+
+                // Add the model to the viewport
+                ModelVisual3D model = new ModelVisual3D { Content = geometryModel };
+                viewport.Children.Add(model);
+            }
+
+            // Adjust the camera to fit the geometry
+            AdjustCamera(viewport, minPoint, maxPoint);
+            SliderRotation.Value = 0;
+            SliderZoom.Value = 0;
+
+         
+        }
+        //----------------------------------------------------
+        private int rotation_angle = 0;
+        private int CurrentAngle
+        {
+            get { return rotation_angle; }
+            set
+            {
+                if (value >= 360) { rotation_angle = 0; } // Wrap around when exceeding 360 degrees
+                else if (value < 0) { rotation_angle = 359; } // Wrap around when going below 0 degrees
+                else { rotation_angle = value; }
+            }
+        }  
+       
+        //----------------------------------------------------
+        private void SetSceneCameraRotationAroundCenter()
+        {
+            CurrentAngle = (int)SliderRotation.Value;
+
+
+            UpdateCameraPosition(Scene_Viewport, lastZoom, CurrentAngle);
+        }
+        private void UpdateBoundingBox(ref Point3D minPoint, ref Point3D maxPoint, Point3D vertex)
+        {
+            minPoint.X = Math.Min(minPoint.X, vertex.X);
+            minPoint.Y = Math.Min(minPoint.Y, vertex.Y);
+            minPoint.Z = Math.Min(minPoint.Z, vertex.Z);
+
+            maxPoint.X = Math.Max(maxPoint.X, vertex.X);
+            maxPoint.Y = Math.Max(maxPoint.Y, vertex.Y);
+            maxPoint.Z = Math.Max(maxPoint.Z, vertex.Z);
+        }
+        
+        private void AdjustCamera(Viewport3D viewport, Point3D minPoint, Point3D maxPoint)
+        {
+            // Calculate the center and size of the bounding box
+            Point3D center = new Point3D(
+                (minPoint.X + maxPoint.X) / 2,
+                (minPoint.Y + maxPoint.Y) / 2,
+                (minPoint.Z + maxPoint.Z) / 2
+            );
+
+            Vector3D size = new Vector3D(
+                maxPoint.X - minPoint.X,
+                maxPoint.Y - minPoint.Y,
+                maxPoint.Z - minPoint.Z
+            );
+
+            // Calculate the diagonal of the bounding box
+            double boundingDiagonal = size.Length;
+
+            // Calculate the camera distance to fit the entire geometry
+            double distance = boundingDiagonal / (2 * Math.Tan(45 * Math.PI / 360)); // Assuming a 45° field of view
+
+            // Create a new PerspectiveCamera
+            PerspectiveCamera camera = new PerspectiveCamera
+            {
+                Position = new Point3D(center.X, center.Y, center.Z + distance),
+                LookDirection = new Vector3D(0, 0, -distance),
+                UpDirection = new Vector3D(0, 1, 0),
+                FieldOfView = 45 // Adjust this value if necessary
+            };
+
+            // Assign the new camera to the viewport
+            viewport.Camera = camera;
+            double zoom = (camera.Position - new Point3D(0, 0, 0)).Length;
+            UpdateCameraPosition(viewport, (int)zoom, CurrentAngle);
+        }
+
+       
+
+        private void AdjustZoom(double zoomFactor)
+        {
+            //MessageBox.Show("called");
+            if (Scene_Viewport.Camera is PerspectiveCamera camera)
+            {
+               // MessageBox.Show("called");
+                // Normalize the LookDirection vector to ensure consistent movement
+                Vector3D lookDirection = camera.LookDirection;
+                lookDirection.Normalize();
+
+                // Calculate the new position by scaling the look direction with zoomFactor
+                Point3D newPosition = new Point3D(
+                    camera.Position.X + lookDirection.X * zoomFactor,
+                    camera.Position.Y + lookDirection.Y * zoomFactor,
+                    camera.Position.Z + lookDirection.Z * zoomFactor
+                );
+
+                // Update the camera's position
+                camera.Position = newPosition;
+                 
+                
+            }
+        }
+
+
+
+
+
+
+        private double Elevation = 0; 
+
+        private void UpdateCameraPosition(Viewport3D viewport, int zoom, int rotation)
+        {
+            if (viewport.Camera is PerspectiveCamera camera)
+            {
+                // Define the center of the scene (default at origin)
+                Point3D center = new Point3D(0, 0, 0);
+
+                // Convert rotation angle to radians
+                double rotationRadians = Math.PI * rotation / 180.0;
+
+                // Calculate the new position in the X-Y plane
+                double x = center.X + zoom * Math.Cos(rotationRadians);
+                double y = center.Y + zoom * Math.Sin(rotationRadians);
+                double z = center.Z; // Keep Z constant for rotation around Z-axis
+
+                // Update the camera's position
+                camera.Position = new Point3D(x, y, z);
+
+                // Ensure the camera looks at the center of the scene
+                camera.LookDirection = new Vector3D(center.X - x, center.Y - y, center.Z - z);
+
+                // Correctly set the camera's UpDirection to always point along the Z-axis
+                camera.UpDirection = new Vector3D(0, 0, 1);
+            }
+        }
+
+
+        private void SliderRotation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (CurrentModel.Geosets.Count == 0) return;
+            CurrentAngle = (int) SliderRotation.Value;
+            AdjustRotation(CurrentAngle);
+            
+        }
+
+        private void AdjustRotation(int currentAngle)
+        {
+            Viewport3D viewport = Scene_Viewport;
+
+            if (viewport.Camera is PerspectiveCamera camera)
+            {
+                // Define the zoom level (distance from the center)
+                // You can make this dynamic or retrieve it from the current camera position
+                double zoom = (camera.Position - new Point3D(0, 0, 0)).Length;
+                 UpdateCameraPosition(viewport, (int)zoom, currentAngle);
+            }
+        }
+
+
+        private int lastZoom = 0;
+        private void Zoomed(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (CurrentModel.Geosets.Count == 0) return;
+            int zoom = (int)SliderZoom.Value;
+            if (zoom > lastZoom)
+            {
+                AdjustZoom(10);
+             
+            }
+            if (zoom < lastZoom)
+            {
+                AdjustZoom(-10);
+                
+            }
+           
+            lastZoom = zoom;    
+        }
+
+        private void setModelName(object sender, RoutedEventArgs e)
+        {
+            Input i = new Input(CurrentModel.Name);
+            i.ShowDialog();
+            if (i.DialogResult == true)
+            {
+                CurrentModel.Name = i.Result;
+            }
+        }
+        private List<CGeoset> SelectedGeosets_Collection = new List<CGeoset>();
+        private void SelectedGeosets(object sender, SelectionChangedEventArgs e)
+        {
+            SelectedGeosets_Collection = GetSElectedGeosets();
+            RefreshViewPort();
+            
+        }
+
+         
     }
 }

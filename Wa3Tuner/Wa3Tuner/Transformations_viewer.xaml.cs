@@ -21,9 +21,12 @@ namespace Wa3Tuner
     /// </summary>
     public partial class Transformations_viewer : Window
     {
-        public Transformations_viewer(INode node)
+        CModel Model;
+        public Transformations_viewer(INode node, CModel geo)
         {
+            
             InitializeComponent();
+            Model = geo;
             TextBlockColumn1.Text = "Translation";
             TextBoxColumn1.Text = GetData(node.Translation);
             TextBlockColumn2.Text = "Rotation";
@@ -31,9 +34,11 @@ namespace Wa3Tuner
             TextBlockColumn3.Text = "Scaling";
             TextBoxColumn3.Text = GetData(node.Scaling);
         }
-        public Transformations_viewer(CGeosetAnimation ga)
+        public Transformations_viewer(CGeosetAnimation ga, CModel geo)
         {
+
             InitializeComponent();
+            Model = geo;
             TextBlockColumn1.Text = "Alpha";
             TextBoxColumn1.Text = GetData(ga.Alpha);
             TextBlockColumn2.Text = "Color";
@@ -44,16 +49,28 @@ namespace Wa3Tuner
             StringBuilder sb = new StringBuilder();
             foreach (var item in animator)
             {
-                sb.AppendLine($"Track {item.Time}: {item.Value.X}, {item.Value.Y}, {item.Value.Z}");
+                sb.AppendLine($"({FindS(item.Time)}) Track {item.Time}: {item.Value.X}, {item.Value.Y}, {item.Value.Z}");
             }
             return sb.ToString();
+        }
+        private string FindS(int track)
+        {
+            string result = "No Sequence";
+            foreach (CSequence sequenc in Model.Sequences)
+            {
+                if (track >= sequenc.IntervalStart &&  track <= sequenc.IntervalEnd)
+                {
+                    return sequenc.Name;
+                }
+            }
+            return result;
         }
         private string GetData(CAnimator<CVector4> animator)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in animator)
             {
-                sb.AppendLine($"Track {item.Time}: {item.Value.X}, {item.Value.Y}, {item.Value.Z}, {item.Value.W}");
+                sb.AppendLine($"{FindS(item.Time)}) Track {item.Time}: {item.Value.X}, {item.Value.Y}, {item.Value.Z}, {item.Value.W}");
             }
             return sb.ToString();
         }
@@ -62,7 +79,7 @@ namespace Wa3Tuner
             StringBuilder sb = new StringBuilder();
             foreach (var item in animator)
             {
-                sb.AppendLine($"Track {item.Time}: {item.Value}");
+                sb.AppendLine($"{FindS(item.Time)}) Track {item.Time}: {item.Value}");
             }
             return sb.ToString();
         }

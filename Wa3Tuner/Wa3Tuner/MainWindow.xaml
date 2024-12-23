@@ -1,8 +1,9 @@
 ﻿<Window x:Class="Wa3Tuner.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"   
         Background="LightGray"
         Loaded="loaded"
+        WindowStartupLocation="CenterScreen"
         Closing="Window_Closing"
         Title="War3 Model Tuner" Height="500" Width="550">
     <Grid>
@@ -26,6 +27,11 @@
 
             
             <MenuItem Header="Recents" Name="Item_Recents"/>
+            <MenuItem Header="More">
+                <MenuItem Header="Set model name"  Click="setModelName"/>
+                <MenuItem Header="Refresh all lists"  Click="refreshalllists"/>
+            </MenuItem>
+            
             <MenuItem Header="About"  Click="about"/>
 
 
@@ -98,42 +104,59 @@
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Geosets"   >
-                <ScrollViewer>
-                    
-                
-                <StackPanel  Background="LightGray" Height="1000">
-                        <TextBlock Name="Report_Geosets" Height="20"/>
-                        <ListBox Name="ListGeosets" Height="100"  SelectionMode="Multiple"/>
-                        <Button Click="SelectAllGeosets">Select All</Button>
-                        <Button Click="DeselectAllGeosets">Select None</Button>
-                        <Button Click="InvertSelectGeosets">Invert Select</Button>
-                        <Button Click="Centergeosets">Center...</Button>
-                     <Button Click="putonground_click">Put on ground....</Button>
-                    <Button Click="TranslateGeoserts">Translate...</Button>
-                        <Button Click="RotateGeosets">Rotate...</Button>
-                        <Button Click="scalegeosets">Scale each...</Button>
-                         
-                        <Button Click="negate">Negate...</Button>
-                    <Button Click="AverageNormals">Average normals</Button>
-                    <Button Click="MergeGeosets">Merge</Button>
-                    <Button Click="PullTogether">Pull together...</Button>
-                     <Button Click="DuplicateGeoset">Duplicate</Button>
-                        <Button Click="aligngeosets">Align...</Button>
-                        <Button Click="scaleToFit">Scale to fit...</Button>
-                        <Button Click="createColsForTargetGeo">Create collision shape for this geoset</Button>
-                         <Button Click="delgeoset">Delete</Button>
-                        <Button Click="DelAllGeosets">Delete All</Button>
-                        <Button Click="reattachToBone">Reattach all to another bone...</Button>
-                        <TextBlock Name="Label_GAs" Text="Geoset animations" FontWeight="Bold"/>
-                        <ListBox Name="List_GeosetAnims" Height="100" SelectionMode="Single"/>
-                        <Button Click="ViewGaTransformatons">view transformations</Button>
-                        <Button Click="MakeGAUseColor">Make use/not use color</Button>
-                        <Button Click="MakeAllGAAlphaStatic">Make all geoset animations alpha static</Button>
-                        <Button Click="equalizegas_alpha">equalize the alpha animation data of all geoset animations</Button>
-                        <Button Click="equalizegas_color">equalize the color animation data of all geoset animations</Button>
-                </StackPanel>
+                 <Grid  >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"  />
+                        <RowDefinition Height="40"/>
+                    </Grid.RowDefinitions>
+                        <Viewport3D    Name="Scene_Viewport" Grid.Column="0"      />
 
-                </ScrollViewer>
+                    <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
+                        <Slider Name="SliderRotation" Maximum="360" ValueChanged="SliderRotation_ValueChanged" Value="0"/>
+                        <Slider Name="SliderZoom" Minimum="0" Maximum="100"   ValueChanged="Zoomed"/>
+                        
+
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+                        <StackPanel Grid.Column="1"  Background="LightGray"  Height="1000">
+                            <TextBlock Name="Report_Geosets" Height="20"/>
+                            <ListBox Name="ListGeosets" Height="100"  SelectionMode="Multiple" SelectionChanged="SelectedGeosets"/>
+                            <Button Click="SelectAllGeosets">Select All</Button>
+                            <Button Click="DeselectAllGeosets">Select None</Button>
+                            <Button Click="InvertSelectGeosets">Invert Select</Button>
+                            <Button Click="Centergeosets">Center...</Button>
+                            <Button Click="putonground_click">Put on ground....</Button>
+                            <Button Click="TranslateGeoserts">Translate...</Button>
+                            <Button Click="RotateGeosets">Rotate...</Button>
+                            <Button Click="scalegeosets">Scale each...</Button>
+
+                            <Button Click="negate">Negate...</Button>
+                            <Button Click="AverageNormals">Average normals</Button>
+                            <Button Click="MergeGeosets">Merge</Button>
+                            <Button Click="PullTogether">Pull together...</Button>
+                            <Button Click="DuplicateGeoset">Duplicate</Button>
+                            <Button Click="aligngeosets">Align...</Button>
+                            <Button Click="scaleToFit">Scale to fit...</Button>
+                            <Button Click="createColsForTargetGeo">Create collision shape for this geoset</Button>
+                            <Button Click="delgeoset">Delete</Button>
+                            <Button Click="DelAllGeosets">Delete All</Button>
+                            <Button Click="reattachToBone">Reattach all to another bone...</Button>
+                            <TextBlock Name="Label_GAs" Text="Geoset animations" FontWeight="Bold"/>
+                            <ListBox Name="List_GeosetAnims" Height="100" SelectionMode="Single"/>
+                            <Button Click="ViewGaTransformatons">view transformations</Button>
+                            <Button Click="MakeGAUseColor">Make use/not use color</Button>
+                            <Button Click="MakeAllGAAlphaStatic">Make all geoset animations alpha static</Button>
+                            <Button Click="equalizegas_alpha">equalize the alpha animation data of all geoset animations</Button>
+                            <Button Click="equalizegas_color">equalize the color animation data of all geoset animations</Button>
+                        </StackPanel>
+
+                    </ScrollViewer>
+                   </Grid>
+              
             </TabItem>
             <TabItem Header="Import">
                 <StackPanel  Background="LightGray">
@@ -194,7 +217,7 @@
             </TabItem>
             <TabItem Header="Inspector" HorizontalAlignment="Right" Margin="0,-2,-2,0" Width="65">
                 <StackPanel  Background="LightGray">
-                    <ScrollViewer Height="250">
+                    <ScrollViewer Height="340">
                         <TextBlock Name="LabelDisplayInfo"/>
                     </ScrollViewer>
                   
@@ -211,10 +234,21 @@
                 <StackPanel  Background="LightGray">
 
                         <TextBlock Name="Report_Nodes" Height="20"/>
-                        <TextBlock Name="Report_Node_data" Height="20"/>
-                        <TreeView Name="ListNodes" Height="150" SelectedItemChanged="ListNodes_SelectedItemChanged">
+                        <Grid Height="250">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TreeView Name="ListNodes" Grid.Column="0" SelectedItemChanged="ListNodes_SelectedItemChanged"/>
+                            <TextBox  Name="Report_Node_data" TextWrapping="Wrap"  IsReadOnly="True" Grid.Column="1"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal">
+                           
+                           
+                        </StackPanel>
+                       
                         
-                    </TreeView>
+                  
                  
                     <Button Click="refreshnodes">Refresh</Button>
                     <Button Click="RenameNode">Rename</Button>

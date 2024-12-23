@@ -54,6 +54,7 @@ namespace Wa3Tuner
             {
 
                 X = val1; Y = val2; Z = val3;
+                DialogResult = true;
             }
         }
     }
