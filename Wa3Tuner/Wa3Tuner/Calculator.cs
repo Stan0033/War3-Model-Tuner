@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Windows.Media.Media3D;
 
 namespace Wa3Tuner
 {
@@ -810,6 +811,111 @@ namespace Wa3Tuner
             float y= (extent.Max.Y - extent.Min.Y ) /2;
             float z= (extent.Max.Z - extent.Min.Z ) /2;
             return new CVector3( x, y, z );
+        }
+
+        internal static CVector3 GetCentroidOfNodes(CNodeContainer nodes)
+        {
+            if (nodes == null || !nodes.Any())
+                return new CVector3(0, 0, 0); // Return a zero vector if there are no nodes.
+
+            // Calculate the sum of all pivot points.
+            float totalX = 0, totalY = 0, totalZ = 0;
+            foreach (var node in nodes)
+            {
+                totalX += node.PivotPoint.X;
+                totalY += node.PivotPoint.Y;
+                totalZ += node.PivotPoint.Z;
+            }
+
+            // Find the average for each component.
+            int count = nodes.Count();
+            float avgX = totalX / count;
+            float avgY = totalY / count;
+            float avgZ = totalZ / count;
+
+            // Create a new CVector3 for the centroid.
+            return new CVector3(avgX, avgY, avgZ);
+        }
+        public static CVector3 QuaternionToEuler(CVector4 quaternion)
+        {
+            // Extract the components of the quaternion
+            float x = quaternion.X;
+            float y = quaternion.Y;
+            float z = quaternion.Z;
+            float w = quaternion.W;
+
+            // Compute the Euler angles
+            float sinRcosP = 2 * (w * x + y * z);
+            float cosRcosP = 1 - 2 * (x * x + y * y);
+            float roll = (float)Math.Atan2(sinRcosP, cosRcosP);
+
+            float sinP = 2 * (w * y - z * x);
+            float pitch;
+            if (Math.Abs(sinP) >= 1)
+                pitch = CopySign((float)Math.PI / 2, sinP); // Use 90 degrees if out of range
+            else
+                pitch = (float)Math.Asin(sinP);
+
+            float sinYcosP = 2 * (w * z + x * y);
+            float cosYcosP = 1 - 2 * (y * y + z * z);
+            float yaw = (float)Math.Atan2(sinYcosP, cosYcosP);
+
+            // Return the angles in radians as a CVector3
+            return new CVector3(roll, pitch, yaw);
+        }
+
+        public static CVector4 EulerToQuaternion(CVector3 euler)
+        {
+            // Extract the Euler angles (in radians)
+            float roll = euler.X;
+            float pitch = euler.Y;
+            float yaw = euler.Z;
+
+            // Compute the half angles
+            float halfRoll = roll / 2;
+            float halfPitch = pitch / 2;
+            float halfYaw = yaw / 2;
+
+            // Calculate trigonometric values
+            float sinRoll = (float)Math.Sin(halfRoll);
+            float cosRoll = (float)Math.Cos(halfRoll);
+            float sinPitch = (float)Math.Sin(halfPitch);
+            float cosPitch = (float)Math.Cos(halfPitch);
+            float sinYaw = (float)Math.Sin(halfYaw);
+            float cosYaw = (float)Math.Cos(halfYaw);
+
+            // Compute the quaternion components
+            float w = cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw;
+            float x = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;
+            float y = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
+            float z = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
+
+            // Return the quaternion as a CVector4
+            return new CVector4(x, y, z, w);
+        }
+
+
+        private static float CopySign(float value, float sign)
+        {
+            return Math.Sign(sign) == -1 ? -Math.Abs(value) : Math.Abs(value);
+        }
+
+
+        private static CVector4 ReverseVector4(CVector4 vector)
+        {
+            CVector3 euler = QuaternionToEuler(vector);
+
+            CVector3 new_euler = new CVector3(-euler.X, -euler.Y, -euler.Z);
+            return EulerToQuaternion(new_euler);
+        }
+        internal static CAnimatorNode<CVector4> ReverseVector4(CAnimatorNode<CVector4> cAnimatorNode)
+        {
+            CAnimatorNode < CVector4 > node = new CAnimatorNode<CVector4 >();
+            int time = node.Time;
+            CVector4 vector = node.Value;
+            CVector4 new_vector = ReverseVector4(vector);
+            return new CAnimatorNode<CVector4>(time, new_vector);
+           
         }
     }
 }

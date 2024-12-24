@@ -8,12 +8,12 @@
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
         Title="Mass Create Textures" Height="250" Width="400">
-    <Grid>
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
             <RowDefinition/>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="20"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Write on each line a texture's path" Grid.Row="0"/>
         <TextBox Name="box" Grid.Row="1"  TextWrapping="Wrap"

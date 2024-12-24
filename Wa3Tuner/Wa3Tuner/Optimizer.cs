@@ -64,6 +64,7 @@ namespace Wa3Tuner
             RearrangeKeyframes_();
             RemoveEmptyGeosets();
             FixInvalidNodeRelationships();
+            CreateLayerForMaterialsWithout();
             if (Linearize) { Linearize_(); }
             if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
             if (DeleteIsolatedVertices) { DeleteIsolatedVertices_(); }
@@ -168,7 +169,35 @@ namespace Wa3Tuner
              //unused
            // throw new NotImplementedException();
         }
-
+        private static void CreateLayerForMaterialsWithout()
+        {
+            foreach (CMaterial mat in Model.Materials)
+            {
+                if (mat.Layers.Count == 0)
+                {
+                    CMaterialLayer layer = CreateDummyLayer();
+                    mat.Layers.Add(layer);  
+                }
+            }
+        }
+        private static CMaterialLayer CreateDummyLayer()
+        {
+            CMaterialLayer layer = new CMaterialLayer(Model);
+            if (Model.Textures.Count == 0)
+            {
+                CreateWhiteTextures();
+            }
+           
+                layer.Texture.Attach(Model.Textures[0]);
+             
+            return layer;
+        }
+        private static void CreateWhiteTextures()
+        {
+            CTexture texture = new CTexture(Model);
+            texture.FileName = "Textures\\white.blp";
+            Model.Textures.Add(texture);
+        }
         private static void AddMissingKeyframes_()
         {
             foreach (CMaterial material in Model.Materials)

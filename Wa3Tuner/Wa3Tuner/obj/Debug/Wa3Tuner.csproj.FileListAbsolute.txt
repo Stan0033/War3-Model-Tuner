@@ -42,3 +42,11 @@ C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Wa3Tuner.csproj.CoreCompi
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Wa3Tuner.csproj.Up2Date
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Wa3Tuner.exe
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Wa3Tuner.pdb
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\EditGS_W.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\EditGS_W.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\translation_selector.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\translation_selector.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\newsequence.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\newsequence.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Multiselector.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Multiselector.baml

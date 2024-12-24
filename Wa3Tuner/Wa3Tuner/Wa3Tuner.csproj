@@ -68,6 +68,9 @@
     <Compile Include="createnode.xaml.cs">
       <DependentUpon>createnode.xaml</DependentUpon>
     </Compile>
+    <Compile Include="EditGS_W.xaml.cs">
+      <DependentUpon>EditGS_W.xaml</DependentUpon>
+    </Compile>
     <Compile Include="edittags.xaml.cs">
       <DependentUpon>edittags.xaml</DependentUpon>
     </Compile>
@@ -79,6 +82,12 @@
     </Compile>
     <Compile Include="Mass_Create_Textures.xaml.cs">
       <DependentUpon>Mass_Create_Textures.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Multiselector.xaml.cs">
+      <DependentUpon>Multiselector.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="newsequence.xaml.cs">
+      <DependentUpon>newsequence.xaml</DependentUpon>
     </Compile>
     <Compile Include="NodeCloner.cs" />
     <Compile Include="putonground.xaml.cs">
@@ -99,11 +108,18 @@
     <Compile Include="Transformations_viewer.xaml.cs">
       <DependentUpon>Transformations_viewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="translation_selector.xaml.cs">
+      <DependentUpon>translation_selector.xaml</DependentUpon>
+    </Compile>
     <Page Include="axis_selector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="createnode.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditGS_W.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -149,6 +165,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Multiselector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="newsequence.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="putonground.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -170,6 +194,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Transformations_viewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="translation_selector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

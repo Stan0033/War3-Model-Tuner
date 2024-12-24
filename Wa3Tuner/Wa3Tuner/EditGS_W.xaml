@@ -1,0 +1,27 @@
+﻿<Window x:Class="Wa3Tuner.EditGS_W"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d"
+        Title="edit global sequences" Height="250" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <ListBox Name="ListGS" Background="LightGray" SelectionChanged="ListGS_SelectionChanged" SelectionMode="Single"/>
+        <StackPanel Grid.Column="1">
+            <TextBox Margin="10" Name="box"/>
+            <Button Click="add">Add</Button>
+            <Button Click="edit">Edit</Button>
+            <Button Click="del">Delete</Button>
+          
+        </StackPanel>
+    </Grid>
+   
+</Window>

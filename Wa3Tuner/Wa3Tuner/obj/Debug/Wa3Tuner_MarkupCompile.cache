@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\App.xaml
-151845188363
+19-1295746105
 
-221544961589
+26-1415869619
 111471545292
-axis_selector.xaml;createnode.xaml;edittags.xaml;import_nodes_choice.xaml;Input.xaml;InputVector.xaml;MainWindow.xaml;Mass_Create_Sequences.xaml;Mass_Create_Textures.xaml;putonground.xaml;resizeSequence_window.xaml;SCALETOFIT.xaml;Selector.xaml;select_Transformations.xaml;Transformations_viewer.xaml;
+axis_selector.xaml;createnode.xaml;EditGS_W.xaml;edittags.xaml;import_nodes_choice.xaml;Input.xaml;InputVector.xaml;MainWindow.xaml;Mass_Create_Sequences.xaml;Mass_Create_Textures.xaml;Multiselector.xaml;newsequence.xaml;putonground.xaml;resizeSequence_window.xaml;SCALETOFIT.xaml;Selector.xaml;select_Transformations.xaml;Transformations_viewer.xaml;translation_selector.xaml;
 
 False
 

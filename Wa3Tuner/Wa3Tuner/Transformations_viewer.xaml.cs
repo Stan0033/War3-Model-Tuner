@@ -34,6 +34,17 @@ namespace Wa3Tuner
             TextBlockColumn3.Text = "Scaling";
             TextBoxColumn3.Text = GetData(node.Scaling);
         }
+        public Transformations_viewer(CTextureAnimation ta, CModel model)
+        {
+            InitializeComponent();
+            Model = model;
+            TextBlockColumn1.Text = "Translation";
+            TextBlockColumn1.Text = "Rotation";
+            TextBlockColumn1.Text = "Scaling";
+            TextBoxColumn1.Text = GetData(ta.Translation);
+            TextBoxColumn2.Text = GetData(ta.Rotation);
+            TextBoxColumn3.Text = GetData(ta.Scaling);
+        }
         public Transformations_viewer(CGeosetAnimation ga, CModel geo)
         {
 
@@ -44,6 +55,16 @@ namespace Wa3Tuner
             TextBlockColumn2.Text = "Color";
             TextBoxColumn2.Text = GetData(ga.Color);
         }
+        public Transformations_viewer(CMaterialLayer layer, CModel geo)
+        {
+
+            InitializeComponent();
+            Model = geo;
+            TextBlockColumn1.Text = "Alpha";
+            TextBoxColumn1.Text = GetData(layer.Alpha);
+            TextBlockColumn2.Text = "TextureId";
+            TextBoxColumn2.Text = GetData(layer.TextureId);
+        }
         private string GetData(CAnimator<CVector3> animator)
         {
             StringBuilder sb = new StringBuilder();
@@ -53,6 +74,35 @@ namespace Wa3Tuner
             }
             return sb.ToString();
         }
+        private string GetData(CAnimator<int> animator)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in animator)
+            {
+                string texture = FindTextureByID(item.Value);
+                sb.AppendLine($"({FindS(item.Time)}) Track {item.Time}: {item.Value} ");
+            }
+            return sb.ToString();
+        }
+
+        private string FindTextureByID(int value)
+        {
+           foreach (CTexture t in Model.Textures)
+            {
+                if (t.ObjectId == value) {
+                    if (t.ReplaceableId == 0)
+                    {
+                        return t.FileName;
+                    }
+                    else
+                    {
+                        return $"Replaceable ID {t.ReplaceableId}";
+                    }
+                }
+            }
+            return "Not Found";
+        }
+
         private string FindS(int track)
         {
             string result = "No Sequence";

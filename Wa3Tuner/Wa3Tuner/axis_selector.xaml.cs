@@ -18,6 +18,7 @@ namespace Wa3Tuner
     /// </summary>
     public partial class axis_selector : Window
     {
+        public bool x, y, z;
         public axis_selector()
         {
             InitializeComponent();
@@ -25,6 +26,9 @@ namespace Wa3Tuner
 
         private void ok(object sender, RoutedEventArgs e)
         {
+            x = Check_x.IsChecked == true;
+            y = Check_y.IsChecked == true;
+            z = Check_z.IsChecked == true;
             DialogResult = true;
         }
     }
