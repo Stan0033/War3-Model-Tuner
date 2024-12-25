@@ -65,6 +65,9 @@
       <DependentUpon>axis_selector.xaml</DependentUpon>
     </Compile>
     <Compile Include="Calculator.cs" />
+    <Compile Include="color_selector.xaml.cs">
+      <DependentUpon>color_selector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="createnode.xaml.cs">
       <DependentUpon>createnode.xaml</DependentUpon>
     </Compile>
@@ -74,6 +77,10 @@
     <Compile Include="edittags.xaml.cs">
       <DependentUpon>edittags.xaml</DependentUpon>
     </Compile>
+    <Compile Include="editvisibilities_window.xaml.cs">
+      <DependentUpon>editvisibilities_window.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorChecker.cs" />
     <Compile Include="import_nodes_choice.xaml.cs">
       <DependentUpon>import_nodes_choice.xaml</DependentUpon>
     </Compile>
@@ -115,6 +122,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="color_selector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="createnode.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -124,6 +135,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="edittags.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="editvisibilities_window.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

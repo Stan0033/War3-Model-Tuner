@@ -23,6 +23,7 @@
                 <MenuItem Header="Reload" Click="reload"></MenuItem>
                 <MenuItem Name="ButtonSave" Header="Save" Click="save" IsEnabled="False"></MenuItem>
                 <MenuItem Name="ButtonSaveAs" Header="Save as..." Click="saveas" IsEnabled="False"></MenuItem>
+                <MenuItem Name="ButtonOpenModelFolder" Header="Open containing folder" Click="opentargetfolder"  ></MenuItem>
                 <MenuItem Header="Set model name"  Click="setModelName"/>
             </MenuItem>
 
@@ -66,7 +67,8 @@
 
 
         </Viewport3D>
-        <TabControl Name="ListOptions" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" SelectionChanged="showinfo" >
+        <TabControl Name="ListOptions" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                    SelectionChanged="showinfo" >
 
 
 
@@ -106,6 +108,7 @@
                         <CheckBox Name="Check_DeleteUnusedTextureAnimations">Delete unused texture animations</CheckBox>
                         <CheckBox Name="Check_DeleteUnusedKeyframes">Delete unused keyframes</CheckBox>
                         <CheckBox Name="Check_DeleteIdenticalAdjascentKEyframes">Delete identical adjascent keyframes</CheckBox>
+                        <CheckBox Name="Check_DeleteIdenticalAdjascentKEyframes_times">Delete identical adjascent keyframes's times</CheckBox>
                         <CheckBox Name="Check_DeleteSimilarSimilarKEyframes" IsEnabled="False">Delete similar adjascent keyframes</CheckBox>
                         <CheckBox Name="Check_MissingKeyframes">Add missing opening keyframes</CheckBox>
                         <CheckBox Name="Check_MergeGeosets">Merge geosets that use the same materials</CheckBox>
@@ -169,7 +172,7 @@
                                     <Button Click="DeselectAllGeosets">Select None</Button>
                                     <Button Click="InvertSelectGeosets">Invert Select</Button>
                                     <Button Click="Centergeosets">Center...</Button>
-                                    <Button Click="Centergeosetsat">Center at...</Button>
+                                    <Button Click="Centergeosetsat" IsEnabled="False">Center at...</Button>
                                     <Button Click="flattengeosets">Flatten...</Button>
                                     <Button Click="putonground_click">Put on ground....</Button>
                                     <Button Click="TranslateGeoserts">Translate...</Button>
@@ -188,10 +191,13 @@
                                    
                                     <Button Click="reattachToBone">Reattach all to another bone...</Button>
                                     <Button Click="changegeosetusedmaterial">Change used material</Button>
+                                    <Button Click="editvisibilitiesofgeoset">Edit visibilities</Button>
+                                     
 
                                     <StackPanel Margin="0,10,0,0">
                                         <Button Click="CreateHeroGlow">Create Hero team glow (and bone)</Button>
                                         <Button Click="importtbg">Create Team background (and bone)</Button>
+                                        <Button Click="createprimitiveshape" IsEnabled="False">Create Primitive shape...</Button>
                                     </StackPanel>
 
                                 </StackPanel>
@@ -355,7 +361,15 @@
                         <TextBlock Name="Label_Layers" Text="Layers" Background="LightGray" VerticalAlignment="Top" />
                         <ListBox Name="List_Layers" Grid.Row="1" SelectionMode="Single"
                      SelectionChanged="SelectedLayer"
-                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+                            <ListBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Move up" Click="movelayerup"/>
+                                    <MenuItem Header="Move down" Click="movelayerdown"/>
+                                    <MenuItem Header="Create new" Click="createnewlayer"/>
+                                </ContextMenu>
+                            </ListBox.ContextMenu>
+                        </ListBox>
                     </Grid>
                     <ScrollViewer Grid.Row="1" Grid.Column="1">
                         <StackPanel Margin="5">
@@ -412,22 +426,30 @@
             </TabItem>
 
             <TabItem Header="Inspector" HorizontalAlignment="Right"  Background="LightGray" Margin="0,-2,-2,0" Width="65">
-                <Grid Background="LightGray">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <ScrollViewer Grid.Column="0"  >
-                        <TextBlock Name="LabelDisplayInfo" />
-                    </ScrollViewer>
-                    <StackPanel VerticalAlignment="Top" Grid.Column="1">
-                        <Button Click="showunanimatedseq">Which sequences are not animated?</Button>
-                        <Button Click="CopySQData">Copy sequences data for keyframes</Button>
-                        <Button Click="ShowGaps">show me sequence gaps up to 999,999</Button>
+                <TabControl Name="TC_Inspector" SelectionChanged="ChangedInspector">
+                    <TabItem Header="Info">
+                        <Grid Background="LightGray">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <ScrollViewer Grid.Column="0"  >
+                                <TextBlock Name="LabelDisplayInfo" />
+                            </ScrollViewer>
+                            <StackPanel VerticalAlignment="Top" Grid.Column="1">
+                                <Button Click="showunanimatedseq">Which sequences are not animated?</Button>
+                                <Button Click="CopySQData">Copy sequences data for keyframes</Button>
+                                <Button Click="ShowGaps">show me sequence gaps up to 999,999</Button>
 
-                    </StackPanel>
+                            </StackPanel>
 
-                </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Check for errors">
+                        <TextBox Name="Box_Errors" Background="LightGray"/>
+                    </TabItem>
+                </TabControl>
+               
                 
             </TabItem>
 

@@ -5,6 +5,7 @@ using MdxLib.Primitives;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -314,7 +315,7 @@ namespace Wa3Tuner
         {
             TreeViewItem item = new TreeViewItem();
 
-            item.Width = 200;
+            item.Width = 250;
             item.HorizontalAlignment = HorizontalAlignment.Left;
             //-----------------------------------
             StackPanel panel = new StackPanel();
@@ -1586,7 +1587,7 @@ namespace Wa3Tuner
 
         private class Interval { public int From; public int To; public Interval(int from, int to) { From = from; To = to; } }
 
-        private void showinfo(object sender, RoutedEventArgs e)
+        private void showinfo( )
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Model name: {CurrentModel.Name}");
@@ -1877,6 +1878,7 @@ namespace Wa3Tuner
             Optimizer.SetAllStaticGAS = Check_SetAllStaticGAs.IsChecked == true;
             Optimizer.ClampKeyframes = Check_ClampKeyframes.IsChecked == true;
             Optimizer.DeleteIdenticalAdjascentKEyframes = Check_DeleteIdenticalAdjascentKEyframes.IsChecked == true;
+            Optimizer.Check_DeleteIdenticalAdjascentKEyframes_times = Check_DeleteIdenticalAdjascentKEyframes_times.IsChecked == true;
             Optimizer.DeleteSimilarSimilarKEyframes = Check_DeleteSimilarSimilarKEyframes.IsChecked == true;
             Optimizer.AddMissingKeyframes = Check_MissingKeyframes.IsChecked == true;
             Optimizer._DetachFromNonBone = Check_DetachFromNonBone.IsChecked == true;
@@ -3697,12 +3699,13 @@ namespace Wa3Tuner
             sb.AppendLine($" DontInheritTranslation: {node.DontInheritTranslation}, ");
             sb.AppendLine($" DontInheritRotation: {node.DontInheritRotation}, ");
             sb.AppendLine($" DontInheritScaling: {node.DontInheritScaling}, ");
+            sb.AppendLine($" Pivot Point: {node.PivotPoint.X}, {node.PivotPoint.Y}, {node.PivotPoint.Z} ");
             Report_Node_data.Text = sb.ToString();
         }
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.0.3 (24/12/2024) by stan0033 built using C#, .NET 3.5, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.0.4 (25/12/2024) by stan0033 built using C#, .NET 3.5, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
 
         private void EditMatTags(object sender, RoutedEventArgs e)
@@ -3761,9 +3764,10 @@ namespace Wa3Tuner
             List_Layers.Items.Clear();
             for (int i = 0; i < CurrentModel.Materials[index].Layers.Count; i++)
             {
-                string name = CurrentModel.Materials[index].Layers[i].TextureId.Count == 0 ?
-                    CurrentModel.Materials[index].Layers[i].Texture.Object.FileName : $" ({CurrentModel.Materials[index].Layers[i].TextureId.Count})";
-                List_Layers.Items.Add(new ListBoxItem() { Content = i });
+                CMaterialLayer layer = CurrentModel.Materials[index].Layers[i];
+                
+                string info = $": alphas: {layer.Alpha.Count}, textureIDs: {layer.TextureId.Count}";
+                List_Layers.Items.Add(new ListBoxItem() { Content = i + info });
             }
 
         }
@@ -4423,6 +4427,7 @@ namespace Wa3Tuner
 
                     }
                 }
+                RefreshViewPort();
             }
         }
         private CSequence AskSequenceName(CSequence except)
@@ -4736,6 +4741,155 @@ namespace Wa3Tuner
                 {
                     node.Rotation[i] = Calculator.ReverseVector4(node.Rotation[i]);
                 }
+            }
+        }
+
+        private void ChangedInspector(object sender, SelectionChangedEventArgs e)
+        {
+            if (TC_Inspector.SelectedIndex == 0)
+            {
+                showinfo();
+            }
+            else
+            {
+                ShowErrors();
+            }
+        }
+
+        private void showinfo(object sender, SelectionChangedEventArgs e)
+        {
+            if (ListOptions.SelectedIndex == 5)
+            {
+                ChangedInspector(null,null);
+            }
+           
+        }
+
+        private void ShowErrors()
+        {
+            ErrorChecker.CurrentModel = CurrentModel;
+            Box_Errors.Text = ErrorChecker.Inspect(CurrentModel);
+        }
+
+        private void editvisibilitiesofgeoset(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count  != 1)
+            {
+                MessageBox.Show("Select a single geoset"); return;
+            }
+            List<CGeoset> geosets = GetSElectedGeosets();
+            editvisibilities_window ew = new editvisibilities_window(CurrentModel, geosets[0]);
+            ew.ShowDialog();
+            if (ew.DialogResult == true)
+            {
+                RefreshGeosetAnimationsList();
+            }
+        }
+
+        private void editgeosetcolors(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count!= 1)
+            {
+                MessageBox.Show("Select a single geoset"); return;
+            }
+            List<CGeoset> geosets = GetSElectedGeosets();
+            
+            color_selector cs = new color_selector(CurrentModel, geosets[0]);
+            
+            if (cs.ShowDialog() == true)
+            {
+                RefreshGeosetAnimationsList();
+            }
+
+        }
+
+        private void createprimitiveshape(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void movelayerup(object sender, RoutedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                int index = List_Layers.SelectedIndex;
+                if (index == 0) { return; }
+                
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[index];
+                var temp = mat.Layers[index-1];
+                mat.Layers[index] = mat.Layers[index -1];
+                mat.Layers[index] = temp;
+                RefreshLayersList();
+            }
+        }
+
+        private void movelayerdown(object sender, RoutedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                int index = List_Layers.SelectedIndex;
+                CMaterial mat = GetSelectedMAterial();
+                if (index == mat.Layers.Count - 1) { return; }
+
+
+                CMaterialLayer layer = mat.Layers[index];
+                var temp = mat.Layers[index + 1];
+                mat.Layers[index + 1] = mat.Layers[index];
+                mat.Layers[index] = temp;
+                RefreshLayersList();
+            }
+        }
+
+        private void createnewlayer(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Textures.Count == 0) { MessageBox.Show("There are no textures"); return; }
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                layer.Alpha.MakeStatic(1);
+                layer.Texture.Attach(CurrentModel.Textures[0]);
+                mat.Layers.Add(layer);
+                RefreshLayersList();
+            }
+            }
+
+        private void opentargetfolder(object sender, RoutedEventArgs e)
+        {
+            if (File.Exists(CurrentSaveLocaiton))
+            {
+                OpenFileLocation(CurrentSaveLocaiton);
+            }
+        }
+        static void OpenFileLocation(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                MessageBox.Show("File path is null or empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show("The specified file does not exist.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string folderPath = System.IO.Path.GetDirectoryName(filePath);
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                MessageBox.Show("Unable to determine the folder path.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                Process.Start("explorer.exe", $"\"{folderPath}\"");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while opening the folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

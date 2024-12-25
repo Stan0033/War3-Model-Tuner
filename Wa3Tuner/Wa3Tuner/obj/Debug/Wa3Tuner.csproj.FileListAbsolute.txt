@@ -50,3 +50,7 @@ C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\newsequence.g.cs
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\newsequence.baml
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Multiselector.g.cs
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\Multiselector.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\editvisibilities_window.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\editvisibilities_window.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\color_selector.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\color_selector.baml

@@ -56,6 +56,7 @@ namespace Wa3Tuner
         internal static bool AddMissingKeyframes;
         internal static bool DeleteSimilarSimilarKEyframes = false;
         internal static bool _DetachFromNonBone;
+        internal static bool Check_DeleteIdenticalAdjascentKEyframes_times;
 
         public static void Optimize(CModel model_)
         {
@@ -97,12 +98,102 @@ namespace Wa3Tuner
             
             if (CalculateExtents) { CalculateExtents_(); }
             if (DeleteIdenticalAdjascentKEyframes) { DeleteIdenticalAdjascentKEyframes_(); }
+            if (Check_DeleteIdenticalAdjascentKEyframes_times) { Check_DeleteIdenticalAdjascentKEyframes_times_(); }
            // if (DeleteSimilarSimilarKEyframes) { DeleteSimilarSimilarKEyframes_(); }
             if (AddMissingKeyframes) { AddMissingKeyframes_(); }
             if (_DetachFromNonBone) { _DetachFromNonBone_(); }
             RearrangeKeyframes_();
             MakeTransformationsWithZeroTracksStatic();
             FixQuirtOfEmitters2();
+        }
+
+        private static void Check_DeleteIdenticalAdjascentKEyframes_times_()
+        {
+            foreach (INode node in Model.Nodes)
+            {
+                RemoveAdjascentKeyframesTimes(node.Translation);
+                RemoveAdjascentKeyframesTimes(node.Rotation);
+                RemoveAdjascentKeyframesTimes(node.Scaling);
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    RemoveAdjascentKeyframesTimes(element.Visibility);
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                    RemoveAdjascentKeyframesTimes(element.Visibility);
+                    RemoveAdjascentKeyframesTimes(element.EmissionRate);
+                    RemoveAdjascentKeyframesTimes(element.LifeSpan);
+                    RemoveAdjascentKeyframesTimes(element.InitialVelocity);
+                    RemoveAdjascentKeyframesTimes(element.Gravity);
+                    RemoveAdjascentKeyframesTimes(element.Longitude);
+                    RemoveAdjascentKeyframesTimes(element.Latitude);
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    RemoveAdjascentKeyframesTimes(element.Visibility);
+                    RemoveAdjascentKeyframesTimes(element.EmissionRate);
+                    RemoveAdjascentKeyframesTimes(element.Speed);
+                    RemoveAdjascentKeyframesTimes(element.Width);
+                    RemoveAdjascentKeyframesTimes(element.Gravity);
+                    RemoveAdjascentKeyframesTimes(element.Length);
+                    RemoveAdjascentKeyframesTimes(element.Latitude);
+                    RemoveAdjascentKeyframesTimes(element.Variation);
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    RemoveAdjascentKeyframesTimes(element.Visibility);
+                    RemoveAdjascentKeyframesTimes(element.HeightAbove);
+                    RemoveAdjascentKeyframesTimes(element.HeightBelow);
+                    RemoveAdjascentKeyframesTimes(element.Color);
+                    RemoveAdjascentKeyframesTimes(element.Alpha);
+                    RemoveAdjascentKeyframesTimes(element.TextureSlot);
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    RemoveAdjascentKeyframesTimes(element.Visibility);
+                    RemoveAdjascentKeyframesTimes(element.Color);
+                    RemoveAdjascentKeyframesTimes(element.AmbientColor);
+                    RemoveAdjascentKeyframesTimes(element.Intensity);
+                    RemoveAdjascentKeyframesTimes(element.AmbientIntensity);
+                    RemoveAdjascentKeyframesTimes(element.AttenuationEnd);
+                    RemoveAdjascentKeyframesTimes(element.AttenuationStart);
+
+                }
+            }
+            foreach (CGeosetAnimation ga in Model.GeosetAnimations)
+            {
+                if (ga.Alpha.Static == false)
+                {
+                    RemoveAdjascentKeyframesTimes(ga.Alpha);
+                }
+                if (ga.Color.Static == false) { RemoveAdjascentKeyframes(ga.Color); }
+            }
+            foreach (CTextureAnimation taa in Model.TextureAnimations)
+            {
+                RemoveAdjascentKeyframesTimes(taa.Translation);
+                RemoveAdjascentKeyframesTimes(taa.Rotation);
+                RemoveAdjascentKeyframesTimes(taa.Scaling);
+
+            }
+            foreach (CMaterial material in Model.Materials)
+            {
+                foreach (CMaterialLayer layer in material.Layers)
+                {
+                    RemoveAdjascentKeyframesTimes(layer.Alpha);
+                    RemoveAdjascentKeyframesTimes(layer.TextureId);
+                }
+            }
+            foreach (CCamera cam in Model.Cameras)
+            {
+                RemoveAdjascentKeyframesTimes(cam.Rotation);
+            }
+
         }
 
         private static void _DetachFromNonBone_()
@@ -483,6 +574,82 @@ namespace Wa3Tuner
             }
            
         }
+        private static void RemoveAdjascentKeyframesTimes(CAnimator<float> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i-1].Time == list[i].Time)
+                    {
+                        list.RemoveAt(i);
+                        goto start;
+                    }
+                }
+                
+            }
+        }
+        private static void RemoveAdjascentKeyframesTimes(CAnimator<int> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1].Time == list[i].Time)
+                    {
+                        list.RemoveAt(i);
+                        goto start;
+                    }
+                }
+
+            }
+        }
+        private static void RemoveAdjascentKeyframesTimes(CAnimator<CVector3> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1].Time == list[i].Time)
+                    {
+                        list.RemoveAt(i);
+                        goto start;
+                    }
+                }
+
+            }
+        }
+        private static void RemoveAdjascentKeyframesTimes(CAnimator<CVector4> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1].Time == list[i].Time)
+                    {
+                        list.RemoveAt(i);
+                        goto start;
+                    }
+                }
+
+            }
+        }
 
         private static void RemoveAdjascentKeyframes(CAnimator<CVector4> list)
         {
@@ -547,6 +714,7 @@ namespace Wa3Tuner
                 }
             }
         }
+
         private static void FixQuirtOfEmitters2()
         {
             foreach (INode node in Model.Nodes)
