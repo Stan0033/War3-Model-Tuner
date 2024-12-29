@@ -1,9 +1,12 @@
-﻿using MdxLib.Model;
+﻿using MdxLib.Animator;
+using MdxLib.Model;
 using MdxLib.Primitives;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Documents;
 using System.Xml.Linq;
 
 namespace Wa3Tuner
@@ -19,6 +22,17 @@ namespace Wa3Tuner
                 foreach (CMaterialLayer layer in mat.Layers)
                 {
                     if (layer.Texture.Object == texture) { return true; }
+                }
+            }
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                if (node is CParticleEmitter2 emitter)
+                {
+                    if (emitter.Texture.Object == texture) { return true; }
+                }
+                if (node is CParticleEmitter emitter1)
+                {
+                    if (emitter1.FileName == texture.FileName) { return true; }
                 }
             }
             return false;
@@ -86,7 +100,14 @@ namespace Wa3Tuner
                 }
             }
             // check tracks - repeating times, repeating frames, inconsistent frames, missing opening, closing
-           
+            List<string> ik= CheckInsonsistentKeyframes();
+            List<string> rk= ChekRepeatingTimes();
+            List<string> mok= ChekMissingOpeningKeyframes();
+           // List<string> dk= CheckDuplicatingKeyframes();
+            foreach (string i in ik) { severe.AppendLine(i); }
+            foreach (string i in rk) { unused.AppendLine(i); }
+            foreach (string i in mok) { unused.AppendLine(i); }
+           // foreach (string i in dk) { warnings.AppendLine(i); }
             
             // check interpolation for visibilities
             foreach (INode node in currentModel.Nodes)
@@ -257,6 +278,677 @@ namespace Wa3Tuner
             return all.ToString();
         }
 
+        private static List<string> CheckDuplicatingKeyframes()
+        {
+            List<string> list = new List<string>();
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                ReportDuplicatingKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
+                ReportDuplicatingKeyframes(node.Rotation, $"At {node.GetType().Name} '{node.Name}': rotation: ");
+                ReportDuplicatingKeyframes(node.Scaling, $"At {node.GetType().Name} '{node.Name}': scaling: ");
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                    ReportDuplicatingKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportDuplicatingKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportDuplicatingKeyframes(element.LifeSpan, $"At {node.GetType().Name} '{node.Name}': lifespan: ");
+                    ReportDuplicatingKeyframes(element.InitialVelocity, $"At {node.GetType().Name} '{node.Name}': initial velocity ");
+                    ReportDuplicatingKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportDuplicatingKeyframes(element.Longitude, $"At {node.GetType().Name} '{node.Name}': longtitude: ");
+                    ReportDuplicatingKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    ReportDuplicatingKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportDuplicatingKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportDuplicatingKeyframes(element.Speed, $"At {node.GetType().Name} '{node.Name}': speed: ");
+                    ReportDuplicatingKeyframes(element.Width, $"At {node.GetType().Name} '{node.Name}': width: ");
+                    ReportDuplicatingKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportDuplicatingKeyframes(element.Length, $"At {node.GetType().Name} '{node.Name}': length: ");
+                    ReportDuplicatingKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                    ReportDuplicatingKeyframes(element.Variation, $"At {node.GetType().Name} '{node.Name}': variation: ");
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    ReportDuplicatingKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportDuplicatingKeyframes(element.HeightAbove, $"At {node.GetType().Name} '{node.Name}': height above: ");
+                    ReportDuplicatingKeyframes(element.HeightBelow, $"At {node.GetType().Name} '{node.Name}': height below: ");
+                    ReportDuplicatingKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportDuplicatingKeyframes(element.Alpha, $"At {node.GetType().Name} '{node.Name}': alpha: ");
+                    ReportDuplicatingKeyframes(element.TextureSlot, $"At {node.GetType().Name} '{node.Name}': texture slot: ");
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    ReportDuplicatingKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportDuplicatingKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportDuplicatingKeyframes(element.AmbientColor, $"At {node.GetType().Name} '{node.Name}': ambient color: ");
+                    ReportDuplicatingKeyframes(element.Intensity, $"At {node.GetType().Name} '{node.Name}': intensity: ");
+                    ReportDuplicatingKeyframes(element.AmbientIntensity, $"At {node.GetType().Name} '{node.Name}': ambient intensity: ");
+                    ReportDuplicatingKeyframes(element.AttenuationEnd, $"At {node.GetType().Name} '{node.Name}': attentuation end: ");
+                    ReportDuplicatingKeyframes(element.AttenuationStart, $"At {node.GetType().Name} '{node.Name}': attentuation start: ");
+
+                }
+            }
+            for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation ga = CurrentModel.GeosetAnimations[i];
+                if (ga.Alpha.Static == false)
+                {
+                    ReportDuplicatingKeyframes(ga.Alpha, $"At geoset_animations[{i}]: alpha: ");
+                }
+                if (ga.Color.Static == false) { ReportRepeatingTimes(ga.Color, $"At geoset_animations[{i}]: color: "); }
+            }
+            for (int i = 0; i < CurrentModel.TextureAnimations.Count; i++)
+            {
+                CTextureAnimation taa = CurrentModel.TextureAnimations[i];
+                ReportDuplicatingKeyframes(taa.Translation, $"At texture_animation[{i}]: translation: ");
+                ReportDuplicatingKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
+                ReportDuplicatingKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
+            }
+
+            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            {
+                for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
+                {
+                    CMaterialLayer layer = CurrentModel.Materials[i].Layers[x];
+                    ReportDuplicatingKeyframes(layer.Alpha, $"At materials[{i}]: layers[{x}] alpha: ");
+                    ReportDuplicatingKeyframes(layer.TextureId, $"At materials[{i}]: layers[{x}] textureid: ");
+                }
+            }
+            for (int i = 0; i < CurrentModel.Cameras.Count; i++)
+            {
+                var cam = CurrentModel.Cameras[i];
+                ReportDuplicatingKeyframes(cam.Rotation, $"At cameras[{i}]: rotation: ");
+            }
+
+            list.AddRange(TemporaryList);
+            TemporaryList.Clear();
+            return list;
+        }
+
+        private static void ReportDuplicatingKeyframes(CAnimator<CVector3> animator, string v)
+        {
+            if (animator.Count > 3)
+            {
+                for (int i = 0; i < animator.Count - 2; i++) // Use animator.Count - 2 to ensure you don't access out of bounds
+                {
+                    if (SameValues(animator[i].Value, animator[i + 1].Value, animator[i + 2].Value) &&
+                        TripletBelongsToSameSequence(animator[i].Time, animator[i + 1].Time, animator[i + 2].Time))
+                    {
+                        TemporaryList.Add($"{v}: The track at {animator[i + 1].Time} has the same values as the ones before and after it");
+                    }
+                }
+            }
+        }
+        private static void ReportDuplicatingKeyframes(CAnimator<CVector4> animator, string v)
+        {
+            if (animator.Count > 3)
+            {
+                for (int i = 0; i < animator.Count - 2; i++) // Use animator.Count - 2 to ensure you don't access out of bounds
+                {
+                    if (SameValues(animator[i].Value, animator[i + 1].Value, animator[i + 2].Value) &&
+                        TripletBelongsToSameSequence(animator[i].Time, animator[i + 1].Time, animator[i + 2].Time))
+                    {
+                        TemporaryList.Add($"{v}: The track at {animator[i + 1].Time} has the same values as the ones before and after it");
+                    }
+                }
+            }
+        }
+        private static void ReportDuplicatingKeyframes(CAnimator<int> animator, string v)
+        {
+            if (animator.Count > 3)
+            {
+                for (int i = 0; i < animator.Count - 2; i++) // Use animator.Count - 2 to ensure you don't access out of bounds
+                {
+                    if (SameValues(animator[i].Value, animator[i + 1].Value, animator[i + 2].Value) &&
+                        TripletBelongsToSameSequence(animator[i].Time, animator[i + 1].Time, animator[i + 2].Time))
+                    {
+                        TemporaryList.Add($"{v}: The track at {animator[i + 1].Time} has the same values as the ones before and after it");
+                    }
+                }
+            }
+
+        }
+        private static bool SameValues(float one, float two, float three)
+        {
+                    return (one == two && two == three);
+        }
+        private static bool SameValues(int one, int two, int three)
+        {
+            return (one == two && two == three);
+        }
+        private static bool SameValues(CVector3 one, CVector3 two, CVector3 three)
+        {
+            return (one.X == two.X && one.Y == two.Y && one.Z == two.Z &&
+                    two.X == three.X && two.Y == three.Y && two.Z == three.Z);
+        }
+
+        private static bool SameValues(CVector4 one, CVector4 two, CVector4 three)
+        {
+            return (one.X == two.X && one.Y == two.Y && one.Z == two.Z && one.W == two.W &&
+                    two.X == three.X && two.Y == three.Y && two.Z == three.Z && two.W == three.W);
+        }
+
+        private static bool TripletBelongsToSameSequence(int time1, int time2, int time3)
+        {
+            foreach (CSequence sequence in CurrentModel.Sequences)
+            {
+                if (
+                    time1>= sequence.IntervalStart && time1>= sequence.IntervalEnd &&
+                    time2>= sequence.IntervalStart && time2>= sequence.IntervalEnd &&
+                    time3 >= sequence.IntervalStart && time3>= sequence.IntervalEnd
+
+                    )
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        private static void ReportDuplicatingKeyframes(CAnimator<float> animator, string v)
+        {
+            if (animator.Count > 3)
+            {
+                for (int i = 0; i < animator.Count - 2; i++) // Use animator.Count - 2 to ensure you don't access out of bounds
+                {
+                    if (SameValues(animator[i].Value, animator[i + 1].Value, animator[i + 2].Value) &&
+                        TripletBelongsToSameSequence(animator[i].Time, animator[i + 1].Time, animator[i + 2].Time))
+                    {
+                        TemporaryList.Add($"{v}: The track at {animator[i + 1].Time} has the same values as the ones before and after it");
+                    }
+                }
+            }
+        }
+
+        private static List<string> ChekMissingOpeningKeyframes()
+        {
+            List<string> list = new List<string>();
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                ReportMissingOpeningKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
+                ReportMissingOpeningKeyframes(node.Rotation, $"At {node.GetType().Name} '{node.Name}': rotation: ");
+                ReportMissingOpeningKeyframes(node.Scaling, $"At {node.GetType().Name} '{node.Name}': scaling: ");
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportMissingOpeningKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportMissingOpeningKeyframes(element.LifeSpan, $"At {node.GetType().Name} '{node.Name}': lifespan: ");
+                    ReportMissingOpeningKeyframes(element.InitialVelocity, $"At {node.GetType().Name} '{node.Name}': initial velocity ");
+                    ReportMissingOpeningKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportMissingOpeningKeyframes(element.Longitude, $"At {node.GetType().Name} '{node.Name}': longtitude: ");
+                    ReportMissingOpeningKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportMissingOpeningKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportMissingOpeningKeyframes(element.Speed, $"At {node.GetType().Name} '{node.Name}': speed: ");
+                    ReportMissingOpeningKeyframes(element.Width, $"At {node.GetType().Name} '{node.Name}': width: ");
+                    ReportMissingOpeningKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportMissingOpeningKeyframes(element.Length, $"At {node.GetType().Name} '{node.Name}': length: ");
+                    ReportMissingOpeningKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                    ReportMissingOpeningKeyframes(element.Variation, $"At {node.GetType().Name} '{node.Name}': variation: ");
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportMissingOpeningKeyframes(element.HeightAbove, $"At {node.GetType().Name} '{node.Name}': height above: ");
+                    ReportMissingOpeningKeyframes(element.HeightBelow, $"At {node.GetType().Name} '{node.Name}': height below: ");
+                    ReportMissingOpeningKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportMissingOpeningKeyframes(element.Alpha, $"At {node.GetType().Name} '{node.Name}': alpha: ");
+                    ReportMissingOpeningKeyframes(element.TextureSlot, $"At {node.GetType().Name} '{node.Name}': texture slot: ");
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportMissingOpeningKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportMissingOpeningKeyframes(element.AmbientColor, $"At {node.GetType().Name} '{node.Name}': ambient color: ");
+                    ReportMissingOpeningKeyframes(element.Intensity, $"At {node.GetType().Name} '{node.Name}': intensity: ");
+                    ReportMissingOpeningKeyframes(element.AmbientIntensity, $"At {node.GetType().Name} '{node.Name}': ambient intensity: ");
+                    ReportMissingOpeningKeyframes(element.AttenuationEnd, $"At {node.GetType().Name} '{node.Name}': attentuation end: ");
+                    ReportMissingOpeningKeyframes(element.AttenuationStart, $"At {node.GetType().Name} '{node.Name}': attentuation start: ");
+
+                }
+            }
+            for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation ga = CurrentModel.GeosetAnimations[i];
+                if (ga.Alpha.Static == false)
+                {
+                    ReportMissingOpeningKeyframes(ga.Alpha, $"At geoset_animations[{i}]: alpha: ");
+                }
+                if (ga.Color.Static == false) { ReportMissingOpeningKeyframes(ga.Color, $"At geoset_animations[{i}]: color: "); }
+            }
+            for (int i = 0; i < CurrentModel.TextureAnimations.Count; i++)
+            {
+                CTextureAnimation taa = CurrentModel.TextureAnimations[i];
+                ReportMissingOpeningKeyframes(taa.Translation, $"At texture_animation[{i}]: translation: ");
+                ReportMissingOpeningKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
+                ReportMissingOpeningKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
+            }
+
+            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            {
+                for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
+                {
+                    CMaterialLayer layer = CurrentModel.Materials[i].Layers[x];
+                    ReportMissingOpeningKeyframes(layer.Alpha, $"At materials[{i}]: layers[{x}] alpha: ");
+                    ReportMissingOpeningKeyframes(layer.TextureId, $"At materials[{i}]: layers[{x}] textureid: ");
+                }
+            }
+            for (int i = 0; i < CurrentModel.Cameras.Count; i++)
+            {
+                var cam = CurrentModel.Cameras[i];
+                ReportMissingOpeningKeyframes(cam.Rotation, $"At cameras[{i}]: rotation: ");
+            }
+
+            list.AddRange(TemporaryList);
+            TemporaryList.Clear();
+            return list;
+        }
+        private static bool TrackInSequence(int track)
+        {
+            foreach (CSequence sequence in CurrentModel.Sequences)
+            {
+                if (track>= sequence.IntervalStart && track <= sequence.IntervalEnd) { return true; }
+            }
+            return false;
+        }
+        private static CSequence   GetSequenceofTrack(int track)
+        {
+            return CurrentModel.Sequences.First(sequence => track >= sequence.IntervalStart && track <= sequence.IntervalEnd);
+        }
+      
+        private static void ReportMissingOpeningKeyframes(CAnimator<CVector3> aniamtor, string v)
+        {
+            for (int i = 0; i < aniamtor.Count; i++)
+            {
+
+                if (TrackInSequence(aniamtor[i].Time))
+                {
+                    CSequence sequenceOf = GetSequenceofTrack(aniamtor[i].Time);
+                    if (aniamtor.Any(x => x.Time == sequenceOf.IntervalStart) == false)
+                    {
+                        TemporaryList.Add($"{v}: missing starting track for sequence {sequenceOf.Name}");
+                    }
+                }
+            }
+        }
+        private static void ReportMissingOpeningKeyframes(CAnimator<CVector4> aniamtor, string v)
+        {
+            for (int i = 0; i < aniamtor.Count; i++)
+            {
+
+                if (TrackInSequence(aniamtor[i].Time))
+                {
+                    CSequence sequenceOf = GetSequenceofTrack(aniamtor[i].Time);
+                    if (aniamtor.Any(x => x.Time == sequenceOf.IntervalStart) == false)
+                    {
+                        TemporaryList.Add($"{v}: missing starting track for sequence {sequenceOf.Name}");
+                    }
+                }
+            }
+        }
+        private static void ReportMissingOpeningKeyframes(CAnimator<float> aniamtor, string v)
+        {
+            for (int i = 0; i < aniamtor.Count; i++)
+            {
+
+                if (TrackInSequence(aniamtor[i].Time))
+                {
+                    CSequence sequenceOf = GetSequenceofTrack(aniamtor[i].Time);
+                    if (aniamtor.Any(x => x.Time == sequenceOf.IntervalStart) == false)
+                    {
+                        TemporaryList.Add($"{v}: missing starting track for sequence {sequenceOf.Name}");
+                    }
+                }
+            }
+        }
+        private static void ReportMissingOpeningKeyframes(CAnimator<int> aniamtor, string v)
+        {
+            for (int i = 0; i < aniamtor.Count; i++)
+            {
+
+                if (TrackInSequence(aniamtor[i].Time))
+                {
+                    CSequence sequenceOf = GetSequenceofTrack(aniamtor[i].Time);
+                    if (aniamtor.Any(x => x.Time == sequenceOf.IntervalStart) == false)
+                    {
+                        TemporaryList.Add($"{v}: missing starting track for sequence {sequenceOf.Name}");
+                    }
+                }
+            }
+        }
+        private static List<string> TemporaryList = new List<string> ();
+        private static List<string> ChekRepeatingTimes()
+        {
+
+            List<string> list = new List<string>();
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                ReportRepeatingTimes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
+                ReportRepeatingTimes(node.Rotation, $"At {node.GetType().Name} '{node.Name}': rotation: ");
+                ReportRepeatingTimes(node.Scaling, $"At {node.GetType().Name} '{node.Name}': scaling: ");
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportRepeatingTimes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportRepeatingTimes(element.LifeSpan, $"At {node.GetType().Name} '{node.Name}': lifespan: ");
+                    ReportRepeatingTimes(element.InitialVelocity, $"At {node.GetType().Name} '{node.Name}': initial velocity ");
+                    ReportRepeatingTimes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportRepeatingTimes(element.Longitude, $"At {node.GetType().Name} '{node.Name}': longtitude: ");
+                    ReportRepeatingTimes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportRepeatingTimes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportRepeatingTimes(element.Speed, $"At {node.GetType().Name} '{node.Name}': speed: ");
+                    ReportRepeatingTimes(element.Width, $"At {node.GetType().Name} '{node.Name}': width: ");
+                    ReportRepeatingTimes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportRepeatingTimes(element.Length, $"At {node.GetType().Name} '{node.Name}': length: ");
+                    ReportRepeatingTimes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                    ReportRepeatingTimes(element.Variation, $"At {node.GetType().Name} '{node.Name}': variation: ");
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportRepeatingTimes(element.HeightAbove, $"At {node.GetType().Name} '{node.Name}': height above: ");
+                    ReportRepeatingTimes(element.HeightBelow, $"At {node.GetType().Name} '{node.Name}': height below: ");
+                    ReportRepeatingTimes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportRepeatingTimes(element.Alpha, $"At {node.GetType().Name} '{node.Name}': alpha: ");
+                    ReportRepeatingTimes(element.TextureSlot, $"At {node.GetType().Name} '{node.Name}': texture slot: ");
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    ReportRepeatingTimes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportRepeatingTimes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportRepeatingTimes(element.AmbientColor, $"At {node.GetType().Name} '{node.Name}': ambient color: ");
+                    ReportRepeatingTimes(element.Intensity, $"At {node.GetType().Name} '{node.Name}': intensity: ");
+                    ReportRepeatingTimes(element.AmbientIntensity, $"At {node.GetType().Name} '{node.Name}': ambient intensity: ");
+                    ReportRepeatingTimes(element.AttenuationEnd, $"At {node.GetType().Name} '{node.Name}': attentuation end: ");
+                    ReportRepeatingTimes(element.AttenuationStart, $"At {node.GetType().Name} '{node.Name}': attentuation start: ");
+
+                }
+            }
+            for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation ga = CurrentModel.GeosetAnimations[i];
+                if (ga.Alpha.Static == false)
+                {
+                    ReportRepeatingTimes(ga.Alpha, $"At geoset_animations[{i}]: alpha: ");
+                }
+                if (ga.Color.Static == false) { ReportRepeatingTimes(ga.Color, $"At geoset_animations[{i}]: color: "); }
+            }
+            for (int i = 0; i < CurrentModel.TextureAnimations.Count; i++)
+            {
+                CTextureAnimation taa = CurrentModel.TextureAnimations[i];
+                ReportRepeatingTimes(taa.Translation, $"At texture_animation[{i}]: translation: ");
+                ReportRepeatingTimes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
+                ReportRepeatingTimes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
+            }
+
+            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            {
+                for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
+                {
+                    CMaterialLayer layer = CurrentModel.Materials[i].Layers[x];
+                    ReportRepeatingTimes(layer.Alpha, $"At materials[{i}]: layers[{x}] alpha: ");
+                    ReportRepeatingTimes(layer.TextureId, $"At materials[{i}]: layers[{x}] textureid: ");
+                }
+            }
+            for (int i = 0; i < CurrentModel.Cameras.Count; i++)
+            {
+                var cam = CurrentModel.Cameras[i];
+                ReportRepeatingTimes(cam.Rotation, $"At cameras[{i}]: rotation: ");
+            }
+            
+             list.AddRange(TemporaryList);
+            TemporaryList.Clear();
+             return list; 
+        }
+
+        private static void ReportRepeatingTimes(CAnimator<CVector3> animator, string prefix)
+        {
+            if (animator.Static) { return; }
+            for (int i =0; i< animator.Count; i++)
+            {
+                if (i+1 < animator.Count)
+                {
+                    if (animator[i].Time == animator[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
+                    }
+                }
+            }
+           
+            
+        }
+        private static void ReportRepeatingTimes(CAnimator<CVector4> animator, string prefix)
+        {
+            if (animator.Static) { return; }
+            for (int i = 0; i < animator.Count; i++)
+            {
+                if (i + 1 < animator.Count)
+                {
+                    if (animator[i].Time == animator[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
+                    }
+                }
+            }
+        }
+        private static void ReportRepeatingTimes(CAnimator<int> animator, string prefix)
+        {
+            if (animator.Static) { return; }
+            for (int i = 0; i < animator.Count; i++)
+            {
+                if (i + 1 < animator.Count)
+                {
+                    if (animator[i].Time == animator[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
+                    }
+                }
+            }
+        }
+        private static void ReportRepeatingTimes(CAnimator<float> animator, string prefix)
+        {
+            if (animator.Static) { return; }
+            for (int i = 0; i < animator.Count; i++)
+            {
+                if (i + 1 < animator.Count)
+                {
+                    if (animator[i].Time == animator[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
+                    }
+                }
+            }
+        }
+        private static List<string> CheckInsonsistentKeyframes()
+        {
+            List<string> list = new List<string>();
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                ReportInconsistentKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
+                ReportInconsistentKeyframes(node.Rotation, $"At {node.GetType().Name} '{node.Name}': rotation: ");
+                ReportInconsistentKeyframes(node.Scaling, $"At {node.GetType().Name} '{node.Name}': scaling: ");
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    ReportMissingOpeningKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                    ReportInconsistentKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportInconsistentKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportInconsistentKeyframes(element.LifeSpan, $"At {node.GetType().Name} '{node.Name}': lifespan: ");
+                    ReportInconsistentKeyframes(element.InitialVelocity, $"At {node.GetType().Name} '{node.Name}': initial velocity ");
+                    ReportInconsistentKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportInconsistentKeyframes(element.Longitude, $"At {node.GetType().Name} '{node.Name}': longtitude: ");
+                    ReportInconsistentKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    ReportInconsistentKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportInconsistentKeyframes(element.EmissionRate, $"At {node.GetType().Name} '{node.Name}': emission rate: ");
+                    ReportInconsistentKeyframes(element.Speed, $"At {node.GetType().Name} '{node.Name}': speed: ");
+                    ReportInconsistentKeyframes(element.Width, $"At {node.GetType().Name} '{node.Name}': width: ");
+                    ReportInconsistentKeyframes(element.Gravity, $"At {node.GetType().Name} '{node.Name}': gravity: ");
+                    ReportInconsistentKeyframes(element.Length, $"At {node.GetType().Name} '{node.Name}': length: ");
+                    ReportInconsistentKeyframes(element.Latitude, $"At {node.GetType().Name} '{node.Name}': latitude: ");
+                    ReportInconsistentKeyframes(element.Variation, $"At {node.GetType().Name} '{node.Name}': variation: ");
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    ReportInconsistentKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportInconsistentKeyframes(element.HeightAbove, $"At {node.GetType().Name} '{node.Name}': height above: ");
+                    ReportInconsistentKeyframes(element.HeightBelow, $"At {node.GetType().Name} '{node.Name}': height below: ");
+                    ReportInconsistentKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportInconsistentKeyframes(element.Alpha, $"At {node.GetType().Name} '{node.Name}': alpha: ");
+                    ReportInconsistentKeyframes(element.TextureSlot, $"At {node.GetType().Name} '{node.Name}': texture slot: ");
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    ReportInconsistentKeyframes(element.Visibility, $"At {node.GetType().Name} '{node.Name}': visibility: ");
+                    ReportInconsistentKeyframes(element.Color, $"At {node.GetType().Name} '{node.Name}': color: ");
+                    ReportInconsistentKeyframes(element.AmbientColor, $"At {node.GetType().Name} '{node.Name}': ambient color: ");
+                    ReportInconsistentKeyframes(element.Intensity, $"At {node.GetType().Name} '{node.Name}': intensity: ");
+                    ReportInconsistentKeyframes(element.AmbientIntensity, $"At {node.GetType().Name} '{node.Name}': ambient intensity: ");
+                    ReportInconsistentKeyframes(element.AttenuationEnd, $"At {node.GetType().Name} '{node.Name}': attentuation end: ");
+                    ReportInconsistentKeyframes(element.AttenuationStart, $"At {node.GetType().Name} '{node.Name}': attentuation start: ");
+
+                }
+            }
+            for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation ga = CurrentModel.GeosetAnimations[i];
+                if (ga.Alpha.Static == false)
+                {
+                    ReportInconsistentKeyframes(ga.Alpha, $"At geoset_animations[{i}]: alpha: ");
+                }
+                if (ga.Color.Static == false) { ReportMissingOpeningKeyframes(ga.Color, $"At geoset_animations[{i}]: color: "); }
+            }
+            for (int i = 0; i < CurrentModel.TextureAnimations.Count; i++)
+            {
+                CTextureAnimation taa = CurrentModel.TextureAnimations[i];
+                ReportInconsistentKeyframes(taa.Translation, $"At texture_animation[{i}]: translation: ");
+                ReportInconsistentKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
+                ReportInconsistentKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
+            }
+
+            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            {
+                for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
+                {
+                    CMaterialLayer layer = CurrentModel.Materials[i].Layers[x];
+                    ReportInconsistentKeyframes(layer.Alpha, $"At materials[{i}]: layers[{x}] alpha: ");
+                    ReportInconsistentKeyframes(layer.TextureId, $"At materials[{i}]: layers[{x}] textureid: ");
+                }
+            }
+            for (int i = 0; i < CurrentModel.Cameras.Count; i++)
+            {
+                var cam = CurrentModel.Cameras[i];
+                ReportInconsistentKeyframes(cam.Rotation, $"At cameras[{i}]: rotation: ");
+            }
+
+            list.AddRange(TemporaryList);
+            TemporaryList.Clear();
+            return list;
+        }
+
+        private static void ReportInconsistentKeyframes(CAnimator<float> heightAbove, string v)
+        {
+            if (heightAbove.Count > 1)
+            {
+                for (int i = 0; i < heightAbove.Count - 1; i++)
+                {
+                    if (heightAbove[i].Time > heightAbove[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{v}: Inconsistent order of keyframes");
+                        return;
+                    }
+                }
+            }
+
+        }
+        private static void ReportInconsistentKeyframes(CAnimator<CVector4> heightAbove, string v)
+        {
+            if (heightAbove.Count > 1)
+            {
+                for (int i = 0; i < heightAbove.Count - 1; i++)
+                {
+                    if (heightAbove[i].Time > heightAbove[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{v}: Inconsistent order of keyframes");
+                        return;
+                    }
+                }
+            }
+        }
+        private static void ReportInconsistentKeyframes(CAnimator<CVector3> heightAbove, string v)
+        {
+            if (heightAbove.Count > 1)
+            {
+                for (int i = 0; i < heightAbove.Count - 1; i++)
+                {
+                    if (heightAbove[i].Time > heightAbove[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{v}: Inconsistent order of keyframes");
+                        return;
+                    }
+                }
+            }
+        }
+        private static void ReportInconsistentKeyframes(CAnimator<int> heightAbove, string v)
+        {
+            if (heightAbove.Count > 1)
+            {
+                for (int i = 0; i < heightAbove.Count - 1; i++)
+                {
+                    if (heightAbove[i].Time > heightAbove[i + 1].Time)
+                    {
+                        TemporaryList.Add($"{v}: Inconsistent order of keyframes");
+                        return;
+                    }
+                }
+            }
+        }
         private static bool NothingAttachedToBone(INode target)
         {
             foreach (CGeoset geo in CurrentModel.Geosets)

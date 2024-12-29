@@ -1,33 +1,30 @@
 ﻿using MdxLib.Animator;
 using MdxLib.Model;
-using MdxLib.ModelFormats;
+
 using MdxLib.Primitives;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
- 
+
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Media.TextFormatting;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
+using W3_Texture_Finder;
+using Brushes = System.Windows.Media.Brushes;
+using Image = System.Windows.Controls.Image;
+using Point = System.Windows.Point;
+using Size = System.Windows.Size;
+
 
 namespace Wa3Tuner
 {
@@ -37,9 +34,14 @@ namespace Wa3Tuner
     public partial class MainWindow : Window
     {
         public string CurrentSaveLocaiton = string.Empty;
+        public string CurrentSaveFolder = string.Empty;
         public CModel CurrentModel = new CModel();
         private string AppPath = AppDomain.CurrentDomain.BaseDirectory;
         private string IconsPath;
+        public TextureBrowser TextureFinder;
+        UVMapper Mapper;
+
+        private ImageSource[] Textures_Loaded;
         Dictionary<string, string> IconPaths = new Dictionary<string, string>();
         List<string> Recents = new List<string>();
         public MainWindow()
@@ -48,6 +50,14 @@ namespace Wa3Tuner
             IconsPath = System.IO.Path.Combine(AppPath, "Icons"); ;
             InitIcons();
             LoadRecents();
+            // MessageBox.Show(MPQPaths.local);
+
+            MPQFinder.Find();
+            MPQHelper.Initialize();
+            TextureFinder = new TextureBrowser(this, MPQHelper.Listfile_All);
+            Mapper = new UVMapper();
+
+
         }
         private void LoadRecents()
         {
@@ -192,9 +202,14 @@ namespace Wa3Tuner
             }
             CurrentModel = TemporaryModel;
             RenameAllNodes();
-
+            Box_Errors.Text = "";
+            LabelDisplayInfo.Text = "";
             CurrentSaveLocaiton = FromFileName;
+            CurrentSaveFolder = Path.GetDirectoryName(CurrentSaveLocaiton); ;
+            MPQHelper.LocalModelFolder = CurrentSaveFolder;
+            CollectTextures();
             RefreshAll();
+
             if (Recents.Contains(FromFileName) == false) { Recents.Add(FromFileName); SaveRecents(); RefreshRecents(); }
         }
         private void load(object sender, RoutedEventArgs e)
@@ -218,23 +233,60 @@ namespace Wa3Tuner
             RefreshTextures();
             RefreshMaterialsList();
             RefreshTextureAnims();
+            RefreshGlobalSequencesList();
             List_Layers.Items.Clear();
             RefreshGeosetAnimationsList();
+            RefreshLayersTextureList();
+            RefreshLayersTextureAnimList();
             RefreshViewPort();
             //   RenderGeosets(Viewport_Main);
         }
-        private void RefreshTextures()
+        public void RefreshTextures()
         {
             List_Textures.Items.Clear();
             foreach (CTexture texture in CurrentModel.Textures)
             {
                 if (texture.ReplaceableId == 0)
                 {
-                    List_Textures.Items.Add(new ListBoxItem() { Content = texture.FileName });
+                    ListBoxItem item = new ListBoxItem() { Content = texture.FileName };
+
+                    Image image = new Image();
+
+                    if (texture.ReplaceableId == 0)
+                    {
+                        if (MPQHelper.FileExists(texture.FileName))
+                        {
+                            image.Source = MPQHelper.GetImageSource(texture.FileName);
+                        }
+                        else
+                        {
+                            string path = Path.Combine(CurrentSaveFolder, texture.FileName);
+                            
+                            image.Source = MPQHelper.GetImageSourceExternal(path);
+                        }
+                    }
+                    if (texture.ReplaceableId == 1)
+                    {
+                        image.Source = MPQHelper.GetImageSource(TeamColor);
+                    }
+                    if (texture.ReplaceableId == 2)
+                    {
+                        image.Source = MPQHelper.GetImageSource(TeamGlow);
+                    }
+                    if (texture.ReplaceableId > 2)
+                    {
+                        image.Source = MPQHelper.GetImageSource(White);
+                    }
+                    item.ToolTip = image;
+                    List_Textures.Items.Add(item);
                 }
                 else
                 {
-                    List_Textures.Items.Add(new ListBoxItem() { Content = $"Repalceable ID {texture.ReplaceableId}" });
+                    string name = $"Repalceable ID {texture.ReplaceableId}";
+                    if (texture.ReplaceableId == 1) name = "Team Color";
+                    if (texture.ReplaceableId == 2) name = "Team Glow";
+
+                    List_Textures.Items.Add(new ListBoxItem() { Content = name });
                 }
             }
             LabelTextues.Text = $"Textures - {CurrentModel.Textures.Count}";
@@ -250,18 +302,86 @@ namespace Wa3Tuner
                 ListSequenes.Items.Add(new ListBoxItem() { Content = data });
             }
         }
+        private void CleanGeosetVisible()
+        {
+            foreach (var geoset in GeosetVisible)
+            {
+                if (CurrentModel.Geosets.Contains(geoset.Key) == false)
+                {
+
+                    GeosetVisible.Remove(geoset.Key);
+
+                }
+            }
+        }
+        private Dictionary<CGeoset, bool> GeosetVisible = new Dictionary<CGeoset, bool>();
         private void RefreshGeosetsList()
         {
 
             ListGeosets.Items.Clear();
             Report_Geosets.Text = $"{CurrentModel.Geosets.Count} geosets";
+
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
-                int usedMAterial = CurrentModel.Materials.IndexOf(geo.Material.Object);
-                string item = geo.ObjectId.ToString() + $" ({geo.Vertices.Count} vertices, {geo.Faces.Count} triangles) (mi {usedMAterial})";
-                ListGeosets.Items.Add(new ListBoxItem() { Content = item });
+                ListBoxItem Item = new ListBoxItem();
+                
+                int UsedMaterialIndex = CurrentModel.Materials.IndexOf(geo.Material.Object);
+                TextBlock Title = new TextBlock();
+               string TitleName = geo.ObjectId.ToString() + $" ({geo.Vertices.Count} vertices, {geo.Faces.Count} triangles) (material {UsedMaterialIndex})";
+                Title.Text = TitleName;
+                CheckBox CheckPart = new CheckBox();
+                StackPanel Container = new StackPanel();
+                Container.Orientation = Orientation.Horizontal;
+                Container.Children.Add(CheckPart);
+                Container.Children.Add(Title);
+                
+                Item.Content = Container;
+                if (GeosetVisible.ContainsKey(geo)) { CheckPart.IsChecked = GeosetVisible[geo]; }
+                else
+                {
+                    CheckPart.IsChecked = true;
+                    GeosetVisible.Add(geo, true);
+                    CheckPart.Checked += CheckedGeosetVisibility;
+                    CheckPart.Unchecked += CheckedGeosetVisibility;
+                }
+
+                ListGeosets.Items.Add(Item);
             }
+            CleanGeosetVisible();
         }
+        private void CheckedGeosetVisibility(object sender, EventArgs e)
+        {
+            if (sender is CheckBox == false) { return; }
+             
+            int index = 0;
+            ListBoxItem item = null;
+            CheckBox CheckedBox = sender as CheckBox;
+            for (int i = 0; i < ListGeosets.Items.Count; i++)
+            {
+                ListBoxItem box = ListGeosets.Items[i] as ListBoxItem;
+                StackPanel p = box.Content as StackPanel;
+                CheckBox c = p.Children[0] as CheckBox;
+                if (c == CheckedBox) { item = box; index = i; break; }
+            }
+           
+           if (item == null) { return; }
+            
+            
+           bool visible = CheckedBox.IsChecked == true;
+             
+             
+            CGeoset geoset = CurrentModel.Geosets[index];
+            GeosetVisible[geoset] = visible;
+            RefreshViewPort();
+        }
+
+        private CGeoset GetGEosetOfCheckbox(CheckBox c)
+        {
+            string start = c.Content.ToString().Split(" ")[0];
+            int id = int.Parse(start);
+            return CurrentModel.Geosets.First(X => X.ObjectId == id);
+        }
+
         private void RefreshNodesTree()
         {
             ListNodes.Items.Clear();
@@ -440,7 +560,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        public static void DrawCube(Viewport3D viewport, Point3D center, double size, Color color)
+        public static void DrawCube(Viewport3D viewport, Point3D center, double size, System.Windows.Media.Color color)
         {
             double halfSize = size / 2;
 
@@ -593,6 +713,7 @@ namespace Wa3Tuner
         private void delgeosets(object sender, RoutedEventArgs e)
         {
             CurrentModel.Geosets.Clear();
+            if (CurrentModel.Geosets.Count == 0) { Mapper.Hide(); }
         }
 
         private void deltxa(object sender, RoutedEventArgs e)
@@ -609,10 +730,10 @@ namespace Wa3Tuner
         {
             for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
             {
-                if (CurrentModel.GeosetAnimations[i].Alpha.Static)
-                {
-                    CurrentModel.GeosetAnimations[i].Alpha.MakeStatic(1);
-                }
+
+                CurrentModel.GeosetAnimations[i].Alpha.Clear();
+                CurrentModel.GeosetAnimations[i].Alpha.MakeStatic(1);
+
             }
             RefreshGeosetAnimationsList();
         }
@@ -1587,7 +1708,7 @@ namespace Wa3Tuner
 
         private class Interval { public int From; public int To; public Interval(int from, int to) { From = from; To = to; } }
 
-        private void showinfo( )
+        private void showinfo()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Model name: {CurrentModel.Name}");
@@ -1847,7 +1968,7 @@ namespace Wa3Tuner
                 texture.FileName = path;
                 CurrentModel.Textures.Add(texture);
                 RefreshTextures();
-
+                RefreshLayersTextureList();
             }
         }
 
@@ -1894,11 +2015,11 @@ namespace Wa3Tuner
 
         private void checkallopts(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < Stack_Optimize.Children.Count; i++)
+            for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
-                if (Stack_Optimize.Children[i] is CheckBox)
+                if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = Stack_Optimize.Children[i] as CheckBox;
+                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
                     if (c.IsEnabled) { c.IsChecked = true; }
                 }
             }
@@ -1906,11 +2027,11 @@ namespace Wa3Tuner
 
         private void uncheckallopts(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < Stack_Optimize.Children.Count; i++)
+            for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
-                if (Stack_Optimize.Children[i] is CheckBox)
+                if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = Stack_Optimize.Children[i] as CheckBox;
+                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
                     if (c.IsEnabled) { c.IsChecked = false; }
 
                 }
@@ -1919,11 +2040,11 @@ namespace Wa3Tuner
 
         private void inversecheckopts(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < Stack_Optimize.Children.Count; i++)
+            for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
-                if (Stack_Optimize.Children[i] is CheckBox)
+                if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = Stack_Optimize.Children[i] as CheckBox;
+                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
                     if (c.IsEnabled) { c.IsChecked = c.IsChecked == true ? false : true; ; }
 
                 }
@@ -2233,6 +2354,7 @@ namespace Wa3Tuner
                     }
                 }
                 RefreshTextures();
+                RefreshLayersTextureList();
             }
         }
 
@@ -2241,15 +2363,34 @@ namespace Wa3Tuner
             if (List_Textures.SelectedItem != null)
             {
                 CTexture texture = GetSElectedTexture();
-                List_Textures.Items.Remove(List_Textures.SelectedItem);
-                foreach (CMaterial material in CurrentModel.Materials)
+                if (texture.HasReferences)
                 {
-                    foreach (CMaterialLayer layer in material.Layers)
+                    if (askDelete())
                     {
-                        if (layer.Texture.Object == texture) { layer.Texture.Detach(); }
+                        List_Textures.Items.Remove(List_Textures.SelectedItem);
+                        foreach (CMaterial material in CurrentModel.Materials)
+                        {
+                            foreach (CMaterialLayer layer in material.Layers)
+                            {
+                                if (layer.Texture.Object == texture) { layer.Texture.Detach(); }
+                            }
+                        }
+                        CurrentModel.Textures.Remove(texture);
                     }
                 }
-                CurrentModel.Textures.Remove(texture);
+                else
+                {
+                    List_Textures.Items.Remove(List_Textures.SelectedItem);
+                    foreach (CMaterial material in CurrentModel.Materials)
+                    {
+                        foreach (CMaterialLayer layer in material.Layers)
+                        {
+                            if (layer.Texture.Object == texture) { layer.Texture.Detach(); }
+                        }
+                    }
+                    CurrentModel.Textures.Remove(texture);
+                }
+
             }
         }
 
@@ -2260,15 +2401,21 @@ namespace Wa3Tuner
 
         private void delgeoset(object sender, RoutedEventArgs e)
         {
-            foreach (var item in ListGeosets.SelectedItems)
+            if (ListGeosets.SelectedItems.Count == 0) return;
+            List<CGeoset> geosets = GetSelectedGeosets();
+            foreach (CGeoset geoset in geosets)
             {
-                ListBoxItem selected = item as ListBoxItem;
-                string name = selected.Content.ToString();
-                int id = int.Parse(name);
-                CGeoset geo = CurrentModel.Geosets.First(x => x.ObjectId == id);
-                CurrentModel.Geosets.Remove(geo);
+                if (CurrentModel.GeosetAnimations.Any(x => x.Geoset.Object == geoset))
+                {
+                    CGeosetAnimation ga = CurrentModel.GeosetAnimations.First(x => x.Geoset.Object == geoset);
+                    CurrentModel.GeosetAnimations.Remove(ga);
+                }
+                CurrentModel.Geosets.Remove(geoset);
             }
-            RefreshGeosetsList(); RefreshViewPort();
+            RefreshGeosetsList();
+            RefreshGeosetAnimationsList();
+            RefreshViewPort();
+            if (CurrentModel.Geosets.Count == 0) { Mapper.Hide(); }
         }
 
         private void creatematerialfortargettexture(object sender, RoutedEventArgs e)
@@ -2278,26 +2425,29 @@ namespace Wa3Tuner
             CMaterial material = new CMaterial(CurrentModel);
             CMaterialLayer layer = new CMaterialLayer(CurrentModel);
             layer.Texture.Attach(texture);
+            material.Layers.Add(layer);
             CurrentModel.Materials.Add(material);
             RefreshMaterialsList();
+            CollectTextures();
         }
         private CMaterial GetSelectedMAterial()
         {
 
             return CurrentModel.Materials[List_MAterials.SelectedIndex];
         }
-        private void RefreshMaterialsList()
+        public void RefreshMaterialsList()
         {
             List_MAterials.Items.Clear();
             foreach (CMaterial material in CurrentModel.Materials)
             {
-                List_MAterials.Items.Add(new ListBoxItem() { Content = material.ObjectId.ToString() + $"({material.Layers.Count} Layers)" });
+                List_MAterials.Items.Add(new ListBoxItem() { Content = material.ObjectId.ToString() + $" ({material.Layers.Count} Layers)" });
             }
             Label_Materials.Text = $"Materials - {CurrentModel.Materials.Count}";
 
         }
         private void RefreshTextureAnims()
         {
+            List_TextureAnims.Items.Clear();
             LabelTextueAnims.Text = $"Texture Animations {CurrentModel.TextureAnimations.Count}";
             foreach (var item in CurrentModel.TextureAnimations)
             {
@@ -2311,8 +2461,20 @@ namespace Wa3Tuner
             if (List_MAterials.SelectedItem != null)
             {
                 CMaterial material = GetSelectedMAterial();
-                CurrentModel.Materials.Remove(material);
-                RefreshMaterialsList();
+                if (material.HasReferences)
+                {
+                    if (askDelete())
+                    {
+                        CurrentModel.Materials.Remove(material);
+                        RefreshMaterialsList();
+                    }
+                }
+                else
+                {
+                    CurrentModel.Materials.Remove(material);
+                    RefreshMaterialsList();
+                }
+
             }
 
         }
@@ -2323,11 +2485,13 @@ namespace Wa3Tuner
             {
                 CMaterial material = new CMaterial(CurrentModel);
                 CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                material.Layers.Add(layer);
                 layer.Texture.Attach(texture);
                 CurrentModel.Materials.Add(material);
 
             }
             RefreshMaterialsList();
+            CollectTextures();
         }
         private INode GetNode(string name)
         {
@@ -2528,16 +2692,15 @@ namespace Wa3Tuner
         {
 
         }
-        private List<CGeoset> GetSElectedGeosets()
+        private List<CGeoset> GetSelectedGeosets()
         {
             List<CGeoset> list = new List<CGeoset>();
-            for (int i = 0; i < ListGeosets.Items.Count; i++)
+            foreach (var item in ListGeosets.SelectedItems)
             {
-                if (ListGeosets.SelectedItems.Contains(ListGeosets.Items[i]))
-                {
-                    list.Add(CurrentModel.Geosets[i]);
-                }
+               int index = ListGeosets.Items.IndexOf(item);
+                list.Add(CurrentModel.Geosets[index]);
             }
+             
             return list;
         }
 
@@ -2546,7 +2709,7 @@ namespace Wa3Tuner
             if (ListGeosets.SelectedItems.Count > 0)
             {
 
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 foreach (CGeoset geoset in geosets)
                 {
                     Optimizer.CalculateGeosetExtent(geoset);
@@ -2565,7 +2728,7 @@ namespace Wa3Tuner
         {
             putonground pg = new putonground();
             pg.ShowDialog();
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             if (pg.DialogResult == true)
             {
                 if (pg.Check_1.IsChecked == true)
@@ -2605,13 +2768,14 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count > 1)
             {
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
 
                 for (int i = 1; i < geosets.Count; i++)
                 {
                     foreach (CGeosetVertex vertex in geosets[i].Vertices.ToList())
                     {
                         CGeosetVertex vertex_c = vertex;
+
                         geosets[i].Vertices.Remove(vertex);
                         geosets[1].Vertices.Add(vertex_c);
                     }
@@ -2631,9 +2795,11 @@ namespace Wa3Tuner
                 }
                 for (int i = 1; i < geosets.Count; i++)
                 {
-                    CurrentModel.Geosets.Remove(geosets[i]);
+                    DeleteGeosetAnimationOf(geosets[i]);
+
                 }
                 RefreshGeosetsList();
+                RefreshGeosetAnimationsList();
             }
             else
             {
@@ -2646,7 +2812,7 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 axis_selector ax = new axis_selector();
                 ax.ShowDialog();
                 if (ax.DialogResult == true)
@@ -2676,7 +2842,7 @@ namespace Wa3Tuner
             if (iv.DialogResult == true)
             {
                 float x = iv.X; float y = iv.Y; float z = iv.Z;
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 foreach (CGeoset geoset in geosets)
                 {
                     foreach (CGeosetVertex vertex in geoset.Vertices)
@@ -2698,7 +2864,7 @@ namespace Wa3Tuner
             if (iv.DialogResult == true)
             {
                 float x = iv.X; float y = iv.Y; float z = iv.Z;
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 foreach (CGeoset geoset in geosets)
                 {
                     foreach (CGeosetVertex vertex in geoset.Vertices)
@@ -2715,7 +2881,7 @@ namespace Wa3Tuner
 
         private void Centergeosets(object sender, RoutedEventArgs e)
         {
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count == 0) { return; }
             axis_selector ax = new axis_selector();
             ax.ShowDialog();
@@ -2742,7 +2908,7 @@ namespace Wa3Tuner
             {
                 CExtent extent = sf.Extent;
                 bool each = sf.Each;
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
 
                 if (each)
                 {
@@ -2771,7 +2937,7 @@ namespace Wa3Tuner
                 if (x > 360 || x < -360) { MessageBox.Show("A values for rotation must be between -360 and 360"); return; }
                 if (y > 360 || y < -360) { MessageBox.Show("A values for rotation must be between -360 and 360"); return; }
                 if (z > 360 || z < -360) { MessageBox.Show("A values for rotation must be between -360 and 360"); return; }
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 foreach (CGeoset geoset in geosets)
                 {
                     Calculator.RotateGeoset(geoset, x, y, z);
@@ -2782,7 +2948,7 @@ namespace Wa3Tuner
 
         private void aligngeosets(object sender, RoutedEventArgs e)
         {
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count < 2) { MessageBox.Show("Select 2 or more geosets"); return; }
             axis_selector ax = new axis_selector();
             ax.ShowDialog();
@@ -2807,15 +2973,17 @@ namespace Wa3Tuner
             group.Nodes.Add(gnode);
             _newGeoset.Groups.Add(group);
             whichModel.Nodes.Add(bone);
+
             Dictionary<CGeosetVertex, CGeosetVertex> VertexReference = new Dictionary<CGeosetVertex, CGeosetVertex>();
 
             foreach (CGeosetFace face in inputGeoset.Faces)
             {
                 CGeosetFace _newFace = new CGeosetFace(whichModel);
-                if (VertexReference.ContainsKey(face.Vertex1.Object) == true)
+
+                // Vertex 1
+                if (VertexReference.ContainsKey(face.Vertex1.Object))
                 {
                     _newFace.Vertex1.Attach(VertexReference[face.Vertex1.Object]);
-
                 }
                 else
                 {
@@ -2824,15 +2992,15 @@ namespace Wa3Tuner
                     _newVertex.TexturePosition = new CVector2(face.Vertex1.Object.TexturePosition);
                     _newVertex.Normal = new CVector3(face.Vertex1.Object.Normal);
                     _newVertex.Group.Attach(group);
-                    _newFace.Vertex1.Attach(_newVertex);
+                    _newFace.Vertex1.Attach(_newVertex);  // Attach to Vertex1 slot
                     VertexReference.Add(face.Vertex1.Object, _newVertex);
                     _newGeoset.Vertices.Add(_newVertex);
-
                 }
-                if (VertexReference.ContainsKey(face.Vertex2.Object) == true)
+
+                // Vertex 2
+                if (VertexReference.ContainsKey(face.Vertex2.Object))
                 {
                     _newFace.Vertex2.Attach(VertexReference[face.Vertex2.Object]);
-
                 }
                 else
                 {
@@ -2841,15 +3009,15 @@ namespace Wa3Tuner
                     _newVertex.TexturePosition = new CVector2(face.Vertex2.Object.TexturePosition);
                     _newVertex.Normal = new CVector3(face.Vertex2.Object.Normal);
                     _newVertex.Group.Attach(group);
-                    _newFace.Vertex1.Attach(_newVertex);
+                    _newFace.Vertex2.Attach(_newVertex);  // Attach to Vertex2 slot
                     VertexReference.Add(face.Vertex2.Object, _newVertex);
                     _newGeoset.Vertices.Add(_newVertex);
-
                 }
-                if (VertexReference.ContainsKey(face.Vertex3.Object) == true)
-                {
-                    _newFace.Vertex1.Attach(VertexReference[face.Vertex3.Object]);
 
+                // Vertex 3
+                if (VertexReference.ContainsKey(face.Vertex3.Object))
+                {
+                    _newFace.Vertex3.Attach(VertexReference[face.Vertex3.Object]);
                 }
                 else
                 {
@@ -2858,23 +3026,24 @@ namespace Wa3Tuner
                     _newVertex.TexturePosition = new CVector2(face.Vertex3.Object.TexturePosition);
                     _newVertex.Normal = new CVector3(face.Vertex3.Object.Normal);
                     _newVertex.Group.Attach(group);
-                    _newFace.Vertex1.Attach(_newVertex);
+                    _newFace.Vertex3.Attach(_newVertex);  // Attach to Vertex3 slot
                     VertexReference.Add(face.Vertex3.Object, _newVertex);
                     _newGeoset.Vertices.Add(_newVertex);
-
                 }
+
+                // Add the face to the new geoset
                 _newGeoset.Faces.Add(_newFace);
             }
+
+            // Attach the material to the new geoset
             _newGeoset.Material.Attach(whichModel.Materials[0]);
-
-
 
             return _newGeoset;
         }
 
         private void reattachToBone(object sender, RoutedEventArgs e)
         {
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count < 1) { MessageBox.Show("Select 1 or more geosets"); return; }
 
             List<string> bones = CurrentModel.Bones.Select(x => x.Name).ToList();
@@ -2910,7 +3079,7 @@ namespace Wa3Tuner
 
         private void PullTogether(object sender, RoutedEventArgs e)
         {
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count != 2) { MessageBox.Show("Select 2  geosets"); return; }
             axis_selector ax = new axis_selector();
             ax.ShowDialog();
@@ -3532,18 +3701,19 @@ namespace Wa3Tuner
             List_GeosetAnims.Items.Clear();
             foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
             {
-                string name = $"Geoset Animation {ga.ObjectId} of geoset {ga.Geoset.ObjectId}: Alpha: {ga.Alpha.Count}, Color: {ga.Color.Count}, Uses color: {ga.UseColor}";
+                string alpha = ga.Alpha.Static ? ga.Alpha.GetValue().ToString() : "N/A";
+                string name = $"Geoset Animation {ga.ObjectId} of geoset {ga.Geoset.ObjectId}: Alpha: {alpha} Alphas: {ga.Alpha.Count}, Colors: {ga.Color.Count}, Uses colors: {ga.UseColor}";
 
                 List_GeosetAnims.Items.Add(new ListBoxItem() { Content = name });
             }
-            Label_GAs.Text = $"Geoset animations - {CurrentModel.GeosetAnimations.Count}";
+             Label_GAs.Text = $"{CurrentModel.GeosetAnimations.Count} Geoset animations";
         }
 
         private void AverageNormals(object sender, RoutedEventArgs e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
-                List<CGeoset> geosts = GetSElectedGeosets();
+                List<CGeoset> geosts = GetSelectedGeosets();
                 foreach (CGeoset ge in geosts)
                 {
                     Calculator.AverageNormals(ge);
@@ -3555,7 +3725,7 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
-                List<CGeoset> geosts = GetSElectedGeosets();
+                List<CGeoset> geosts = GetSelectedGeosets();
                 foreach (CGeoset ge in geosts)
                 {
                     CurrentModel.Geosets.Add(DuplicateGeogeset(ge, CurrentModel));
@@ -3610,10 +3780,123 @@ namespace Wa3Tuner
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
             string file = System.IO.Path.Combine(local, "geosets\\Hero_Glow.mdx");
-            ImportTargetGeosetOne(file);
 
-
+            CGeoset ImportedGeoset = GetImportedGeoset(file);
+            if (ImportedGeoset != null)
+            {
+                ImportedGeoset.Material.Attach(GetHerGlowMaterial());
+                CurrentModel.Geosets.Add(ImportedGeoset);
+                AttachToNewBone(ImportedGeoset);
+                RefreshGeosetsList();
+            }
+            CollectTextures();
+            RefreshViewPort();
         }
+        private CMaterial GetHerGlowMaterial()
+        {
+            if (CurrentModel.Textures.Any(x => x.ReplaceableId == 2) == false)
+            {
+                CTexture texture = new CTexture(CurrentModel);
+                texture.ReplaceableId = 2;
+                CurrentModel.Textures.Add(texture);
+                RefreshMaterialsList();
+                CMaterial mat = new CMaterial(CurrentModel);
+                CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                layer.Texture.Attach(texture);
+                mat.Layers.Add(layer);
+                CurrentModel.Materials.Add(mat);
+                RefreshMaterialsList();
+                return mat;
+            }
+            else
+            {
+                CTexture texture = CurrentModel.Textures.First(x => x.ReplaceableId == 2);
+                bool found = false;
+                foreach (CMaterial mat in CurrentModel.Materials)
+                {
+                    foreach (CMaterialLayer layer in mat.Layers)
+                    {
+                        if (layer.Texture.Object == texture) { return mat; }
+                    }
+                }
+                if (!found)
+                {
+                    CMaterial mat = new CMaterial(CurrentModel);
+                    CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                    layer.Texture.Attach(texture);
+                    mat.Layers.Add(layer);
+                    CurrentModel.Materials.Add(mat);
+                    RefreshMaterialsList();
+                    return mat;
+                }
+            }
+            return null;
+        }
+        private CMaterial GetTeamColorMaterial()
+        {
+            if (CurrentModel.Textures.Any(x => x.ReplaceableId == 1) == false)
+            {
+                CTexture texture = new CTexture(CurrentModel);
+                texture.ReplaceableId = 1;
+                CurrentModel.Textures.Add(texture);
+                RefreshMaterialsList();
+                CMaterial mat = new CMaterial(CurrentModel);
+                CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                layer.Texture.Attach(texture);
+                mat.Layers.Add(layer);
+                CurrentModel.Materials.Add(mat);
+                RefreshMaterialsList();
+                return mat;
+            }
+            else
+            {
+                CTexture texture = CurrentModel.Textures.First(x => x.ReplaceableId == 1);
+                bool found = false;
+                foreach (CMaterial mat in CurrentModel.Materials)
+                {
+                    foreach (CMaterialLayer layer in mat.Layers)
+                    {
+                        if (layer.Texture.Object == texture) { return mat; }
+                    }
+                }
+                if (!found)
+                {
+                    CMaterial mat = new CMaterial(CurrentModel);
+                    CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                    layer.Texture.Attach(texture);
+                    mat.Layers.Add(layer);
+                    CurrentModel.Materials.Add(mat);
+                    RefreshMaterialsList();
+                    return mat;
+                }
+            }
+            return null;
+        }
+
+        private CGeoset GetImportedGeoset(string file)
+        {
+            CGeoset geo = null;
+            if (File.Exists(file))
+            {
+                CModel TemporaryModel = GetTemporaryModel(file);
+                if (TemporaryModel == null) { return null; }
+
+                CGeoset new_Geoset = DuplicateGeogeset(TemporaryModel.Geosets[0], CurrentModel);
+                CMaterial new_material = GetTeamGlowMaterial();
+                new_Geoset.Material.Attach(new_material);
+
+
+                geo = new_Geoset;
+
+
+            }
+            else
+            {
+                MessageBox.Show($"{file} was not found");
+            }
+            return geo;
+        }
+
         private CMaterial GetTeamGlowMaterial()
         {
             CMaterial material = new CMaterial(CurrentModel);
@@ -3636,9 +3919,32 @@ namespace Wa3Tuner
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
             string file = System.IO.Path.Combine(local, "geosets\\Team_Background.mdx");
-            ImportTargetGeosetOne(file);
+            CGeoset ImportedGeoset = GetImportedGeoset(file);
+            if (ImportedGeoset != null)
+            {
+                ImportedGeoset.Material.Attach(GetHerGlowMaterial());
+                CurrentModel.Geosets.Add(ImportedGeoset);
+                AttachToNewBone(ImportedGeoset);
+                RefreshGeosetsList();
+            }
+            CollectTextures();
+            RefreshViewPort();
         }
-
+        private void AttachToNewBone(CGeoset geoset)
+        {
+            CBone bone = new CBone(CurrentModel);
+            bone.Name = "ImportedGeosetBone_" + IDCounter.Next();
+            geoset.Groups.Clear();
+            CGeosetGroup group = new CGeosetGroup(CurrentModel);
+            CGeosetGroupNode n = new CGeosetGroupNode(CurrentModel);
+            n.Node.Attach(bone);
+            geoset.Groups.Add(group);
+            foreach (CGeosetVertex vertex in geoset.Vertices)
+            {
+                vertex.Group.Attach(group);
+            }
+            RefreshNodesTree();
+        }
         private void DelBonesGeometry(object sender, RoutedEventArgs e)
         {
             if (ListNodes.SelectedItem != null)
@@ -3687,25 +3993,46 @@ namespace Wa3Tuner
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
+            ButtonEditTranslations.Content = $"Translations ({node.Translation.Count})"; ;
+            ButtonEditRotations.Content = $"Rotations ({node.Rotation.Count})"; ;
+            ButtonEditScalings.Content = $"Scalings ({node.Scaling.Count})"; ;
+
+            Check_Billlboarded.IsChecked = node.Billboarded;
+            Check_Billlboardedx.IsChecked = node.BillboardedLockX;
+            Check_Billlboardedy.IsChecked = node.BillboardedLockY;
+            Check_Billlboardedz.IsChecked = node.BillboardedLockZ;
+            Check_cameraAnchored.IsChecked = node.CameraAnchored;
+            Check_dontInhTranslation.IsChecked = node.DontInheritTranslation;
+            Check_dontInhRotation.IsChecked = node.DontInheritRotation;
+            Check_DontinhScaling.IsChecked = node.DontInheritScaling;
+
+            InfoPivotPointNode.Text = $" Pivot: {node.PivotPoint.X}, {node.PivotPoint.Y}, {node.PivotPoint.Z} ";
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Translations: {node.Translation.Count},");
-            sb.AppendLine($" Rotations: {node.Rotation.Count}, ");
-            sb.AppendLine($" Scalings: {node.Scaling.Count}, ");
-            sb.AppendLine($" Billboarded: {node.Billboarded}, ");
-            sb.AppendLine($" BillboardedX: {node.BillboardedLockX}, ");
-            sb.AppendLine($" BillboardedY: {node.BillboardedLockY}, ");
-            sb.AppendLine($" BillboardedZ: {node.BillboardedLockZ}, ");
-            sb.AppendLine($" CamAnchored: {node.CameraAnchored}, ");
-            sb.AppendLine($" DontInheritTranslation: {node.DontInheritTranslation}, ");
-            sb.AppendLine($" DontInheritRotation: {node.DontInheritRotation}, ");
-            sb.AppendLine($" DontInheritScaling: {node.DontInheritScaling}, ");
-            sb.AppendLine($" Pivot Point: {node.PivotPoint.X}, {node.PivotPoint.Y}, {node.PivotPoint.Z} ");
+            if (node is CCollisionShape cols)
+            {
+                sb.AppendLine($" Type: {cols.Type}");
+                sb.AppendLine($" Minimum Extents: {cols.Vertex1.X}, {cols.Vertex1.Y}, {cols.Vertex1.Z} ");
+                sb.AppendLine($" Maximum Extents: {cols.Vertex2.X}, {cols.Vertex2.Y}, {cols.Vertex2.Z} ");
+                sb.AppendLine($" Radius: {cols.Radius}");
+
+            }
+            if (node is CAttachment att)
+            {
+                sb.AppendLine($" Path: {att.Path}");
+                sb.AppendLine($" Visibilities: {att.Visibility.Count}");
+            }
+            if (node is CBone bone)
+            {
+                sb.AppendLine($"Geoset ID: {bone.Geoset.ObjectId}");
+                sb.AppendLine($"Geoset Animation ID: {bone.GeosetAnimation.ObjectId}");
+            }
+
             Report_Node_data.Text = sb.ToString();
         }
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.0.4 (25/12/2024) by stan0033 built using C#, .NET 3.5, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.0.8 (??/12/2024) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
 
         private void EditMatTags(object sender, RoutedEventArgs e)
@@ -3756,6 +4083,7 @@ namespace Wa3Tuner
                 Check_MatFS.IsChecked = material.FullResolution;
                 Check_MatSort.IsChecked = material.SortPrimitivesFarZ;
                 FillLayers(List_MAterials.SelectedIndex);
+                List_Layers.SelectedIndex = 0;
             }
 
         }
@@ -3765,30 +4093,71 @@ namespace Wa3Tuner
             for (int i = 0; i < CurrentModel.Materials[index].Layers.Count; i++)
             {
                 CMaterialLayer layer = CurrentModel.Materials[index].Layers[i];
-                
-                string info = $": alphas: {layer.Alpha.Count}, textureIDs: {layer.TextureId.Count}";
+                string texture = layer.TextureId.Static ? layer.Texture.ObjectId.ToString() : "N/A";
+                string alpha = layer.Alpha.Static ? (layer.Alpha.GetValue() * 100).ToString() : "N/A";
+                string info = $": Texture: {texture} Alpha: {alpha}  Alphas: {layer.Alpha.Count}, textureIDs: {layer.TextureId.Count}";
                 List_Layers.Items.Add(new ListBoxItem() { Content = i + info });
             }
 
         }
-
         private void Scene_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            // Ensure the camera is a PerspectiveCamera
-            if (Scene_Viewport.Camera is PerspectiveCamera camera)
+            int zoomStep = 10; // Define the zoom step size
+            if (e.Delta > 0)
             {
-                // Get the zoom factor from the mouse wheel delta
-                double zoomFactor = e.Delta > 0 ? 0.9 : 1.1; // Zoom in on scroll up, out on scroll down
-
-                // Calculate the new position by moving the camera along its LookDirection
-                Vector3D lookDirection = camera.LookDirection;
-                Point3D newPosition = camera.Position + lookDirection * zoomFactor;
-
-                // Update the camera position
-                camera.Position = newPosition;
+                AdjustZoom(zoomStep); // Zoom in
+            }
+            else if (e.Delta < 0)
+            {
+                AdjustZoom(-zoomStep); // Zoom out
             }
         }
+        private string TeamColor = "ReplaceableTextures\\TeamColor\\TeamColor00.blp";
+        private string TeamGlow = "ReplaceableTextures\\TeamGlow\\TeamGlow00.blp";
+        private string White = "Textures\\white.blp";
+        private void CollectTextures()
+        {
+            if (CurrentModel.Textures.Count == 0) { return; }
+            Textures_Loaded = new ImageSource[CurrentModel.Textures.Count];
+            for (int i = 0; i < CurrentModel.Textures.Count; i++)
+            {
+                CTexture texture = CurrentModel.Textures[i];
+                if (texture.ReplaceableId == 0)
+                {
+                    if (MPQHelper.FileExists(texture.FileName))
+                    {
+                        Textures_Loaded[i]  = MPQHelper.GetImageSource(texture.FileName);
+                        
+                    }
+                    else
+                    {
+                        string path = Path.Combine(CurrentSaveFolder, texture.FileName);
+                        Textures_Loaded[i] = MPQHelper.GetImageSource(path);
+                        
+                    }
+                    
+                     
 
+                }
+                  if (texture.ReplaceableId == 1)
+                {
+                    Textures_Loaded[i] = MPQHelper.GetImageSource(TeamColor);
+                   
+
+                }
+                  if (texture.ReplaceableId == 2)
+                {
+
+                    Textures_Loaded[i] = MPQHelper.GetImageSource(TeamGlow);
+
+                }
+                if (texture.ReplaceableId  > 2)
+                {
+                    Textures_Loaded[i] = MPQHelper.GetImageSource(White);
+
+                }
+            }
+        }
 
 
         private void refreshalllists(object sender, RoutedEventArgs e)
@@ -3814,27 +4183,51 @@ namespace Wa3Tuner
             ModelVisual3D lightModel = new ModelVisual3D { Content = light };
             viewport.Children.Add(lightModel);
 
+            // Optionally render a ground plane
+
             // Render each geoset
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
+                if (GeosetVisible[geo] == false) { continue; }
                 MeshGeometry3D mesh = new MeshGeometry3D();
+                int indexOfTexture = CurrentModel.Textures.IndexOf(geo.Material.Object.Layers[0].Texture.Object);
+                ImageSource texture = Textures_Loaded[indexOfTexture];
+               
+                bool hasAlphaTransparency = geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.Additive || geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.AdditiveAlpha;
 
+                // Loop through each face in the geoset
                 foreach (CGeosetFace face in geo.Faces)
                 {
-                    // Get vertex positions
+                    // Get vertex positions, normals, and texture coordinates
                     Point3D vertex1 = new Point3D(face.Vertex1.Object.Position.X, face.Vertex1.Object.Position.Y, face.Vertex1.Object.Position.Z);
+                    Vector3D normal1 = new Vector3D(face.Vertex1.Object.Normal.X, face.Vertex1.Object.Normal.Y, face.Vertex1.Object.Normal.Z);
+                    Point vertex1TexCoord = new Point(face.Vertex1.Object.TexturePosition.X, face.Vertex1.Object.TexturePosition.Y);
+
                     Point3D vertex2 = new Point3D(face.Vertex2.Object.Position.X, face.Vertex2.Object.Position.Y, face.Vertex2.Object.Position.Z);
+                    Vector3D normal2 = new Vector3D(face.Vertex2.Object.Normal.X, face.Vertex2.Object.Normal.Y, face.Vertex2.Object.Normal.Z);
+                    Point vertex2TexCoord = new Point(face.Vertex2.Object.TexturePosition.X, face.Vertex2.Object.TexturePosition.Y);
+
                     Point3D vertex3 = new Point3D(face.Vertex3.Object.Position.X, face.Vertex3.Object.Position.Y, face.Vertex3.Object.Position.Z);
+                    Vector3D normal3 = new Vector3D(face.Vertex3.Object.Normal.X, face.Vertex3.Object.Normal.Y, face.Vertex3.Object.Normal.Z);
+                    Point vertex3TexCoord = new Point(face.Vertex3.Object.TexturePosition.X, face.Vertex3.Object.TexturePosition.Y);
 
                     // Update bounding box
                     UpdateBoundingBox(ref minPoint, ref maxPoint, vertex1);
                     UpdateBoundingBox(ref minPoint, ref maxPoint, vertex2);
                     UpdateBoundingBox(ref minPoint, ref maxPoint, vertex3);
 
-                    // Add vertices
+                    // Add vertices, normals, and texture coordinates
                     mesh.Positions.Add(vertex1);
+                    mesh.Normals.Add(normal1);
+                    mesh.TextureCoordinates.Add(vertex1TexCoord);
+
                     mesh.Positions.Add(vertex2);
+                    mesh.Normals.Add(normal2);
+                    mesh.TextureCoordinates.Add(vertex2TexCoord);
+
                     mesh.Positions.Add(vertex3);
+                    mesh.Normals.Add(normal3);
+                    mesh.TextureCoordinates.Add(vertex3TexCoord);
 
                     // Add triangle indices
                     int baseIndex = mesh.Positions.Count - 3;
@@ -3851,16 +4244,44 @@ namespace Wa3Tuner
                 }
                 else
                 {
-                    material = new DiffuseMaterial(new SolidColorBrush(Colors.Gray));
-                }
+                    if (!RenderTextures)
+                    {
+                        material = new DiffuseMaterial(new SolidColorBrush(Colors.Gray));
+                    }
+                    else
+                    {
+                        // Handle transparency logic based on the hasAlphaTransparency flag
+                        if (hasAlphaTransparency)
+                        {
+                            // Use an ImageBrush for the texture and set Opacity to allow transparency
+                            ImageBrush imageBrush = new ImageBrush(texture)
+                            {
+                                Opacity = 0.5 // Set transparency here, adjust as needed
+                            };
 
+                            // Create a material using the ImageBrush for transparency
+                            material = new DiffuseMaterial(imageBrush);
+                        }
+                        else
+                        {
+                            // If no alpha transparency, use the diffuse material with the texture
+                            material = new DiffuseMaterial(new ImageBrush(texture));
+                        }
+                    }
+
+                }
 
                 // Create a GeometryModel3D
                 GeometryModel3D geometryModel = new GeometryModel3D
                 {
                     Geometry = mesh,
-                    Material = material
+                    Material = material,
+                    BackMaterial = material, // Ensures the material is used for both sides of the geometry
                 };
+
+                // Enable double-sided rendering by setting BackFaceCulling to None
+                geometryModel.Material = material;
+                geometryModel.BackMaterial = material;  // Apply the same material to both sides
 
                 // Add the model to the viewport
                 ModelVisual3D model = new ModelVisual3D { Content = geometryModel };
@@ -3869,14 +4290,12 @@ namespace Wa3Tuner
 
             // Adjust the camera to fit the geometry
             AdjustCamera(viewport, minPoint, maxPoint);
-            SliderRotation.Value = 0;
-            SliderZoom.Value = 0;
-
-
         }
+
+
         //----------------------------------------------------
-        private int rotation_angle = 0;
-        private int CurrentAngle
+        private float rotation_angle = 0;
+        private float CurrentAngle
         {
             get { return rotation_angle; }
             set
@@ -3888,13 +4307,7 @@ namespace Wa3Tuner
         }
 
         //----------------------------------------------------
-        private void SetSceneCameraRotationAroundCenter()
-        {
-            CurrentAngle = (int)SliderRotation.Value;
 
-
-            UpdateCameraPosition(Scene_Viewport, lastZoom, CurrentAngle);
-        }
         private void UpdateBoundingBox(ref Point3D minPoint, ref Point3D maxPoint, Point3D vertex)
         {
             minPoint.X = Math.Min(minPoint.X, vertex.X);
@@ -3975,42 +4388,40 @@ namespace Wa3Tuner
 
         private double Elevation = 0;
 
-        private void UpdateCameraPosition(Viewport3D viewport, int zoom, int rotation)
+        private void UpdateCameraPosition(Viewport3D viewport, int zoom, float rotation)
         {
-            if (viewport.Camera is PerspectiveCamera camera)
+            try
             {
-                // Define the center of the scene (default at origin)
-                Point3D center = new Point3D(0, 0, 0);
+                if (viewport.Camera is PerspectiveCamera camera)
+                {
+                    // Define the center of the scene (default at origin)
+                    Point3D center = new Point3D(0, 0, 0);
 
-                // Convert rotation angle to radians
-                double rotationRadians = Math.PI * rotation / 180.0;
+                    // Convert rotation angle to radians
+                    double rotationRadians = Math.PI * rotation / 180.0;
 
-                // Calculate the new position in the X-Y plane
-                double x = center.X + zoom * Math.Cos(rotationRadians);
-                double y = center.Y + zoom * Math.Sin(rotationRadians);
-                double z = center.Z; // Keep Z constant for rotation around Z-axis
+                    // Calculate the new position in the X-Y plane
+                    double x = center.X + zoom * Math.Cos(rotationRadians);
+                    double y = center.Y + zoom * Math.Sin(rotationRadians);
+                    double z = center.Z; // Keep Z constant for rotation around Z-axis
 
-                // Update the camera's position
-                camera.Position = new Point3D(x, y, z);
+                    // Update the camera's position
+                    camera.Position = new Point3D(x, y, z);
 
-                // Ensure the camera looks at the center of the scene
-                camera.LookDirection = new Vector3D(center.X - x, center.Y - y, center.Z - z);
+                    // Ensure the camera looks at the center of the scene
+                    camera.LookDirection = new Vector3D(center.X - x, center.Y - y, center.Z - z);
 
-                // Correctly set the camera's UpDirection to always point along the Z-axis
-                camera.UpDirection = new Vector3D(0, 0, 1);
+                    // Correctly set the camera's UpDirection to always point along the Z-axis
+                    camera.UpDirection = new Vector3D(0, 0, 1);
+                }
             }
+            catch { return; }
         }
 
 
-        private void SliderRotation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (CurrentModel.Geosets.Count == 0) return;
-            CurrentAngle = (int)SliderRotation.Value;
-            AdjustRotation(CurrentAngle);
 
-        }
 
-        private void AdjustRotation(int currentAngle)
+        private void AdjustRotation(float currentAngle)
         {
             Viewport3D viewport = Scene_Viewport;
 
@@ -4024,24 +4435,6 @@ namespace Wa3Tuner
         }
 
 
-        private int lastZoom = 0;
-        private void Zoomed(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (CurrentModel.Geosets.Count == 0) return;
-            int zoom = (int)SliderZoom.Value;
-            if (zoom > lastZoom)
-            {
-                AdjustZoom(10);
-
-            }
-            if (zoom < lastZoom)
-            {
-                AdjustZoom(-10);
-
-            }
-
-            lastZoom = zoom;
-        }
 
         private void setModelName(object sender, RoutedEventArgs e)
         {
@@ -4055,7 +4448,7 @@ namespace Wa3Tuner
         private List<CGeoset> SelectedGeosets_Collection = new List<CGeoset>();
         private void SelectedGeosets(object sender, SelectionChangedEventArgs e)
         {
-            SelectedGeosets_Collection = GetSElectedGeosets();
+            SelectedGeosets_Collection = GetSelectedGeosets();
             RefreshViewPort();
 
         }
@@ -4077,18 +4470,36 @@ namespace Wa3Tuner
                 Check_sf.IsChecked = layer.SphereEnvironmentMap;
                 Check_NoDepthSet.IsChecked = layer.NoDepthSet;
                 Check_NoDepthTest.IsChecked = layer.NoDepthTest;
-                RefreshLayersTextureList();
+                Combo_FilterModeLayer.SelectedIndex = (int)layer.FilterMode;
+               // Pause = true;
+              
+              ;
                 Combo_LayerUsedTexture.SelectedIndex = CurrentModel.Textures.IndexOf(layer.Texture.Object);
+               // Pause = false;
+                
             }
+        }
+        private bool Pause = false;
+        private void RefreshLayersTextureAnimList()
+        {
+            Combo_LayerUsedTextureAnim.Items.Clear();
+            Combo_LayerUsedTextureAnim.Items.Add(new ComboBoxItem() { Content="None" });
+            foreach (CTextureAnimation ta in CurrentModel.TextureAnimations)
+            {
+                Combo_LayerUsedTextureAnim.Items.Add(new ComboBoxItem() { Content = ta.ObjectId.ToString() });
+            }
+            Combo_LayerUsedTextureAnim.SelectedIndex = 0;
         }
         private void RefreshLayersTextureList()
         {
-            Combo_LayerUsedTexture.Items.Clear();
-            foreach (CTexture texture in CurrentModel.Textures)
-            {
-                string name = texture.ReplaceableId == 0 ? texture.FileName : "Replaceable ID" + texture.ReplaceableId.ToString();
-                Combo_LayerUsedTexture.Items.Add(new ComboBoxItem() { Content = name });
-            }
+           
+                Combo_LayerUsedTexture.Items.Clear();
+                foreach (CTexture texture in CurrentModel.Textures)
+                {
+                    string name = texture.ReplaceableId == 0 ? texture.FileName : "Replaceable ID" + texture.ReplaceableId.ToString();
+                    Combo_LayerUsedTexture.Items.Add(new ComboBoxItem() { Content = name });
+                }
+             
         }
         private void RefreshLayersList()
         {
@@ -4187,8 +4598,21 @@ namespace Wa3Tuner
         {
             if (List_TextureAnims.SelectedItem != null)
             {
-                CurrentModel.TextureAnimations.RemoveAt(List_TextureAnims.SelectedIndex);
-                RefreshTextureAnims();
+                CTextureAnimation ta = CurrentModel.TextureAnimations[List_TextureAnims.SelectedIndex];
+                if (ta.HasReferences)
+                {
+                    if (askDelete())
+                    {
+                        CurrentModel.TextureAnimations.Remove(ta);
+                        RefreshTextureAnims();
+                    }
+                }
+                else
+                {
+                    CurrentModel.TextureAnimations.Remove(ta);
+                    RefreshTextureAnims();
+                }
+
             }
         }
 
@@ -4342,7 +4766,7 @@ namespace Wa3Tuner
 
         private void changegeosetusedmaterial(object sender, RoutedEventArgs e)
         {
-            List<CGeoset> geos = GetSElectedGeosets();
+            List<CGeoset> geos = GetSelectedGeosets();
             if (geos.Count == 0)
             {
                 return;
@@ -4379,6 +4803,14 @@ namespace Wa3Tuner
                 if (type == NodeType.Emitter1) _new = new CRibbonEmitter(CurrentModel);
                 if (type == NodeType.Emitter2) _new = new CParticleEmitter2(CurrentModel);
                 if (type == NodeType.Cols) _new = new CCollisionShape(CurrentModel);
+                if (type == NodeType.Light) _new = new CLight(CurrentModel);
+                if (type == NodeType.Event)
+                {
+                    edit_eventobject ew = new edit_eventobject(CurrentModel);
+                    ew.ShowDialog();
+                    if (ew.DialogResult == true) { RefreshNodesTree(); }
+                    return;
+                }
 
                 _new.Name = name;
 
@@ -4397,7 +4829,7 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
-                List<CGeoset> geosets = GetSElectedGeosets();
+                List<CGeoset> geosets = GetSelectedGeosets();
                 axis_selector ax = new axis_selector();
                 ax.ShowDialog();
                 if (ax.DialogResult == true)
@@ -4468,21 +4900,52 @@ namespace Wa3Tuner
                 RefreshSequencesList();
             }
         }
-
+        private void RefreshGlobalSequencesList()
+        {
+            Report_gsequences.Text = $"Global sequences: {CurrentModel.GlobalSequences.Count}";
+            ListGSequenes.Items.Clear();
+            foreach (var gs in CurrentModel.GlobalSequences)
+            {
+                ListGSequenes.Items.Add($"{gs.ObjectId}: {gs.Duration}");
+            }
+        }
         private void Centergeosetsat(object sender, RoutedEventArgs e)
         {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
 
+                InputVector v = new InputVector();
+                if (v.ShowDialog() == true)
+                {
+                    float x = v.X;
+                    float y = v.Y;
+                    float z = v.Z;
+                    foreach (CGeoset geoset in geosets)
+                    {
+                        Calculator.CenterGeoset(geoset, x, y, z);
+                    }
+
+                }
+            }
         }
 
         private void SetUsedLayerTexture(object sender, SelectionChangedEventArgs e)
         {
-            int indx = Combo_LayerUsedTexture.SelectedIndex;
+            if (Pause) { return; }
 
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
+                int indx = Combo_LayerUsedTexture.SelectedIndex;
+               // MessageBox.Show("Selected " + indx.ToString());
                 CMaterial mat = GetSelectedMAterial();
                 CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+                layer.Texture.Detach();
                 layer.Texture.Attach(CurrentModel.Textures[indx]);
+              //  MessageBox.Show($"attaching {CurrentModel.Textures[indx].FileName}");
+                if (layer.Texture.Object == null) { MessageBox.Show("Failed"); }
+                CollectTextures();
+                RefreshViewPort();
             }
         }
         private List<INode> GetNodes(List<string> list)
@@ -4625,7 +5088,7 @@ namespace Wa3Tuner
 
                         CAnimatorNode<CVector3> item = node.Translation[i];
 
-                        float xp = item.Value.X * x/100; float yp = item.Value.Y * y/100; float zp = item.Value.Z * z/100;
+                        float xp = item.Value.X * x / 100; float yp = item.Value.Y * y / 100; float zp = item.Value.Z * z / 100;
                         int time = item.Time;
                         item = new CAnimatorNode<CVector3>(time, new CVector3(xp, yp, zp));
                     }
@@ -4647,22 +5110,22 @@ namespace Wa3Tuner
                     float xp = x ? 0 : CurrentModel.Nodes[0].PivotPoint.X;
                     float yp = y ? 0 : CurrentModel.Nodes[0].PivotPoint.Y;
                     float zp = z ? 0 : CurrentModel.Nodes[0].PivotPoint.Z;
-                    CurrentModel.Nodes[0].PivotPoint = new CVector3(xp,yp,zp);
+                    CurrentModel.Nodes[0].PivotPoint = new CVector3(xp, yp, zp);
                 }
                 if (CurrentModel.Nodes.Count > 1)
                 {
-                  CVector3 centroid =  Calculator.GetCentroidOfNodes(CurrentModel.Nodes);
+                    CVector3 centroid = Calculator.GetCentroidOfNodes(CurrentModel.Nodes);
 
                     foreach (var node in CurrentModel.Nodes)
                     {
                         float xp = node.PivotPoint.X - (x ? centroid.X : 0);
                         float yp = node.PivotPoint.Y - (y ? centroid.Y : 0);
                         float zp = node.PivotPoint.Z - (z ? centroid.Z : 0);
-                        node.PivotPoint = new CVector3(xp,yp,zp);
+                        node.PivotPoint = new CVector3(xp, yp, zp);
                     }
                 }
             }
-           
+
         }
 
 
@@ -4750,7 +5213,7 @@ namespace Wa3Tuner
             {
                 showinfo();
             }
-            else
+            if (TC_Inspector.SelectedIndex == 1)
             {
                 ShowErrors();
             }
@@ -4760,9 +5223,9 @@ namespace Wa3Tuner
         {
             if (ListOptions.SelectedIndex == 5)
             {
-                ChangedInspector(null,null);
+                ChangedInspector(null, null);
             }
-           
+
         }
 
         private void ShowErrors()
@@ -4773,11 +5236,11 @@ namespace Wa3Tuner
 
         private void editvisibilitiesofgeoset(object sender, RoutedEventArgs e)
         {
-            if (ListGeosets.SelectedItems.Count  != 1)
+            if (ListGeosets.SelectedItems.Count != 1)
             {
                 MessageBox.Show("Select a single geoset"); return;
             }
-            List<CGeoset> geosets = GetSElectedGeosets();
+            List<CGeoset> geosets = GetSelectedGeosets();
             editvisibilities_window ew = new editvisibilities_window(CurrentModel, geosets[0]);
             ew.ShowDialog();
             if (ew.DialogResult == true)
@@ -4786,26 +5249,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void editgeosetcolors(object sender, RoutedEventArgs e)
-        {
-            if (ListGeosets.SelectedItems.Count!= 1)
-            {
-                MessageBox.Show("Select a single geoset"); return;
-            }
-            List<CGeoset> geosets = GetSElectedGeosets();
-            
-            color_selector cs = new color_selector(CurrentModel, geosets[0]);
-            
-            if (cs.ShowDialog() == true)
-            {
-                RefreshGeosetAnimationsList();
-            }
 
-        }
 
         private void createprimitiveshape(object sender, RoutedEventArgs e)
         {
-
+            //  MenuPrimitiveShape.ContextMenu.IsEnabled = true;
         }
 
         private void movelayerup(object sender, RoutedEventArgs e)
@@ -4814,11 +5262,11 @@ namespace Wa3Tuner
             {
                 int index = List_Layers.SelectedIndex;
                 if (index == 0) { return; }
-                
+
                 CMaterial mat = GetSelectedMAterial();
                 CMaterialLayer layer = mat.Layers[index];
-                var temp = mat.Layers[index-1];
-                mat.Layers[index] = mat.Layers[index -1];
+                var temp = mat.Layers[index - 1];
+                mat.Layers[index] = mat.Layers[index - 1];
                 mat.Layers[index] = temp;
                 RefreshLayersList();
             }
@@ -4853,7 +5301,7 @@ namespace Wa3Tuner
                 mat.Layers.Add(layer);
                 RefreshLayersList();
             }
-            }
+        }
 
         private void opentargetfolder(object sender, RoutedEventArgs e)
         {
@@ -4892,5 +5340,915 @@ namespace Wa3Tuner
                 MessageBox.Show($"An error occurred while opening the folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void CreateMAterial(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Textures.Count == 0) { MessageBox.Show("No textures"); return; }
+
+            CMaterial mat = new CMaterial(CurrentModel);
+            CMaterialLayer later = new CMaterialLayer(CurrentModel);
+            later.Texture.Attach(CurrentModel.Textures[0]);
+            mat.Layers.Add(later);
+            CurrentModel.Materials.Add(mat);
+            RefreshMaterialsList();
+        }
+
+        private void createTC(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Textures.Any(x => x.ReplaceableId == 1) == false)
+            {
+                CTexture textue = new CTexture(CurrentModel);
+                textue.ReplaceableId = 1;
+                CurrentModel.Textures.Add(textue);
+                RefreshTextures();
+                RefreshLayersTextureList();
+
+            }
+            else { MessageBox.Show("There is already TC Texture"); }
+        }
+
+        private void createTG(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Textures.Any(x => x.ReplaceableId == 2) == false)
+            {
+                CTexture textue = new CTexture(CurrentModel);
+                textue.ReplaceableId = 2;
+                CurrentModel.Textures.Add(textue);
+                RefreshTextures();
+            }
+            else { MessageBox.Show("There is already TG Texture"); }
+        }
+        private bool RenderGroundPlane = false;
+        private void rendergroundplane(object sender, RoutedEventArgs e)
+        {
+
+            RefreshViewPort();
+        }
+
+        private void ga_editalphas(object sender, RoutedEventArgs e)
+        {
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                CGeosetAnimation ga = GetSelectedGeosetAnimation();
+
+                transformation_editor tr = new transformation_editor(CurrentModel, ga.Alpha, true, TransformationType.Alpha);
+                tr.ShowDialog();
+            }
+        }
+
+        private void ga_editcolors(object sender, RoutedEventArgs e)
+        {
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                CGeosetAnimation ga = GetSelectedGeosetAnimation();
+
+                transformation_editor tr = new transformation_editor(CurrentModel, ga.Color, true, TransformationType.Color);
+                tr.ShowDialog();
+            }
+        }
+
+        private void editnodetranslations(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+
+                INode node = GetSeletedNode();
+                transformation_editor tr = new transformation_editor(CurrentModel, node.Translation, false, TransformationType.Translation);
+                tr.ShowDialog();
+            }
+        }
+
+        private void editnoderotations(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+
+                INode node = GetSeletedNode();
+                transformation_editor tr = new transformation_editor(CurrentModel, node.Rotation, false);
+                tr.ShowDialog();
+            }
+        }
+
+        private void editnodescalings(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+
+                INode node = GetSeletedNode();
+                transformation_editor tr = new transformation_editor(CurrentModel, node.Scaling, false, TransformationType.Scaling);
+                tr.ShowDialog();
+            }
+        }
+
+        private void editlayeralpha(object sender, RoutedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+                transformation_editor tr = new transformation_editor(CurrentModel, layer.Alpha, true, TransformationType.Alpha);
+                tr.ShowDialog();
+            }
+        }
+
+        private void editlayertextureid(object sender, RoutedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+                transformation_editor tr = new transformation_editor(CurrentModel, layer.TextureId, false);
+                tr.ShowDialog();
+            }
+        }
+
+        private void ta_edit_tr(object sender, RoutedEventArgs e)
+        {
+            if (List_TextureAnims.SelectedItem != null)
+            {
+                CTextureAnimation ta = GetSelectedTextureAnim();
+                transformation_editor tr = new transformation_editor(CurrentModel, ta.Translation, false, TransformationType.Translation);
+                tr.ShowDialog();
+            }
+        }
+
+        private CTextureAnimation GetSelectedTextureAnim()
+        {
+            return CurrentModel.TextureAnimations[List_TextureAnims.SelectedIndex];
+        }
+
+        private void ta_edit_ro(object sender, RoutedEventArgs e)
+        {
+            if (List_TextureAnims.SelectedItem != null)
+            {
+                CTextureAnimation ta = GetSelectedTextureAnim();
+                transformation_editor tr = new transformation_editor(CurrentModel, ta.Rotation, false);
+                tr.ShowDialog();
+            }
+        }
+
+        private void ta_edit_scaling(object sender, RoutedEventArgs e)
+        {
+            if (List_TextureAnims.SelectedItem != null)
+            {
+                CTextureAnimation ta = GetSelectedTextureAnim();
+                transformation_editor tr = new transformation_editor(CurrentModel, ta.Scaling, false, TransformationType.Scaling);
+                tr.ShowDialog();
+            }
+        }
+
+        private void EditNodeData(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                if (node is CAttachment attachment)
+                {
+                    window_EditAttachment ea = new window_EditAttachment(node, CurrentModel);
+                    ea.ShowDialog();
+                }
+                if (node is CBone bone)
+                {
+                    window_editbone_data edit = new window_editbone_data(bone, CurrentModel);
+                    edit.ShowDialog();
+                }
+                if (node is CCollisionShape cols)
+                {
+                    window_edit_cols edit = new window_edit_cols(cols, CurrentModel);
+                    edit.ShowDialog();
+
+                }
+                if (node is CParticleEmitter emitter1)
+                {
+                    edit_emitter1 ei = new edit_emitter1(emitter1, CurrentModel);
+                    ei.ShowDialog();
+
+                }
+                if (node is CParticleEmitter2 emitter2)
+                {
+                    edit_emitter2 e2 = new edit_emitter2(emitter2, CurrentModel);
+                    e2.ShowDialog();
+
+                }
+                if (node is CRibbonEmitter ribbon)
+                {
+                    edit_ribbon er = new edit_ribbon(CurrentModel, ribbon);
+                    er.ShowDialog();
+
+                }
+                if (node is CLight light)
+                {
+                    Edit_light el = new Edit_light(light, CurrentModel); el.ShowDialog();
+                }
+                if (node is CEvent ev)
+                {
+                    edit_eventobject edit = new edit_eventobject(CurrentModel, ev);
+                    edit.ShowDialog();
+                    if (edit.DialogResult == true)
+                    {
+                        ChangeNameOfSelectedNode(ev.Name);
+                    }
+                }
+            }
+        }
+
+        private void subdivide(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (var geoset in geosets)
+                {
+
+                    Calculator.SubdivideGeoset(geoset, CurrentModel);
+                }
+            }
+            RefreshGeosetsList();
+        }
+        private void ChangeNameOfSelectedNode(string name)
+        {
+            TreeViewItem item = ListNodes.SelectedItem as TreeViewItem;
+            StackPanel panel = item.Header as StackPanel;
+            TextBlock t = panel.Children[1] as TextBlock;
+            t.Text = name;
+        }
+
+        private void explain(object sender, RoutedEventArgs e)
+        {
+            howmodel h = new howmodel();
+            h.ShowDialog();
+        }
+
+        private void Checked_Billlboarded(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.Billboarded = Check_Billlboarded.IsChecked == true;
+            }
+        }
+
+        private void Checked_Billlboardedx(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.BillboardedLockX = Check_Billlboardedx.IsChecked == true;
+            }
+        }
+
+        private void Checked_Billlboardedy(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.BillboardedLockY = Check_Billlboardedy.IsChecked == true;
+            }
+        }
+
+        private void Checked_Billlboardedz(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.BillboardedLockZ = Check_Billlboardedz.IsChecked == true;
+            }
+        }
+
+        private void Checked_cameraAnchored(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.CameraAnchored = Check_cameraAnchored.IsChecked == true;
+            }
+        }
+
+
+
+        private void Checked_dontInhRotation(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.DontInheritRotation = Check_dontInhRotation.IsChecked == true;
+            }
+        }
+
+        private void Checked_DontinhScaling(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.DontInheritScaling = Check_cameraAnchored.IsChecked == true;
+            }
+        }
+
+        private void Checked_dontInhTranslation(object sender, RoutedEventArgs e)
+        {
+
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+                node.DontInheritTranslation = Check_dontInhTranslation.IsChecked == true;
+            }
+        }
+
+        private void SetUsedLayerTextureAnim(object sender, SelectionChangedEventArgs e)
+        {
+            if (Combo_LayerUsedTexture.SelectedIndex == -1) { return; }
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                int index = List_Layers.SelectedIndex;
+                int comboIndex = Combo_LayerUsedTexture.SelectedIndex;
+                
+                if (comboIndex == 0)
+                {
+                    mat.Layers[index].TextureAnimation.Detach();
+                }
+                else
+                {
+                    mat.Layers[index].TextureAnimation.Attach(CurrentModel.TextureAnimations[comboIndex - 1]);
+                }
+            }
+        }
+
+        private void createta(object sender, RoutedEventArgs e)
+        {
+            CTextureAnimation ta = new CTextureAnimation(CurrentModel);
+            CurrentModel.TextureAnimations.Add(ta);
+            RefreshTextureAnims();
+            RefreshLayersTextureAnimList();
+
+        }
+
+        private bool _isRotating = false; // Track if rotation is active
+        private Point _lastMousePosition; // Store the last mouse position
+
+
+        private void RotateMoved(object sender, MouseEventArgs e)
+        {
+            if (!_isRotating)
+                return;
+
+            // Get the current mouse position
+            Point currentMousePosition = e.GetPosition((UIElement)sender);
+
+            // Calculate the change in horizontal position
+            double deltaX = currentMousePosition.X - _lastMousePosition.X;
+
+            // Update the rotation angle based on movement
+            CurrentAngle += (float)(deltaX * 0.5); // Adjust sensitivity as needed
+
+            // Update the last mouse position
+            _lastMousePosition = currentMousePosition;
+
+            // Apply the rotation
+            AdjustRotation(CurrentAngle);
+        }
+
+        private void RotateOn(object sender, MouseButtonEventArgs e)
+        {
+            _isRotating = true;
+
+            // Capture the mouse for consistent input
+            UIElement element = (UIElement)sender;
+            element.CaptureMouse();
+
+            // Store the initial mouse position
+            _lastMousePosition = e.GetPosition(element);
+        }
+
+        private void RotateOff(object sender, MouseButtonEventArgs e)
+        {
+            _isRotating = false;
+
+            // Release the mouse capture
+            UIElement element = (UIElement)sender;
+            element.ReleaseMouseCapture();
+        }
+
+        private void SetLayerFilterMode(object sender, SelectionChangedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                int index = List_Layers.SelectedIndex;
+
+                mat.Layers[index].FilterMode = (EMaterialLayerFilterMode)Combo_FilterModeLayer.SelectedIndex;
+            }
+        }
+
+        private void scr(object sender, RoutedEventArgs e)
+        {
+            var dir = AppDomain.CurrentDomain.BaseDirectory;
+            string folder = System.IO.Path.Combine(dir, "Screenshots");
+            if (!File.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+            string filename = System.IO.Path.Combine(folder, "SCreenshot_" + DateTime.Now.ToString("dd mm yyyy hh mm ss") + ".png");
+            CaptureScreenshot(App_window, filename);
+
+
+        }
+        public static void CaptureScreenshot(UIElement visual, string filePath)
+        {
+            // Get the dimensions of the visual
+            double width = visual.RenderSize.Width;
+            double height = visual.RenderSize.Height;
+
+            // Render the visual to a RenderTargetBitmap
+            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(
+                (int)width, (int)height, 96d, 96d, PixelFormats.Pbgra32);
+            visual.Measure(new Size(width, height));
+            visual.Arrange(new Rect(new Size(width, height)));
+            renderBitmap.Render(visual);
+
+            // Encode the bitmap as a PNG
+            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+            // Save to the specified file path
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                encoder.Save(fileStream);
+            }
+
+            Process.Start("explorer.exe", System.IO.Path.GetDirectoryName(filePath));
+        }
+
+        private void scr2(object sender, RoutedEventArgs e)
+        {
+            if (ListOptions.SelectedIndex != 1) { MessageBox.Show("Select geosets tab"); return; }
+            var dir = AppDomain.CurrentDomain.BaseDirectory;
+            string folder = System.IO.Path.Combine(dir, "Screenshots");
+            if (!File.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+            string filename = System.IO.Path.Combine(folder, "SCreenshot_" + DateTime.Now.ToString("dd mm yyyy hh mm ss") + ".png");
+            CaptureScreenshot(Scene_Viewport, filename);
+        }
+
+        private void findTexture(object sender, RoutedEventArgs e)
+        {
+            TextureFinder.ShowDialog();
+        }
+        private bool RenderTextures = true;
+        private void ToggleTextures(object sender, RoutedEventArgs e)
+        {
+
+            if (Scene_Viewport == null) { return; }
+            RenderTextures = !RenderTextures;
+            RefreshViewPort();
+        }
+
+        private void createcube(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
+            CGeoset cube = Calculator.CreateCube(CurrentModel);
+            cube.Material.Attach(CurrentModel.Materials[0]);
+            CreateBoneForGeoset(cube);
+            CurrentModel.Geosets.Add(cube);
+            CollectTextures();
+            RefreshGeosetsList();
+            RefreshNodesTree();
+            RefreshViewPort();
+
+
+        }
+        private void CreateBoneForGeoset(CGeoset geoset)
+        {
+            CBone bone = new CBone(CurrentModel);
+            bone.Name = "CubeBone_" + IDCounter.Next_();
+            CGeosetGroup group = new CGeosetGroup(CurrentModel);
+            CGeosetGroupNode node = new CGeosetGroupNode(CurrentModel);
+            node.Node.Attach(bone);
+            group.Nodes.Add(node);
+            geoset.Groups.Add(group);
+            CurrentModel.Nodes.Add(bone);
+        }
+
+        private void createcyllinder(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
+            Input i = new Input("Sides");
+            i.ShowDialog();
+            bool parse = int.TryParse(i.Result, out int sides);
+            if (!parse) { MessageBox.Show("Inout not and integer"); return; }
+            else
+            {
+                if (sides < 3) { MessageBox.Show("Sides cannot be less than 3"); return; }
+                CGeoset cyllinder = Calculator.CreateCylinder(CurrentModel, 1, 2, sides);
+                CreateBoneForGeoset(cyllinder);
+                CurrentModel.Geosets.Add(cyllinder);
+                cyllinder.Material.Attach(CurrentModel.Materials[0]);
+                CollectTextures();
+                RefreshGeosetsList();
+                RefreshNodesTree();
+                RefreshViewPort();
+            }
+
+
+        }
+
+        private void createsphere(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
+        }
+
+        private void createcone(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
+            Input i = new Input("Sides");
+            i.ShowDialog();
+            bool parse = int.TryParse(i.Result, out int sides);
+            if (!parse) { MessageBox.Show("Inout not and integer"); return; }
+            else
+            {
+                if (sides < 3) { MessageBox.Show("Sides cannot be less than 3"); return; }
+                CGeoset cone = Calculator.CreateCone(CurrentModel, 1, 2, sides);
+                CreateBoneForGeoset(cone);
+                cone.Material.Attach(CurrentModel.Materials[0]);
+                CurrentModel.Geosets.Add(cone);
+                CollectTextures();
+                RefreshGeosetsList();
+                RefreshNodesTree();
+                RefreshViewPort();
+            }
+        }
+        private void DeleteGeosetAnimationOf(CGeoset geoset)
+        {
+            foreach (CGeosetAnimation a in CurrentModel.GeosetAnimations.ToList())
+            {
+                if (a.Geoset.Object == geoset)
+                {
+                    CurrentModel.GeosetAnimations.Remove(a);
+                }
+            }
+        }
+        private void fragmentGeoset(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                List<CGeoset> fragments = new List<CGeoset>();
+
+                foreach (CGeoset geoset in geosets)
+                {
+                    fragments.AddRange(Calculator.Fragment(geoset, CurrentModel));
+                    DeleteGeosetAnimationOf(geoset);
+                    CurrentModel.Geosets.Remove(geoset);
+                }
+                foreach (CGeoset geoset in fragments)
+                {
+                    CurrentModel.Geosets.Add(geoset);
+                }
+                RefreshGeosetsList();
+                RefreshGeosetAnimationsList();
+
+            }
+        }
+
+        private void WeldAll(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    Calculator.WeldAll(geoset, CurrentModel);
+                }
+                RefreshGeosetsList();
+            }
+        }
+
+        private void showuv(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
+            Mapper.Show();
+        }
+
+        private void Window_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
+        }
+
+        private void flattengeosetsside(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                FlattenSide fs = new FlattenSide();
+                fs.ShowDialog();
+                if (fs.DialogResult == true)
+                {
+                    Side side = fs.side;
+                    foreach (CGeoset geoset in geosets)
+                    {
+                        Calculator.FlattenSide(geoset, side);
+                    }
+                }
+                RefreshViewPort();
+            }
+        }
+
+        private void Simplify(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    Calculator.Simplify(geoset, CurrentModel);
+                }
+            }
+        }
+
+        private void EqualizeColor(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DeleteGeoset(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void showgm(object sender, RoutedEventArgs e)
+        {
+            ButtonGeosetOptions.ContextMenu.IsOpen = true;
+        }
+
+        private void showgam(object sender, RoutedEventArgs e)
+        {
+            Buttongam.ContextMenu.IsOpen = true;
+        }
+
+        private void SelectedGS(object sender, SelectionChangedEventArgs e)
+        {
+            if (ListGSequenes.SelectedItem != null)
+            {
+                CGlobalSequence gs = CurrentModel.GlobalSequences[ListGSequenes.SelectedIndex];
+                InputGSDuration.Text = gs.Duration.ToString();
+            }
+        }
+
+        private void addgs(object sender, RoutedEventArgs e)
+        {
+            bool parse = int.TryParse(InputGSDuration.Text, out int duration);
+            if (!parse) { MessageBox.Show("Expected integer"); return; }
+            else
+            {
+                if (CurrentModel.GlobalSequences.Any(x => x.Duration == duration))
+                {
+                    MessageBox.Show("There is already a global sequence with this duration"); return;
+                }
+                CGlobalSequence gs = new CGlobalSequence(CurrentModel);
+                gs.Duration = duration;
+                CurrentModel.GlobalSequences.Add(gs);
+                RefreshGlobalSequencesList();
+            }
+        }
+
+        private void editgs(object sender, RoutedEventArgs e)
+        {
+            if (ListGSequenes.SelectedItem != null)
+            {
+                CGlobalSequence gs = new CGlobalSequence(CurrentModel);
+
+                bool parse = int.TryParse(InputGSDuration.Text, out int duration);
+                if (!parse) { MessageBox.Show("Expected integer"); return; }
+                else
+                {
+                    gs.Duration = duration;
+                    RefreshGlobalSequencesList();
+                }
+            }
+
+        }
+
+        private void delgs(object sender, RoutedEventArgs e)
+        {
+            if (ListGSequenes.SelectedItem != null)
+            {
+                CGlobalSequence gs = CurrentModel.GlobalSequences[ListGSequenes.SelectedIndex];
+                if (gs.HasReferences)
+                {
+                    if (askDelete())
+                    {
+                        CurrentModel.GlobalSequences.RemoveAt(ListGSequenes.SelectedIndex);
+                        RefreshGlobalSequencesList();
+                    }
+                }
+
+            }
+        }
+
+        private bool askDelete()
+        {
+            // Show a MessageBox with Yes/No options
+            MessageBoxResult result = MessageBox.Show(
+                "This object is referenced. Still delete?",
+                "Confirm Deletion",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            // Return true if the user clicked Yes, false otherwise
+            return result == MessageBoxResult.Yes;
+        }
+
+        private void clampuvofgeoset(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    {
+                        Calculator.ClampUV(vertex.TexturePosition);
+                    }
+
+                }
+            }
+            RefreshViewPort();
+        }
+
+        private void negateusofgeosets(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    {
+                        float X = vertex.TexturePosition.X;
+                        float Y = vertex.TexturePosition.Y;
+                        X = -X;
+                        vertex.TexturePosition = new CVector2(X,Y);
+                    }
+
+                }
+            }
+            RefreshViewPort();
+        }
+
+        private void negavsofgeosets(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    {
+                        float X = vertex.TexturePosition.X;
+                        float Y = vertex.TexturePosition.Y;
+                        Y = -Y;
+                        vertex.TexturePosition = new CVector2(X, Y);
+                    }
+
+                }
+            }
+            RefreshViewPort();
+        }
+
+        private void fituvgeoet(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    if (geoset.Faces.Count != 2) { continue; }
+                    geoset.Vertices[0].TexturePosition = new CVector2(0,0);
+                    geoset.Vertices[1].TexturePosition = new CVector2(0,1);
+                    geoset.Vertices[2].TexturePosition = new CVector2(1,0);
+                    geoset.Vertices[3].TexturePosition = new CVector2(1,1);
+                }
+            }
+            RefreshViewPort();
+        }
+      
+        private void swapusvsgeosets(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (CGeoset geoset in geosets)
+                {
+                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    {
+                        float X = vertex.TexturePosition.X;
+                        float Y = vertex.TexturePosition.Y;
+                        float temp = X;
+                        X = Y;
+                        Y = temp;
+
+                        
+                        vertex.TexturePosition = new CVector2(X, Y);
+                    }
+
+                }
+            }
+            RefreshViewPort();
+        }
+
+        private void gotogeosettexture(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                int index = CurrentModel.Materials.IndexOf(geosets[0].Material.Object);
+                List_MAterials.SelectedIndex = index;
+                ListOptions.SelectedIndex = 4;
+            }
+            else
+            {
+                MessageBox.Show("Select a single geoset");
+            }
+        }
+
+        private void gotogeosetbone(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 0) { return; }
+            List<CGeoset> geosets = GetSelectedGeosets();
+            CBone     AttachedToBone = null;
+            bool same = true;
+            foreach (CGeoset geoset in geosets)
+            {
+                foreach (CGeosetVertex vertex in geoset.Vertices)
+                {
+                    INode attachedToNode = vertex.Group.Object.Nodes[0].Node.Node;
+                    if (AttachedToBone != null)
+                    {
+                        if (attachedToNode != AttachedToBone)
+                        {
+                            same = false;
+                        }
+                    }
+                    else
+                    {
+                        AttachedToBone =(CBone) attachedToNode;
+                    }
+                }
+               end:
+                if (same)
+                {
+                    string name = AttachedToBone.Name;
+                    SelectNodeByName(name);
+                }
+            }
+        }
+
+        private void SelectNodeByName(string name)
+        {
+            foreach (var item in ListNodes.Items)
+            {
+                if (item is TreeViewItem node)
+                {
+                    if (SelectNodeByNameRecursive(node, name))
+                        break; // Exit once the desired node is found and selected
+                }
+            }
+            ListOptions.SelectedIndex = 3;
+        }
+
+        private bool SelectNodeByNameRecursive(TreeViewItem node, string name)
+        {
+            // Ensure the node's header is correctly structured
+            if (node.Header is StackPanel container)
+            {
+                TextBlock nameContainer = container.Children.OfType<TextBlock>().FirstOrDefault();
+                if (nameContainer != null && nameContainer.Text == name)
+                {
+                    node.IsSelected = true;
+                    node.IsExpanded = true; // Expand the node
+                    node.BringIntoView(); // Ensures the node is visible
+                    return true; // Node found and selected
+                }
+            }
+
+            // Check nested nodes
+            foreach (var child in node.Items)
+            {
+                if (child is TreeViewItem childNode)
+                {
+                    // Recursively check child nodes
+                    if (SelectNodeByNameRecursive(childNode, name))
+                    {
+                        node.IsExpanded = true; // Ensure the parent node is expanded
+                        return true; // Stop once the node is found
+                    }
+                }
+            }
+
+            return false; // Node not found in this branch
+        }
+
     }
 }

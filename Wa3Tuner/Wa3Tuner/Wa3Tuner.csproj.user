@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <ApplicationDefinition Update="App.xaml">
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="edit_emitter1.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="edit_emitter2.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Edit_light.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="edit_ribbon.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="FlattenSide.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="loopdialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="TextureBrowser.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UVMapper.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="edit_emitter1.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="edit_emitter2.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Edit_light.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="edit_ribbon.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="FlattenSide.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="loopdialog.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="TextureBrowser.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UVMapper.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>

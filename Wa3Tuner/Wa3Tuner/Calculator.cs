@@ -3,9 +3,14 @@ using MdxLib.Model;
 using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
+ 
 using System.Text;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
 namespace Wa3Tuner
@@ -34,7 +39,7 @@ namespace Wa3Tuner
 
         internal static CAnimatorNode<CVector4> ClampQuaternion(CAnimatorNode<CVector4> item)
         {
-            CVector4 value = IsValidQuaternion(item.Value.W, item.Value.X, item.Value.Y, item.Value.Z) ?  item.Value  : new CVector4(0,0,0,0);
+            CVector4 value = IsValidQuaternion(item.Value.W, item.Value.X, item.Value.Y, item.Value.Z) ? item.Value : new CVector4(0, 0, 0, 0);
             CVector4 intan = IsValidQuaternion(item.InTangent.W, item.InTangent.X, item.InTangent.Y, item.InTangent.Z) ? item.InTangent : new CVector4(0, 0, 0, 0);
             CVector4 outtan = IsValidQuaternion(item.OutTangent.W, item.OutTangent.X, item.OutTangent.Y, item.OutTangent.Z) ? item.InTangent : new CVector4(0, 0, 0, 0);
             return new CAnimatorNode<CVector4>(item.Time, value, intan, outtan);
@@ -52,20 +57,17 @@ namespace Wa3Tuner
 
         internal static CVector2 ClampUV(CVector2 texturePosition)
         {
-            
-            float X = texturePosition.X;
-            float Y = texturePosition.Y;
-            float decimalX = X - (int) X;
-            float decimalY = Y - (int)Y;
+            float X = texturePosition.X % 1;
+            float Y = texturePosition.Y % 1;
 
-            if (texturePosition.X < -10) { X =-9 - decimalX; }
-             if (texturePosition.X >10) { X = 9 + decimalX; }
-             if (texturePosition.Y >10) { Y = -9 - decimalY; }
-            if (texturePosition.Y <-10) { Y = 9 + decimalY; }
+            // Ensure positive values for wrapping
+            if (X < 0) X += 1;
+            if (Y < 0) Y += 1;
+
             return new CVector2(X, Y);
-
         }
-       
+
+
         internal static float ClampNormalized(float value)
         {
             if (value >= 0 && value <= 999999) { return value; }
@@ -74,11 +76,11 @@ namespace Wa3Tuner
         }
         internal static CAnimatorNode<float> ClampNormalized(CAnimatorNode<float> item)
         {
-            if ( item.Value < 0)
+            if (item.Value < 0)
             {
                 return new CAnimatorNode<float>(item.Time, 0);
             }
-            if (item.Value  > 1)
+            if (item.Value > 1)
             {
                 return new CAnimatorNode<float>(item.Time, 1);
             }
@@ -95,11 +97,11 @@ namespace Wa3Tuner
             if (value.Y < 0) { y = 0; }
             if (value.Y > 1) { y = 1; }
             if (value.Z < 0) { z = 0; }
-             if (value.Z > 1) { z = 1; }
-            return new CVector3(x,y,z);
-             
+            if (value.Z > 1) { z = 1; }
+            return new CVector3(x, y, z);
+
         }
-        internal static CAnimatorNode<CVector3>  ClampVector3 (CAnimatorNode<CVector3> item)
+        internal static CAnimatorNode<CVector3> ClampVector3(CAnimatorNode<CVector3> item)
         {
             CVector3 value = ClampVector3(item.Value);
             return new CAnimatorNode<CVector3>(item.Time, value);
@@ -111,16 +113,16 @@ namespace Wa3Tuner
 
         internal static int ClampInt(int v)
         {
-           return v>=0? v : 0;
+            return v >= 0 ? v : 0;
         }
         internal static CAnimatorNode<int> ClampInt(CAnimatorNode<int> v)
         {
-            return new CAnimatorNode<int>(v.Time, v.Value < 0? 0 : v.Value);
+            return new CAnimatorNode<int>(v.Time, v.Value < 0 ? 0 : v.Value);
         }
 
         internal static float ClampFloat(float v)
         {
-           return v < 0? 0 : v;
+            return v < 0 ? 0 : v;
         }
         internal static CAnimatorNode<float> ClampFloat(CAnimatorNode<float> v)
         {
@@ -186,7 +188,7 @@ namespace Wa3Tuner
         {
             if (extents == null || extents.Count == 0)
             {
-                throw new ArgumentException("The list of extents cannot be null or empty.");
+                return new CExtent();
             }
 
             // Temporary min and max holders initialized with the first extent's bounds
@@ -319,6 +321,28 @@ namespace Wa3Tuner
                 vertex.Position = new CVector3(x, y, z);
             }
         }
+        internal static void CenterGeoset(CGeoset geoset, float X, float Y, float Z)
+        {
+            // Calculate the centroid of the geoset
+            CVector3 centroid = GetCentroidOfGeoset(geoset);
+
+            // Calculate the offset needed to move the centroid to the target position (X, Y, Z)
+            float offsetX = X - centroid.X;
+            float offsetY = Y - centroid.Y;
+            float offsetZ = Z - centroid.Z;
+
+            // Adjust each vertex position
+            foreach (CGeosetVertex vertex in geoset.Vertices)
+            {
+                // Move each vertex by the calculated offset
+                vertex.Position = new CVector3(
+                    vertex.Position.X + offsetX,
+                    vertex.Position.Y + offsetY,
+                    vertex.Position.Z + offsetZ
+                );
+            }
+        }
+
 
         internal static void RotateGeoset(CGeoset geoset, float x, float y, float z)
         {
@@ -418,7 +442,7 @@ namespace Wa3Tuner
         }
         private static CSequence DuplicatingFromSequence;
         private static CSequence DuplicatingToSequence;
-         
+
 
         internal static void DuplicateSequence(CSequence sequence, CSequence ToSequence, CModel Model)
         {
@@ -807,10 +831,10 @@ namespace Wa3Tuner
 
         private static CVector3 GetCentroidOfExtent(CExtent extent)
         {
-            float x= (extent.Max.X - extent.Min.X ) /2;
-            float y= (extent.Max.Y - extent.Min.Y ) /2;
-            float z= (extent.Max.Z - extent.Min.Z ) /2;
-            return new CVector3( x, y, z );
+            float x = (extent.Max.X - extent.Min.X) / 2;
+            float y = (extent.Max.Y - extent.Min.Y) / 2;
+            float z = (extent.Max.Z - extent.Min.Z) / 2;
+            return new CVector3(x, y, z);
         }
 
         internal static CVector3 GetCentroidOfNodes(CNodeContainer nodes)
@@ -836,7 +860,13 @@ namespace Wa3Tuner
             // Create a new CVector3 for the centroid.
             return new CVector3(avgX, avgY, avgZ);
         }
-        public static CVector3 QuaternionToEuler(CVector4 quaternion)
+        public static string QuaternionToEuler_(CVector4 quaternion)
+        {
+            CVector3 q = QuaternionToEuler(quaternion);
+            return $"{q.X}, {q.Y}, {q.Z}";
+        }
+         
+            public static CVector3 QuaternionToEuler(CVector4 quaternion)
         {
             // Extract the components of the quaternion
             float x = quaternion.X;
@@ -910,12 +940,920 @@ namespace Wa3Tuner
         }
         internal static CAnimatorNode<CVector4> ReverseVector4(CAnimatorNode<CVector4> cAnimatorNode)
         {
-            CAnimatorNode < CVector4 > node = new CAnimatorNode<CVector4 >();
+            CAnimatorNode<CVector4> node = new CAnimatorNode<CVector4>();
             int time = node.Time;
             CVector4 vector = node.Value;
             CVector4 new_vector = ReverseVector4(vector);
             return new CAnimatorNode<CVector4>(time, new_vector);
+
+        }
+
+        internal static float[] EulerToQuaternion(float x, float y, float z)
+        {
+            // Convert degrees to radians
+            float cx = (float)Math.Cos(x * 0.5f);
+            float cy = (float)Math.Cos(y * 0.5f);
+            float cz = (float)Math.Cos(z * 0.5f);
+            float sx = (float)Math.Sin(x * 0.5f);
+            float sy = (float)Math.Sin(y * 0.5f);
+            float sz = (float)Math.Sin(z * 0.5f);
+
+            // Quaternion components
+            float w = cx * cy * cz + sx * sy * sz;
+            float qx = sx * cy * cz - cx * sy * sz;
+            float qy = cx * sy * cz + sx * cy * sz;
+            float qz = cx * cy * sz - sx * sy * cz;
+
+            return new float[] { qx, qy, qz, w };
+        }
+
+        internal static float[] QuaternionToEuler(float x, float y, float z, float w)
+        {
+            // Roll (X axis rotation)
+            float sinr_cosp = 2.0f * (w * x + y * z);
+            float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
+            float roll = (float)Math.Atan2(sinr_cosp, cosr_cosp);
+
+            // Pitch (Y axis rotation)
+            float sinp = 2.0f * (w * y - z * x);
+            float pitch = Math.Abs(sinp) >= 1.0f ? (float)Math.Sign(sinp) * (float)Math.PI / 2.0f : (float)Math.Asin(sinp);
+
+            // Yaw (Z axis rotation)
+            float siny_cosp = 2.0f * (w * z + x * y);
+            float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
+            float yaw = (float)Math.Atan2(siny_cosp, cosy_cosp);
+
+            return new float[] { roll, pitch, yaw };
+        }
+
+
+        internal static string BGRnToRGB(CVector3 v)
+        {
+            float r = v.Z * 255;
+            float g = v.Y * 255;
+            float b = v.X * 255;
+            return $"{r}, {g}, {b}";
+
+
+
+
+        }
+
+        public static ImageSource ConvertBitmapToImageSource(Bitmap bitmap)
+        {
+            // Create a MemoryStream to hold the image data
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                // Save the Bitmap to the MemoryStream in PNG format
+                bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+                // Create a BitmapImage from the MemoryStream
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                BitmapImage imageSource = new BitmapImage();
+                imageSource.BeginInit();
+                imageSource.StreamSource = memoryStream;
+                imageSource.EndInit();
+
+                return imageSource;
+            }
+        }
+        private static Point3D GetMiddleVertex(CGeosetVertex one, CGeosetVertex two, CGeosetVertex three)
+        {
+            // Calculate the average of the X, Y, and Z coordinates
+            double middleX = (one.Position.X + two.Position.X + three.Position.X) / 3.0;
+            double middleY = (one.Position.Y + two.Position.Y + three.Position.Y) / 3.0;
+            double middleZ = (one.Position.Z + two.Position.Z + three.Position.Z) / 3.0;
+
+            // Return the calculated middle point as a Point3D
+            return new Point3D(middleX, middleY, middleZ);
+        }
+
+        internal static void SubdivideGeoset(CGeoset geoset, CModel ParentModel)
+        {
+            foreach (var originalFace in geoset.Faces.ToList())
+            {
+                // Create the 3 new faces
+                CGeosetFace face1 = new CGeosetFace(ParentModel);
+                CGeosetFace face2 = new CGeosetFace(ParentModel);
+                CGeosetFace face3 = new CGeosetFace(ParentModel);
+
+                // Get the middle vertex between the original triangle's vertices
+                Point3D middle = GetMiddleVertex(originalFace.Vertex1.Object, originalFace.Vertex2.Object, originalFace.Vertex3.Object);
+                CGeosetVertex middleVertex = new CGeosetVertex(ParentModel);
+                middleVertex.Position = new CVector3((float)middle.X, (float)middle.Y, (float)middle.Z);
+
+                // Set the texture coordinates and normals for the middle vertex
+                middleVertex.TexturePosition = CalculateMiddleTexturePositon
+                    (
+                    originalFace.Vertex1.Object.TexturePosition,
+                    originalFace.Vertex2.Object.TexturePosition,
+                    originalFace.Vertex3.Object.TexturePosition 
+                    );
+                middleVertex.Normal = CalculateMiddleNormal(
+                    originalFace.Vertex1.Object.Normal,
+                    originalFace.Vertex2.Object.Normal,
+                    originalFace.Vertex3.Object.Normal
+                    ); 
+                // Add the new middle vertex to the geoset
+                geoset.Vertices.Add(middleVertex);
+
+                // Create the three new faces
+                face1.Vertex1.Attach(originalFace.Vertex1.Object);
+                face1.Vertex2.Attach(originalFace.Vertex2.Object);
+                face1.Vertex3.Attach(middleVertex);
+
+                face2.Vertex1.Attach(originalFace.Vertex2.Object);
+                face2.Vertex2.Attach(originalFace.Vertex3.Object);
+                face2.Vertex3.Attach(middleVertex);
+
+                face3.Vertex1.Attach(originalFace.Vertex3.Object);
+                face3.Vertex2.Attach(originalFace.Vertex1.Object);
+                face3.Vertex3.Attach(middleVertex);
+
+                // Remove the original face and add the new faces
+                geoset.Faces.Remove(originalFace);
+                geoset.Faces.Add(face1);
+                geoset.Faces.Add(face2);
+                geoset.Faces.Add(face3);
+            }
+        }
+
+        private static CVector3 CalculateMiddleNormal(CVector3 normal1, CVector3 normal2, CVector3 normal3)
+        {
+            // Average the X, Y, and Z components of the normals
+            float x = (normal1.X + normal2.X + normal3.X) / 3f;
+            float y = (normal1.Y + normal2.Y + normal3.Y) / 3f;
+            float z = (normal1.Z + normal2.Z + normal3.Z) / 3f;
+
+            // Return a new CVector3 with the averaged normal components
+            return new CVector3(x, y, z);
+        }
+
+
+        private static CVector2 CalculateMiddleTexturePositon(CVector2 texturePosition1, CVector2 texturePosition2, CVector2 texturePosition3)
+        {
+            // Average the X and Y components of the texture positions
+            float x = (texturePosition1.X + texturePosition2.X + texturePosition3.X) / 3f;
+            float y = (texturePosition1.Y + texturePosition2.Y + texturePosition3.Y) / 3f;
+
+            // Return a new CVector2 with the averaged texture coordinates
+            return new CVector2(x, y);
+        }
+
+        internal static CGeoset CreateCube(CModel ModelOwner)
+        {
+            CGeoset geoset = new CGeoset(ModelOwner);
+
+            // Create the 8 vertices of the cube
+            CGeosetVertex v1 = new CGeosetVertex(ModelOwner) { Position = new CVector3(-1, -1, -1), Normal = new CVector3(0, 0, -1) };
+            CGeosetVertex v2 = new CGeosetVertex(ModelOwner) { Position = new CVector3(1, -1, -1), Normal = new CVector3(0, 0, -1) };
+            CGeosetVertex v3 = new CGeosetVertex(ModelOwner) { Position = new CVector3(1, 1, -1), Normal = new CVector3(0, 0, -1) };
+            CGeosetVertex v4 = new CGeosetVertex(ModelOwner) { Position = new CVector3(-1, 1, -1), Normal = new CVector3(0, 0, -1) };
+
+            CGeosetVertex v5 = new CGeosetVertex(ModelOwner) { Position = new CVector3(-1, -1, 1), Normal = new CVector3(0, 0, 1) };
+            CGeosetVertex v6 = new CGeosetVertex(ModelOwner) { Position = new CVector3(1, -1, 1), Normal = new CVector3(0, 0, 1) };
+            CGeosetVertex v7 = new CGeosetVertex(ModelOwner) { Position = new CVector3(1, 1, 1), Normal = new CVector3(0, 0, 1) };
+            CGeosetVertex v8 = new CGeosetVertex(ModelOwner) { Position = new CVector3(-1, 1, 1), Normal = new CVector3(0, 0, 1) };
+
+            // Add vertices to the geoset
+            geoset.Vertices.Add(v1);
+            geoset.Vertices.Add(v2);
+            geoset.Vertices.Add(v3);
+            geoset.Vertices.Add(v4);
+            geoset.Vertices.Add(v5);
+            geoset.Vertices.Add(v6);
+            geoset.Vertices.Add(v7);
+            geoset.Vertices.Add(v8);
+
+            // Create the faces of the cube
+            AddFace(geoset, ModelOwner, v1, v2, v3); // Bottom face 1
+            AddFace(geoset, ModelOwner, v1, v3, v4); // Bottom face 2
+
+            AddFace(geoset, ModelOwner, v5, v6, v7); // Top face 1
+            AddFace(geoset, ModelOwner, v5, v7, v8); // Top face 2
+
+            AddFace(geoset, ModelOwner, v1, v5, v8); // Left face 1
+            AddFace(geoset, ModelOwner, v1, v8, v4); // Left face 2
+
+            AddFace(geoset, ModelOwner, v2, v6, v7); // Right face 1
+            AddFace(geoset, ModelOwner, v2, v7, v3); // Right face 2
+
+            AddFace(geoset, ModelOwner, v1, v2, v6); // Front face 1
+            AddFace(geoset, ModelOwner, v1, v6, v5); // Front face 2
+
+            AddFace(geoset, ModelOwner, v4, v3, v7); // Back face 1
+            AddFace(geoset, ModelOwner, v4, v7, v8); // Back face 2
+
+            return geoset;
+        }
+
+        private static void AddFace(CGeoset geoset, CModel ModelOwner, CGeosetVertex v1, CGeosetVertex v2, CGeosetVertex v3)
+        {
+            CGeosetFace face = new CGeosetFace(ModelOwner);
+            face.Vertex1.Attach(v1);
+            face.Vertex2.Attach(v2);
+            face.Vertex3.Attach(v3);
+            geoset.Faces.Add(face);
+        }
+
+        internal static CGeoset CreateCylinder(CModel ModelOwner, float radius, float height, int sides)
+        {
+            // Ensure the number of sides is valid
+            if (sides < 3)
+            {
+                throw new ArgumentException("The number of sides cannot be less than 3.", nameof(sides));
+            }
+
+            CGeoset geoset = new CGeoset(ModelOwner);
+
+            float halfHeight = height / 2;
+
+            // Create vertices for the top and bottom circles
+            List<CGeosetVertex> topVertices = new List<CGeosetVertex>();
+            List<CGeosetVertex> bottomVertices = new List<CGeosetVertex>();
+
+            for (int i = 0; i < sides; i++)
+            {
+                float angle = 2 * MathF.PI * i / sides;
+                float x = radius * MathF.Cos(angle);
+                float z = radius * MathF.Sin(angle);
+
+                // Top circle vertex
+                CGeosetVertex topVertex = new CGeosetVertex(ModelOwner)
+                {
+                    Position = new CVector3(x, halfHeight, z),
+                    Normal = NormalizeVector(new CVector3(x, 0, z))
+                };
+                topVertices.Add(topVertex);
+                geoset.Vertices.Add(topVertex);
+
+                // Bottom circle vertex
+                CGeosetVertex bottomVertex = new CGeosetVertex(ModelOwner)
+                {
+                    Position = new CVector3(x, -halfHeight, z),
+                    Normal = NormalizeVector (new CVector3(x, 0, z))
+                };
+                bottomVertices.Add(bottomVertex);
+                geoset.Vertices.Add(bottomVertex);
+            }
+
+            // Create the center vertices for the top and bottom caps
+            CGeosetVertex topCenter = new CGeosetVertex(ModelOwner)
+            {
+                Position = new CVector3(0, halfHeight, 0),
+                Normal = new CVector3(0, 1, 0)
+            };
+            geoset.Vertices.Add(topCenter);
+
+            CGeosetVertex bottomCenter = new CGeosetVertex(ModelOwner)
+            {
+                Position = new CVector3(0, -halfHeight, 0),
+                Normal = new CVector3(0, -1, 0)
+            };
+            geoset.Vertices.Add(bottomCenter);
+
+            // Create faces for the top and bottom caps
+            for (int i = 0; i < sides; i++)
+            {
+                int next = (i + 1) % sides;
+
+                // Top cap
+                AddFace(geoset, ModelOwner, topVertices[i], topVertices[next], topCenter);
+
+                // Bottom cap
+                AddFace(geoset, ModelOwner, bottomVertices[next], bottomVertices[i], bottomCenter);
+            }
+
+            // Create faces for the sides
+            for (int i = 0; i < sides; i++)
+            {
+                int next = (i + 1) % sides;
+
+                // Side face 1 (bottom to top)
+                AddFace(geoset, ModelOwner, bottomVertices[i], topVertices[i], topVertices[next]);
+
+                // Side face 2 (top to bottom)
+                AddFace(geoset, ModelOwner, bottomVertices[i], topVertices[next], bottomVertices[next]);
+            }
+
+            return geoset;
+        }
+        public static CVector3 NormalizeVector(CVector3 vector)
+        {
+            // Calculate the length (magnitude) of the vector
+            float length = MathF.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
+
+            // Check if the length is greater than zero to avoid division by zero
+            if (length > 0)
+            {
+                // Return a new CVector3 instance with normalized components
+                return new CVector3(vector.X / length, vector.Y / length, vector.Z / length);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot normalize a vector with length zero.");
+            }
+        }
+
+        internal static CGeoset CreateCone(CModel ModelOwner, float radius, float height, int sides)
+        {
+            // Ensure the number of sides is at least 3
+            if (sides < 3)
+            {
+                throw new ArgumentException("The number of sides must be at least 3.", nameof(sides));
+            }
+
+            CGeoset geoset = new CGeoset(ModelOwner);
+
+            float halfHeight = height / 2;
+
+            // Create the apex vertex of the cone
+            CGeosetVertex apexVertex = new CGeosetVertex(ModelOwner)
+            {
+                Position = new CVector3(0, halfHeight, 0),
+                Normal = new CVector3(0, 1, 0) // Upward normal for the apex
+            };
+            geoset.Vertices.Add(apexVertex);
+
+            // Create the center vertex of the base
+            CGeosetVertex baseCenterVertex = new CGeosetVertex(ModelOwner)
+            {
+                Position = new CVector3(0, -halfHeight, 0),
+                Normal = new CVector3(0, -1, 0) // Downward normal for the base center
+            };
+            geoset.Vertices.Add(baseCenterVertex);
+
+            // Create vertices around the base circle
+            List<CGeosetVertex> baseVertices = new List<CGeosetVertex>();
+            for (int i = 0; i < sides; i++)
+            {
+                float angle = 2 * MathF.PI * i / sides;
+                float x = radius * MathF.Cos(angle);
+                float z = radius * MathF.Sin(angle);
+
+                CGeosetVertex baseVertex = new CGeosetVertex(ModelOwner)
+                {
+                    Position = new CVector3(x, -halfHeight, z),
+                    Normal = new CVector3(x, 0, z) // Outward normal for the base perimeter
+                };
+                baseVertices.Add(baseVertex);
+                geoset.Vertices.Add(baseVertex);
+            }
+
+            // Create faces for the base
+            for (int i = 0; i < sides; i++)
+            {
+                int nextIndex = (i + 1) % sides;
+                AddFace(geoset, ModelOwner, baseCenterVertex, baseVertices[nextIndex], baseVertices[i]);
+            }
+
+            // Create faces for the sides
+            for (int i = 0; i < sides; i++)
+            {
+                int nextIndex = (i + 1) % sides;
+                AddFace(geoset, ModelOwner, apexVertex, baseVertices[i], baseVertices[nextIndex]);
+            }
+
+            return geoset;
+        }
+       
+        internal static CGeosetVertex CloneVertex(CGeosetVertex vertex, CModel owner, CGeoset geoset)
+        {
+
+            CGeosetVertex vertex2 = new CGeosetVertex(owner);
+            vertex2.Position = new CVector3(vertex.Position.X, vertex.Position.Y,vertex.Position.Z);
+            vertex2.TexturePosition = new CVector2(vertex.TexturePosition.X, vertex.TexturePosition.Y);
+            vertex2.Normal = new CVector3(vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z);
+            CGeosetGroup group = new CGeosetGroup(owner);
+            foreach (var node in vertex.Group.Object.Nodes)
+            {
+                
+                CGeosetGroupNode n = new CGeosetGroupNode(owner );
+                n.Node.Attach(node.Node.Node);
+                group.Nodes.Add(n);
+            }
+            geoset.Groups.Add(group);
+            return vertex2;
+        }
+        internal static List<CGeoset> Fragment(CGeoset geoset, CModel owner)
+        {
+            List<CGeoset> list = new List<CGeoset>();
+            foreach (CGeosetFace face in geoset.Faces)
+            {
+                CGeoset _new = new CGeoset(owner);
+
+                CGeosetFace fragment = new CGeosetFace(owner);
+                CGeosetVertex one = CloneVertex(face.Vertex1.Object, owner, geoset);
+                CGeosetVertex two = CloneVertex(face.Vertex2.Object, owner, geoset);
+                CGeosetVertex three = CloneVertex(face.Vertex3.Object, owner, geoset);
+                fragment.Vertex1.Attach(one);
+                fragment.Vertex2.Attach(two);
+                fragment.Vertex3.Attach(three);
+                _new.Vertices.Add(one);
+                _new.Vertices.Add(two);
+                _new.Vertices.Add(three);
+                _new.Faces.Add(fragment);
+                _new.Material.Attach(geoset.Material.Object);
+                
+                 
+
+                //other
+                _new.Unselectable = geoset.Unselectable;
+                list.Add(_new);
+
+            }
+                return list;
+        }
+        private static bool CoordinatesSame(CVector3 one, CVector3 two)
+        {
+            return one.X == two.X && one.Y == two.Y && one.Z == two.Z;
+        }
+
+        internal static void WeldAll(CGeoset geoset, CModel currentModel)
+        {
+            start:
+            foreach (var vertex1 in geoset.Vertices.ToList())
+            {
+                foreach (var vertex2 in geoset.Vertices.ToList())
+                {
+                    if (vertex1 == vertex2) { continue; }
+                    if (CoordinatesSame(vertex1.Position, vertex2.Position))
+                    {
+                        foreach (var face in geoset.Faces)
+                        {
+                            if (face.Vertex1.Object == vertex2) face.Vertex1.Attach(vertex1);
+                            if (face.Vertex2.Object == vertex2) face.Vertex1.Attach(vertex1);
+                            if (face.Vertex3.Object == vertex2) face.Vertex1.Attach(vertex1);
+                        }
+                        geoset.Vertices.Remove(vertex2);
+                        goto start;
+                    }
+                }
+            }
+             
+        }
+
+        internal static System.Windows.Media.Brush BrushFromVector3(CVector3 cVector3)
+        {
+            // Clamp each value to the 0-1 range to avoid invalid brush colors
+            double r = Math.Min(Math.Max(cVector3.X, 0), 1);
+            double g = Math.Min(Math.Max(cVector3.Y, 0), 1);
+            double b = Math.Min(Math.Max(cVector3.Z, 0), 1);
+
+            // Create and return a SolidColorBrush using the vector's components
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, (float)r, (float)g, (float)b));
+        }
+
+        internal static string VisibilityValue(float v)
+        {
+            if (v <= 0) return "Invisible";
+            return "Visible";
+        }
+
+        internal static string GetAlpha(float v)
+        {
+            return (v * 100).ToString(); ;
+        }
+        static CGeosetVertex getTopMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex topMostVertex = null;
+            float topMostZ = float.MinValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.Z > topMostZ)
+                {
+                    topMostZ = vertex.Position.Z;
+                    topMostVertex = vertex;
+                }
+            }
+
+            return topMostVertex;
+        }
+
+        static CGeosetVertex getBottomMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex bottomMostVertex = null;
+            float bottomMostZ = float.MaxValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.Z < bottomMostZ)
+                {
+                    bottomMostZ = vertex.Position.Z;
+                    bottomMostVertex = vertex;
+                }
+            }
+
+            return bottomMostVertex;
+        }
+
+        static CGeosetVertex getLeftMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex leftMostVertex = null;
+            float leftMostY = float.MaxValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.Y  < leftMostY)
+                {
+                    leftMostY = vertex.Position.Y;
+                    leftMostVertex = vertex;
+                }
+            }
+
+            return leftMostVertex;
+        }
+
+        static CGeosetVertex getRightMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex rightMostVertex = null;
+            float rightmostY = float.MinValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.Y > rightmostY)
+                {
+                    rightmostY = vertex.Position.Y;
+                    rightMostVertex = vertex;
+                }
+            }
+
+            return rightMostVertex;
+        }
+
+      static  CGeosetVertex getFrontMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex frontMostVertex = null;
+            float frontMostX = float.MinValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.X > frontMostX)
+                {
+                    frontMostX = vertex.Position.X;
+                    frontMostVertex = vertex;
+                }
+            }
+
+            return frontMostVertex;
+        }
+
+        static CGeosetVertex getBackMostVertex(CGeoset geoset)
+        {
+            CGeosetVertex backMostVertex = null;
+            float backMostX =  float.MaxValue;
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (vertex.Position.X < backMostX)
+                {
+                    backMostX = vertex.Position.X;
+                    backMostVertex = vertex;
+                }
+            }
+
+            return backMostVertex;
+        }
+
+        static bool CoordinateIsAfterCentroid(CVector3 centroid, CVector3 targetCoordinate, Side side)
+        {
+            switch (side)
+            {
+                case Side.Top:
+                    return targetCoordinate.Z > centroid.Z; // Target is above the centroid (higher Z value)
+                case Side.Bottom:
+                    return targetCoordinate.Z < centroid.Z; // Target is below the centroid (lower Z value)
+                case Side.Left:
+                    return targetCoordinate.Y < centroid.Y; // Target is to the left of the centroid (lower Y value)
+                case Side.Right:
+                    return targetCoordinate.Y > centroid.Y; // Target is to the right of the centroid (higher Y value)
+                case Side.Front:
+                    return targetCoordinate.X > centroid.X; // Target is in front of the centroid (higher X value)
+                case Side.Back:
+                    return targetCoordinate.X < centroid.X; // Target is behind the centroid (lower X value)
+                default:
+                    return false;
+            }
+        }
+
+        internal static void FlattenSide(CGeoset geoset, Side side)
+        {
+            var centroid = GetCentroidOfGeoset(geoset);
+
+            switch (side)
+            {
+                case Side.Left:
+                    CGeosetVertex leftmost = getLeftMostVertex(geoset);
+                    foreach ( var vertex in geoset.Vertices)
+                    {
+                        if ( CoordinateIsAfterCentroid(centroid, vertex.Position, side)){
+                            float X = vertex.Position.X;
+                            float Y = leftmost.Position.Y;
+                            float Z = vertex.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                     
+                    
+                    break; 
+                case Side.Right:
+                    CGeosetVertex rightmost = getRightMostVertex(geoset);
+                   
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
+
+                            float X = vertex.Position.X;
+                            float Y = rightmost.Position.Y;
+                            float Z = vertex.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                    break;
+                 case Side.Top:
+                    CGeosetVertex topmost = getTopMostVertex(geoset);
+                   
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
+
+                            float X = vertex.Position.X;
+                            float Y = vertex.Position.Y;
+                            float Z = topmost.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                    break;
+                 case Side.Bottom:
+                    CGeosetVertex bottommost = getBottomMostVertex(geoset);
+                    
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
+
+                            float X = vertex.Position.X;
+                            float Y = vertex.Position.Y;
+                            float Z = bottommost.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                    break;
+                  case Side.Front:
+                    CGeosetVertex frontmost = getFrontMostVertex(geoset);
+                    
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
+
+                            float X = frontmost.Position.X;
+                            float Y = vertex.Position.Y;
+                            float Z = vertex.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                    break;
+                   case Side.Back:
+                    CGeosetVertex backmost = getBackMostVertex(geoset);
+                  
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
+
+                            float X = backmost.Position.X;
+                            float Y = vertex.Position.Y;
+                            float Z = vertex.Position.Z;
+                            vertex.Position = new CVector3(X, Y, Z);
+                        }
+                    }
+                    break;
+            }
+            // find the farthest vertex at.... and then based on it
            
         }
+
+        internal static void Simplify(CGeoset geoset, CModel Model)
+        {
+            // If there are fewer than 3 faces, simplification is not possible
+            if (geoset.Faces.Count < 3) return;
+
+            // Loop until no more surfaces can be simplified
+            bool changesMade = true;
+            while (changesMade)
+            {
+                changesMade = false;
+
+                // Find a flat uninterrupted surface with at least 3 faces
+                List<CGeosetFace> surface = FindUninterruptedFlatSurface(geoset);
+                if (surface.Count >= 3)
+                {
+                    changesMade = true;
+
+                    // 2. Find all outermost vertices of the surface
+                    List<CGeosetVertex> outerVertices = FindOuterVertices(surface);
+
+                    // 3. Destroy all faces in that group
+                    foreach (CGeosetFace face in surface)
+                    {
+                        geoset.Faces.Remove(face);
+                    }
+
+                    // 4. Create new triangles from the outer vertices
+                    List<CGeosetFace> newFaces = CreateNewTrianglesFromVertices(outerVertices, Model);
+
+                    // Add the new faces to the geoset
+                    foreach (CGeosetFace face in newFaces) geoset.Faces.Add(face);
+                  
+                }
+            }
+        }
+
+        private static bool AreCoplanar(CGeosetFace one, CGeosetFace two)
+        {
+            // Basic implementation for coplanarity check using normals or another criteria
+            // For simplicity, using vertex positions as an example, assuming a method that checks normals is implemented
+            var normal1 = CalculateNormal(one);
+            var normal2 = CalculateNormal(two);
+
+            return normal1.Equals(normal2); // You can refine this logic with a tolerance check
+        }
+
+        // Assuming CVertex has a Position property that is of type Vector3
+        private static Vector3 CalculateNormal(CGeosetFace face)
+        {
+            // Get the positions of the three vertices
+            var v1 = face.Vertex1.Object.Position;
+            var v2 = face.Vertex2.Object.Position;
+            var v3 = face.Vertex3.Object.Position;
+
+            // Compute two edge vectors
+            var edge1 = new Vector3(v2.X - v1.X, v2.Y - v1.Y, v2.Z - v1.Z); // v2 - v1
+            var edge2 = new Vector3(v3.X - v1.X, v3.Y - v1.Y, v3.Z - v1.Z); // v3 - v1
+
+            // Calculate the cross product (the normal to the plane of the triangle)
+            var normal = new Vector3(
+                edge1.Y * edge2.Z - edge1.Z * edge2.Y, // X component
+                edge1.Z * edge2.X - edge1.X * edge2.Z, // Y component
+                edge1.X * edge2.Y - edge1.Y * edge2.X  // Z component
+            );
+
+            // Normalize the normal vector (make it a unit vector)
+            float length = (float)Math.Sqrt(normal.X * normal.X + normal.Y * normal.Y + normal.Z * normal.Z);
+            if (length > 0)
+            {
+                normal.X /= length;
+                normal.Y /= length;
+                normal.Z /= length;
+            }
+
+            return normal;
+        }
+
+
+
+        private static List<CGeosetFace> FindUninterruptedFlatSurface(CGeoset geoset)
+        {
+            List<CGeosetFace> surface = new List<CGeosetFace>();
+            List<CGeosetFace> remainingFaces = new List<CGeosetFace>(geoset.Faces);
+
+            for (int i = 0; i < remainingFaces.Count - 1; i++)
+            {
+                if (AreCoplanar(remainingFaces[i], remainingFaces[i + 1]))
+                {
+                    // Add faces to the surface group
+                    surface.Add(remainingFaces[i]);
+                    surface.Add(remainingFaces[i + 1]);
+                    remainingFaces.RemoveAt(i);
+                    remainingFaces.RemoveAt(i);
+                    i--; // Adjust index after removal
+                }
+            }
+
+            // Second pass: check for connected faces that share vertices
+            List<CGeosetFace> connectedFaces = new List<CGeosetFace>();
+            foreach (CGeosetFace face in surface)
+            {
+                foreach (CGeosetFace otherFace in remainingFaces)
+                {
+                    if (HaveCommonVertices(face, otherFace))
+                    {
+                        connectedFaces.Add(otherFace);
+                        remainingFaces.Remove(otherFace);
+                    }
+                }
+            }
+
+            surface.AddRange(connectedFaces);
+            return surface;
+        }
+
+        private static bool HaveCommonVertices(CGeosetFace face1, CGeosetFace face2)
+        {
+            // Check if two faces share at least one vertex
+            return face1.Vertex1 == face2.Vertex1 || face1.Vertex1 == face2.Vertex2 || face1.Vertex1 == face2.Vertex3 ||
+                   face1.Vertex2 == face2.Vertex1 || face1.Vertex2 == face2.Vertex2 || face1.Vertex2 == face2.Vertex3 ||
+                   face1.Vertex3 == face2.Vertex1 || face1.Vertex3 == face2.Vertex2 || face1.Vertex3 == face2.Vertex3;
+        }
+
+        private static List<CGeosetVertex> FindOuterVertices(List<CGeosetFace> surface)
+        {
+            List<CGeosetVertex> outerVertices = new List<CGeosetVertex>();
+            // For simplicity, assume we get the outer vertices from the convex hull or boundary of the surface.
+            // This can be done by examining the vertices and finding the outermost ones (for example, using a convex hull algorithm).
+
+            // Dummy example, just collecting vertices
+            foreach (var face in surface)
+            {
+                if (!outerVertices.Contains(face.Vertex1.Object)) outerVertices.Add(face.Vertex1.Object);
+                if (!outerVertices.Contains(face.Vertex2.Object)) outerVertices.Add(face.Vertex2.Object);
+                if (!outerVertices.Contains(face.Vertex3.Object)) outerVertices.Add(face.Vertex3.Object);
+            }
+            return outerVertices;
+        }
+
+        private static List<CGeosetFace> CreateNewTrianglesFromVertices(List<CGeosetVertex> vertices, CModel Model)
+        {
+            List<CGeosetFace> newFaces = new List<CGeosetFace>();
+
+            // For simplicity, assume the outer vertices form a simple polygon
+            // We would typically triangulate the outer vertices (e.g., by using an ear clipping algorithm or similar)
+
+            // Dummy triangulation example
+            for (int i = 1; i < vertices.Count - 1; i++)
+            {
+                CGeosetFace face = new CGeosetFace(Model);
+                face.Vertex1.Attach(vertices[0]);
+                face.Vertex2.Attach(vertices[i]);
+                face.Vertex3.Attach(vertices[i+1]);
+                newFaces.Add(face);
+            }
+
+            return newFaces;
+        }
+
+        internal static int[] GetColor(Button button)
+        {
+            // Ensure the background is a SolidColorBrush
+            if (button.Background is System.Windows.Media.SolidColorBrush solidColorBrush)
+            {
+                // Extract the color components
+                System.Windows.Media.Color color = solidColorBrush.Color;
+                int r = color.R;
+                int g = color.G;
+                int b = color.B;
+                return new int[] { r, g, b };
+            }
+
+            // Return a default value or throw an exception if the brush is not a SolidColorBrush
+            return new int[] { 0, 0, 0 }; // Default to black
+        }
+
+        internal static System.Windows.Media.Brush ColorToBrush(System.Windows.Media.Color color)
+        {
+            return new System.Windows.Media.SolidColorBrush(color);
+        }
+
+        internal static System.Windows.Media.Brush War3ColorToBrush(CVector3 color)
+        {
+            float R = color.Z * 255;
+            float G = color.Y * 255;
+            float B = color.X * 255;
+            return BrushFromRGB(R, G, B);
+            throw new NotImplementedException();
+        }
+
+        private static System.Windows.Media.Brush BrushFromRGB(float r, float g, float b)
+        {
+            // Ensure the values are clamped between 0 and 1
+            r = Math.Max(0, Math.Min(1, r));
+            g = Math.Max(0, Math.Min(1, g));
+            b = Math.Max(0, Math.Min(1, b));
+
+            // Convert the values to the 0-255 range
+            byte red = (byte)(r * 255);
+            byte green = (byte)(g * 255);
+            byte blue = (byte)(b * 255);
+
+            // Create and return the SolidColorBrush
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
+        }
+
+        internal static System.Windows.Media.Color BrushToColor(System.Windows.Media.Brush brush)
+        {
+            if (brush is System.Windows.Media.SolidColorBrush solidColorBrush)
+            {
+                return solidColorBrush.Color;
+            }
+            else
+            {
+                throw new InvalidOperationException("Only SolidColorBrush is supported.");
+            }
+        }
+
     }
 }

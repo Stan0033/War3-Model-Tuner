@@ -36,6 +36,7 @@
                 <ListBoxItem>Emitter2</ListBoxItem>
                 <ListBoxItem>Ribbon</ListBoxItem>
                 <ListBoxItem>Attachment</ListBoxItem>
+                <ListBoxItem>Event Object</ListBoxItem>
             </ListBox.Items>
         </ListBox>
     </Grid>

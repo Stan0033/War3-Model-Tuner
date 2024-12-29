@@ -8,7 +8,7 @@
         ResizeMode="NoResize"
         Background="LightGray"
         WindowStartupLocation="CenterScreen"
-        Title="Import nodes" Height="150" Width="350">
+        Title="Import nodes" Height="180" Width="350">
     <StackPanel Margin="10">
         <RadioButton IsEnabled="False" Name="one">Append different only</RadioButton>
         <RadioButton Name="two" IsChecked="True">Overwrite keyframes of identicals, do not append different</RadioButton>

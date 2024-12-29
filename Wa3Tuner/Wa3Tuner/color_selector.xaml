@@ -9,7 +9,7 @@
 
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Title="Color Selector" Height="200" Width="300">
+        Title="Color Selector" Height="220" Width="300">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

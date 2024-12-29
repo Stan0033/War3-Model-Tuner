@@ -1,0 +1,25 @@
+﻿<Window x:Class="Wa3Tuner.edit_emitter1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        mc:Ignorable="d"
+        Background="LightGray"
+        Title="Edit Emitter1" Height="250" Width="400">
+    <StackPanel>
+        <Button Name="ButtonEmissionRate" Click="editemission">Emission Rate</Button>
+        <Button Name="ButtonLifespan" Click="editlifespan">Lifespan</Button>
+        <Button Name="ButtonInitialVelocity" Click="editinitial">Initial Velocity</Button>
+        <Button Name="ButtonGravity" Click="editgravity" >Gravity</Button>
+        <Button Name="ButtonLongtitude" Click="editlongti">Logtitude</Button>
+        <Button Name="ButtonLatitude" Click="editlat">Latitude</Button>
+        <Button Name="ButtonVisibility" Click="editvis">Visibility</Button>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Particle Filename"/>
+            <TextBox Name="InputPArticlde" Width="200" Margin="5,0,5,0"></TextBox>
+        </StackPanel>
+        <CheckBox Name="Check_usemd" Checked="ChckedUseMDL" Unchecked="ChckedUseMDL">Emitter uses MDL</CheckBox>
+        <CheckBox Name="Check_usetga" Unchecked="CheckedUsesTGA" Checked="CheckedUsesTGA">Emitter uses TGA</CheckBox>
+    </StackPanel>
+</Window>

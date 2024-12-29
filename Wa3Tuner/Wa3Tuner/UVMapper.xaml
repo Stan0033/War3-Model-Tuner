@@ -1,0 +1,48 @@
+﻿<Window x:Class="Wa3Tuner.UVMapper"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        Closing="Window_Closing"
+        mc:Ignorable="d"
+        Title="UVMapper" Height="650" Width="800">
+    <Grid Background="LightGray">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel>
+            <TextBlock Text="Geosets"/>
+            <ListBox Name="List_Geosets_UV" Height="80" SelectionMode="Single" SelectionChanged="SelectedGeoset"/>
+            <TextBlock Text="Triangles"/>
+            <ListBox Name="List_Faces_UV" Height="80" SelectionMode="Multiple" SelectionChanged="SelectFaces"/>
+            <Button>Select all</Button>
+            <Button>Select None</Button>
+            <Button>Select Inverse</Button>
+            <RadioButton IsChecked="True">Render single</RadioButton>
+            <RadioButton>Render tiled</RadioButton>
+            <Button>Project</Button>
+            <Button>Swap two</Button>
+            <Button>Negate Us</Button>
+            <Button>Negate Vs</Button>
+            <Button>Swap Us with Vs</Button>
+            <Button>Rotate by 90C</Button>
+            <Button>Clamp coordinates</Button>
+            <Button>Refresh view in main window</Button>
+           
+            <StackPanel Margin="5">
+                <TextBox Name="InputU" Margin="2" KeyDown="EnterU"/>
+                <TextBox Name="InputV" Margin="2" KeyDown="EnterV"/>
+                <Button Click="CopyUV">Copy coordinate</Button>
+                <Button Click="PasteUV">Paste coordinate</Button>
+            </StackPanel>
+            
+            <TextBlock Text="Edi mode:"/>
+            <Button>Move</Button>
+            <Button>Scale</Button>
+            <Button>Rotate</Button>
+        </StackPanel>
+        <Canvas Name="Canvas_UV" Grid.Column="1" Background="Black"/>
+    </Grid>
+</Window>

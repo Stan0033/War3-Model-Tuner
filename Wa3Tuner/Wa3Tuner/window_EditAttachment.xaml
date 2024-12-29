@@ -1,0 +1,19 @@
+﻿<Window x:Class="Wa3Tuner.window_EditAttachment"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        mc:Ignorable="d"
+        Background="LightGray"
+        WindowStartupLocation="CenterScreen"
+        
+        ResizeMode="NoResize"
+        Title="Edit data of attachment" Height="220" Width="300">
+    <StackPanel>
+        <TextBlock Text="External model path:"/>
+        <TextBox Name="Path" Padding="5" Margin="5"/>
+        <Button Click="EditVis" Content="Edit visibilities" Padding="10" Margin="10"/>
+        <Button Click="ok" Content="OK" Padding="10" Margin="10"/>
+    </StackPanel>
+</Window>

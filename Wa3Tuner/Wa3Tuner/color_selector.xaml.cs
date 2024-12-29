@@ -19,16 +19,26 @@ namespace Wa3Tuner
     /// </summary>
     public partial class color_selector : Window
     {
-        public Color SelectedColor { get; private set; }
+        public Color SelectedColor = Colors.White;
+        public Brush SelectedBrush = Brushes.White;
         CModel Model;
         CGeoset Geoset;
         bool initialized = false;
-        public color_selector(MdxLib.Model.CModel currentModel, CGeoset geoset)
+        public color_selector( )
         {
             InitializeComponent();
-            Model = currentModel;
-            Geoset = geoset;
+            
             initialized = true;
+        }
+        public color_selector(Brush brush)
+        {
+            InitializeComponent();
+
+            initialized = true;
+            Color color = Calculator.BrushToColor(brush);
+            RedSlider.Value = color.R;
+            GreenSlider.Value = color.G;
+            BlueSlider.Value = color.B;
         }
         private void OnColorChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -44,6 +54,7 @@ namespace Wa3Tuner
             byte blue = (byte)BlueSlider.Value;
 
             SelectedColor = Color.FromRgb(red, green, blue);
+            SelectedBrush = new SolidColorBrush(SelectedColor);
             ColorCanvas.Background = new SolidColorBrush(SelectedColor);
         }
 

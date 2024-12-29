@@ -1,0 +1,175 @@
+﻿<Window x:Class="Wa3Tuner.edit_emitter2"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        mc:Ignorable="d"
+        Background="LightGray"
+        Title="Edit Emitter2" Height="650" Width="800">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+
+        <!-- Buttons Section -->
+        <StackPanel>
+            <Button Name="ButtonVisibility" Height="30" Click="EditVisibility" Margin="0,5"/>
+            <Button Name="ButtonEmissionRate" Height="30" Click="EditEmissionRate" Margin="0,5"/>
+            <Button Name="ButtonSpeed" Height="30" Click="EditSpeed" Margin="0,5"/>
+            <Button Name="ButtonVariation" Height="30" Click="EditVariation" Margin="0,5"/>
+            <Button Name="ButtonLatitude" Height="30" Click="EditLatitude" Margin="0,5"/>
+            <Button Name="ButtonWidth" Height="30" Click="EditWidth" Margin="0,5"/>
+            <Button Name="ButtonLength" Height="30" Click="EditLength" Margin="0,5"/>
+            <Button Name="ButtonGravity" Height="30" Click="EditGravity" Margin="0,5"/>
+            <!-- Texture and Filter Mode Section -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Texture used" Width="120" VerticalAlignment="Center"/>
+                <ComboBox Name="ComboTexture" Width="250" SelectionChanged="SelectedTexture"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Filter Mode" Width="120" VerticalAlignment="Center"/>
+                <ComboBox Name="ComboFilterMode" Width="250" SelectionChanged="SelectedFilterMode">
+                    <ComboBox.Items>
+                        <ComboBoxItem Content="None"/>
+                        <ComboBoxItem Content="Transparent"/>
+                        <ComboBoxItem Content="Blend"/>
+                        <ComboBoxItem Content="Additive"/>
+                        <ComboBoxItem Content="AddAlpha"/>
+                        <ComboBoxItem Content="Modulate"/>
+                        <ComboBoxItem Content="Modulate2x"/>
+                        <ComboBoxItem Content="AlphaKey"/>
+                    </ComboBox.Items>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Flags Section -->
+            <StackPanel Orientation="Vertical" Margin="0,5">
+                <TextBlock Text="Flags" FontWeight="Bold" Margin="0,5"/>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Name="Check_Unshaded" Checked="Checked_Unshaded" Unchecked="Checked_Unshaded" Content="Unshaded" Margin="5"/>
+                    <CheckBox Name="Check_Unfogged" Checked="Checked_Unfogged" Unchecked="Checked_Unfogged" Content="Unfogged" Margin="5"/>
+                    <CheckBox Name="Check_LineEmitter" Unchecked="Checked_LineEmitter" Checked="Checked_LineEmitter" Content="Line Emitter" Margin="5"/>
+                    <CheckBox Name="Check_Sort" Checked="Checked_Sort" Unchecked="Checked_Sort" Content="Sort Primitives Far Z" Margin="5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Name="Check_ModelSpace" Unchecked="Checked_ModelSpace" Checked="Checked_ModelSpace" Content="Model Space" Margin="5"/>
+                    <CheckBox Name="Check_XY" Checked="Checked_XY" Unchecked="Checked_XY" Content="XY Quad" Margin="5"/>
+                    <CheckBox Name="Check_Squirt" Unchecked="Checked_Squirt" Checked="Checked_Squirt" Content="Squirt" Margin="5"/>
+                    <CheckBox Name="Check_Head" Checked="Checked_Head" Unchecked="Checked_Head" Content="Head" Margin="5"/>
+                    <CheckBox Content="Tail" Name="Check_Tail" Checked="Checked_Tail" Unchecked="Checked_Tail" Margin="5"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Margin="5">
+
+
+           
+
+            <!-- Segment 1 and 2 Sections -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Segment 1" Width="120" VerticalAlignment="Center" />
+                <Button Name="ButtonColor1" Click="SetColor1" Content="Color" Margin="5" Width="100"/>
+                <StackPanel>
+                    <TextBlock Text="Alpha (%)" VerticalAlignment="Center" Width="60"/>
+                    <TextBox Name="InputAlpha1" TextChanged="SetSegment1" Margin="5"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Scaling (%+)" VerticalAlignment="Center"/>
+                    <TextBox Name="InputScaling1" TextChanged="SetSegment1"  Margin="5"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Segment 2" Width="120" VerticalAlignment="Center"/>
+                <Button Name="ButtonColor2" Click="SetColor2" Content="Color" Margin="5"  Width="100"/>
+                <StackPanel>
+                    <TextBlock  Text="Alpha (%)" VerticalAlignment="Center" Width="60"/>
+                    <TextBox  Name="InputAlpha2" TextChanged="SetSegment2" Margin="5"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Scaling (%+)" VerticalAlignment="Center"/>
+                    <TextBox Name="InputScaling2" TextChanged="SetSegment2" Margin="5"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Segment 3" Width="120" VerticalAlignment="Center"/>
+                <Button Name="ButtonColor3" Click="SetColor3" Content="Color" Margin="5"  Width="100"/>
+                <StackPanel>
+                    <TextBlock Text="Alpha (%)" VerticalAlignment="Center" Width="60"/>
+                    <TextBox Name="InputAlpha3" TextChanged="SetSegment3" Margin="5"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Scaling (%+)" VerticalAlignment="Center"/>
+                    <TextBox Name="InputScaling3" TextChanged="SetSegment3" Margin="5"/>
+                </StackPanel>
+            </StackPanel>
+            <!-- Head and Tail Sections -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Head (Lifespan) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
+                <TextBox Name="InputHeadStart" TextChanged="SetHeadLife" Width="50" Margin="5"/>
+                <TextBox Name="InputHeadEnd" TextChanged="SetHeadLife"  Width="50" Margin="5"/>
+                <TextBox Name="InputHeadRepeat" TextChanged="SetHeadLife"  Width="50" Margin="5"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Head (Decay) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
+                <TextBox Name="InputHeadStartDecay" TextChanged="SetHedDecay" Width="50" Margin="5"/>
+                <TextBox Name="InputHeadEndDecay"  TextChanged="SetHedDecay"  Width="50" Margin="5"/>
+                <TextBox Name="InputHeadRepeatDecay" TextChanged="SetHedDecay"  Width="50" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Tail (Decay) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
+                <TextBox Name="InputTailDecayStart" TextChanged="SetTailDecay" Width="50" Margin="5"/>
+                <TextBox Name="InputTailDecayEnd" TextChanged="SetTailDecay"  Width="50" Margin="5"/>
+                <TextBox Name="InputTailDecayRepeat" TextChanged="SetTailDecay"  Width="50" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Tail (Lifespan) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
+                <TextBox Name="InputTailLifespanStart" TextChanged="SetTailLife" Width="50" Margin="5"/>
+                <TextBox Name="InputTailLifespanEnd" TextChanged="SetTailLife" Width="50" Margin="5"/>
+                <TextBox Name="InputTailLifespanRepeat"  TextChanged="SetTailLife" Width="50" Margin="5"/>
+            </StackPanel>
+
+            <!-- Other Settings -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Rows" Width="120" VerticalAlignment="Center"/>
+                <TextBox Name="InputRows" TextChanged="SetRows" Width="100" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Columns" Width="120" VerticalAlignment="Center"/>
+                <TextBox Name="InputColumns" TextChanged="SetColumns" Width="100" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Lifespan" Width="120" VerticalAlignment="Center"/>
+                <TextBox Name="InputLifespan" TextChanged="SetLifespan" Width="100" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Tail Length" Width="120" VerticalAlignment="Center"/>
+                <TextBox Width="100"   Name="InputTailLength"  Margin="5" TextChanged="SetTailLength"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Priority Plane" Width="120" VerticalAlignment="Center"/>
+                <TextBox  Name="InputPriorityPlane" TextChanged="SetPriorityPlane" Width="100" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Replaceable ID" Width="120" VerticalAlignment="Center"/>
+                <TextBox Width="100" Margin="5" Name="InputReplaceableID" TextChanged="SetRepalceableID"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                <TextBlock Text="Time" Width="120" VerticalAlignment="Center"/>
+                <TextBox Name="InputTime" TextChanged="SetTime" Width="100" Margin="5"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

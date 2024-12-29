@@ -4,7 +4,7 @@ using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Configuration;
+ 
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -620,9 +620,10 @@ namespace Wa3Tuner
 
             for (int i = 0; i < list.Count; i++)
             {
+               
                 if (i - 1 != -1)
                 {
-                    if (list[i - 1].Time == list[i].Time)
+                    if (list[i - 1].Time == list[i].Time  )
                     {
                         list.RemoveAt(i);
                         goto start;
@@ -754,6 +755,19 @@ namespace Wa3Tuner
                     one>= sequence.IntervalStart && one <= sequence.IntervalEnd &&
                     two>= sequence.IntervalStart && two <= sequence.IntervalEnd &&
                     three >= sequence.IntervalStart && three <= sequence.IntervalEnd
+                    ) { return true; }
+            }
+            return false;
+
+        }
+        private static bool TracksBelongToSameSequence(int one, int two)
+        {
+            foreach (CSequence sequence in Model.Sequences)
+            {
+                if (
+                    one >= sequence.IntervalStart && one <= sequence.IntervalEnd &&
+                    two >= sequence.IntervalStart && two <= sequence.IntervalEnd  
+                   
                     ) { return true; }
             }
             return false;

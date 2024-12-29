@@ -48,7 +48,11 @@ namespace Wa3Tuner
                         {
                             int time = item.Time;
                             CSequence _sequence = findSequenceofTime(time);
-                            if (_sequence != null) { Visibilities.Add(_sequence, true); }
+                            if (_sequence != null) {
+                                if (Visibilities.ContainsKey(_sequence) == false)
+                                {
+                                    Visibilities.Add(_sequence, true);
+                                } }
                         }
                       
                     }
@@ -109,6 +113,9 @@ namespace Wa3Tuner
                 float value = visibility.Value == true ? 1 : 0; 
                 GeosetAnim.Alpha.Add(new MdxLib.Animator.CAnimatorNode<float>(time, value));
             }
+            GeosetAnim.Alpha.MakeAnimated();
+
+
             GeosetAnim.Geoset.Attach(Geoset);
             
         }
@@ -118,13 +125,9 @@ namespace Wa3Tuner
             if (Model.GeosetAnimations.Any(x => x.Geoset.Object == Geoset))
             {
                 CGeosetAnimation existing = Model.GeosetAnimations.First(x => x.Geoset.Object == Geoset);
-                existing = GeosetAnim;
+                Model.GeosetAnimations.Remove(existing);
             }
-            else
-            {
-                Model.GeosetAnimations.Add(GeosetAnim);
-            }
-
+            Model.GeosetAnimations.Add(GeosetAnim);
             DialogResult = true;
         }
     }

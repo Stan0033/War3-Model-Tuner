@@ -1,0 +1,38 @@
+﻿<Window x:Class="Wa3Tuner.loopdialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner"
+        mc:Ignorable="d"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="Loop" Height="230" Width="300">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="In sequence" Width="100"/>
+            <ComboBox Name="InputSequence" Width="150"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="1">
+            <TextBlock Text="Times" Width="100"/>
+            <TextBox Name="InputTimes" Width="150"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="2">
+            <TextBlock Text="Value 1" Width="100"/>
+            <TextBox Name="InputValue1" Width="150"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="3">
+            <TextBlock Text="Value 2" Width="100"/>
+            <TextBox Name="InputValue2" Width="150"/>
+        </StackPanel>
+        <Button Grid.Row="4" Click="OK" Content="OK"/>
+    </Grid>
+</Window>

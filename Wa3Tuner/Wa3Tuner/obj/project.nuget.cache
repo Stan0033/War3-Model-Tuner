@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "LS8ZS/6Z33g=",
+  "success": true,
+  "projectFilePath": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\dotnetzip\\1.16.0\\dotnetzip.1.16.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.1\\microsoft.netcore.platforms.3.1.1.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\microsoft.win32.systemevents\\6.0.0\\microsoft.win32.systemevents.6.0.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.drawing.common\\6.0.0\\system.drawing.common.6.0.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.security.accesscontrol\\4.7.0\\system.security.accesscontrol.4.7.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.security.permissions\\4.7.0\\system.security.permissions.4.7.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.security.principal.windows\\4.7.0\\system.security.principal.windows.4.7.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.text.encoding.codepages\\4.7.1\\system.text.encoding.codepages.4.7.1.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\system.windows.extensions\\4.7.0\\system.windows.extensions.4.7.0.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\war3net.common\\5.6.1\\war3net.common.5.6.1.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\war3net.drawing.blp\\5.6.1\\war3net.drawing.blp.5.6.1.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\war3net.io.compression\\5.6.1\\war3net.io.compression.5.6.1.nupkg.sha512",
+    "C:\\Users\\stan0033_laptop\\.nuget\\packages\\war3net.io.mpq\\5.6.1\\war3net.io.mpq.5.6.1.nupkg.sha512"
+  ],
+  "logs": []
+}

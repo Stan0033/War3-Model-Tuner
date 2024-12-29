@@ -16,7 +16,8 @@ namespace Wa3Tuner
 {
    public enum NodeType
     {
-        Bone, Helper, Cols, Light, Emitter1, Emitter2, Ribbon, Attachment
+        Bone, Helper, Cols, Light, Emitter1, Emitter2, Ribbon, Attachment,
+        Event
     }
     /// <summary>
     /// Interaction logic for createnode.xaml
