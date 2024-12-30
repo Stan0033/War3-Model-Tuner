@@ -73,6 +73,7 @@
                 <MenuItem Click="ImportAllGeosetsOf" Header="Import all geosets of..." ></MenuItem>
                 <MenuItem Click="ImportAllNodesOf" Header="Import all nodes of.."></MenuItem>
                 <MenuItem Click="ImportTextures" Header="Import all textures of..."></MenuItem>
+                <MenuItem Click="ImportSequences" Header="Overwrite the list of sequences with another model's..."></MenuItem>
 
             </MenuItem>
             <MenuItem Header="Cleaner">
@@ -145,7 +146,9 @@
                             <CheckBox Name="Check_delEmptyEO">Delete empty event objects</CheckBox>
                             <CheckBox Name="check_delISolatedTriangles">Delete isolated triangles</CheckBox>
                             <CheckBox Name="check_delISolatedVertices">Delete isolated vertices</CheckBox>
-
+                            <CheckBox Name="check_delOverlapping1">Delete fully overlapping triangles who share the same vertices</CheckBox>
+                            <CheckBox Name="check_delOverlapping2">Delete fully overlapping triangles who share the different vertices</CheckBox>
+                            
 
                             <CheckBox Name="Check_Delete0LengthSequences">Delete 0-length sequences</CheckBox>
                             <CheckBox Name="Check_Delete0LengthGSequences">Delete 0-length global sequences</CheckBox>
@@ -226,8 +229,12 @@
                                 <MenuItem Header="Go to material" Click="gotogeosettexture" />
                                 <MenuItem Header="Go to bone" Click="gotogeosetbone" />
                                 <MenuItem Header="Delete" Click="delgeoset" />
+                                    <MenuItem Header="Normals">
+                                        <MenuItem Header="Average normals" Click="AverageNormals" />
+                                        <MenuItem Header="Negate normals" Click="negatenormals" />
 
-                                <MenuItem Header="Geoset Operations">
+                                    </MenuItem>
+                                    <MenuItem Header="Geoset Operations">
 
                                     <MenuItem Header="Center...">
                                         <MenuItem Header="Center..." Click="Centergeosets" />
@@ -242,7 +249,6 @@
                                     <MenuItem Header="Rotate..." Click="RotateGeosets" />
                                     <MenuItem Header="Scale each..." Click="scalegeosets" />
                                     <MenuItem Header="Negate..." Click="negate" />
-                                    <MenuItem Header="Average normals" Click="AverageNormals" />
                                     <MenuItem Header="Merge" ToolTip="All selected geosets will be merged into one and use the first's material" Click="MergeGeosets" />
                                     <MenuItem Header="Pull together..." Click="PullTogether" />
                                     <MenuItem Header="Subdivide" ToolTip="Splits each triangle into 3 triangles. Preserves texture coordinates." Click="subdivide" />
@@ -297,6 +303,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                     <MenuItem Header="Make all geoset animations alpha static" Click="MakeAllGAAlphaStatic" />
                                     <MenuItem Header="equalize the alpha animation data of all geoset animations" Click="equalizegas_alpha" />
                                     <MenuItem Header="equalize the color animation data of all geoset animations" Click="equalizegas_color" />
+                                    <MenuItem Header="Make all geoset animations the same as this" Click="makegassameasga" />
                                     <MenuItem Header="Edit alphas" Click="ga_editalphas" />
                                     <MenuItem Header="Edit colors" Click="ga_editcolors" />
                                 </ContextMenu>
@@ -353,17 +360,15 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             <Button Click="reverseSequence">Reverse sequence</Button>
                             <Button>Reverse all sequences</Button>
                             <Button Click="masscreeatesequences">Mass create sequences...</Button>
-                            <Button IsEnabled="False">Loop X Times...</Button>
-                            <Button IsEnabled="False">Unloop</Button>
+                            
                             <Button Click="clearsequencetranslations">Clear translations</Button>
                             <Button Click="clearsequencescalings">Clear scalings</Button>
                             <Button Click="clearsequencerotations">Clear rotations</Button>
                             <Button Click="ClearAllAnimationsOfSequence">Clear all animations</Button>
                             <Button Click="MergeSelectedSequences">Merge</Button>
                             <Button Click="SplitSequences">Split</Button>
-                            <Button Click="syncwhith" IsEnabled="False">Sync with...</Button>
-                            <Button IsEnabled="False">Quick Animations...</Button>
-
+                            <Button Click="syncwhith"   ToolTip="For each component's transformation, if that transformation's keyframes count is equal to the second sequence, sync their times">Sync with...</Button>
+                            
 
                         </StackPanel>
                     </ScrollViewer>
@@ -446,7 +451,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             <Button Click="rootall">Root all nodes</Button>
                             <Button Click="clearnodeTrans">Clear transformations...</Button>
                             <Button Click="reversenodetr">Reverse Transformations...</Button>
-                            <Button Click="SpaceTras" ToolTip="Makes the distance between keyframes equal" IsEnabled="False">Space Transformations...</Button>
+                            <Button Click="SpaceTras" ToolTip="Makes the distance between keyframes equal"  >Space Transformations...</Button>
                             <Button Click="clearAllnodetrans">Clear all nodes of transformations</Button>
 
 

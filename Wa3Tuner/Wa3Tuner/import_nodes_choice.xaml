@@ -13,8 +13,8 @@
         <RadioButton IsEnabled="False" Name="one">Append different only</RadioButton>
         <RadioButton Name="two" IsChecked="True">Overwrite keyframes of identicals, do not append different</RadioButton>
         <RadioButton  IsEnabled="False" Name="three">Overwrite keyframes of identicals, append different</RadioButton>
-       <RadioButton Name="four" IsEnabled="False">Overwrite all node data</RadioButton>
-       <RadioButton Name="five" IsEnabled="False">Import emitters2 and event objects at root</RadioButton>
+       <RadioButton Name="four" >Overwrite all node data</RadioButton>
+       <RadioButton Name="five" >Import emitters and event objects at root</RadioButton>
         <Button Margin="5" Click="ok">OK</Button>
     </StackPanel>
 </Window>

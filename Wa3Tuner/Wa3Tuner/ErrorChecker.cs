@@ -64,6 +64,28 @@ namespace Wa3Tuner
                     unused.AppendLine($"Textures[{i}] ({name}) is unused");
                 }
             }
+             // check for triangle who use the same vertices
+             for (int g =0; g < currentModel.Geosets.Count; g++)
+            {
+                CGeoset geoset = currentModel.Geosets[g];
+                for (int i = 0; i < geoset.Faces.Count; i++)
+                {
+                    for (int x = 0; x < geoset.Faces.Count; x++)
+                    {
+                        if (x == i) { continue; }
+                        if (FacesShareSameVertices(geoset.Faces[i], geoset.Faces[x]))
+                        {
+                            warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are using the same vertices");
+                        }
+                        if (FacesAreFullyOverLapping(geoset.Faces[i], geoset.Faces[x]))
+                        {
+                            warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are fully overlapping");
+
+                        }
+                    }
+                }
+            }
+            
              for    (int i = 0;i < currentModel.Materials.Count; i++)
             {
                 if (MaterialUsed(currentModel.Materials[i]) == false)
@@ -277,6 +299,50 @@ namespace Wa3Tuner
 
             return all.ToString();
         }
+
+        private static bool FacesAreFullyOverLapping(CGeosetFace cGeosetFace1, CGeosetFace cGeosetFace2)
+        {
+            // Get the vertices of both faces
+            var vertices1 = new[] { cGeosetFace1.Vertex1, cGeosetFace1.Vertex2, cGeosetFace1.Vertex3 };
+            var vertices2 = new[] { cGeosetFace2.Vertex1, cGeosetFace2.Vertex2, cGeosetFace2.Vertex3 };
+
+            // Compare the coordinates of each vertex in face1 with each vertex in face2
+            foreach (var vertex1 in vertices1)
+            {
+                bool foundMatch = false;
+                foreach (var vertex2 in vertices2)
+                {
+                    // Check if the vertex positions are the same (compare X, Y, Z coordinates)
+                    if (vertex1.Object.Position.X == vertex2.Object.Position.X &&
+                        vertex1.Object.Position.Y == vertex2.Object.Position.Y &&
+                        vertex1.Object.Position.Z == vertex2.Object.Position.Z)
+                    {
+                        foundMatch = true;
+                        break;
+                    }
+                }
+
+                // If any vertex from face1 doesn't have a matching vertex in face2, they are not fully overlapping
+                if (!foundMatch)
+                {
+                    return false;
+                }
+            }
+
+            // If all vertices from face1 match a vertex in face2, the faces are fully overlapping
+            return true;
+        }
+
+
+        private static bool FacesShareSameVertices(CGeosetFace face1, CGeosetFace face2)
+        {
+            // Directly compare the 3 vertices using their Object references
+            return (face1.Vertex1.Object == face2.Vertex1.Object || face1.Vertex1.Object == face2.Vertex2.Object || face1.Vertex1.Object == face2.Vertex3.Object) &&
+                   (face1.Vertex2.Object == face2.Vertex1.Object || face1.Vertex2.Object == face2.Vertex2.Object || face1.Vertex2.Object == face2.Vertex3.Object) &&
+                   (face1.Vertex3.Object == face2.Vertex1.Object || face1.Vertex3.Object == face2.Vertex2.Object || face1.Vertex3.Object == face2.Vertex3.Object);
+        }
+
+
 
         private static List<string> CheckDuplicatingKeyframes()
         {

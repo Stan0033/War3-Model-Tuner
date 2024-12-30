@@ -10,6 +10,8 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Reflection.Emit;
 using System.Text;
 
 using System.Windows;
@@ -17,8 +19,10 @@ using System.Windows.Controls;
 
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using System.Xml.Linq;
 using W3_Texture_Finder;
 using Brushes = System.Windows.Media.Brushes;
 using Image = System.Windows.Controls.Image;
@@ -47,6 +51,12 @@ namespace Wa3Tuner
         public MainWindow()
         {
             InitializeComponent();
+            Initialize();
+
+
+        }
+        public void Initialize()
+        {
             IconsPath = System.IO.Path.Combine(AppPath, "Icons"); ;
             InitIcons();
             LoadRecents();
@@ -56,10 +66,15 @@ namespace Wa3Tuner
             MPQHelper.Initialize();
             TextureFinder = new TextureBrowser(this, MPQHelper.Listfile_All);
             Mapper = new UVMapper();
-
-
         }
-        private void LoadRecents()
+        public MainWindow(string file) // for opening by double click
+        {
+            InitializeComponent();
+
+            Initialize();
+            LoadModel(file);
+        }
+            private void LoadRecents()
         {
 
             string local = AppDomain.CurrentDomain.BaseDirectory;
@@ -826,15 +841,20 @@ namespace Wa3Tuner
                 int choice = i.selected;
                 CModel TemporaryModel = GetTemporaryModel();
                 if (TemporaryModel == null) { return; }
-                if (choice == 1) { } // append only
+                if (choice == 1) {
+                    AppendDifferentNodes(CurrentModel, TemporaryModel);
+                    RefreshNodesTree();
+                } // append only
                 if (choice == 2) // overwrite, dont append
                 {
                     OVerwriteKeyframesForMatchingNodes(CurrentModel, TemporaryModel);
                 }
-                if (choice == 3)
+                if (choice == 3) // overwrite, and append
                 {
                     OVerwriteKeyframesForMatchingNodes(CurrentModel, TemporaryModel);
-                }// overwrite, and append
+                    AppendDifferentNodes(CurrentModel, TemporaryModel);
+                    RefreshNodesTree();
+                }
                 if (choice == 4)
 
                 { // overwrite all
@@ -843,6 +863,7 @@ namespace Wa3Tuner
                 if (choice == 5)
                 {
                     ImportEmitters2AndEventObjects(CurrentModel, TemporaryModel);
+                    RefreshNodesTree();
                 }
                 {
 
@@ -861,33 +882,54 @@ namespace Wa3Tuner
 
         }
 
-        private void ImportEmitters2AndEventObjects(CModel currentModel, CModel temporaryModel)
+        private void AppendDifferentNodes(CModel currentModel, CModel temporaryModel)
         {
-
             foreach (INode node in temporaryModel.Nodes)
             {
-                if (node is CEvent)
+                if (currentModel.Nodes.Any(x=>x.Name.ToLower() == node.Name.ToLower()) == false)
                 {
-                    CEvent ev = (CEvent)node;
-
-                    CEvent _new = new CEvent(currentModel);
-                    foreach (var item in ev.Tracks)
-                    {
-                        CEventTrack track = new CEventTrack(currentModel);
-                        track.Time = item.Time;
-                        _new.Tracks.Add(track);
-                        track.Tag = item.Tag;
-                    }
-
+                    currentModel.Nodes.Add(NodeCloner.Clone(node, currentModel));
                 }
             }
             throw new NotImplementedException();
         }
 
+        private void ImportEmitters2AndEventObjects(CModel currentModel, CModel temporaryModel)
+        {
+            List<INode> nodes = new List<INode>();
+            foreach (INode node in temporaryModel.Nodes)
+            {
+                if (node is CParticleEmitter || node is CParticleEmitter2 || node is CRibbonEmitter || node is CEvent)
+                {
+                    nodes.Add(NodeCloner.Clone(node, currentModel));
+                }
+            }
+            foreach (INode node in nodes)
+            {
+                currentModel.Nodes.Add(node);
+            }
+          
+        }
+
         private void OverwriteWholeNodeStructure(CModel currentModel, CModel temporaryModel)
         {
             currentModel.Nodes.Clear();
-            throw new NotImplementedException();
+            Dictionary<INode, INode> NodeReferenceOldNew = new Dictionary<INode, INode>();
+            foreach (INode node in temporaryModel.Nodes)
+            {
+                NodeReferenceOldNew.Add(node, NodeCloner.Clone(node, currentModel));
+            }
+            
+                foreach (INode node in temporaryModel.Nodes)
+                {
+                    if (node.Parent != null && node.Parent.ObjectId != -1)
+                    {
+
+                    NodeReferenceOldNew[node].Parent.Attach(NodeReferenceOldNew[node.Parent.Node]);
+                    }
+                 
+            }
+            RefreshNodesTree();
         }
 
         private void OVerwriteKeyframesForMatchingNodes(CModel currentModel, CModel temporaryModel)
@@ -2003,8 +2045,9 @@ namespace Wa3Tuner
             Optimizer.DeleteSimilarSimilarKEyframes = Check_DeleteSimilarSimilarKEyframes.IsChecked == true;
             Optimizer.AddMissingKeyframes = Check_MissingKeyframes.IsChecked == true;
             Optimizer._DetachFromNonBone = Check_DetachFromNonBone.IsChecked == true;
-            Optimizer.AddOrigin = Check_AddMissingOrigin.IsChecked == true;
-
+            Optimizer.DleteOverlapping1 = check_delOverlapping1.IsChecked == true;
+            Optimizer.DleteOverlapping2 = check_delOverlapping2.IsChecked == true;
+           
 
             // we sohudl clamp keyframes not delete them if invalid
 
@@ -2145,10 +2188,88 @@ namespace Wa3Tuner
             st.ShowDialog();
             if (st.DialogResult == true)
             {
-                if (st.Check_T.IsChecked == true) node.Translation.Reverse();
-                if (st.Check_R.IsChecked == true) node.Rotation.Reverse();
-                if (st.Check_S.IsChecked == true) node.Scaling.Reverse();
+                if (st.Check_T.IsChecked == true)
+                {
+                    foreach (CSequence sequence in CurrentModel.Sequences)
+                    {
+                        SpaceTransformation(sequence, node.Translation);
+                    }
+                }
+                if (st.Check_R.IsChecked == true)
+                {
+                    foreach (CSequence sequence in CurrentModel.Sequences)
+                    {
+                        SpaceTransformation(sequence, node.Rotation);
+                    }
+                }
+                if (st.Check_S.IsChecked == true)
+                {
+                    foreach (CSequence sequence in CurrentModel.Sequences)
+                    {
+                        SpaceTransformation(sequence, node.Scaling);
+                    }
+                }
 
+            }
+        }
+
+        private void SpaceTransformation(CSequence sequence, CAnimator<CVector3> animator)
+        {
+            int from = sequence.IntervalStart;
+            int to = sequence.IntervalEnd;
+            List<CAnimatorNode<CVector3>> isolated = animator.Where(x => x.Time >= from && x.Time <= to).ToList();
+
+            if (isolated.Count <= 1)
+            {
+                return; // Cannot space less than 2 keyframes
+            }
+
+            if (isolated.Count > to - from)
+            {
+                MessageBox.Show($"Sequence {sequence.Name}: Translation: Keyframes are more than the interval");
+                return;
+            }
+
+            // Calculate the interval for spacing
+            int totalDuration = to - from;
+            int spacing = totalDuration / (isolated.Count - 1);
+
+            // Adjust the keyframes to be equally spaced
+            for (int i = 0; i < isolated.Count; i++)
+            {
+                int newTime = from + i * spacing;
+                CVector3 value = isolated[i].Value; // Retain the original value
+                isolated[i] = new CAnimatorNode<CVector3>(newTime, value);
+            }
+        }
+
+        private void SpaceTransformation(CSequence sequence, CAnimator<CVector4> animator)
+        {
+            int from = sequence.IntervalStart;
+            int to = sequence.IntervalEnd;
+            List<CAnimatorNode<CVector4>> isolated = animator.Where(x => x.Time >= from && x.Time <= to).ToList();
+
+            if (isolated.Count <= 1)
+            {
+                return; // Cannot space less than 2 keyframes
+            }
+
+            if (isolated.Count > to - from)
+            {
+                MessageBox.Show($"Sequence {sequence.Name}: Translation: Keyframes are more than the interval");
+                return;
+            }
+
+            // Calculate the interval for spacing
+            int totalDuration = to - from;
+            int spacing = totalDuration / (isolated.Count - 1);
+
+            // Adjust the keyframes to be equally spaced
+            for (int i = 0; i < isolated.Count; i++)
+            {
+                int newTime = from + i * spacing;
+                CVector4 value = isolated[i].Value; // Retain the original value
+                isolated[i] = new CAnimatorNode<CVector4>(newTime, value);
             }
         }
 
@@ -4032,7 +4153,7 @@ namespace Wa3Tuner
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.0.8 (??/12/2024) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.0.8 (30/12/2024) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
 
         private void EditMatTags(object sender, RoutedEventArgs e)
@@ -4744,17 +4865,19 @@ namespace Wa3Tuner
         private void syncwhith(object sender, RoutedEventArgs e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
-            CSequence seq = GetSelectedSequence();
+            CSequence FirstSequence = GetSelectedSequence();
             MessageBox.Show("For each node that contains animations of the first sequence, if the seocnd sequence's associates nodes contain the same amount keyframes, they will sync in time with the first sequence");
             List<string> sequences = CurrentModel.Sequences.Select(x => x.Name).ToList();
-            sequences.Remove(seq.Name);
+            sequences.Remove(FirstSequence.Name);
             if (sequences.Count > 1)
             {
                 Selector s = new Selector(sequences);
                 s.ShowDialog();
                 if (s.DialogResult == true)
                 {
-
+                    CSequence SecondSequence = CurrentModel.Sequences.First(x=>x.Name == s.Selected);
+               if (FirstSequence == SecondSequence) { MessageBox.Show("First and scond sequence must not be the same"); return; }
+                    SyncSequences(FirstSequence, SecondSequence);
                 }
             }
             else
@@ -4762,6 +4885,514 @@ namespace Wa3Tuner
                 MessageBox.Show("At least two sequences must be present");
             }
 
+        }
+
+        private void SyncSequences(CSequence firstSequence, CSequence secondSequence)
+        {
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                List<CAnimatorNode<CVector3>> Translations_Sequence1 = node.Translation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector3>> Translations_Sequence2 = node.Translation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                {
+                    Synchronize(Translations_Sequence1, Translations_Sequence2);
+                }
+                List<CAnimatorNode<CVector3>> Scalings_Sequence1 = node.Scaling.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector3>> Salings_Sequence2 = node.Scaling.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                {
+                    Synchronize(Scalings_Sequence1, Salings_Sequence2);
+                }
+                List<CAnimatorNode<CVector4>> Rotations_Sequence1 = node.Rotation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector4>> Rotations_Sequence2 = node.Rotation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (Rotations_Sequence1.Count == Rotations_Sequence2.Count)
+                {
+                    Synchronize(Rotations_Sequence1, Rotations_Sequence2);
+                }
+                if (node is CAttachment attachment)
+                {
+                    List<CAnimatorNode<float>> list1 = attachment.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                    List<CAnimatorNode<float>> list2 = attachment.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                    if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                    {
+                        Synchronize(list1, list2);
+                    }
+                }
+                if (node is CLight light)
+                {
+                    if (light.Color.Static == false && light.Color.Count > 1)
+                    {
+                        List<CAnimatorNode<CVector3>> list1 = light.Color.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<CVector3>> list2 = light.Color.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.AmbientColor.Static == false && light.AmbientColor.Count > 1)
+                    {
+                        List<CAnimatorNode<CVector3>> list1 = light.AmbientColor.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<CVector3>> list2 = light.AmbientColor.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.Intensity.Static == false && light.Intensity.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = light.Intensity.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = light.Intensity.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.AmbientIntensity.Static == false && light.AmbientIntensity.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = light.AmbientIntensity.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = light.AmbientIntensity.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.AttenuationStart.Static == false && light.AttenuationStart.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = light.AttenuationStart.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = light.AttenuationStart.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.AttenuationEnd.Static == false && light.AttenuationEnd.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = light.AttenuationEnd.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = light.AttenuationEnd.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (light.Visibility.Static == false && light.Visibility.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = light.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = light.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                }
+            
+                if (node is CParticleEmitter emitter)
+                {
+                    if (emitter.Visibility.Static == false && emitter.Visibility.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.EmissionRate.Static == false && emitter.EmissionRate.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.EmissionRate.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.EmissionRate.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.LifeSpan.Static == false && emitter.LifeSpan.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.LifeSpan.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.LifeSpan.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.Gravity.Static == false && emitter.Gravity.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.Gravity.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.Gravity.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.Longitude.Static == false && emitter.Longitude.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.Longitude.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.Longitude.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.Latitude.Static == false && emitter.Latitude.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.Latitude.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.Latitude.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.Visibility.Static == false && emitter.Visibility.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter.InitialVelocity.Static == false && emitter.InitialVelocity.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter.InitialVelocity.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter.InitialVelocity.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                }
+                if (node is CParticleEmitter2 emitter2)
+                {
+                    if (emitter2.Visibility.Static == false && emitter2.Visibility.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Speed.Static == false && emitter2.Speed.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Speed.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Speed.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Gravity.Static == false && emitter2.Gravity.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Gravity.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Gravity.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Variation.Static == false && emitter2.Variation.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Variation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Variation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Latitude.Static == false && emitter2.Latitude.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Latitude.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Latitude.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Width.Static == false && emitter2.Width.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Width.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Width.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.Length.Static == false && emitter2.Length.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.Length.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.Length.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (emitter2.EmissionRate.Static == false && emitter2.EmissionRate.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = emitter2.EmissionRate.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = emitter2.EmissionRate.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                }
+            if (node is CRibbonEmitter ribbon)
+                {
+                    if (ribbon.Visibility.Static == false && ribbon.Visibility.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = ribbon.Visibility.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = ribbon.Visibility.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (ribbon.Color.Static == false && ribbon.Color.Count > 1)
+                    {
+                        List<CAnimatorNode<CVector3>> list1 = ribbon.Color.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<CVector3>> list2 = ribbon.Color.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (ribbon.Alpha.Static == false && ribbon.Alpha.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = ribbon.Alpha.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = ribbon.Alpha.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (ribbon.TextureSlot.Static == false && ribbon.TextureSlot.Count > 1)
+                    {
+                        List<CAnimatorNode<int>> list1 = ribbon.TextureSlot.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<int>> list2 = ribbon.TextureSlot.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (ribbon.HeightAbove.Static == false && ribbon.HeightAbove.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = ribbon.HeightAbove.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = ribbon.HeightAbove.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                    if (ribbon.HeightBelow.Static == false && ribbon.HeightBelow.Count > 1)
+                    {
+                        List<CAnimatorNode<float>> list1 = ribbon.HeightBelow.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> list2 = ribbon.HeightBelow.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (list1.Count == list2.Count)
+                        {
+                            Synchronize(list1, list2);
+                        }
+                    }
+                }
+            }
+            foreach (CMaterial mat in CurrentModel.Materials)
+            {
+                foreach (CMaterialLayer layer in mat.Layers)
+                {
+                    if (layer.Alpha.Static == false)
+                    {
+                        List<CAnimatorNode<float>> alphas1 = layer.Alpha.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<float>> alphas2 = layer.Alpha.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (alphas1.Count == alphas2.Count)
+                        {
+                            Synchronize(alphas1, alphas2);
+                        }
+                    }
+                    if (layer.TextureId.Static == false)
+                    {
+                        List<CAnimatorNode<int>> t1 = layer.TextureId.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                        List<CAnimatorNode<int>> t2 = layer.TextureId.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                        if (t1.Count == t2.Count)
+                        {
+                            Synchronize(t1, t2);
+                        }
+                    }
+                }
+
+            }
+            foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
+            {
+                if (ga.Alpha.Static == false)
+                {
+                    List<CAnimatorNode<float>> alphas1 = ga.Alpha.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                    List<CAnimatorNode<float>> alphas2 = ga.Alpha.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                    if (alphas1.Count == alphas2.Count)
+                    {
+                        Synchronize(alphas1, alphas2);
+                    }
+                }
+                if (ga.Color.Static == false && ga.UseColor)
+                {
+                    List<CAnimatorNode<CVector3>> list1 = ga.Color.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                    List<CAnimatorNode<CVector3>> list2 = ga.Color.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                    if (list1.Count == list2.Count)
+                    {
+                        Synchronize(list1, list2);
+                    }
+                }
+            }
+            foreach (CCamera camera in CurrentModel.Cameras)
+            {
+                if (camera.Rotation.Static == false)
+                {
+
+                }
+                List<CAnimatorNode<float>> list1 = camera.Rotation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<float>> list2 = camera.Rotation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (list1.Count == list2.Count)
+                {
+                    Synchronize(list1, list2);
+                }
+            }
+            foreach (CTextureAnimation ta in CurrentModel.TextureAnimations)
+            {
+                List<CAnimatorNode<CVector3>> Translations_Sequence1 = ta.Translation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector3>> Translations_Sequence2 = ta.Translation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                {
+                    Synchronize(Translations_Sequence1, Translations_Sequence2);
+                }
+                List<CAnimatorNode<CVector3>> Scalings_Sequence1 = ta.Scaling.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector3>> Salings_Sequence2 = ta.Scaling.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                {
+                    Synchronize(Scalings_Sequence1, Salings_Sequence2);
+                }
+                List<CAnimatorNode<CVector4>> Rotations_Sequence1 = ta.Rotation.Where(x => x.Time >= firstSequence.IntervalStart && x.Time <= firstSequence.IntervalEnd).ToList();
+                List<CAnimatorNode<CVector4>> Rotations_Sequence2 = ta.Rotation.Where(x => x.Time >= secondSequence.IntervalStart && x.Time <= secondSequence.IntervalEnd).ToList();
+                if (Translations_Sequence1.Count == Translations_Sequence2.Count)
+                {
+                    Synchronize(Rotations_Sequence1, Rotations_Sequence2);
+                }
+            }
+            
+        }
+        public List<CAnimatorNode<CVector3>> Synchronize(List<CAnimatorNode<CVector3>> list1, List<CAnimatorNode<CVector3>> list2)
+        {
+            if (list2.Count == 0) { return list2; }
+            List<CAnimatorNode<CVector3>> result = new List<CAnimatorNode<CVector3>>();
+
+            // Calculate the relative time gaps in list1
+            for (int i = 0; i < list1.Count; i++)
+            {
+                int newTime;
+
+                if (i == 0)
+                {
+                    // First keyframe matches exactly
+                    newTime = list1[i].Time;
+                }
+                else
+                {
+                    // Compute the relative gap and apply it to list2's starting time
+                    int gap = list1[i].Time - list1[i - 1].Time;
+                    newTime = result[i - 1].Time + gap;
+                }
+
+                // Create a new node with synchronized time and the original value from list2
+                CVector3 newValue = new CVector3(list2[i].Value);
+                result.Add(new CAnimatorNode<CVector3>(newTime, newValue));
+            }
+
+            return result;
+        }
+
+        public List<CAnimatorNode<CVector4>> Synchronize(List<CAnimatorNode<CVector4>> list1, List<CAnimatorNode<CVector4>> list2)
+        {
+            if (list2.Count == 0) { return list2; }
+            List<CAnimatorNode<CVector4>> result = new List<CAnimatorNode<CVector4>>();
+
+            // Calculate the relative time gaps in list1
+            for (int i = 0; i < list1.Count; i++)
+            {
+                int newTime;
+
+                if (i == 0)
+                {
+                    // First keyframe matches exactly
+                    newTime = list1[i].Time;
+                }
+                else
+                {
+                    // Compute the relative gap and apply it to list2's starting time
+                    int gap = list1[i].Time - list1[i - 1].Time;
+                    newTime = result[i - 1].Time + gap;
+                }
+
+                // Create a new node with synchronized time and the original value from list2
+                CVector4 newValue = new CVector4(list2[i].Value);
+                result.Add(new CAnimatorNode<CVector4>(newTime, newValue));
+            }
+
+            return result;
+        }
+        public List<CAnimatorNode<int>> Synchronize(List<CAnimatorNode<int>> list1, List<CAnimatorNode<int>> list2)
+        {
+            if (list2.Count == 0) { return list2; }
+            List<CAnimatorNode<int>> result = new List<CAnimatorNode<int>>();
+
+            // Calculate the relative time gaps in list1
+            for (int i = 0; i < list1.Count; i++)
+            {
+                int newTime;
+
+                if (i == 0)
+                {
+                    // First keyframe matches exactly
+                    newTime = list1[i].Time;
+                }
+                else
+                {
+                    // Compute the relative gap and apply it to list2's starting time
+                    int gap = list1[i].Time - list1[i - 1].Time;
+                    newTime = result[i - 1].Time + gap;
+                }
+
+                // Create a new node with synchronized time and the original value from list2
+                int newValue =  list2[i].Value ;
+                result.Add(new CAnimatorNode<int>(newTime, newValue));
+            }
+
+            return result;
+        }
+
+
+        public List<CAnimatorNode<float>> Synchronize(List<CAnimatorNode<float>> list1, List<CAnimatorNode<float>> list2)
+        {
+            if (list2.Count == 0) { return list2; }
+            List<CAnimatorNode<float>> result = new List<CAnimatorNode<float>>();
+
+            // Calculate the relative time gaps in list1
+            for (int i = 0; i < list1.Count; i++)
+            {
+                int newTime;
+
+                if (i == 0)
+                {
+                    // First keyframe matches exactly
+                    newTime = list1[i].Time;
+                }
+                else
+                {
+                    // Compute the relative gap and apply it to list2's starting time
+                    int gap = list1[i].Time - list1[i - 1].Time;
+                    newTime = result[i - 1].Time + gap;
+                }
+
+                // Create a new node with synchronized time and the original value from list2
+                float newValue =  list2[i].Value ;
+                result.Add(new CAnimatorNode<float>(newTime, newValue));
+            }
+
+            return result;
         }
 
         private void changegeosetusedmaterial(object sender, RoutedEventArgs e)
@@ -6250,5 +6881,85 @@ namespace Wa3Tuner
             return false; // Node not found in this branch
         }
 
+        private void negatenormals(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (var geoset in geosets)
+                {
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        float x = vertex.Normal.X;
+                        float y = vertex.Normal.Y;
+                        float z = vertex.Normal.Z;
+                        vertex.Normal = new CVector3(-x,-y,-z);
+                    }
+                }
+            }
+        }
+
+        private void makegassameasga(object sender, RoutedEventArgs e)
+        {
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                CGeosetAnimation ga = GetSelectedGeosetAnimation();
+                foreach (CGeosetAnimation anim in CurrentModel.GeosetAnimations)
+                {
+                    if (anim == ga) { continue; }
+                    anim.UseColor = ga.UseColor;
+                    anim.DropShadow = ga.DropShadow;
+                    if (ga.Alpha.Static)
+                    {
+                        anim.Alpha.MakeStatic(ga.Alpha.GetValue());
+                    }
+                    else
+                    {
+                        anim.Alpha.Clear();
+                        foreach (var item in ga.Alpha)
+                        {
+                            anim.Alpha.Add(new CAnimatorNode<float>(item.Time, item.Value));
+                        }
+                    }
+                    if (ga.Color.Static)
+                    {
+                        anim.Color.MakeStatic(new CVector3( ga.Color.GetValue()));
+                    }
+                    else
+                    {
+                        foreach (var item in ga.Color)
+                        {
+                            anim.Color.Add(new CAnimatorNode<CVector3>(item.Time,  new CVector3(item.Value)));
+                        }
+                    }
+                }
+                RefreshGeosetAnimationsList();
+            }
+        }
+
+        private void ImportSequences(object sender, RoutedEventArgs e)
+        {
+            CModel TemporaryModel = GetTemporaryModel();
+            if (TemporaryModel == null) { return; }
+            CurrentModel.Sequences.Clear();
+            List<CSequence> importedSequences = new List<CSequence>();
+            foreach (CSequence sequence in TemporaryModel.Sequences)
+            {
+                CSequence imported = new CSequence(CurrentModel);
+                imported.Name = sequence.Name;
+                imported.IntervalStart = sequence.IntervalStart;
+                imported.IntervalEnd = sequence.IntervalEnd;
+                imported.NonLooping = sequence.NonLooping;
+                imported.MoveSpeed = sequence.MoveSpeed;
+                imported.Rarity = sequence.Rarity;
+                importedSequences.Add(imported);
+            }
+            importedSequences = importedSequences.OrderBy(x=>x.IntervalStart).ToList();
+            foreach (CSequence sequence in importedSequences)
+            {
+                CurrentModel.Sequences.Add(sequence);
+            }
+            RefreshSequencesList();
+        }
     }
 }

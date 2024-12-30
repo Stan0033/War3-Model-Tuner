@@ -40,10 +40,11 @@
             <TextBox Name="TrackInput" Width="50" Margin="0,0,5,0" />
             <TextBox Name="ValueInput" Width="100" Margin="0,0,5,0" />
             <Button Name="ButtonColor" Content="" Width="20" Margin="0,0,5,0" Click="setColor"/>
-            <Button Name="ButtonDel" Content="Delete" Width="50" Margin="0,0,5,0" Click="del"/>
-          
+            
             <Button Name="ButtonNew" Content="New" Width="50" Margin="0,0,5,0" Click="newItem"/>
             <Button Name="ButtonEdit" Content="Edit" Width="50" Margin="0,0,5,0" Click="edit" />
+            <Button Name="ButtonDel" Content="Delete" Width="50" Margin="0,0,5,0" Click="del"/>
+
             <Button Name="ButtonMore" Content="More..." Width="50" Margin="0,0,5,0" Click="showmore" >
                 <Button.ContextMenu>
                     <ContextMenu>
@@ -59,6 +60,13 @@
                         <MenuItem    Header="Leave only starts and ends"    Click="leaveonlystartsends"/>
                         <MenuItem     Header="Create all starts and ends"    Click="createstartsends"/>
                         <MenuItem     Header="Create all starts"   Click="createstarts"/>
+                        <MenuItem     Header="Negate"   Click="negatetrack"/>
+                        <MenuItem     Header="Negate all"   Click="negatetrackall"/>
+                        <MenuItem     Header="Set all to the input"   Click="setalltoinput"/>
+                        <MenuItem     Header="Add the input to all"   Click="addtoall"/>
+                        <MenuItem     Header="Subtract the input from all"   Click="subtractfromall"/>
+                        <MenuItem     Header="Multiply all with the input"   Click="multiplyall"/>
+                        <MenuItem     Header="Divide all with the input"   Click="divideall"/>
 
                     </ContextMenu>
                 </Button.ContextMenu>

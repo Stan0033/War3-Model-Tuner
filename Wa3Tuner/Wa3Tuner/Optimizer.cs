@@ -57,6 +57,9 @@ namespace Wa3Tuner
         internal static bool DeleteSimilarSimilarKEyframes = false;
         internal static bool _DetachFromNonBone;
         internal static bool Check_DeleteIdenticalAdjascentKEyframes_times;
+        internal static bool DleteOverlapping1;
+        internal static bool DleteOverlapping2;
+        internal static bool InvalidTriangleUses;
 
         public static void Optimize(CModel model_)
         {
@@ -102,9 +105,132 @@ namespace Wa3Tuner
            // if (DeleteSimilarSimilarKEyframes) { DeleteSimilarSimilarKEyframes_(); }
             if (AddMissingKeyframes) { AddMissingKeyframes_(); }
             if (_DetachFromNonBone) { _DetachFromNonBone_(); }
-            RearrangeKeyframes_();
+            if (DleteOverlapping1) DeleteIdenticalFaces();
+            if (DleteOverlapping2) DeleteFullyOverLappingFaces();
+            if (InvalidTriangleUses) InvalidTriangleUses_();
+
+
+
+
+        RearrangeKeyframes_();
             MakeTransformationsWithZeroTracksStatic();
             FixQuirtOfEmitters2();
+        }
+
+        private static void InvalidTriangleUses_()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                // Use ToList() to avoid modifying the collection while iterating
+                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                {
+                    if (
+                        
+                        !geoset.Vertices.Contains(face1.Vertex1.Object) ||
+                        !geoset.Vertices.Contains(face1.Vertex2.Object) ||
+                        !geoset.Vertices.Contains(face1.Vertex3.Object)
+
+                        )
+                    {
+                        geoset.Faces.Remove(face1);
+                    }
+
+                    }
+                }
+            }
+       
+
+        private static void DeleteFullyOverLappingFaces()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                // Use ToList() to avoid modifying the collection while iterating
+                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                {
+                    foreach (CGeosetFace face2 in geoset.Faces.ToList())
+                    {
+                        // Skip comparison with itself
+                        if (face1 == face2) { continue; }
+
+                        // If faces are fully overlapping, remove the second one
+                        if (FacesFullyOverlapping(face1, face2))
+                        {
+                            geoset.Faces.Remove(face2);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool FacesFullyOverlapping(CGeosetFace face1, CGeosetFace face2)
+        {
+            // Get the vertices of both faces (assuming faces have 3 vertices)
+            var vertices1 = new List<CGeosetVertex> { face1.Vertex1.Object, face1.Vertex2.Object, face1.Vertex3.Object };
+            var vertices2 = new List<CGeosetVertex> { face2.Vertex1.Object, face2.Vertex2.Object, face2.Vertex3.Object };
+
+            // Check if all corresponding vertices occupy the same space (i.e., same position)
+            for (int i = 0; i < 3; i++)
+            {
+                bool overlap = false;
+                for (int j = 0; j < 3; j++)
+                {
+                    if (VerticesAreInSamePosition(vertices1[i], vertices2[j]))
+                    {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                // If this vertex does not overlap with any of the other face's vertices, return false
+                if (!overlap) return false;
+            }
+
+            // If all vertices are matched in space, the faces are fully overlapping
+            return true;
+        }
+
+        private static bool VerticesAreInSamePosition(CGeosetVertex vertex1, CGeosetVertex vertex2)
+        {
+            // Check if the vertices are in the exact same position in 3D space
+            return vertex1.Position.X == vertex2.Position.X &&
+                   vertex1.Position.Y == vertex2.Position.Y &&
+                   vertex1.Position.Z == vertex2.Position.Z;
+        }
+
+
+        private static void DeleteIdenticalFaces()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                // Use ToList() to avoid modifying the collection while iterating
+                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                {
+                    foreach (CGeosetFace face2 in geoset.Faces.ToList())
+                    {
+                        // Skip comparison with itself
+                        if (face1 == face2) { continue; }
+
+                        // Check if the faces share any vertices
+                        if (ShareSameVertices(face1, face2))
+                        {
+                            // If they share vertices, remove the second face
+                            geoset.Faces.Remove(face2);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool ShareSameVertices(CGeosetFace face1, CGeosetFace face2)
+        {
+            // Compare all three vertices
+            if (face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex1 || face1.Vertex3 == face2.Vertex1 ||
+                face1.Vertex1 == face2.Vertex2 || face1.Vertex2 == face2.Vertex2 || face1.Vertex3 == face2.Vertex2 ||
+                face1.Vertex1 == face2.Vertex3 || face1.Vertex2 == face2.Vertex3 || face1.Vertex3 == face2.Vertex3)
+            {
+                return true;
+            }
+            return false;
         }
 
         private static void Check_DeleteIdenticalAdjascentKEyframes_times_()

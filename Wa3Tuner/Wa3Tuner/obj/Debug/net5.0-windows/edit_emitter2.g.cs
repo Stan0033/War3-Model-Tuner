@@ -429,7 +429,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.0.7;component/edit_emitter2.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.0.8;component/edit_emitter2.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\edit_emitter2.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

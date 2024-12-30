@@ -61,7 +61,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.0.7;component/editvisibilities_window.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.0.8;component/editvisibilities_window.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\editvisibilities_window.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
