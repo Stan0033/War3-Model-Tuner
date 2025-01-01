@@ -57,9 +57,13 @@ namespace Wa3Tuner
         internal static bool DeleteSimilarSimilarKEyframes = false;
         internal static bool _DetachFromNonBone;
         internal static bool Check_DeleteIdenticalAdjascentKEyframes_times;
-        internal static bool DleteOverlapping1;
-        internal static bool DleteOverlapping2;
-        internal static bool InvalidTriangleUses;
+        internal static bool DleteOverlapping1 = false;
+        internal static bool DleteOverlapping2 = false;
+        internal static bool InvalidTriangleUses = false;
+        internal static bool ClampNormals = false;
+        internal static bool DeleteTrianglesWithNoArea;
+
+        public static bool MergeIdenticalVertices { get; internal set; }
 
         public static void Optimize(CModel model_)
         {
@@ -108,14 +112,155 @@ namespace Wa3Tuner
             if (DleteOverlapping1) DeleteIdenticalFaces();
             if (DleteOverlapping2) DeleteFullyOverLappingFaces();
             if (InvalidTriangleUses) InvalidTriangleUses_();
+            if (ClampNormals) ClampNormals_();
+            if (DeleteTrianglesWithNoArea) DeleteTrianglesWithNoArea_();
+            if (MergeIdenticalVertices) MergeIdenticalVertices_();
 
 
 
 
-        RearrangeKeyframes_();
+             RearrangeKeyframes_();
             MakeTransformationsWithZeroTracksStatic();
             FixQuirtOfEmitters2();
+            DeleteEmptyGeosets();
         }
+        private static void DeleteEmptyGeosets()
+        {
+            foreach (CGeoset geoset in Model.Geosets.ToList())
+            {
+                if (geoset.Faces.Count == 0 || geoset.Vertices.Count < 3)
+                { 
+                    Model.Geosets.Remove(geoset); 
+                } 
+            }
+
+            
+            }
+        private static void MergeIdenticalVertices_()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                var verticesToRemove = new List<CGeosetVertex>(); // List of vertices to remove
+
+                foreach (CGeosetFace face in geoset.Faces)
+                {
+                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    {
+                        if (face.Vertex1.Object != vertex && !verticesToRemove.Contains(vertex))
+                        {
+                            if (face.Vertex1.Object.IdenticalWith(vertex))
+                            {
+                                verticesToRemove.Add(vertex);
+                            }
+                        }
+                        if (face.Vertex2.Object != vertex && !verticesToRemove.Contains(vertex))
+                        {
+                            if (face.Vertex2.Object.IdenticalWith(vertex))
+                            {
+                                verticesToRemove.Add(vertex);
+                            }
+                        }
+                        if (face.Vertex3.Object != vertex && !verticesToRemove.Contains(vertex))
+                        {
+                            if (face.Vertex3.Object.IdenticalWith(vertex))
+                            {
+                                verticesToRemove.Add(vertex);
+                            }
+                        }
+                    }
+                }
+
+                // After the loop finishes, remove vertices
+                foreach (var vertex in verticesToRemove)
+                {
+                    geoset.Vertices.Remove(vertex);
+                }
+            }
+        }
+
+
+        private static void DeleteTrianglesWithNoArea_()
+        {
+            foreach (CGeoset geoset in Model.Geosets.ToList())
+            {
+                foreach (CGeosetFace face in geoset.Faces.ToList())
+                {
+                    if (TriangleHasNoArea(face))
+                    {
+                        geoset.Faces.Remove(face); continue;
+                    }
+                    if (TriangleRepeatVertices(face))
+                    {
+                        geoset.Faces.Remove(face); continue;
+                    }
+                }
+            }
+        }
+
+        private static bool TriangleRepeatVertices(CGeosetFace face)
+        {
+            if (
+                face.Vertex1.Object == face.Vertex2.Object ||
+                face.Vertex1.Object == face.Vertex3.Object ||
+                face.Vertex2.Object == face.Vertex3.Object
+
+                ) { return true; }
+            return false;
+        }
+
+        private static bool TriangleHasNoArea(CGeosetFace face)
+        {
+            // Access the positions of the three vertices
+            var v1 = face.Vertex1.Object.Position;
+            var v2 = face.Vertex2.Object.Position;
+            var v3 = face.Vertex3.Object.Position;
+
+            // Calculate the edge vectors
+            var edge1 = new CVector3(v2.X - v1.X, v2.Y - v1.Y, v2.Z - v1.Z);
+            var edge2 = new CVector3(v3.X - v1.X, v3.Y - v1.Y, v3.Z - v1.Z);
+
+            // Compute the cross product of the two edges
+            var crossProduct = new CVector3(
+                edge1.Y * edge2.Z - edge1.Z * edge2.Y,
+                edge1.Z * edge2.X - edge1.X * edge2.Z,
+                edge1.X * edge2.Y - edge1.Y * edge2.X
+            );
+
+            // If the cross product is a zero vector, the triangle has no area
+            return crossProduct.X == 0 && crossProduct.Y == 0 && crossProduct.Z == 0;
+        }
+
+        private static void ClampNormals_()
+        {
+
+            foreach (CGeoset geo in Model.Geosets)
+            {
+                foreach (CGeosetVertex vertex in geo.Vertices)
+                {
+                    if (
+                        vertex.Normal.X < 0 || vertex.Normal.X > 1 ||
+                        vertex.Normal.Y < 0 || vertex.Normal.Y > 1 ||
+                        vertex.Normal.Z < 0 || vertex.Normal.Z > 1)
+                    {
+                        float x = vertex.Normal.X;
+                        float y = vertex.Normal.Y;
+                        float z = vertex.Normal.Z;
+                        if (x < -1) x = -1;
+                        if (x > 1) x = 1;
+                        if (y < -1) y = -1;
+                        if (y > 1) y = 1;
+                        if (z < -1) z = -1;
+                        if (z > 1) z = 1;
+                        vertex.Normal = new CVector3(x, y, z);
+
+
+
+
+                    }
+                }
+            }
+        }
+       
 
         private static void InvalidTriangleUses_()
         {
@@ -162,32 +307,52 @@ namespace Wa3Tuner
             }
         }
 
-        private static bool FacesFullyOverlapping(CGeosetFace face1, CGeosetFace face2)
+        public static bool FacesFullyOverlapping(CGeosetFace face1, CGeosetFace face2)
         {
-            // Get the vertices of both faces (assuming faces have 3 vertices)
-            var vertices1 = new List<CGeosetVertex> { face1.Vertex1.Object, face1.Vertex2.Object, face1.Vertex3.Object };
-            var vertices2 = new List<CGeosetVertex> { face2.Vertex1.Object, face2.Vertex2.Object, face2.Vertex3.Object };
-
-            // Check if all corresponding vertices occupy the same space (i.e., same position)
-            for (int i = 0; i < 3; i++)
+            // Combination 1: All conditions combined with AND
+            if (face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex2 &&
+                face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1)
             {
-                bool overlap = false;
-                for (int j = 0; j < 3; j++)
-                {
-                    if (VerticesAreInSamePosition(vertices1[i], vertices2[j]))
-                    {
-                        overlap = true;
-                        break;
-                    }
-                }
-
-                // If this vertex does not overlap with any of the other face's vertices, return false
-                if (!overlap) return false;
+                return true;
             }
 
-            // If all vertices are matched in space, the faces are fully overlapping
-            return true;
+            // Combination 2: All conditions combined with OR
+            if (face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex2 ||
+                face1.Vertex1 == face2.Vertex2 || face1.Vertex2 == face2.Vertex1)
+            {
+                return true;
+            }
+
+            // Combination 3: Mixed AND and OR (example: first two AND, rest OR)
+            if ((face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex2) ||
+                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1))
+            {
+                return true;
+            }
+
+            // Combination 4: Mixed AND and OR (example: first two OR, rest AND)
+            if ((face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex2) &&
+                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1))
+            {
+                return true;
+            }
+
+            // Combination 5: Another variation of mixed AND and OR
+            if ((face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex1) ||
+                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex2))
+            {
+                return true;
+            }
+
+            // Add more combinations as needed...
+
+            // Default case
+            return false;
         }
+
+
+
+
 
         private static bool VerticesAreInSamePosition(CGeosetVertex vertex1, CGeosetVertex vertex2)
         {

@@ -1,0 +1,4 @@
+C:\Games\Warcraft III\war3.mpq
+C:\Games\Warcraft III\War3x.mpq
+C:\Games\Warcraft III\War3Patch.mpq
+C:\Games\Warcraft III\War3xlocal.mpq

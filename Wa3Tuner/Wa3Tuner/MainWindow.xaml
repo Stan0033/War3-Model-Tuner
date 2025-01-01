@@ -94,6 +94,9 @@
                 <MenuItem Click="DelAllGeosets" Header="Remove all geosets"/>
                 <MenuItem Header="Remove all node animations" Click="RemoveAllAnimations" />
             </MenuItem>
+            <MenuItem Name="MenuTeamColor" Header="Team Color">
+                
+            </MenuItem>
             <MenuItem Header="UV Mapper" Click="showuv" Visibility="Collapsed"/>
             <MenuItem Header="Help">
                 <MenuItem Header="How a model works?"  Click="explain"/>
@@ -146,16 +149,18 @@
                             <CheckBox Name="Check_delEmptyEO">Delete empty event objects</CheckBox>
                             <CheckBox Name="check_delISolatedTriangles">Delete isolated triangles</CheckBox>
                             <CheckBox Name="check_delISolatedVertices">Delete isolated vertices</CheckBox>
-                            <CheckBox Name="check_delOverlapping1">Delete fully overlapping triangles who share the same vertices</CheckBox>
-                            <CheckBox Name="check_delOverlapping2">Delete fully overlapping triangles who share the different vertices</CheckBox>
+                            <CheckBox Name="check_noArea">Delete triangles with no area</CheckBox>
+                            <CheckBox Name="check_delOverlapping1" >Delete fully overlapping triangles who share the same vertices</CheckBox>
+                            <CheckBox Name="check_delOverlapping2"   >Delete fully overlapping triangles who share different vertices</CheckBox>
+                            <CheckBox Name="check_mergevertices"   >Merge vertices with identical positions and texture positions</CheckBox>
                             
 
                             <CheckBox Name="Check_Delete0LengthSequences">Delete 0-length sequences</CheckBox>
                             <CheckBox Name="Check_Delete0LengthGSequences">Delete 0-length global sequences</CheckBox>
                             <CheckBox Name="Check_DeleteUnanimatedSequences">Delete un-animated sequences</CheckBox>
                             <CheckBox Name="Check_delunusedgs">Delete unused global sequencs</CheckBox>
-                            <CheckBox Name="Check_ConvertBones">Remove bones with no attachees and no children</CheckBox>
-                            <CheckBox Name="Check_DeleteUnusedHelpers">Delete unused helpers</CheckBox>
+                            <CheckBox Name="Check_ConvertBones">Remove bones with no attached vertices to it, and no children</CheckBox>
+                            <CheckBox Name="Check_DeleteUnusedHelpers">Delete childless helpers</CheckBox>
 
                             <CheckBox Name="Check_DeleteUnusedMaterials">Delete unused materials</CheckBox>
                             <CheckBox Name="Check_DeleteUnusedTextures">Delete unused textures</CheckBox>
@@ -172,11 +177,12 @@
                             <CheckBox Name="Check_ClampKeyframes">clamp all keyframes</CheckBox>
                             <CheckBox Name="Check_ClampUVs">clamp all uv coordinates</CheckBox>
                             <CheckBox Name="Check_ClampLights">clamp all light attentuations</CheckBox>
+                            <CheckBox Name="Check_ClampNormals">clamp invalid normals</CheckBox>
                             <CheckBox Name="Check_AddMissingOrigin">add origin ref if missing</CheckBox>
 
                             <CheckBox Name="Check_DeleteDuplciateGAs">delete duplicate geoset animations</CheckBox>
                             <CheckBox Name="Check_AddMissingGeosetAnims">add missing geoset animations</CheckBox>
-                            <CheckBox Name="Check_SetAllStaticGAs">set all static geoset animations to 1</CheckBox>
+                            <CheckBox Name="Check_SetAllStaticGAs">set all alpha static geoset animations to 1</CheckBox>
                             <CheckBox Name="Check_AddMissingVisibilities">add missing visibilities to all geoset animations and nodes</CheckBox>
                             <CheckBox Name="Check_DetachFromNonBone">detach vertices from non-bone nodes and if empy, reattach to dummy bone</CheckBox>
 
@@ -236,7 +242,8 @@
                                     </MenuItem>
                                     <MenuItem Header="Geoset Operations">
 
-                                    <MenuItem Header="Center...">
+                                    <MenuItem Header="Center
+                                              ">
                                         <MenuItem Header="Center..." Click="Centergeosets" />
                                         <MenuItem Header="Center at..." Click="Centergeosetsat" />
                                     </MenuItem>
@@ -294,7 +301,7 @@
 
                     <StackPanel Orientation="Horizontal"  Grid.Row="2" Grid.Column="1" Background="LightGray">
                         <TextBlock Name="Label_GAs" Text="Geoset animations" FontWeight="Bold" Margin="0,0,5,0"/>
-                        <Button Name="Buttongam" Click="showgam" Content="..." Width="30"  Grid.Column="1" FontWeight="Bold" Grid.Row="2" 
+                        <Button Name="Buttongam" Click="showgam" Content="..." Width="30"  FontWeight="Bold"  
 VerticalContentAlignment="Top" BorderBrush="LightGray">
                             <Button.ContextMenu>
                                 <ContextMenu>
@@ -304,12 +311,12 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                     <MenuItem Header="equalize the alpha animation data of all geoset animations" Click="equalizegas_alpha" />
                                     <MenuItem Header="equalize the color animation data of all geoset animations" Click="equalizegas_color" />
                                     <MenuItem Header="Make all geoset animations the same as this" Click="makegassameasga" />
-                                    <MenuItem Header="Edit alphas" Click="ga_editalphas" />
-                                    <MenuItem Header="Edit colors" Click="ga_editcolors" />
+                                   
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>
-
+                        <Button Width="30" ToolTip="Edit Alphas" Click="ga_editalphas" >A</Button>
+                        <Button Width="30" ToolTip="Edit Color"  Click="ga_editcolors" >C</Button>
                     </StackPanel>
 
 
@@ -332,11 +339,13 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         <RowDefinition Height="20"/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition Height="80"/>
 
                     </Grid.RowDefinitions>
                     <TextBlock Name="Report_sequences" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"  />
                     <TextBlock Name="Report_gsequences" Grid.Row="0" Grid.Column="2" />
-                    <ListBox Name="ListSequenes"    Background="LightGray"   SelectionMode="Single" Grid.Row="1" Grid.ColumnSpan="2"  ></ListBox>
+                    <ListBox Name="ListSequenes"    Background="LightGray"   SelectionMode="Single" 
+                             Grid.Row="1" Grid.ColumnSpan="2"  SelectionChanged="SelectedSequence" ></ListBox>
 
                     <ListBox Name="ListGSequenes" SelectionChanged="SelectedGS"   Background="LightGray" Grid.Row="1" Grid.Column="2"  SelectionMode="Single" />
 
@@ -355,6 +364,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             <Button Click="delseqalong">Delete (along with all keyframes)</Button>
 
 
+                            <Button Click="reportwbaaits">Which bones are animated in this sequence?</Button>
                             <Button Click="switchLooping">Make looping/Nonlooping</Button>
                             <Button Click="ClearSequenceAnimations">Clear animations</Button>
                             <Button Click="reverseSequence">Reverse sequence</Button>
@@ -371,6 +381,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             
 
                         </StackPanel>
+                     
                     </ScrollViewer>
                     <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,208,0,0" Grid.RowSpan="2">
                         <TextBox Name="InputGSDuration"></TextBox>
@@ -378,6 +389,16 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         <Button Click="editgs">Edit</Button>
                         <Button Click="delgs">Remove</Button>
                     </StackPanel>
+                    <TextBox Name="Report_Sequence_UsedNodes" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" IsReadOnly="True"  AcceptsReturn="True" 
+    AcceptsTab="True" 
+    TextWrapping="Wrap" 
+    VerticalScrollBarVisibility="Auto"
+    HorizontalScrollBarVisibility="Disabled" />
+                    <TextBox Name="Report_GSequence_UsedNodes" Grid.Column="2"  Grid.Row="3" IsReadOnly="True"  AcceptsReturn="True" 
+    AcceptsTab="True" 
+    TextWrapping="Wrap" 
+    VerticalScrollBarVisibility="Auto"
+    HorizontalScrollBarVisibility="Disabled" />
                 </Grid>
             </TabItem>
             <TabItem Header="Nodes"  Background="LightGray">
@@ -580,7 +601,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         </Grid.RowDefinitions>
                         <TextBlock Name="LabelTextues" Text="Textures" />
                         <ListBox Name="List_Textures" Grid.Row="1" SelectionMode="Single"   Background="LightGray"  
-                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="SelectedTexture" />
                     </Grid>
                     <ScrollViewer  Grid.Row="2" Grid.Column="1" Margin="3">
 
@@ -593,6 +614,8 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             <Button Click="creatematsforalltextures" Content="Create materials for all textures" />
                             <Button Click="createTC" Content="Create Team color" />
                             <Button Click="createTG" Content="Create Team glow" />
+                            <CheckBox Name="Check_WW" Content="Wrap Width"  Checked="Checked_WW" Unchecked="Checked_WW"/>
+                            <CheckBox Name="Check_WH" Content="Wrap Height"  Checked="Checked_WH" Unchecked="Checked_WH"/>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -638,7 +661,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         </Grid>
                     </TabItem>
                     <TabItem Header="Check for errors">
-                        <TextBox Name="Box_Errors" Background="LightGray"/>
+                        <TextBox Name="Box_Errors" Background="LightGray"  VerticalScrollBarVisibility="Visible"/>
                     </TabItem>
                 </TabControl>
 

@@ -5,44 +5,64 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         Closing="Window_Closing"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
-        Title="UVMapper" Height="650" Width="800">
+        Title="UVMapper" Height="512" Width="1200">
     <Grid Background="LightGray">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="180"/>
             <ColumnDefinition/>
+            <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <StackPanel>
-            <TextBlock Text="Geosets"/>
-            <ListBox Name="List_Geosets_UV" Height="80" SelectionMode="Single" SelectionChanged="SelectedGeoset"/>
-            <TextBlock Text="Triangles"/>
-            <ListBox Name="List_Faces_UV" Height="80" SelectionMode="Multiple" SelectionChanged="SelectFaces"/>
-            <Button>Select all</Button>
-            <Button>Select None</Button>
-            <Button>Select Inverse</Button>
-            <RadioButton IsChecked="True">Render single</RadioButton>
-            <RadioButton>Render tiled</RadioButton>
-            <Button>Project</Button>
-            <Button>Swap two</Button>
-            <Button>Negate Us</Button>
-            <Button>Negate Vs</Button>
-            <Button>Swap Us with Vs</Button>
-            <Button>Rotate by 90C</Button>
-            <Button>Clamp coordinates</Button>
-            <Button>Refresh view in main window</Button>
-           
-            <StackPanel Margin="5">
-                <TextBox Name="InputU" Margin="2" KeyDown="EnterU"/>
-                <TextBox Name="InputV" Margin="2" KeyDown="EnterV"/>
-                <Button Click="CopyUV">Copy coordinate</Button>
-                <Button Click="PasteUV">Paste coordinate</Button>
+        <ScrollViewer>
+            <StackPanel Height="800">
+                <TextBlock Text="Geosets"/>
+                <ListBox Name="List_Geosets_UV" Height="50"
+                         SelectionMode="Single" SelectionChanged="SelectedGeoset"/>
+                <TextBlock Text="Triangles"/>
+                <ListBox Name="List_Faces_UV" Height="80" 
+                         SelectionMode="Multiple" SelectionChanged="SelectFaces"/>
+                <Button Click="selectall">Select all</Button>
+                <Button Click="unselect">Select None</Button>
+                <Button Click="inverseselect">Select Inverse</Button>
+                <Button>Project</Button>
+                <Button ToolTip="Swap the coordinates of two selected vertices">Swap two</Button>
+                <Button>Negate Us</Button>
+                <Button>Negate Vs</Button>
+                <Button>Flatten by U</Button>
+                <Button>Flatten by V</Button>
+                <Button>Swap Us with Vs</Button>
+                <Button ToolTip="Rotate the selected by 90C">Rotate by 90C</Button>
+
+                <StackPanel Margin="5" Orientation="Horizontal">
+                    <TextBox Name="InputU" Margin="2" KeyDown="EnterU" Width="70"/>
+                    <TextBox Name="InputV" Margin="2" KeyDown="EnterV" Width="70"/>
+                   
+                  
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Click="CopyUV" Width="60">Copy</Button>
+                    <Button Click="PasteUV" Width="60">Paste</Button>
+                </StackPanel >
+                <StackPanel Margin="5" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Width="50" ToolTip="M" Click="setmove">Move</Button>
+                    <Button Width="50" ToolTip="Z" Click="setzoom">Zoom</Button>
+                    <Button Width="50" ToolTip="R" Click="setrotate">Rotate</Button>
+                </StackPanel>
+                 
+               
             </StackPanel>
-            
-            <TextBlock Text="Edi mode:"/>
-            <Button>Move</Button>
-            <Button>Scale</Button>
-            <Button>Rotate</Button>
-        </StackPanel>
-        <Canvas Name="Canvas_UV" Grid.Column="1" Background="Black"/>
+
+        </ScrollViewer>
+        <Canvas Name="Canvas_UV" Grid.Column="1" Background="Black" Height="512" 
+                VerticalAlignment="Top" HorizontalAlignment="Left"  Width="512"
+                MouseMove="Canvas_UV_MouseMove" MouseDown="Canvas_UV_MouseDown"
+               MouseUp="Canvas_UV_MouseUp"
+                >
+            <Image Name="Displayer_Texture"/>
+            <Canvas Name="Canvas_UV_Draw"/>
+        </Canvas>
+        <Canvas Name="Canvas_Viewport" Grid.Column="2" Background="Black" Height="512" VerticalAlignment="Top" HorizontalAlignment="Left"  Width="512"/>
     </Grid>
 </Window>

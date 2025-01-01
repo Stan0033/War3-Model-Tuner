@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Wa3Tuner
 {
-    
+
     internal static class ErrorChecker
     {
         public static CModel CurrentModel;
@@ -37,6 +37,7 @@ namespace Wa3Tuner
             }
             return false;
         }
+
         private static bool MaterialUsed(CMaterial material)
         {
             foreach (CGeoset geo in CurrentModel.Geosets)
@@ -47,15 +48,15 @@ namespace Wa3Tuner
         }
         internal static string Inspect(CModel currentModel)
         {
-             
-            StringBuilder all = new StringBuilder();    
+
+            StringBuilder all = new StringBuilder();
             StringBuilder unused = new StringBuilder();
             StringBuilder warnings = new StringBuilder();
             StringBuilder severe = new StringBuilder();
             StringBuilder errors = new StringBuilder();
 
             //check unused materials
-             for (int i = 0; i < currentModel.Textures.Count; i++)
+            for (int i = 0; i < currentModel.Textures.Count; i++)
             {
                 if (TextureUsed(currentModel.Textures[i]) == false)
                 {
@@ -64,8 +65,8 @@ namespace Wa3Tuner
                     unused.AppendLine($"Textures[{i}] ({name}) is unused");
                 }
             }
-             // check for triangle who use the same vertices
-             for (int g =0; g < currentModel.Geosets.Count; g++)
+            // check for triangle who use the same vertices
+            for (int g = 0; g < currentModel.Geosets.Count; g++)
             {
                 CGeoset geoset = currentModel.Geosets[g];
                 for (int i = 0; i < geoset.Faces.Count; i++)
@@ -77,7 +78,7 @@ namespace Wa3Tuner
                         {
                             warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are using the same vertices");
                         }
-                        if (FacesAreFullyOverLapping(geoset.Faces[i], geoset.Faces[x]))
+                        if (Optimizer. FacesFullyOverlapping(geoset.Faces[i], geoset.Faces[x]))
                         {
                             warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are fully overlapping");
 
@@ -85,27 +86,28 @@ namespace Wa3Tuner
                     }
                 }
             }
-            
-             for    (int i = 0;i < currentModel.Materials.Count; i++)
+
+            for (int i = 0; i < currentModel.Materials.Count; i++)
             {
                 if (MaterialUsed(currentModel.Materials[i]) == false)
                 {
                     unused.AppendLine($"Materials[{i}] is unused");
                 }
-               
+
             }
-             for (int i = 0; i< currentModel.TextureAnimations.Count; i++) {
-             if (TAIsUsed(currentModel.TextureAnimations[i]) == false)
+            for (int i = 0; i < currentModel.TextureAnimations.Count; i++)
+            {
+                if (TAIsUsed(currentModel.TextureAnimations[i]) == false)
                 {
                     unused.AppendLine($"TextureAnims[{i}] is unused");
                 }
             }
             // unused.AppendLine($"");
-            if (currentModel.Textures.Count ==0)  warnings.AppendLine("No textures");
-            if (currentModel.Materials.Count ==0)  warnings.AppendLine("No Materials");
-            if (currentModel.Sequences.Count ==0)  warnings.AppendLine("No sequences");
-            if (currentModel.Nodes.Any(x=>x.Name.ToLower() == "origin ref") == false)  warnings.AppendLine("Missing the origin attachment point");
-          for (int i = 0;i < currentModel.Geosets.Count; i++)
+            if (currentModel.Textures.Count == 0) warnings.AppendLine("No textures");
+            if (currentModel.Materials.Count == 0) warnings.AppendLine("No Materials");
+            if (currentModel.Sequences.Count == 0) warnings.AppendLine("No sequences");
+            if (currentModel.Nodes.Any(x => x.Name.ToLower() == "origin ref") == false) warnings.AppendLine("Missing the origin attachment point");
+            for (int i = 0; i < currentModel.Geosets.Count; i++)
             {
                 CGeoset geo = currentModel.Geosets[i];
                 if (geo.Faces.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no faces"); }
@@ -122,15 +124,15 @@ namespace Wa3Tuner
                 }
             }
             // check tracks - repeating times, repeating frames, inconsistent frames, missing opening, closing
-            List<string> ik= CheckInsonsistentKeyframes();
-            List<string> rk= ChekRepeatingTimes();
-            List<string> mok= ChekMissingOpeningKeyframes();
-           // List<string> dk= CheckDuplicatingKeyframes();
+            List<string> ik = CheckInsonsistentKeyframes();
+            List<string> rk = ChekRepeatingTimes();
+            List<string> mok = ChekMissingOpeningKeyframes();
+            // List<string> dk= CheckDuplicatingKeyframes();
             foreach (string i in ik) { severe.AppendLine(i); }
             foreach (string i in rk) { unused.AppendLine(i); }
             foreach (string i in mok) { unused.AppendLine(i); }
-           // foreach (string i in dk) { warnings.AppendLine(i); }
-            
+            // foreach (string i in dk) { warnings.AppendLine(i); }
+
             // check interpolation for visibilities
             foreach (INode node in currentModel.Nodes)
             {
@@ -168,7 +170,7 @@ namespace Wa3Tuner
 
                 }
             }
-             
+
             // check non-bone attachment
             for (int i = 0; i < currentModel.Geosets.Count; i++)
             {
@@ -177,10 +179,10 @@ namespace Wa3Tuner
                 {
                     severe.AppendLine($"Geosets[{i}]: no matrix groups"); continue;
                 }
-                 for (int j = 0; j < gep.Groups.Count; j++)
+                for (int j = 0; j < gep.Groups.Count; j++)
                 {
                     CGeosetGroup group = gep.Groups[j];
-                    for (int k = 0; k <group.Nodes.Count; k++)
+                    for (int k = 0; k < group.Nodes.Count; k++)
                     {
                         if (group.Nodes[k].Node.Node is CBone == false)
                         {
@@ -190,11 +192,11 @@ namespace Wa3Tuner
                     }
                 }
             }
-            
+
             // check bone not attached to anything
             foreach (INode node in currentModel.Nodes)
             {
-                 if (node is CBone)
+                if (node is CBone)
                 {
                     if (NothingAttachedToBone(node))
                     {
@@ -202,7 +204,7 @@ namespace Wa3Tuner
                     }
                 }
             }
-          
+
             // invalid event object
             foreach (INode node in currentModel.Nodes)
             {
@@ -211,7 +213,7 @@ namespace Wa3Tuner
                     if (ev.Tracks.Count == 0) errors.AppendLine($"Event object {ev.Name}: no tracks");
                 }
             }
-            
+
             // invisible geoset anim
             for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
             {
@@ -231,7 +233,7 @@ namespace Wa3Tuner
                         errors.AppendLine($"GeosetAnims[{i}]: invalid geoset");
                     }
                 }
-                
+
             }
             // inconsistent sequences
             if (currentModel.Sequences.Count > 1)
@@ -249,14 +251,14 @@ namespace Wa3Tuner
                     }
                 }
             }
-             // not attached to anything
-             
-             for (int g =0; g < currentModel.Geosets.Count; g++)
+            // not attached to anything
+
+            for (int g = 0; g < currentModel.Geosets.Count; g++)
             {
                 CGeoset geo = currentModel.Geosets[g];
                 for (int i = 0; i < geo.Vertices.Count; i++)
                 {
-                    if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null   )
+                    if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null)
                     {
                         errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
                     }
@@ -265,7 +267,7 @@ namespace Wa3Tuner
                         errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
                     }
                 }
-                if (geo.Material.Object == null )
+                if (geo.Material.Object == null)
                 {
                     severe.AppendLine($"Geoset {g}: no material. The geoset will be invisible"); continue;
                 }
@@ -276,14 +278,59 @@ namespace Wa3Tuner
                         severe.AppendLine($"Geoset {g}: invalid material. The geoset will be invisible"); continue;
                     }
                 }
-            } 
-            foreach (CMaterial material in currentModel.Materials)
-            {
-
             }
 
-            if (unused.Length == 0 && warnings.Length ==0 && 
-                severe.Length == 0 && errors.Length == 0)  { all.AppendLine("All ok"); }
+            for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation anim = currentModel.GeosetAnimations[i];
+                if (anim.Alpha.Static == false)
+                {
+                    foreach (CSequence sequence in currentModel.Sequences)
+                    {
+                        if (anim.Alpha.Any(x => x.Time == sequence.IntervalStart) == false)
+                        {
+                            severe.AppendLine($"in geoset_animations[{i}]: missing opening track for sequence '{sequence.Name}'");
+                        }
+                    }
+                }
+
+            }
+            // check for overlapping triangles
+            
+            if (currentModel.Geosets.Count > 0)
+            {
+                for (int one = 0; one < currentModel.Geosets.Count; one++)
+                {
+                    CGeoset geoset1 = currentModel.Geosets[one];
+
+                    for (int face1Index = 0; face1Index < geoset1.Faces.Count; face1Index++)
+                    {
+                        // Compare with other geosets (or the same geoset but without redundant checks)
+                        for (int two = one; two < currentModel.Geosets.Count; two++)
+                        {
+                            CGeoset geoset2 = currentModel.Geosets[two];
+
+                            // Avoid duplicate checks when comparing the same geoset
+                            int startIndex = (one == two) ? face1Index + 1 : 0;
+
+                            for (int face2Index = startIndex; face2Index < geoset2.Faces.Count; face2Index++)
+                            {
+                                // Check for overlap
+                                if (OverlapChecker.TrianglesIntersect(geoset1.Faces[face1Index], geoset2.Faces[face2Index]))
+                                {
+                                    warnings.AppendLine(
+                                        $"geosets[{one}].triangles[{face1Index}] is overlapping with geosets[{two}].triangles[{face2Index}]");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            
+
+            if (unused.Length == 0 && warnings.Length == 0 &&
+                severe.Length == 0 && errors.Length == 0) { all.AppendLine("All ok"); }
             else
             {
                 all.AppendLine("----------Unused:");
@@ -295,43 +342,20 @@ namespace Wa3Tuner
                 all.AppendLine("----------Errors:");
                 all.AppendLine(errors.ToString());
             }
-          
+
 
             return all.ToString();
         }
+       
+        // Check if a point is inside a triangle
+        
 
-        private static bool FacesAreFullyOverLapping(CGeosetFace cGeosetFace1, CGeosetFace cGeosetFace2)
-        {
-            // Get the vertices of both faces
-            var vertices1 = new[] { cGeosetFace1.Vertex1, cGeosetFace1.Vertex2, cGeosetFace1.Vertex3 };
-            var vertices2 = new[] { cGeosetFace2.Vertex1, cGeosetFace2.Vertex2, cGeosetFace2.Vertex3 };
+        // Helper methods for vector operations
+         
 
-            // Compare the coordinates of each vertex in face1 with each vertex in face2
-            foreach (var vertex1 in vertices1)
-            {
-                bool foundMatch = false;
-                foreach (var vertex2 in vertices2)
-                {
-                    // Check if the vertex positions are the same (compare X, Y, Z coordinates)
-                    if (vertex1.Object.Position.X == vertex2.Object.Position.X &&
-                        vertex1.Object.Position.Y == vertex2.Object.Position.Y &&
-                        vertex1.Object.Position.Z == vertex2.Object.Position.Z)
-                    {
-                        foundMatch = true;
-                        break;
-                    }
-                }
 
-                // If any vertex from face1 doesn't have a matching vertex in face2, they are not fully overlapping
-                if (!foundMatch)
-                {
-                    return false;
-                }
-            }
-
-            // If all vertices from face1 match a vertex in face2, the faces are fully overlapping
-            return true;
-        }
+      
+ 
 
 
         private static bool FacesShareSameVertices(CGeosetFace face1, CGeosetFace face2)
@@ -486,7 +510,7 @@ namespace Wa3Tuner
         }
         private static bool SameValues(float one, float two, float three)
         {
-                    return (one == two && two == three);
+            return (one == two && two == three);
         }
         private static bool SameValues(int one, int two, int three)
         {
@@ -509,9 +533,9 @@ namespace Wa3Tuner
             foreach (CSequence sequence in CurrentModel.Sequences)
             {
                 if (
-                    time1>= sequence.IntervalStart && time1>= sequence.IntervalEnd &&
-                    time2>= sequence.IntervalStart && time2>= sequence.IntervalEnd &&
-                    time3 >= sequence.IntervalStart && time3>= sequence.IntervalEnd
+                    time1 >= sequence.IntervalStart && time1 >= sequence.IntervalEnd &&
+                    time2 >= sequence.IntervalStart && time2 >= sequence.IntervalEnd &&
+                    time3 >= sequence.IntervalStart && time3 >= sequence.IntervalEnd
 
                     )
                 {
@@ -635,15 +659,15 @@ namespace Wa3Tuner
         {
             foreach (CSequence sequence in CurrentModel.Sequences)
             {
-                if (track>= sequence.IntervalStart && track <= sequence.IntervalEnd) { return true; }
+                if (track >= sequence.IntervalStart && track <= sequence.IntervalEnd) { return true; }
             }
             return false;
         }
-        private static CSequence   GetSequenceofTrack(int track)
+        private static CSequence GetSequenceofTrack(int track)
         {
             return CurrentModel.Sequences.First(sequence => track >= sequence.IntervalStart && track <= sequence.IntervalEnd);
         }
-      
+
         private static void ReportMissingOpeningKeyframes(CAnimator<CVector3> aniamtor, string v)
         {
             for (int i = 0; i < aniamtor.Count; i++)
@@ -704,7 +728,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private static List<string> TemporaryList = new List<string> ();
+        private static List<string> TemporaryList = new List<string>();
         private static List<string> ChekRepeatingTimes()
         {
 
@@ -797,18 +821,18 @@ namespace Wa3Tuner
                 var cam = CurrentModel.Cameras[i];
                 ReportRepeatingTimes(cam.Rotation, $"At cameras[{i}]: rotation: ");
             }
-            
-             list.AddRange(TemporaryList);
+
+            list.AddRange(TemporaryList);
             TemporaryList.Clear();
-             return list; 
+            return list;
         }
 
         private static void ReportRepeatingTimes(CAnimator<CVector3> animator, string prefix)
         {
             if (animator.Static) { return; }
-            for (int i =0; i< animator.Count; i++)
+            for (int i = 0; i < animator.Count; i++)
             {
-                if (i+1 < animator.Count)
+                if (i + 1 < animator.Count)
                 {
                     if (animator[i].Time == animator[i + 1].Time)
                     {
@@ -816,8 +840,8 @@ namespace Wa3Tuner
                     }
                 }
             }
-           
-            
+
+
         }
         private static void ReportRepeatingTimes(CAnimator<CVector4> animator, string prefix)
         {
@@ -1046,7 +1070,7 @@ namespace Wa3Tuner
             {
                 foreach (CMaterialLayer layer in mat.Layers)
                 {
-                    if (layer.TextureAnimation.Object == cTextureAnimation) { return true; }    
+                    if (layer.TextureAnimation.Object == cTextureAnimation) { return true; }
                 }
             }
             return false;
