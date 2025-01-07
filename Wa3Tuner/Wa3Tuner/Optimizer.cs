@@ -4,7 +4,7 @@ using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
- 
+using System.Numerics;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -28,7 +28,7 @@ namespace Wa3Tuner
         public static bool DeleteUnusedTextures = false;
         public static bool RenameAllComponents = false;
         public static bool ClampAllUVCoordinates = false;
-        public static bool AddMissingPivotPoints = false;
+        public static bool AddMissingPivotPoints = true;
         public static bool MakeVisibilitiesNone = false;
         public static bool AddOrigin = false;
         public static bool EnumerateSequences = false;
@@ -62,6 +62,11 @@ namespace Wa3Tuner
         internal static bool InvalidTriangleUses = false;
         internal static bool ClampNormals = false;
         internal static bool DeleteTrianglesWithNoArea;
+        internal static bool DeleteDuplicateGEosets = false;
+        internal static bool MergeTextures = false;
+        internal static bool MergeMAtertials = false;
+        internal static bool MergeTAs = false;
+        internal static bool MergeLayers = false;
 
         public static bool MergeIdenticalVertices { get; internal set; }
 
@@ -90,11 +95,11 @@ namespace Wa3Tuner
             if (AddOrigin) { AddOrigin_(); }
             if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
             if (DeleteUnAnimatedSequences) { DeleteUnAnimatedSequences_(); }
-            if (DeleteUnusedBones) { DeleteUnusedBones_(); }
+          
 
             if (DeleteUnusedTextureAnimations) { DeleteUnusedTextureAnimations_(); }
             if (ClampKeyframes) { ClampKeyframes_(); }
-            if (DeleteUnusedKeyframes) { DeleteUnusedKeyframes_(); }
+           
             if (MergeGeosets) { MergeGeosets_(); }
             if (AddMissingVisibilities) { AddMissingVisibilities_(); }
             if (ClampUVs) { ClampUVs_(); }
@@ -106,7 +111,8 @@ namespace Wa3Tuner
             if (CalculateExtents) { CalculateExtents_(); }
             if (DeleteIdenticalAdjascentKEyframes) { DeleteIdenticalAdjascentKEyframes_(); }
             if (Check_DeleteIdenticalAdjascentKEyframes_times) { Check_DeleteIdenticalAdjascentKEyframes_times_(); }
-           // if (DeleteSimilarSimilarKEyframes) { DeleteSimilarSimilarKEyframes_(); }
+           if (DeleteSimilarSimilarKEyframes) { DeleteSimilarSimilarKEyframes_(); }
+            if (DeleteUnusedKeyframes) { DeleteUnusedKeyframes_(); }
             if (AddMissingKeyframes) { AddMissingKeyframes_(); }
             if (_DetachFromNonBone) { _DetachFromNonBone_(); }
             if (DleteOverlapping1) DeleteIdenticalFaces();
@@ -115,17 +121,430 @@ namespace Wa3Tuner
             if (ClampNormals) ClampNormals_();
             if (DeleteTrianglesWithNoArea) DeleteTrianglesWithNoArea_();
             if (MergeIdenticalVertices) MergeIdenticalVertices_();
+            if (DeleteDuplicateGEosets) DeleteDuplicateGEosets_();
+            if (MergeTextures) MergeTextures_();
+            if (MergeLayers) MergeLayers_();
+            if (MergeMAtertials) MergeMatertials_();
+            if (MergeTAs) MergeTAs_();
 
-
-
-
-             RearrangeKeyframes_();
+            
+            if (DelUnusedMatrixGroups) { DelUnusedMatrixGroups_(); }
+            if (DeleteUnusedBones) { DeleteUnusedBones_(); }
+            FillMissingComponents();
+            MakeDynamicTransformationsWithOneOfNoKeyframeStatic();
+            RearrangeKeyframes_();
             MakeTransformationsWithZeroTracksStatic();
-            FixQuirtOfEmitters2();
+            FixSquirtOfEmitters2();
             DeleteEmptyGeosets();
+            RemoveEmptyGeosetAnimations();
         }
+
+        private static void MakeDynamicTransformationsWithOneOfNoKeyframeStatic()
+        {
+            foreach (INode node in Model.Nodes)
+            {
+               
+                if (node is CAttachment)
+                {
+                    CAttachment cAttachment = (CAttachment)node;
+                    ClampStatic(cAttachment.Visibility);
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                    ClampStatic(element.Visibility);
+                    ClampStatic(element.AttenuationEnd);
+                    ClampStatic(element.AttenuationStart);
+                    ClampStatic(element.Color);
+                    ClampStatic(element.AmbientColor);
+                    ClampStatic(element.Intensity);
+                    ClampStatic(element.AmbientIntensity);
+
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+
+                    ClampStatic(element.Visibility);
+                    ClampStatic(element.EmissionRate);
+                    ClampStatic(element.LifeSpan);
+                    ClampStatic(element.InitialVelocity);
+                    ClampStatic(element.Gravity);
+                    ClampStatic(element.Longitude);
+                    ClampStatic(element.Latitude);
+
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                    ClampStatic(element.Visibility);
+                    ClampStatic(element.EmissionRate);
+                    ClampStatic(element.Speed);
+                    ClampStatic(element.Gravity);
+                    ClampStatic(element.Variation);
+                    ClampStatic(element.Latitude);
+                    ClampStatic(element.Width);
+                    ClampStatic(element.Length);
+
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                    ClampStatic(element.Visibility);
+                    ClampStatic(element.Color);
+
+                    ClampStatic(element.Alpha);
+                    ClampStatic(element.HeightBelow);
+
+                    ClampStatic(element.HeightAbove);
+                    ClampStatic(element.TextureSlot);
+
+
+                }
+            }
+            foreach (CGeosetAnimation ga in Model.GeosetAnimations)
+            {
+                ClampStatic(ga.Alpha);
+                ClampStatic(ga.Color);
+
+            }
+            foreach (CMaterial material in Model.Materials)
+            {
+                foreach
+                    (CMaterialLayer layer in material.Layers)
+                {
+                    ClampStatic(layer.Alpha);
+                    ClampStatic(layer.TextureId);
+                }
+            }
+            foreach (CTextureAnimation ta in Model.TextureAnimations)
+            {
+                ClampStatic(ta.Translation);
+                ClampStatic(ta.Rotation);
+                ClampStatic(ta.Scaling);
+            }
+            foreach (CCamera camera in Model.Cameras)
+            {
+                ClampStatic(camera.Rotation);
+                ClampStatic(camera.Translation);
+                ClampStatic(camera.TargetTranslation);
+            }
+
+        }
+        private static void ClampStatic(CAnimator<float> animator)
+        {
+            if (animator.Static == false && animator.Count <= 1)
+            {
+                animator.Clear();
+                animator.MakeStatic(0);
+            }
+        }
+        private static void ClampStatic(CAnimator<CVector3> animator)
+        {
+            if (animator.Static == false && animator.Count <= 1)
+            {
+                animator.Clear();
+                animator.MakeStatic(new CVector3(0,0,0));
+            }
+        }
+        private static void ClampStatic(CAnimator<CVector4> animator)
+        {
+            if (animator.Static == false && animator.Count <= 1)
+            {
+                animator.Clear();
+                animator.MakeStatic(new CVector4(0, 0, 0,1));
+            }
+        }
+        private static void ClampStatic(CAnimator<int> animator)
+        {
+            if (animator.Static == false && animator.Count <= 1)
+            {
+                animator.Clear();
+                animator.MakeStatic(0);
+            }
+        }
+        private static void DelUnusedMatrixGroups_()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                foreach (CGeosetGroup group in geoset.Groups.ToList())
+                {
+                    if (geoset.Vertices.Any(x=>x.Group.Object ==  group) == false)
+                    {
+                        geoset.Groups.Remove(group);
+                    }
+                }
+            }
+        }
+
+        private static void MergeTAs_()
+        {
+            again:
+            if (Model.TextureAnimations.Count > 1)
+            {
+                 foreach (CTextureAnimation ta1 in Model.TextureAnimations.ToList())
+                {
+                    foreach (CTextureAnimation ta2 in Model.TextureAnimations.ToList())
+                    {
+                        if (ta1 == ta2) { continue; }
+                        if (TextureAnimationsSame(ta1, ta2))
+                        {
+                            ReassignTextureAnimation(ta1, ta2);
+                           Model.TextureAnimations.Remove(ta2);
+                            goto again;
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        private static void ReassignTextureAnimation(CTextureAnimation ta1, CTextureAnimation ta2)
+        {
+            foreach (CMaterial mat in Model.Materials)
+            {
+                foreach (CMaterialLayer layer in mat.Layers)
+                {
+                    if (layer.TextureAnimation.Object == ta2)
+                    {
+                        layer.TextureAnimation.Attach(ta1);
+                    }
+                }
+            }
+            
+        }
+
+        private static bool TextureAnimationsSame(CTextureAnimation one, CTextureAnimation two)
+        {
+           
+            if (one.Translation.Static && !two.Translation.Static) return false;
+            if (one.Rotation.Static && !two.Rotation.Static) return false;
+            if (one.Scaling.Static && !two.Scaling.Static) return false;
+            if (one.Translation.Count != two.Translation.Count) return false;
+            if (one.Rotation.Count != two.Rotation.Count) return false;
+            if (one.Scaling.Count != two.Scaling.Count) return false;
+            for (int i = 0;i< one.Translation.Count; i++)
+            {
+               if ((
+                    one.Translation[i].Value.X ==  two.Translation[i].Value.X &&
+                    one.Translation[i].Value.Y ==  two.Translation[i].Value.Y &&
+                    one.Translation[i].Value.Z ==  two.Translation[i].Value.Z 
+                    ) == false) { return false; }
+            }
+            for (int i = 0; i < one.Scaling.Count; i++)
+            {
+                if ((
+                     one.Scaling[i].Value.X == two.Scaling[i].Value.X &&
+                     one.Scaling[i].Value.Y == two.Scaling[i].Value.Y &&
+                     one.Scaling[i].Value.Z == two.Scaling[i].Value.Z
+                     ) == false) { return false; }
+            }
+            for (int i = 0; i < one.Rotation.Count; i++)
+            {
+                if ((
+                     one.Rotation[i].Value.X == two.Rotation[i].Value.X &&
+                     one.Rotation[i].Value.Y == two.Rotation[i].Value.Y &&
+                     one.Rotation[i].Value.Z == two.Rotation[i].Value.Z &&
+                     one.Rotation[i].Value.W == two.Rotation[i].Value.W
+                     ) == false) { return false; }
+            }
+            return true;
+        }
+       
+        private static void MergeMatertials_()
+        {
+            again:
+            if (Model.Materials.Count < 2) { return; }
+            foreach (CMaterial mat1 in Model.Materials.ToList())
+            {
+                foreach (CMaterial mat2 in Model.Materials)
+                {
+                    if (mat1 == mat2) { continue; }
+                    if (MaterialsSame(mat1, mat2))
+                    {
+                        ReassignMaterial(mat1, mat2);
+                        Model.Materials.Remove(mat1);
+                        goto again;
+                    }
+                }
+            }
+           
+        }
+
+        private static void ReassignMaterial(CMaterial mat1, CMaterial mat2)
+        {
+         foreach (CGeoset geoset in Model.Geosets)
+            {
+                if (geoset.Material.Object == mat2) { geoset.Material.Attach(mat1); }
+            }
+        }
+
+        private static bool MaterialsSame(CMaterial mat1, CMaterial mat2)
+        {
+            bool same = false;
+            same = mat1.SortPrimitivesFarZ = mat2.SortPrimitivesFarZ;
+            same = mat1.SortPrimitivesNearZ = mat2.SortPrimitivesNearZ;
+            same = mat1.FullResolution = mat2.FullResolution;
+            same = mat2.Layers.Count == mat2.Layers.Count;
+            if (mat1.Layers.Count == mat1.Layers.Count)
+            {
+                for (int i = 0; i < mat1.Layers.Count; i++)
+                {
+                    same = LayersSame(mat1.Layers[i], mat2.Layers[i]);
+                }
+            }
+            return same;
+
+            
+        }
+
+        private static void MergeLayers_()
+        {
+            foreach (CMaterial mat in Model.Materials)
+            {
+                again:
+                if (mat.Layers.Count > 1)
+                {
+                    for (int i = 0; i < mat.Layers.Count; i++)
+                    {
+                        if (LayersSame(mat.Layers[0], mat.Layers[i + 1]))
+                        {
+                            mat.Layers.RemoveAt(i+1);
+                            goto again;
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        private static bool LayersSame(CMaterialLayer one, CMaterialLayer two)
+        {
+            bool same = true;
+           same = one.Alpha.Static && two.Alpha.Static && one.Alpha.GetValue() == two.Alpha.GetValue();
+           same = one.TextureId.Static && two.TextureId.Static && one.Texture.Object == two.Texture.Object;
+             if (one.Alpha.Static == false && two.Alpha.Static == false)
+            {
+                same = one.Alpha.Count == two.Alpha.Count;
+                if (one.Alpha.Count == two.Alpha.Count)
+                {
+                    same = AlphasSame(one.Alpha, two.Alpha);
+                }
+
+            }
+
+            return same;
+        }
+        private static bool AlphasSame(CAnimator<float> one, CAnimator<float> two)
+        {
+
+            for (int i = 0; i < one.Count; i++)
+            {
+                if (one[i] != two[i]) { return false; }
+            }
+            return true;
+        }
+        private static void MergeTextures_()
+        {
+           
+            var textures = Model.Textures.ToList(); // Work on a copy of the collection.
+            int ToRemove = -1;
+            start:
+            if (ToRemove > -1)
+            {
+                textures.RemoveAt(ToRemove);
+            }
+            ToRemove = -1;
+            if (textures.Count <= 1) { return; }
+            for (int i = 0; i< textures.Count; i++)
+            {
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    if (i == j) { continue; }
+                    if (
+                        textures[i].ReplaceableId == 0   && 
+                        textures[j].ReplaceableId == 0   && 
+                        textures[i].FileName == textures[j].FileName
+                        )
+                    {
+                        ReassignTexture(textures[i], textures[j]);
+                        ToRemove = j;
+                        goto start;
+                    }
+                    if (
+                       textures[i].ReplaceableId  > 0 &&
+                       textures[j].ReplaceableId  >  0 &&
+                       textures[i].ReplaceableId == textures[j].ReplaceableId
+                       )
+                    {
+                        ReassignTexture(textures[i], textures[j]);
+                        ToRemove = j;
+                        goto start;
+                    }
+                }
+            }
+        }
+
+        private static void ReassignTexture(CTexture first, CTexture second)
+        {
+            foreach (CMaterial material in Model.Materials)
+            {
+                foreach (CMaterialLayer layer in material.Layers)
+                {
+                    if (layer.Texture.Object == second)
+                    {
+                        layer.Texture.Attach(first);
+                    }
+                }
+            }
+        }
+
+        private static void RemoveEmptyGeosetAnimations()
+        {
+            foreach (CGeosetAnimation ga in Model.GeosetAnimations.ToList())
+            {
+                if (Model.Geosets.Contains(ga.Geoset.Object) == false || ga.Geoset == null || ga.Geoset.Object == null)
+                {
+                    Model.GeosetAnimations.Remove(ga);
+                }
+            }
+        }
+        private static void DeleteDuplicateGEosets_()
+        {
+            again:
+            foreach (CGeoset geoset1 in Model.Geosets.ToList())
+            {
+                foreach (CGeoset geoset2 in Model.Geosets.ToList())
+                {
+                    if (geoset1 != geoset2)
+                    {
+
+                    
+                    if (GeosetComparer.IdenticalPositions(geoset1, geoset2))
+                    {
+                         Model.Geosets.Remove(geoset2);
+                            goto again;
+                    }
+                    }
+                }
+
+            }
+        }
+
         private static void DeleteEmptyGeosets()
         {
+            foreach (CGeoset geoset in Model.Geosets.ToList())
+            {
+              foreach (CGeosetFace face in geoset.Faces.ToList())
+                {
+                    if (face.Vertex1.Object == null || 
+                        face.Vertex2.Object == null ||
+                        face.Vertex3.Object == null)
+                    {
+                        geoset.Faces.Remove(face);
+                    }
+                }
+            }
             foreach (CGeoset geoset in Model.Geosets.ToList())
             {
                 if (geoset.Faces.Count == 0 || geoset.Vertices.Count < 3)
@@ -140,37 +559,38 @@ namespace Wa3Tuner
         {
             foreach (CGeoset geoset in Model.Geosets)
             {
-                var verticesToRemove = new List<CGeosetVertex>(); // List of vertices to remove
+                var verticesToRemove = new HashSet<CGeosetVertex>(); // Use HashSet for efficient lookup
+                var vertexMap = new Dictionary<CGeosetVertex, CGeosetVertex>(); // Map to track vertex replacements
 
-                foreach (CGeosetFace face in geoset.Faces)
+                // Compare each vertex only once
+                for (int i = 0; i < geoset.Vertices.Count; i++)
                 {
-                    foreach (CGeosetVertex vertex in geoset.Vertices)
+                    var vertex1 = geoset.Vertices[i];
+
+                    for (int j = i + 1; j < geoset.Vertices.Count; j++)
                     {
-                        if (face.Vertex1.Object != vertex && !verticesToRemove.Contains(vertex))
+                        var vertex2 = geoset.Vertices[j];
+
+                        if (VerticesIdentical(vertex1, vertex2))
                         {
-                            if (face.Vertex1.Object.IdenticalWith(vertex))
-                            {
-                                verticesToRemove.Add(vertex);
-                            }
-                        }
-                        if (face.Vertex2.Object != vertex && !verticesToRemove.Contains(vertex))
-                        {
-                            if (face.Vertex2.Object.IdenticalWith(vertex))
-                            {
-                                verticesToRemove.Add(vertex);
-                            }
-                        }
-                        if (face.Vertex3.Object != vertex && !verticesToRemove.Contains(vertex))
-                        {
-                            if (face.Vertex3.Object.IdenticalWith(vertex))
-                            {
-                                verticesToRemove.Add(vertex);
-                            }
+                            vertexMap[vertex2] = vertex1; // Map vertex2 to vertex1
+                            verticesToRemove.Add(vertex2);
                         }
                     }
                 }
 
-                // After the loop finishes, remove vertices
+                // Reassign vertices in faces using the map
+                foreach (CGeosetFace face in geoset.Faces)
+                {
+                    if (vertexMap.TryGetValue(face.Vertex1.Object, out var replacement1))
+                        face.Vertex1.Attach(replacement1);
+                    if (vertexMap.TryGetValue(face.Vertex2.Object, out var replacement2))
+                        face.Vertex2.Attach(replacement2);
+                    if (vertexMap.TryGetValue(face.Vertex3.Object, out var replacement3))
+                        face.Vertex3.Attach(replacement3);
+                }
+
+                // Remove duplicates from the geoset
                 foreach (var vertex in verticesToRemove)
                 {
                     geoset.Vertices.Remove(vertex);
@@ -178,6 +598,16 @@ namespace Wa3Tuner
             }
         }
 
+
+        private static bool VerticesIdentical(CGeosetVertex one, CGeosetVertex two)
+        {
+            return
+                one.Position.X == two.Position.X &&
+                one.Position.Y == two.Position.Y &&
+                one.Position.Z == two.Position.Z &&
+                one.TexturePosition.X == two.Position.X &&
+                one.TexturePosition.Y == two.Position.Y;
+        }
 
         private static void DeleteTrianglesWithNoArea_()
         {
@@ -548,8 +978,171 @@ namespace Wa3Tuner
 
         private static void DeleteSimilarSimilarKEyframes_()
         {
-             //unused
-           // throw new NotImplementedException();
+            foreach (INode node in Model.Nodes)
+            {
+                RemoveSimilarAdjascentKeyframes(node.Translation);
+                RemoveSimilarAdjascentKeyframes(node.Rotation);
+                RemoveSimilarAdjascentKeyframes(node.Scaling);
+                if (node is CAttachment)
+                {
+                    CAttachment element = (CAttachment)node;
+                    RemoveSimilarAdjascentKeyframes(element.Visibility);
+                }
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter element = (CParticleEmitter)node;
+                   // RemoveSimilarAdjascentKeyframes(element.Visibility);
+                    RemoveSimilarAdjascentKeyframes(element.EmissionRate);
+                    RemoveSimilarAdjascentKeyframes(element.LifeSpan);
+                    RemoveSimilarAdjascentKeyframes(element.InitialVelocity);
+                    RemoveSimilarAdjascentKeyframes(element.Gravity);
+                    RemoveSimilarAdjascentKeyframes(element.Longitude);
+                    RemoveSimilarAdjascentKeyframes(element.Latitude);
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 element = (CParticleEmitter2)node;
+                   // RemoveSimilarAdjascentKeyframes(element.Visibility);
+                    RemoveSimilarAdjascentKeyframes(element.EmissionRate);
+                    RemoveSimilarAdjascentKeyframes(element.Speed);
+                    RemoveSimilarAdjascentKeyframes(element.Width);
+                    RemoveSimilarAdjascentKeyframes(element.Gravity);
+                    RemoveSimilarAdjascentKeyframes(element.Length);
+                    RemoveSimilarAdjascentKeyframes(element.Latitude);
+                    RemoveSimilarAdjascentKeyframes(element.Variation);
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter element = (CRibbonEmitter)node;
+                   // RemoveSimilarAdjascentKeyframes(element.Visibility);
+                    RemoveSimilarAdjascentKeyframes(element.HeightAbove);
+                    RemoveSimilarAdjascentKeyframes(element.HeightBelow);
+                    RemoveSimilarAdjascentKeyframes(element.Color);
+                    RemoveSimilarAdjascentKeyframes(element.Alpha);
+                    RemoveSimilarAdjascentKeyframes(element.TextureSlot);
+
+                }
+                if (node is CLight)
+                {
+                    CLight element = (CLight)node;
+                  //  RemoveSimilarAdjascentKeyframes(element.Visibility);
+                    RemoveSimilarAdjascentKeyframes(element.Color);
+                    RemoveSimilarAdjascentKeyframes(element.AmbientColor);
+                    RemoveSimilarAdjascentKeyframes(element.Intensity);
+                    RemoveSimilarAdjascentKeyframes(element.AmbientIntensity);
+                    RemoveSimilarAdjascentKeyframes(element.AttenuationEnd);
+                    RemoveSimilarAdjascentKeyframes(element.AttenuationStart);
+
+                }
+            }
+            foreach (CGeosetAnimation ga in Model.GeosetAnimations)
+            {
+                if (ga.Alpha.Static == false)
+                {
+                    RemoveSimilarAdjascentKeyframes(ga.Alpha);
+                }
+                if (ga.Color.Static == false) { RemoveAdjascentKeyframes(ga.Color); }
+            }
+            foreach (CTextureAnimation taa in Model.TextureAnimations)
+            {
+                RemoveSimilarAdjascentKeyframes(taa.Translation);
+                RemoveSimilarAdjascentKeyframes(taa.Rotation);
+                RemoveSimilarAdjascentKeyframes(taa.Scaling);
+
+            }
+            foreach (CMaterial material in Model.Materials)
+            {
+                foreach (CMaterialLayer layer in material.Layers)
+                {
+                    RemoveSimilarAdjascentKeyframes(layer.Alpha);
+                    RemoveSimilarAdjascentKeyframes(layer.TextureId);
+                }
+            }
+            foreach (CCamera cam in Model.Cameras)
+            {
+                RemoveSimilarAdjascentKeyframes(cam.Rotation);
+            }
+
+        }
+
+        private static void RemoveSimilarAdjascentKeyframes(CAnimator<CVector3> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1] == null || list[i] == null || list[i+1] == null) { continue; } 
+                        if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
+                        {
+                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.05)
+                            {
+
+                                list.RemoveAt(i);
+                                goto start;
+                            }
+                        }
+                    
+                }
+
+            }
+        }
+        private static void RemoveSimilarAdjascentKeyframes(CAnimator<CVector4> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
+                        {
+                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.57)
+                            {
+
+                                list.RemoveAt(i);
+                                goto start;
+                            }
+                        }
+                    
+                }
+
+            }
+        }
+        private static void RemoveSimilarAdjascentKeyframes(CAnimator<float> list)
+        {
+            if (list.Static == true) { return; }
+            start:
+            if (list.Count < 3) { return; }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i - 1 != -1)
+                {
+                    if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
+                        {
+                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.2)
+                            {
+
+                                list.RemoveAt(i);
+                                goto start;
+                            }
+                        }
+                     
+
+                }
+            }
+        }
+        private static void RemoveSimilarAdjascentKeyframes(CAnimator<int> list)
+        {
+            return;
         }
         private static void CreateLayerForMaterialsWithout()
         {
@@ -579,6 +1172,14 @@ namespace Wa3Tuner
             CTexture texture = new CTexture(Model);
             texture.FileName = "Textures\\white.blp";
             Model.Textures.Add(texture);
+        }
+        private static void CreateWhiteTextureifNo()
+        {
+            if (Model.Textures.Count == 0)
+            {
+                CreateWhiteTextures();
+            }
+           
         }
         private static void AddMissingKeyframes_()
         {
@@ -670,6 +1271,16 @@ namespace Wa3Tuner
                         }
                     }
 
+
+                }
+
+            }
+            if (Model.GlobalSequences.Contains(animator.GlobalSequence.Object))
+            {
+                if (animator.Any(x => x.Time == 0) == false)
+                {
+                    animator.Add(new CAnimatorNode<float>(0, 0));
+
                 }
             }
         }
@@ -691,6 +1302,16 @@ namespace Wa3Tuner
                         }
                     }
 
+
+                }
+
+            }
+            if (Model.GlobalSequences.Contains(animator.GlobalSequence.Object))
+            {
+                if (animator.Any(x => x.Time == 0) == false)
+                {
+                    animator.Add(new CAnimatorNode<int>(0, 0));
+
                 }
             }
         }
@@ -710,8 +1331,21 @@ namespace Wa3Tuner
                             animator.Add(new CAnimatorNode<CVector3>(sequence.IntervalStart, item.Value));
                             goto Start;
                         }
-                    }
 
+                    }
+                    
+
+                }
+              
+            }
+            if (Model.GlobalSequences.Contains(animator.GlobalSequence.Object))
+            {
+                
+                if (animator.Any(x => x.Time == 0) == false)
+                {
+                     
+                    animator.Add(new CAnimatorNode<CVector3>(0, new CVector3(0, 0, 0)));
+                   
                 }
             }
         }
@@ -732,6 +1366,16 @@ namespace Wa3Tuner
                             goto Start;
                         }
                     }
+                   
+
+                }
+
+            }
+            if (animator.GlobalSequence.Object != null)
+            {
+                if (animator.Any(x => x.Time == 0) == false)
+                {
+                    animator.Add(new CAnimatorNode<CVector4>(0, new CVector4(0, 0, 0, 1)));
 
                 }
             }
@@ -875,10 +1519,14 @@ namespace Wa3Tuner
             {
                 if (i - 1 != -1)
                 {
-                    if (list[i-1].Time == list[i].Time)
+                    if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                     {
-                        list.RemoveAt(i);
-                        goto start;
+                        if (list[i - 1].Time == list[i].Time)
+                        {
+                            list.RemoveAt(i);
+                            goto start;
+                        }
                     }
                 }
                 
@@ -894,10 +1542,14 @@ namespace Wa3Tuner
             {
                 if (i - 1 != -1)
                 {
-                    if (list[i - 1].Time == list[i].Time)
+                    if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                     {
-                        list.RemoveAt(i);
-                        goto start;
+                        if (list[i - 1].Time == list[i].Time)
+                        {
+                            list.RemoveAt(i);
+                            goto start;
+                        }
                     }
                 }
 
@@ -914,10 +1566,14 @@ namespace Wa3Tuner
                
                 if (i - 1 != -1)
                 {
-                    if (list[i - 1].Time == list[i].Time  )
+                    if (list[i - 1] == null || list[i] == null || list[i+1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                     {
-                        list.RemoveAt(i);
-                        goto start;
+                        if (list[i - 1].Time == list[i].Time)
+                        {
+                            list.RemoveAt(i);
+                            goto start;
+                        }
                     }
                 }
 
@@ -933,11 +1589,16 @@ namespace Wa3Tuner
             {
                 if (i - 1 != -1)
                 {
-                    if (list[i - 1].Time == list[i].Time)
+                    if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
+                    if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                     {
-                        list.RemoveAt(i);
-                        goto start;
+                        if (list[i - 1].Time == list[i].Time)
+                        {
+                            list.RemoveAt(i);
+                            goto start;
+                        }
                     }
+                    
                 }
 
             }
@@ -1007,7 +1668,7 @@ namespace Wa3Tuner
             }
         }
 
-        private static void FixQuirtOfEmitters2()
+        private static void FixSquirtOfEmitters2()
         {
             foreach (INode node in Model.Nodes)
             {
@@ -1797,7 +2458,7 @@ namespace Wa3Tuner
                 {
                     foreach (var item in ga.Alpha.ToList())
                     {
-                        if (item.Time<0) ga.Alpha.Remove(item);
+                        if (item.Time < 0) {ga.Alpha.Remove(item); continue;  }
                         if (ValueExistsInSequences(item.Time) == false)
                         {
                             ga.Alpha.Remove(item);
@@ -1999,6 +2660,10 @@ namespace Wa3Tuner
                     return true;
                 }
             }
+            foreach (CGlobalSequence gs in Model.GlobalSequences)
+            {
+              //  if (track == gs.)
+            }
             return false;
         }
         private static void DeleteUnusedTextureAnimations_()
@@ -2027,34 +2692,37 @@ namespace Wa3Tuner
         {
             foreach (INode node in Model.Nodes.ToList())
             {
+             
                 if (node is CBone)
                 {
                     if (BoneHasAttachees(node) == false && NodeHasChildren(node) == false)
                     {
                       Model.Nodes.Remove(node);
+                    
                     }
 
                 }
             }
            
         }
-        private static bool NodeHasChildren(INode node)
+        private static bool NodeHasChildren(INode checkedNode)
         {
-            foreach (INode n in Model.Nodes)
+            foreach (INode loopedNode in Model.Nodes)
             {
-                if (n.Parent.Node == node) { return true; }
+                if (loopedNode.Parent.Node == null) { continue; }
+                if (loopedNode.Parent.Node.ObjectId == checkedNode.ObjectId) { return true; }
             }
             return false;
         }
-        private static bool BoneHasAttachees(INode node)
+        private static bool BoneHasAttachees(INode checkedBone)
         {
             foreach (CGeoset geo in Model.Geosets)
             {
                 foreach (CGeosetGroup group in geo.Groups)
                 {
-                    foreach (var item in group.Nodes)
+                    foreach (var node in group.Nodes)
                     {
-                        if (item.Node.ObjectId == node.ObjectId) { return true; }
+                        if (node.Node.ObjectId == checkedBone.ObjectId) { return true; }
                     }
                 }
             }
@@ -2675,6 +3343,67 @@ namespace Wa3Tuner
             }
              
         }
+        private static void CreateMAterialIfNo()
+        {
+            if (Model.Materials.Count == 0)
+            {
+                CreateWhiteTextureifNo();
+                 CMaterial mat = new CMaterial(Model);
+                CMaterialLayer layer = new CMaterialLayer(Model);
+                layer.Texture.Attach(Model.Textures[0]);
+                mat.Layers.Add(layer);
+                Model.Materials.Add(mat);
+            }
+           
+
+        }
+        private static void FillMissingComponents()
+        {
+            CreateLayerForMaterialsWithout();
+            // materials without layers
+            // layers without textures
+            
+            foreach (INode node in Model.Nodes)
+            {
+                // emitter2 without texture
+                if (node is CParticleEmitter2 emitter)
+                {
+
+                    if (emitter.Texture == null || emitter.Texture.Object == null ||
+                        Model.Textures.Contains(emitter.Texture.Object) == false)
+                    {
+                        CreateWhiteTextureifNo();
+                        emitter.Texture.Attach(Model.Textures[0]);
+                    }
+                }
+                // ribbon without material
+                if (node is CRibbonEmitter ribbon)
+                {
+                    if (ribbon.Material == null || ribbon.Material.Object == null ||
+                        Model.Materials.Contains(ribbon.Material.Object) == false)
+                    {
+
+
+                        CreateMAterialIfNo();
+                        ribbon.Material.Attach(Model.Materials[0]);
+                    }
+                }
+            }
+
+
+            // geoset without material
+
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                if (geoset.Material == null || geoset.Material.Object == null ||
+                    Model.Materials.Contains(geoset.Material.Object) == false)
+                {
+                    CreateMAterialIfNo();
+                    geoset.Material.Attach(Model.Materials[0]);
+                }
+            }
+            
+        }
         private static MdxLib.Primitives.CVector2 ClampUV(CVector2 value)
         {
             CVector2 result = new CVector2();
@@ -2728,7 +3457,14 @@ namespace Wa3Tuner
            
             foreach (CGeoset geo in Model.Geosets)
             {
-                if (geo.Material.Object == mat  || geo.Material.ObjectId == mat.ObjectId) { return true; }
+                if (geo.Material.Object == mat   ) { return true; }
+            }
+            foreach (INode node in Model.Nodes)
+            {
+                if (node is CRibbonEmitter ribbon)
+                {
+                    if (ribbon.Material.Object == mat) { return true; }
+                }
             }
             return false;
         }
@@ -2740,7 +3476,7 @@ namespace Wa3Tuner
             {
                 if (node is CHelper)
                 {
-                    if (HasChildren(node))
+                    if (HasChildren(node) == false)
                     {
                         Model.Nodes.Remove(node);
                     }

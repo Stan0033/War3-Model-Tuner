@@ -78,5 +78,10 @@ namespace Wa3Tuner
                 Bone.GeosetAnimation.Attach(Model.GeosetAnimations[index+1]);
             }
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
     }
 }

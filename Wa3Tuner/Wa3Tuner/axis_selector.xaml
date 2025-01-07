@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
         ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Title="Axis Selector" Height="150" Width="150">
     <StackPanel Margin="10">

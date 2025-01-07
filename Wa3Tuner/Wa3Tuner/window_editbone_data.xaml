@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="LightGray"

@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Wa3Tuner"
         Background="LightGray"
         ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
         Title="edit global sequences" Height="250" Width="400">

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wa3Tuner", "Wa3Tuner\Wa3Tuner.csproj", "{01167A63-886E-4F89-BEF3-B8294448F776}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wa3Tuner", "Wa3Tuner\Wa3Tuner.csproj", "{01167A63-886E-4F89-BEF3-B8294448F776}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

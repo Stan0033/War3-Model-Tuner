@@ -42,13 +42,13 @@ namespace Wa3Tuner
             ListType.SelectedIndex = (int)Light.Type;
             if (Light.Color.Static)
             {
-                Brush color = Calculator.BrushFromVector3(Light.Color.GetValue());
+                Brush color = Calculator.BrushFromWar3Vector3(Light.Color.GetValue());
                 btnColor.Background = color;
 
             }
             if (Light.AmbientColor.Static)
             {
-                Brush amcolor = Calculator.BrushFromVector3(Light.AmbientColor.GetValue());
+                Brush amcolor = Calculator.BrushFromWar3Vector3(Light.AmbientColor.GetValue());
                 btnAmbientColor.Background = amcolor;
             }
         }
@@ -94,5 +94,9 @@ namespace Wa3Tuner
             editor.ShowDialog();
         }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { DialogResult = false; }
+        }
     }
 }

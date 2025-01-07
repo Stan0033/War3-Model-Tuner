@@ -24,12 +24,7 @@ namespace Wa3Tuner
         CModel Model;
         CGeoset Geoset;
         bool initialized = false;
-        public color_selector( )
-        {
-            InitializeComponent();
-            
-            initialized = true;
-        }
+       
         public color_selector(Brush brush)
         {
             InitializeComponent();
@@ -56,12 +51,21 @@ namespace Wa3Tuner
             SelectedColor = Color.FromRgb(red, green, blue);
             SelectedBrush = new SolidColorBrush(SelectedColor);
             ColorCanvas.Background = new SolidColorBrush(SelectedColor);
+
+            DisplayR.Text = red.ToString();
+            DisplayG.Text = green.ToString();
+            DisplayB.Text = blue.ToString();
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
             Close();
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { DialogResult = false; }
         }
     }
 }

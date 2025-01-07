@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         ResizeMode="NoResize"
+        Background="LightGray"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
         Title="Put on ground" Height="180" Width="200">

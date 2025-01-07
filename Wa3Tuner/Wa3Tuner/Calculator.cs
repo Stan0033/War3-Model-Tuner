@@ -442,7 +442,7 @@ namespace Wa3Tuner
         }
         private static CSequence DuplicatingFromSequence;
         private static CSequence DuplicatingToSequence;
-
+      
 
         internal static void DuplicateSequence(CSequence sequence, CSequence ToSequence, CModel Model)
         {
@@ -1393,12 +1393,12 @@ namespace Wa3Tuner
              
         }
 
-        internal static System.Windows.Media.Brush BrushFromVector3(CVector3 cVector3)
+        internal static System.Windows.Media.Brush BrushFromWar3Vector3(CVector3 cVector3)
         {
             // Clamp each value to the 0-1 range to avoid invalid brush colors
-            double r = Math.Min(Math.Max(cVector3.X, 0), 1);
+            double r = Math.Min(Math.Max(cVector3.Z, 0), 1);
             double g = Math.Min(Math.Max(cVector3.Y, 0), 1);
-            double b = Math.Min(Math.Max(cVector3.Z, 0), 1);
+            double b = Math.Min(Math.Max(cVector3.X, 0), 1);
 
             // Create and return a SolidColorBrush using the vector's components
             return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, (float)r, (float)g, (float)b));
@@ -1853,6 +1853,96 @@ namespace Wa3Tuner
             {
                 throw new InvalidOperationException("Only SolidColorBrush is supported.");
             }
+        }
+
+        internal static CVector3 ColorToWar3Color(System.Windows.Media.Color color)
+        {
+            float r = color.B / 255;
+            float g = color.G / 255;
+            float b = color.R / 255;
+           return new CVector3(r, g, b);
+        }
+
+        internal static int _255ToPercentage(float alpha)
+        {
+            if (alpha < 0) { return 0; }
+            if (alpha > 255) { return 100; }
+            // Convert 255-based percentage to standard percentage
+             return _255To100(alpha);
+        }
+        public static int _255To100(float value)
+        {
+            if (value < 0 || value > 255)
+                throw new ArgumentOutOfRangeException(nameof(value), "The value must be between 0 and 255.");
+
+            return (int)((value / 255) * 100);
+        }
+
+        internal static System.Windows.Media.Brush RGBToBrush(int r, int g, int b)
+        {
+            // Validate the RGB values to ensure they are within the valid range (0-255)
+            r = Math.Clamp(r, 0, 255);
+            g = Math.Clamp(g, 0, 255);
+            b = Math.Clamp(b, 0, 255);
+
+            // Create a SolidColorBrush using the RGB values
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb((byte)r, (byte)g, (byte)b));
+        }
+
+        internal static float Difference(CAnimatorNode<CVector3> cAnimatorNode1, CAnimatorNode<CVector3> cAnimatorNode2, CAnimatorNode<CVector3> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
+            // Get the CVector3 values
+            CVector3 one = cAnimatorNode1.Value;
+            CVector3 two = cAnimatorNode2.Value;
+            CVector3 three = cAnimatorNode3.Value;
+
+            // Calculate the differences between each vector component
+            float diffX = one.X - two.X + two.X - three.X + three.X - one.X;
+            float diffY = one.Y - two.Y + two.Y - three.Y + three.Y - one.Y;
+            float diffZ = one.Z - two.Z + two.Z - three.Z + three.Z - one.Z;
+
+            // Calculate the overall difference (e.g., Euclidean distance for simplicity)
+            float totalDifference = (float)Math.Sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
+
+            return totalDifference;
+        }
+        internal static float Difference(CAnimatorNode<CVector4> cAnimatorNode1, CAnimatorNode<CVector4> cAnimatorNode2, CAnimatorNode<CVector4> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
+
+            // Get the CVector3 values
+            CVector3 one = QuaternionToEuler(cAnimatorNode1.Value);
+            CVector3 two = QuaternionToEuler(cAnimatorNode2.Value);
+            CVector3 three = QuaternionToEuler(cAnimatorNode3.Value);
+
+            // Calculate the differences between each vector component
+            float diffX = one.X - two.X + two.X - three.X + three.X - one.X;
+            float diffY = one.Y - two.Y + two.Y - three.Y + three.Y - one.Y;
+            float diffZ = one.Z - two.Z + two.Z - three.Z + three.Z - one.Z;
+
+            // Calculate the overall difference (e.g., Euclidean distance for simplicity)
+            float totalDifference = (float)Math.Sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
+
+            return totalDifference;
+        }
+        internal static float Difference(CAnimatorNode<float> cAnimatorNode1, CAnimatorNode<float> cAnimatorNode2, CAnimatorNode<float> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
+            // Get the float values from the animator nodes
+            float one = cAnimatorNode1.Value;
+            float two = cAnimatorNode2.Value;
+            float three = cAnimatorNode3.Value;
+
+            // Calculate the differences
+            float diff1 = Math.Abs(one - two);
+            float diff2 = Math.Abs(two - three);
+            float diff3 = Math.Abs(three - one);
+
+            // Aggregate the differences (e.g., sum of absolute differences)
+            float totalDifference = diff1 + diff2 + diff3;
+
+            return totalDifference;
         }
 
     }

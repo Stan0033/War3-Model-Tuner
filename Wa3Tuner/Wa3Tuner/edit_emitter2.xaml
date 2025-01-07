@@ -5,9 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown"
         Background="LightGray"
-        Title="Edit Emitter2" Height="650" Width="800">
-    <Grid Margin="10">
+        Title="Edit Emitter2" Height="550" Width="800">
+    <Grid Margin="10" Name="All">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
@@ -110,65 +112,72 @@
             <!-- Head and Tail Sections -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
                 <TextBlock Text="Head (Lifespan) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
-                <TextBox Name="InputHeadStart" TextChanged="SetHeadLife" Width="50" Margin="5"/>
-                <TextBox Name="InputHeadEnd" TextChanged="SetHeadLife"  Width="50" Margin="5"/>
-                <TextBox Name="InputHeadRepeat" TextChanged="SetHeadLife"  Width="50" Margin="5"/>
+                <TextBox Name="InputHeadStart" TextChanged="SetHeadLife" Width="50" Margin="5" IsEnabled="False"/>
+                <TextBox Name="InputHeadEnd" TextChanged="SetHeadLife"  Width="50" Margin="5"  IsEnabled="False"/>
+                <TextBox Name="InputHeadRepeat" TextChanged="SetHeadLife"  Width="50" Margin="5"  IsEnabled="False"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
                 <TextBlock Text="Head (Decay) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
-                <TextBox Name="InputHeadStartDecay" TextChanged="SetHedDecay" Width="50" Margin="5"/>
-                <TextBox Name="InputHeadEndDecay"  TextChanged="SetHedDecay"  Width="50" Margin="5"/>
-                <TextBox Name="InputHeadRepeatDecay" TextChanged="SetHedDecay"  Width="50" Margin="5"/>
+                <TextBox Name="InputHeadStartDecay" TextChanged="SetHedDecay"  IsEnabled="False" Width="50" Margin="5"/>
+                <TextBox Name="InputHeadEndDecay"  TextChanged="SetHedDecay"  IsEnabled="False"  Width="50" Margin="5"/>
+                <TextBox Name="InputHeadRepeatDecay" TextChanged="SetHedDecay"  IsEnabled="False"  Width="50" Margin="5"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
                 <TextBlock Text="Tail (Decay) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
-                <TextBox Name="InputTailDecayStart" TextChanged="SetTailDecay" Width="50" Margin="5"/>
-                <TextBox Name="InputTailDecayEnd" TextChanged="SetTailDecay"  Width="50" Margin="5"/>
-                <TextBox Name="InputTailDecayRepeat" TextChanged="SetTailDecay"  Width="50" Margin="5"/>
+                <TextBox Name="InputTailDecayStart" TextChanged="SetTailDecay"  IsEnabled="False" Width="50" Margin="5"/>
+                <TextBox Name="InputTailDecayEnd" TextChanged="SetTailDecay"  IsEnabled="False"  Width="50" Margin="5"/>
+                <TextBox Name="InputTailDecayRepeat" TextChanged="SetTailDecay"  IsEnabled="False"  Width="50" Margin="5"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
                 <TextBlock Text="Tail (Lifespan) - Start, End, Repeat" Width="200" VerticalAlignment="Center"/>
-                <TextBox Name="InputTailLifespanStart" TextChanged="SetTailLife" Width="50" Margin="5"/>
-                <TextBox Name="InputTailLifespanEnd" TextChanged="SetTailLife" Width="50" Margin="5"/>
-                <TextBox Name="InputTailLifespanRepeat"  TextChanged="SetTailLife" Width="50" Margin="5"/>
+                <TextBox Name="InputTailLifespanStart" TextChanged="SetTailLife"  IsEnabled="False" Width="50" Margin="5"/>
+                <TextBox Name="InputTailLifespanEnd" TextChanged="SetTailLife"  IsEnabled="False" Width="50" Margin="5"/>
+                <TextBox Name="InputTailLifespanRepeat"  TextChanged="SetTailLife"  IsEnabled="False" Width="50" Margin="5"/>
             </StackPanel>
 
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Rows" Width="50" VerticalAlignment="Center"/>
+                    <TextBox Name="InputRows" TextChanged="SetRows" Width="80" Margin="5"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Columns" Width="50" VerticalAlignment="Center"/>
+                    <TextBox Name="InputColumns" TextChanged="SetColumns" Width="80" Margin="5"/>
+                </StackPanel>
+            </StackPanel>
             <!-- Other Settings -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Rows" Width="120" VerticalAlignment="Center"/>
-                <TextBox Name="InputRows" TextChanged="SetRows" Width="100" Margin="5"/>
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Lifespan" Width="50" VerticalAlignment="Center"/>
+                    <TextBox Name="InputLifespan" TextChanged="SetLifespan" Width="80" Margin="5"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Tail Length" Width="60" VerticalAlignment="Center"/>
+                    <TextBox Width="80"   Name="InputTailLength"  Margin="5" TextChanged="SetTailLength"/>
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Columns" Width="120" VerticalAlignment="Center"/>
-                <TextBox Name="InputColumns" TextChanged="SetColumns" Width="100" Margin="5"/>
+
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Priority Plane" Width="80" VerticalAlignment="Center"/>
+                    <TextBox  Name="InputPriorityPlane" TextChanged="SetPriorityPlane" Width="60" Margin="5"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
+                    <TextBlock Text="Replaceable ID" Width="80" VerticalAlignment="Center"/>
+                    <TextBox Width="60" Margin="5" Name="InputReplaceableID" TextChanged="SetRepalceableID"/>
+                </StackPanel>
             </StackPanel>
+            
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Lifespan" Width="120" VerticalAlignment="Center"/>
-                <TextBox Name="InputLifespan" TextChanged="SetLifespan" Width="100" Margin="5"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Tail Length" Width="120" VerticalAlignment="Center"/>
-                <TextBox Width="100"   Name="InputTailLength"  Margin="5" TextChanged="SetTailLength"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Priority Plane" Width="120" VerticalAlignment="Center"/>
-                <TextBox  Name="InputPriorityPlane" TextChanged="SetPriorityPlane" Width="100" Margin="5"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Replaceable ID" Width="120" VerticalAlignment="Center"/>
-                <TextBox Width="100" Margin="5" Name="InputReplaceableID" TextChanged="SetRepalceableID"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,5">
-                <TextBlock Text="Time" Width="120" VerticalAlignment="Center"/>
-                <TextBox Name="InputTime" TextChanged="SetTime" Width="100" Margin="5"/>
+                <TextBlock Text="Time" Width="60" VerticalAlignment="Center"/>
+                <TextBox Name="InputTime" TextChanged="SetTime" Width="60" Margin="5"/>
             </StackPanel>
         </StackPanel>
     </Grid>

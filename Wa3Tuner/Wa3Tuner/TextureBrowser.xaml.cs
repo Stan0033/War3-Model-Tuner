@@ -126,5 +126,10 @@ namespace Wa3Tuner
                 Main_Window.RefreshTextures();
             }
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
     }
 }

@@ -27,6 +27,8 @@ namespace Wa3Tuner
             InitializeComponent();
             Model = model;
             Emitter = emitter;
+            if (model.Materials.Count == 0 ) { MessageBox.Show("No materials"); DialogResult = false;  }
+                
             Fill();
         }
         void Fill()
@@ -46,6 +48,13 @@ namespace Wa3Tuner
      ButtonHeightAbove.Content = Emitter.HeightAbove.Static ? $"HeightAbove: { Emitter.HeightAbove.GetValue()}" : $"HeightAbove: ({Emitter.HeightAbove.Count})";
      ButtonHeightBelow.Content = Emitter.HeightBelow.Static ? $"HeightBelow: { Emitter.HeightBelow.GetValue()}" : $"HeightBelow: ({Emitter.HeightBelow.Count})";
      ButtonTextureSlot.Content = Emitter.TextureSlot.Static ? $"TextureSlot: { Emitter.TextureSlot.GetValue()}" : $"TextureSlot: ({Emitter.TextureSlot.Count})";
+            ButtonColor.Content = Emitter.Color.Static == false ? $"Color: ({Emitter.Color.Count})" : "Color";
+
+            if (Emitter.Color.Static) {
+                ButtonColor.Background =
+                    Calculator.BrushFromWar3Vector3(Emitter.Color.GetValue());
+            }
+          
         }
 
         private void editcolor(object sender, RoutedEventArgs e)
@@ -152,6 +161,11 @@ namespace Wa3Tuner
             transformation_editor tr = new transformation_editor(Model, Emitter.Visibility, true, TransformationType.Visibility);
             tr.ShowDialog();
             Fill();
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { DialogResult = false; }
         }
     }
 }

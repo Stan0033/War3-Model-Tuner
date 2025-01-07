@@ -133,5 +133,10 @@ namespace Wa3Tuner
             }
             return sb.ToString();
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
     }
 }

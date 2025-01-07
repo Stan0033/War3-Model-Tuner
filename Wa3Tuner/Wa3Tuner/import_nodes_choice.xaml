@@ -4,15 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
+        KeyDown="Window_KeyDown"
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Background="LightGray"
         WindowStartupLocation="CenterScreen"
         Title="Import nodes" Height="180" Width="350">
     <StackPanel Margin="10">
-        <RadioButton IsEnabled="False" Name="one">Append different only</RadioButton>
+        <RadioButton  Name="one">Append different only</RadioButton>
         <RadioButton Name="two" IsChecked="True">Overwrite keyframes of identicals, do not append different</RadioButton>
-        <RadioButton  IsEnabled="False" Name="three">Overwrite keyframes of identicals, append different</RadioButton>
+        <RadioButton Name="three">Overwrite keyframes of identicals, append different</RadioButton>
        <RadioButton Name="four" >Overwrite all node data</RadioButton>
        <RadioButton Name="five" >Import emitters and event objects at root</RadioButton>
         <Button Margin="5" Click="ok">OK</Button>

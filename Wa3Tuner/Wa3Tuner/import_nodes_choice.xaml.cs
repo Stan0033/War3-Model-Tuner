@@ -32,5 +32,10 @@ namespace Wa3Tuner
             if (five.IsChecked == true) { selected = 5; }
             DialogResult = true;
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
     }
 }

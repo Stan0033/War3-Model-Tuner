@@ -19,6 +19,12 @@ namespace Wa3Tuner
     public partial class axis_selector : Window
     {
         public bool x, y, z;
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { DialogResult = false; }
+        }
+
         public axis_selector()
         {
             InitializeComponent();

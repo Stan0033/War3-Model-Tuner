@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
         Background="LightGray" 
 
         ResizeMode="NoResize"
@@ -21,8 +22,11 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="50" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="40" />
         </Grid.ColumnDefinitions>
-
+        <TextBlock Name="DisplayR" Text="0" Grid.Column="2"/>
+        <TextBlock Name="DisplayG" Text="0" Grid.Column="2" Grid.Row="1"/>
+        <TextBlock Name="DisplayB" Text="0" Grid.Column="2" Grid.Row="2"/>
         <!-- Red Slider -->
         <TextBlock Text="Red" VerticalAlignment="Center" />
         <Slider x:Name="RedSlider" Minimum="0" Maximum="255" Value="128" Grid.Column="1" ValueChanged="OnColorChanged" />

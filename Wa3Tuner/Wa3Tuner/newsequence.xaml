@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d" Background="LightGray"
         ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         
-        Title="newsequence" Height="200" Width="300">
+        Title="New Sequence" Height="200" Width="300">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>

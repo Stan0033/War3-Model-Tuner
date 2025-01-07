@@ -7,6 +7,12 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="cameraManager.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="copyTrackToNode.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="edit_emitter1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,6 +31,9 @@
     <Compile Update="loopdialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="presets.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="TextureBrowser.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -33,6 +42,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="cameraManager.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="copyTrackToNode.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="edit_emitter1.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -52,6 +67,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="presets.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="TextureBrowser.xaml">

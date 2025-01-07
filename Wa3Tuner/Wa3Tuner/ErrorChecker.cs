@@ -170,6 +170,11 @@ namespace Wa3Tuner
 
                 }
             }
+            List<INode> Particles = currentModel.Nodes.Where(x => x is CParticleEmitter || x is CParticleEmitter2 || x is CRibbonEmitter).ToList();
+            if (currentModel.Sequences.Count == 0 && Particles.Count > 0)
+            {
+                errors.AppendLine("There are particle emitters, but no sequences");
+            }
 
             // check non-bone attachment
             for (int i = 0; i < currentModel.Geosets.Count; i++)

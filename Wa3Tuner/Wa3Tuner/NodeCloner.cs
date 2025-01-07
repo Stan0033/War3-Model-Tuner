@@ -116,6 +116,7 @@ namespace Wa3Tuner
             if (node is CParticleEmitter2 emitter2)
             {
                 CParticleEmitter2 CloneEmitter2 = new CParticleEmitter2(model);
+                CloneEmitter2.RequiredTexturePath = emitter2.RequiredTexturePath;
                 CloneEmitter2.Unshaded = emitter2.Unshaded;
                 CloneEmitter2.Unfogged = emitter2.Unfogged;
                 CloneEmitter2.Tail = emitter2.Tail;

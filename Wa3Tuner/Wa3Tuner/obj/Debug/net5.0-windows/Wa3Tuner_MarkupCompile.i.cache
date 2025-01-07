@@ -1,5 +1,5 @@
 ﻿Wa3Tuner
-1.0.8
+1.1.1
 
 winexe
 C#
@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET5_0;NETCOREAPP
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\App.xaml
-35-580778678
+381181075806
 178170099
-47744602136
+531458178363
 2001659848956
-axis_selector.xaml;color_selector.xaml;createnode.xaml;EditGS_W.xaml;edittags.xaml;editvisibilities_window.xaml;edit_emitter1.xaml;edit_emitter2.xaml;edit_eventobject.xaml;Edit_light.xaml;edit_ribbon.xaml;FlattenSide.xaml;howmodel.xaml;import_nodes_choice.xaml;Input.xaml;InputVector.xaml;loopdialog.xaml;MainWindow.xaml;Mass_Create_Sequences.xaml;Mass_Create_Textures.xaml;Multiselector.xaml;newsequence.xaml;putonground.xaml;resizeSequence_window.xaml;SCALETOFIT.xaml;Selector.xaml;select_Transformations.xaml;TextureBrowser.xaml;tranformation_editor.xaml;Transformations_viewer.xaml;translation_selector.xaml;UVMapper.xaml;window_EditAttachment.xaml;window_editbone_data.xaml;window_edit_cols.xaml;
+axis_selector.xaml;cameraManager.xaml;color_selector.xaml;copyTrackToNode.xaml;createnode.xaml;EditGS_W.xaml;edittags.xaml;editvisibilities_window.xaml;edit_emitter1.xaml;edit_emitter2.xaml;edit_eventobject.xaml;Edit_light.xaml;edit_ribbon.xaml;FlattenSide.xaml;howmodel.xaml;import_nodes_choice.xaml;Input.xaml;InputVector.xaml;loopdialog.xaml;MainWindow.xaml;Mass_Create_Sequences.xaml;Mass_Create_Textures.xaml;Multiselector.xaml;newsequence.xaml;presets.xaml;putonground.xaml;resizeSequence_window.xaml;SCALETOFIT.xaml;Selector.xaml;select_Transformations.xaml;TextureBrowser.xaml;Transformations_viewer.xaml;transformation_editor.xaml;translation_selector.xaml;UVMapper.xaml;window_EditAttachment.xaml;window_editbone_data.xaml;window_edit_cols.xaml;
 
 False
 

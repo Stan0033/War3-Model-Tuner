@@ -39,5 +39,10 @@ namespace Wa3Tuner
             transformation_editor tr = new transformation_editor(Model, Attachment.Visibility, false, TransformationType.Visibility);
             tr.ShowDialog();
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
     }
 }

@@ -22,6 +22,8 @@ namespace Wa3Tuner
         CModel Model;
         CGeoset Geoset;
         CGeosetAnimation GeosetAnim;
+        List<Ttrack> Tracks = new List<Ttrack>();
+        bool NotGeosetAnimation = false;
         Dictionary<CSequence, bool> Visibilities = new Dictionary<CSequence, bool>();
         public editvisibilities_window(CModel model, CGeoset geoset)
         {
@@ -32,6 +34,33 @@ namespace Wa3Tuner
             GeosetAnim = new CGeosetAnimation(Model);
 
             GenerateUI();
+        }
+
+        public editvisibilities_window(CModel model, List<Ttrack> tracks)
+        {
+            InitializeComponent();
+            NotGeosetAnimation = true;
+            Model = model;
+            Tracks = tracks;    
+            foreach (CSequence sequence in model.Sequences)
+            {
+                CheckBox c = new CheckBox();
+                c.Content =
+                    sequence.Name;
+                c.IsChecked = true;
+                c.Checked += CheckSequence;
+                c.Unchecked += CheckSequence;
+                Box.Items.Add(c);
+                Visibilities.Add(sequence, true);
+            }
+        }
+        private void CheckSequence(object sender, EventArgs e)
+        {
+            CheckBox c = (CheckBox)sender;
+            string name = c.Content.ToString();
+            CSequence sequence = Model.Sequences.First(x => x.Name == name);
+            Visibilities[sequence] = c.IsChecked == true;
+
         }
         private void GenerateUI()
         {
@@ -100,6 +129,7 @@ namespace Wa3Tuner
             CheckBox c = (CheckBox)sender;
             bool visible = c.IsChecked == true;
             int index = Box.Items.IndexOf(sender);
+           
             Visibilities[Model.Sequences[index]] = visible;
         }
 
@@ -121,14 +151,36 @@ namespace Wa3Tuner
         }
         private void ok(object sender, RoutedEventArgs e)
         {
-            FinalizeGeosetAnim();
-            if (Model.GeosetAnimations.Any(x => x.Geoset.Object == Geoset))
+            if (NotGeosetAnimation)
             {
-                CGeosetAnimation existing = Model.GeosetAnimations.First(x => x.Geoset.Object == Geoset);
-                Model.GeosetAnimations.Remove(existing);
+                
+                
+                Tracks.Clear();
+                foreach ( var item in Visibilities)
+                {
+                    int value = item.Value == true ? 1: 0;
+                    Tracks.Add(new Ttrack(item.Key.IntervalStart, value));
+                }
+                DialogResult = true;   
             }
-            Model.GeosetAnimations.Add(GeosetAnim);
-            DialogResult = true;
+            else
+            {
+
+
+                FinalizeGeosetAnim();
+                if (Model.GeosetAnimations.Any(x => x.Geoset.Object == Geoset))
+                {
+                    CGeosetAnimation existing = Model.GeosetAnimations.First(x => x.Geoset.Object == Geoset);
+                    Model.GeosetAnimations.Remove(existing);
+                }
+                Model.GeosetAnimations.Add(GeosetAnim);
+                DialogResult = true;
+            }
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
         }
     }
 }

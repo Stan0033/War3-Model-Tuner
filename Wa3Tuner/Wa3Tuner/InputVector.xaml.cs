@@ -38,6 +38,12 @@ namespace Wa3Tuner
             z.Text = pivotPoint.Z.ToString();
             Title = title;
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             
