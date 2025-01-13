@@ -85,7 +85,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.1.1;component/resizesequence_window.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.1.2;component/resizesequence_window.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\resizeSequence_window.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

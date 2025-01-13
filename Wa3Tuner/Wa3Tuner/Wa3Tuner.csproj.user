@@ -13,6 +13,12 @@
     <Compile Update="copyTrackToNode.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="createextrudedpolygon.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DrawShape.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="edit_emitter1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -46,6 +52,12 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="copyTrackToNode.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="createextrudedpolygon.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DrawShape.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="edit_emitter1.xaml">

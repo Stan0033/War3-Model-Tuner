@@ -11,7 +11,7 @@ namespace Wa3Tuner
 {
     class OverlapChecker
     {
-        public static bool TrianglesIntersect(CGeosetFace first, CGeosetFace second)
+        public static bool TrianglesIntersect(CGeosetTriangle first, CGeosetTriangle second)
         {
             // Check if bounding boxes of triangles overlap
             if (!BoundingBoxesOverlap(first, second))
@@ -28,7 +28,7 @@ namespace Wa3Tuner
             return false;
         }
 
-        private static bool BoundingBoxesOverlap(CGeosetFace t1, CGeosetFace t2)
+        private static bool BoundingBoxesOverlap(CGeosetTriangle t1, CGeosetTriangle t2)
         {
             CVector3 min1 = GetMin(t1), max1 = GetMax(t1);
             CVector3 min2 = GetMin(t2), max2 = GetMax(t2);
@@ -38,7 +38,7 @@ namespace Wa3Tuner
                    min1.Z <= max2.Z && max1.Z >= min2.Z;
         }
 
-        private static CVector3 GetMin(CGeosetFace t)
+        private static CVector3 GetMin(CGeosetTriangle t)
         {
             return CVector3.Min(
                 CVector3.Min(t.Vertex1.Object.Position, t.Vertex2.Object.Position),
@@ -46,7 +46,7 @@ namespace Wa3Tuner
             );
         }
 
-        private static CVector3 GetMax(CGeosetFace t)
+        private static CVector3 GetMax(CGeosetTriangle t)
         {
             return CVector3.Max(
                 CVector3.Max(t.Vertex1.Object.Position, t.Vertex2.Object.Position),
@@ -54,10 +54,10 @@ namespace Wa3Tuner
             );
         }
 
-        // Assuming CGeosetFace has properties Vertex1, Vertex2, Vertex3 of type Vertex
+        // Assuming CGeosetTriangle has properties Vertex1, Vertex2, Vertex3 of type Vertex
          
 
-        private static bool EdgesIntersect(CGeosetFace t1, CGeosetFace t2)
+        private static bool EdgesIntersect(CGeosetTriangle t1, CGeosetTriangle t2)
         {
             // Get the edges of the two faces (triangles)
             CVector3[] edges1 = GetEdges(t1);
@@ -86,7 +86,7 @@ namespace Wa3Tuner
         }
 
 
-        private static CVector3[] GetEdges(CGeosetFace t)
+        private static CVector3[] GetEdges(CGeosetTriangle t)
         {
             return new CVector3[]
             {
@@ -139,14 +139,14 @@ namespace Wa3Tuner
         }
 
 
-        private static bool TriangleInsideTriangle(CGeosetFace inner, CGeosetFace outer)
+        private static bool TriangleInsideTriangle(CGeosetTriangle inner, CGeosetTriangle outer)
         {
             return PointInsideTriangle(inner.Vertex1.Object.Position, outer) &&
                    PointInsideTriangle(inner.Vertex2.Object.Position, outer) &&
                    PointInsideTriangle(inner.Vertex3.Object.Position, outer);
         }
 
-        private static bool PointInsideTriangle(CVector3 p, CGeosetFace t)
+        private static bool PointInsideTriangle(CVector3 p, CGeosetTriangle t)
         {
             // Placeholder for Point-In-Triangle test logic
             return false;

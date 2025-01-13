@@ -69,16 +69,16 @@ namespace Wa3Tuner
             for (int g = 0; g < currentModel.Geosets.Count; g++)
             {
                 CGeoset geoset = currentModel.Geosets[g];
-                for (int i = 0; i < geoset.Faces.Count; i++)
+                for (int i = 0; i < geoset.Triangles.Count; i++)
                 {
-                    for (int x = 0; x < geoset.Faces.Count; x++)
+                    for (int x = 0; x < geoset.Triangles.Count; x++)
                     {
                         if (x == i) { continue; }
-                        if (FacesShareSameVertices(geoset.Faces[i], geoset.Faces[x]))
+                        if (FacesShareSameVertices(geoset.Triangles[i], geoset.Triangles[x]))
                         {
                             warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are using the same vertices");
                         }
-                        if (Optimizer. FacesFullyOverlapping(geoset.Faces[i], geoset.Faces[x]))
+                        if (Optimizer.FacesFullyOverlapping(geoset.Triangles[i], geoset.Triangles[x]))
                         {
                             warnings.AppendLine($"Geosets[{g}]: Triangle {i} and triangle {x} are fully overlapping");
 
@@ -102,6 +102,13 @@ namespace Wa3Tuner
                     unused.AppendLine($"TextureAnims[{i}] is unused");
                 }
             }
+            for (int i = 0; i < currentModel.Geosets.Count; i++)
+            {
+                if (currentModel.Geosets[i].Triangles.Count >= 20000)
+                {
+                    warnings.AppendLine($"Geosets[{i}]: more than 20,000 triangles");
+                }
+            }
             // unused.AppendLine($"");
             if (currentModel.Textures.Count == 0) warnings.AppendLine("No textures");
             if (currentModel.Materials.Count == 0) warnings.AppendLine("No Materials");
@@ -110,7 +117,7 @@ namespace Wa3Tuner
             for (int i = 0; i < currentModel.Geosets.Count; i++)
             {
                 CGeoset geo = currentModel.Geosets[i];
-                if (geo.Faces.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no faces"); }
+                if (geo.Triangles.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no faces"); }
                 if (geo.Vertices.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no vertices"); }
                 if (geo.Extents.Count != currentModel.Sequences.Count) { warnings.AppendLine($"Geosets[{i}]: number of extents not equal to number of sequences"); }
                 if (ExtentsNegative(geo.Extent)) { warnings.AppendLine($"Geosets[{i}]: negative extents"); }
@@ -122,6 +129,9 @@ namespace Wa3Tuner
                 {
                     warnings.AppendLine($"Sequence '{cSequence.Name}': Zero length");
                 }
+            }
+            if (currentModel.Geosets.Count != currentModel.GeosetAnimations.Count) {
+                warnings.AppendLine("Number of geoset animations not equal to the number of geosets");
             }
             // check tracks - repeating times, repeating frames, inconsistent frames, missing opening, closing
             List<string> ik = CheckInsonsistentKeyframes();
@@ -225,7 +235,7 @@ namespace Wa3Tuner
                 CGeosetAnimation ga = currentModel.GeosetAnimations[i];
                 if (ga.Alpha.Static && ga.Alpha.GetValue() < 0.2)
                 {
-                    severe.AppendLine($"GeosetAnims[{i}]: 0 or near 0 alpha, it may be invisible");
+                    severe.AppendLine($"GeosetAnims[{i}]: 0 or near 0 static alpha, it may be invisible");
                 }
                 if (ga.Geoset == null || ga.Geoset.Object == null)
                 {
@@ -240,130 +250,144 @@ namespace Wa3Tuner
                 }
 
             }
-            // inconsistent sequences
-            if (currentModel.Sequences.Count > 1)
-            {
-                for (int i = 0; i < currentModel.Sequences.Count; i++)
-                {
-                    if (i - 1 != -1)
-                    {
-                        CSequence prev = currentModel.Sequences[i - 1];
-                        CSequence current = currentModel.Sequences[i];
-                        if (current.IntervalStart < prev.IntervalStart)
-                        {
-                            severe.AppendLine($"Sequence '{current.Name}' starts before the sequence before it");
-                        }
-                    }
-                }
-            }
-            // not attached to anything
-
-            for (int g = 0; g < currentModel.Geosets.Count; g++)
-            {
-                CGeoset geo = currentModel.Geosets[g];
-                for (int i = 0; i < geo.Vertices.Count; i++)
-                {
-                    if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null)
-                    {
-                        errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
-                    }
-                    if (geo.Vertices[i].Group.Object.Nodes.Count == 0)
-                    {
-                        errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
-                    }
-                }
-                if (geo.Material.Object == null)
-                {
-                    severe.AppendLine($"Geoset {g}: no material. The geoset will be invisible"); continue;
-                }
-                else
-                {
-                    if (CurrentModel.Materials.Contains(geo.Material.Object) == false)
-                    {
-                        severe.AppendLine($"Geoset {g}: invalid material. The geoset will be invisible"); continue;
-                    }
-                }
-            }
-
-            for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
-            {
-                CGeosetAnimation anim = currentModel.GeosetAnimations[i];
-                if (anim.Alpha.Static == false)
-                {
-                    foreach (CSequence sequence in currentModel.Sequences)
-                    {
-                        if (anim.Alpha.Any(x => x.Time == sequence.IntervalStart) == false)
-                        {
-                            severe.AppendLine($"in geoset_animations[{i}]: missing opening track for sequence '{sequence.Name}'");
-                        }
-                    }
-                }
-
-            }
-            // check for overlapping triangles
-            
+            // repeating geoset animations
             if (currentModel.Geosets.Count > 0)
             {
-                for (int one = 0; one < currentModel.Geosets.Count; one++)
+                for (int i = 0; i < currentModel.Geosets.Count; i++)
                 {
-                    CGeoset geoset1 = currentModel.Geosets[one];
-
-                    for (int face1Index = 0; face1Index < geoset1.Faces.Count; face1Index++)
+                    CGeoset ge = currentModel.Geosets[i];
+                    if (currentModel.GeosetAnimations.Count(x => x.Geoset.Object == ge) > 1)
                     {
-                        // Compare with other geosets (or the same geoset but without redundant checks)
-                        for (int two = one; two < currentModel.Geosets.Count; two++)
+                        warnings.AppendLine("");
+                    }
+                }
+            }
+            
+
+                // inconsistent sequences
+                if (currentModel.Sequences.Count > 1)
+                {
+                    for (int i = 0; i < currentModel.Sequences.Count; i++)
+                    {
+                        if (i - 1 != -1)
                         {
-                            CGeoset geoset2 = currentModel.Geosets[two];
-
-                            // Avoid duplicate checks when comparing the same geoset
-                            int startIndex = (one == two) ? face1Index + 1 : 0;
-
-                            for (int face2Index = startIndex; face2Index < geoset2.Faces.Count; face2Index++)
+                            CSequence prev = currentModel.Sequences[i - 1];
+                            CSequence current = currentModel.Sequences[i];
+                            if (current.IntervalStart < prev.IntervalStart)
                             {
-                                // Check for overlap
-                                if (OverlapChecker.TrianglesIntersect(geoset1.Faces[face1Index], geoset2.Faces[face2Index]))
+                                severe.AppendLine($"Sequence '{current.Name}' starts before the sequence before it");
+                            }
+                        }
+                    }
+                }
+                // not attached to anything
+
+                for (int g = 0; g < currentModel.Geosets.Count; g++)
+                {
+                    CGeoset geo = currentModel.Geosets[g];
+                    for (int i = 0; i < geo.Vertices.Count; i++)
+                    {
+                        if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null)
+                        {
+                            errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
+                        }
+                        if (geo.Vertices[i].Group.Object.Nodes.Count == 0)
+                        {
+                            errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
+                        }
+                    }
+                    if (geo.Material.Object == null)
+                    {
+                        severe.AppendLine($"Geoset {g}: no material. The geoset will be invisible"); continue;
+                    }
+                    else
+                    {
+                        if (CurrentModel.Materials.Contains(geo.Material.Object) == false)
+                        {
+                            severe.AppendLine($"Geoset {g}: invalid material. The geoset will be invisible"); continue;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
+                {
+                    CGeosetAnimation anim = currentModel.GeosetAnimations[i];
+                    if (anim.Alpha.Static == false)
+                    {
+                        foreach (CSequence sequence in currentModel.Sequences)
+                        {
+                            if (anim.Alpha.Any(x => x.Time == sequence.IntervalStart) == false)
+                            {
+                                severe.AppendLine($"in geoset_animations[{i}]: missing opening track for sequence '{sequence.Name}'");
+                            }
+                        }
+                    }
+
+                }
+                // check for overlapping triangles
+
+                if (currentModel.Geosets.Count > 0)
+                {
+                    for (int one = 0; one < currentModel.Geosets.Count; one++)
+                    {
+                        CGeoset geoset1 = currentModel.Geosets[one];
+
+                        for (int face1Index = 0; face1Index < geoset1.Triangles.Count; face1Index++)
+                        {
+                            // Compare with other geosets (or the same geoset but without redundant checks)
+                            for (int two = one; two < currentModel.Geosets.Count; two++)
+                            {
+                                CGeoset geoset2 = currentModel.Geosets[two];
+
+                                // Avoid duplicate checks when comparing the same geoset
+                                int startIndex = (one == two) ? face1Index + 1 : 0;
+
+                                for (int face2Index = startIndex; face2Index < geoset2.Triangles.Count; face2Index++)
                                 {
-                                    warnings.AppendLine(
-                                        $"geosets[{one}].triangles[{face1Index}] is overlapping with geosets[{two}].triangles[{face2Index}]");
+                                    // Check for overlap
+                                    if (OverlapChecker.TrianglesIntersect(geoset1.Triangles[face1Index], geoset2.Triangles[face2Index]))
+                                    {
+                                        warnings.AppendLine(
+                                            $"geosets[{one}].triangles[{face1Index}] is overlapping with geosets[{two}].triangles[{face2Index}]");
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            
 
-            if (unused.Length == 0 && warnings.Length == 0 &&
-                severe.Length == 0 && errors.Length == 0) { all.AppendLine("All ok"); }
-            else
-            {
-                all.AppendLine("----------Unused:");
-                all.AppendLine(unused.ToString());
-                all.AppendLine("----------Warnings:");
-                all.AppendLine(warnings.ToString());
-                all.AppendLine("----------Severe:");
-                all.AppendLine(severe.ToString());
-                all.AppendLine("----------Errors:");
-                all.AppendLine(errors.ToString());
-            }
 
+                if (unused.Length == 0 && warnings.Length == 0 &&
+                    severe.Length == 0 && errors.Length == 0) { all.AppendLine("All ok"); }
+                else
+                {
+                    all.AppendLine("----------Unused:");
+                    all.AppendLine(unused.ToString());
+                    all.AppendLine("----------Warnings:");
+                    all.AppendLine(warnings.ToString());
+                    all.AppendLine("----------Severe:");
+                    all.AppendLine(severe.ToString());
+                    all.AppendLine("----------Errors:");
+                    all.AppendLine(errors.ToString());
+                }
 
             return all.ToString();
+
         }
-       
-        // Check if a point is inside a triangle
+
+            // Check if a point is inside a triangle
+
+
+            // Helper methods for vector operations
+            
         
-
-        // Helper methods for vector operations
-         
-
 
       
  
 
 
-        private static bool FacesShareSameVertices(CGeosetFace face1, CGeosetFace face2)
+        private static bool FacesShareSameVertices(CGeosetTriangle face1, CGeosetTriangle face2)
         {
             // Directly compare the 3 vertices using their Object references
             return (face1.Vertex1.Object == face2.Vertex1.Object || face1.Vertex1.Object == face2.Vertex2.Object || face1.Vertex1.Object == face2.Vertex3.Object) &&

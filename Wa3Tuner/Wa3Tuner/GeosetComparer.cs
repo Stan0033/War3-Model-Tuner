@@ -12,7 +12,7 @@ namespace Wa3Tuner
         internal static bool IdenticalPositions(CGeoset geoset1, CGeoset geoset2)
         {
             if (geoset1.Vertices.Count != geoset2.Vertices.Count) return false;
-            if (geoset1.Faces.ObjectList.Count != geoset2.Faces.ObjectList.Count) return false;
+            if (geoset1.Triangles.ObjectList.Count != geoset2.Triangles.ObjectList.Count) return false;
 
             // Define a small tolerance for floating-point comparisons
             const float epsilon = 0.0001f;
@@ -60,18 +60,18 @@ namespace Wa3Tuner
 
             // Compare faces, ignoring order
             List<int[]> faces1 = new List<int[]>();
-            for (int i = 0; i < geoset1.Faces.ObjectList.Count; i++)
+            for (int i = 0; i < geoset1.Triangles.ObjectList.Count; i++)
             {
-                CGeosetFace face = geoset1.Faces.ObjectList[i];
+                CGeosetTriangle face = geoset1.Triangles.ObjectList[i];
                 int[] faceVertices = new int[] { face.Vertex1.ObjectId, face.Vertex2.ObjectId, face.Vertex3.ObjectId };
                 Array.Sort(faceVertices);
                 faces1.Add(faceVertices);
             }
 
             List<int[]> faces2 = new List<int[]>();
-            for (int i = 0; i < geoset2.Faces.ObjectList.Count; i++)
+            for (int i = 0; i < geoset2.Triangles.ObjectList.Count; i++)
             {
-                CGeosetFace face = geoset2.Faces.ObjectList[i];
+                CGeosetTriangle face = geoset2.Triangles.ObjectList[i];
                 int[] faceVertices = new int[] { face.Vertex1.ObjectId, face.Vertex2.ObjectId, face.Vertex3.ObjectId };
                 Array.Sort(faceVertices);
                 faces2.Add(faceVertices);

@@ -107,3 +107,7 @@ C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\refint\Wa3
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.pdb
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.genruntimeconfig.cache
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\ref\Wa3Tuner.dll
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\DrawShape.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\DrawShape.baml
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\createextrudedpolygon.g.cs
+C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\createextrudedpolygon.baml

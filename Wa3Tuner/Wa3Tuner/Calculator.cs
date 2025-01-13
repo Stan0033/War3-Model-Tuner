@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using static Wa3Tuner.MainWindow;
 
 namespace Wa3Tuner
 {
@@ -558,7 +559,7 @@ namespace Wa3Tuner
             Dictionary<CGeosetVertex, NormalData> normalSums = new Dictionary<CGeosetVertex, NormalData>();
 
             // Step 1: Accumulate face normals for each vertex
-            foreach (CGeosetFace face in geoset.Faces)
+            foreach (CGeosetTriangle face in geoset.Triangles)
             {
                 // Get vertices for the current face
                 CGeosetVertex vertex1 = face.Vertex1.Object;
@@ -1030,12 +1031,12 @@ namespace Wa3Tuner
 
         internal static void SubdivideGeoset(CGeoset geoset, CModel ParentModel)
         {
-            foreach (var originalFace in geoset.Faces.ToList())
+            foreach (var originalFace in geoset.Triangles.ToList())
             {
                 // Create the 3 new faces
-                CGeosetFace face1 = new CGeosetFace(ParentModel);
-                CGeosetFace face2 = new CGeosetFace(ParentModel);
-                CGeosetFace face3 = new CGeosetFace(ParentModel);
+                CGeosetTriangle face1 = new CGeosetTriangle(ParentModel);
+                CGeosetTriangle face2 = new CGeosetTriangle(ParentModel);
+                CGeosetTriangle face3 = new CGeosetTriangle(ParentModel);
 
                 // Get the middle vertex between the original triangle's vertices
                 Point3D middle = GetMiddleVertex(originalFace.Vertex1.Object, originalFace.Vertex2.Object, originalFace.Vertex3.Object);
@@ -1071,10 +1072,10 @@ namespace Wa3Tuner
                 face3.Vertex3.Attach(middleVertex);
 
                 // Remove the original face and add the new faces
-                geoset.Faces.Remove(originalFace);
-                geoset.Faces.Add(face1);
-                geoset.Faces.Add(face2);
-                geoset.Faces.Add(face3);
+                geoset.Triangles.Remove(originalFace);
+                geoset.Triangles.Add(face1);
+                geoset.Triangles.Add(face2);
+                geoset.Triangles.Add(face3);
             }
         }
 
@@ -1149,11 +1150,11 @@ namespace Wa3Tuner
 
         private static void AddFace(CGeoset geoset, CModel ModelOwner, CGeosetVertex v1, CGeosetVertex v2, CGeosetVertex v3)
         {
-            CGeosetFace face = new CGeosetFace(ModelOwner);
+            CGeosetTriangle face = new CGeosetTriangle(ModelOwner);
             face.Vertex1.Attach(v1);
             face.Vertex2.Attach(v2);
             face.Vertex3.Attach(v3);
-            geoset.Faces.Add(face);
+            geoset.Triangles.Add(face);
         }
 
         internal static CGeoset CreateCylinder(CModel ModelOwner, float radius, float height, int sides)
@@ -1335,14 +1336,47 @@ namespace Wa3Tuner
             geoset.Groups.Add(group);
             return vertex2;
         }
+        internal static CGeosetVertex CloneVertex_Merge(CGeosetVertex vertex, CModel owner, CGeoset geoset)
+        {
+
+            CGeosetVertex vertex2 = new CGeosetVertex(owner);
+            vertex2.Position = new CVector3(vertex.Position.X, vertex.Position.Y, vertex.Position.Z);
+            vertex2.TexturePosition = new CVector2(vertex.TexturePosition.X, vertex.TexturePosition.Y);
+            vertex2.Normal = new CVector3(vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z);
+            vertex2.Group.Attach(geoset.Groups[0]);
+            return vertex2;
+        }
         internal static List<CGeoset> Fragment(CGeoset geoset, CModel owner)
         {
             List<CGeoset> list = new List<CGeoset>();
-            foreach (CGeosetFace face in geoset.Faces)
+            INode first_node = null;
+            if (geoset.Groups.Count > 0)
+            {
+                var group = geoset.Vertices[0].Group.Object;
+                first_node = group.Nodes[0].Node.Node;
+            }
+            else
+            {
+                if (owner.Nodes.Any(x=>x is CBone))
+                {
+                    first_node = owner.Nodes.First(x=>x is CBone);
+                }
+                else
+                { 
+                    first_node = new CBone(owner);
+                    first_node.Name = $"GeneratedBone_{IDCounter.Next()}";
+                    owner.Nodes.Add(first_node);
+                }
+            }
+            foreach (CGeosetTriangle face in geoset.Triangles)
             {
                 CGeoset _new = new CGeoset(owner);
-
-                CGeosetFace fragment = new CGeosetFace(owner);
+                CGeosetGroup group = new CGeosetGroup(owner);
+                CGeosetGroupNode gnode = new CGeosetGroupNode(owner);
+                gnode.Node.Attach(first_node);
+                group.Nodes.Add(gnode);
+                _new.Groups.Add(group);
+                  CGeosetTriangle fragment = new CGeosetTriangle(owner);
                 CGeosetVertex one = CloneVertex(face.Vertex1.Object, owner, geoset);
                 CGeosetVertex two = CloneVertex(face.Vertex2.Object, owner, geoset);
                 CGeosetVertex three = CloneVertex(face.Vertex3.Object, owner, geoset);
@@ -1352,7 +1386,7 @@ namespace Wa3Tuner
                 _new.Vertices.Add(one);
                 _new.Vertices.Add(two);
                 _new.Vertices.Add(three);
-                _new.Faces.Add(fragment);
+                _new.Triangles.Add(fragment);
                 _new.Material.Attach(geoset.Material.Object);
                 
                  
@@ -1379,7 +1413,7 @@ namespace Wa3Tuner
                     if (vertex1 == vertex2) { continue; }
                     if (CoordinatesSame(vertex1.Position, vertex2.Position))
                     {
-                        foreach (var face in geoset.Faces)
+                        foreach (var face in geoset.Triangles)
                         {
                             if (face.Vertex1.Object == vertex2) face.Vertex1.Attach(vertex1);
                             if (face.Vertex2.Object == vertex2) face.Vertex1.Attach(vertex1);
@@ -1640,7 +1674,7 @@ namespace Wa3Tuner
         internal static void Simplify(CGeoset geoset, CModel Model)
         {
             // If there are fewer than 3 faces, simplification is not possible
-            if (geoset.Faces.Count < 3) return;
+            if (geoset.Triangles.Count < 3) return;
 
             // Loop until no more surfaces can be simplified
             bool changesMade = true;
@@ -1649,7 +1683,7 @@ namespace Wa3Tuner
                 changesMade = false;
 
                 // Find a flat uninterrupted surface with at least 3 faces
-                List<CGeosetFace> surface = FindUninterruptedFlatSurface(geoset);
+                List<CGeosetTriangle> surface = FindUninterruptedFlatSurface(geoset);
                 if (surface.Count >= 3)
                 {
                     changesMade = true;
@@ -1658,22 +1692,22 @@ namespace Wa3Tuner
                     List<CGeosetVertex> outerVertices = FindOuterVertices(surface);
 
                     // 3. Destroy all faces in that group
-                    foreach (CGeosetFace face in surface)
+                    foreach (CGeosetTriangle face in surface)
                     {
-                        geoset.Faces.Remove(face);
+                        geoset.Triangles.Remove(face);
                     }
 
                     // 4. Create new triangles from the outer vertices
-                    List<CGeosetFace> newFaces = CreateNewTrianglesFromVertices(outerVertices, Model);
+                    List<CGeosetTriangle> newFaces = CreateNewTrianglesFromVertices(outerVertices, Model);
 
                     // Add the new faces to the geoset
-                    foreach (CGeosetFace face in newFaces) geoset.Faces.Add(face);
+                    foreach (CGeosetTriangle face in newFaces) geoset.Triangles.Add(face);
                   
                 }
             }
         }
 
-        private static bool AreCoplanar(CGeosetFace one, CGeosetFace two)
+        private static bool AreCoplanar(CGeosetTriangle one, CGeosetTriangle two)
         {
             // Basic implementation for coplanarity check using normals or another criteria
             // For simplicity, using vertex positions as an example, assuming a method that checks normals is implemented
@@ -1684,7 +1718,7 @@ namespace Wa3Tuner
         }
 
         // Assuming CVertex has a Position property that is of type Vector3
-        private static Vector3 CalculateNormal(CGeosetFace face)
+        private static Vector3 CalculateNormal(CGeosetTriangle face)
         {
             // Get the positions of the three vertices
             var v1 = face.Vertex1.Object.Position;
@@ -1716,10 +1750,10 @@ namespace Wa3Tuner
 
 
 
-        private static List<CGeosetFace> FindUninterruptedFlatSurface(CGeoset geoset)
+        private static List<CGeosetTriangle> FindUninterruptedFlatSurface(CGeoset geoset)
         {
-            List<CGeosetFace> surface = new List<CGeosetFace>();
-            List<CGeosetFace> remainingFaces = new List<CGeosetFace>(geoset.Faces);
+            List<CGeosetTriangle> surface = new List<CGeosetTriangle>();
+            List<CGeosetTriangle> remainingFaces = new List<CGeosetTriangle>(geoset.Triangles);
 
             for (int i = 0; i < remainingFaces.Count - 1; i++)
             {
@@ -1735,10 +1769,10 @@ namespace Wa3Tuner
             }
 
             // Second pass: check for connected faces that share vertices
-            List<CGeosetFace> connectedFaces = new List<CGeosetFace>();
-            foreach (CGeosetFace face in surface)
+            List<CGeosetTriangle> connectedFaces = new List<CGeosetTriangle>();
+            foreach (CGeosetTriangle face in surface)
             {
-                foreach (CGeosetFace otherFace in remainingFaces)
+                foreach (CGeosetTriangle otherFace in remainingFaces)
                 {
                     if (HaveCommonVertices(face, otherFace))
                     {
@@ -1752,7 +1786,7 @@ namespace Wa3Tuner
             return surface;
         }
 
-        private static bool HaveCommonVertices(CGeosetFace face1, CGeosetFace face2)
+        private static bool HaveCommonVertices(CGeosetTriangle face1, CGeosetTriangle face2)
         {
             // Check if two faces share at least one vertex
             return face1.Vertex1 == face2.Vertex1 || face1.Vertex1 == face2.Vertex2 || face1.Vertex1 == face2.Vertex3 ||
@@ -1760,7 +1794,7 @@ namespace Wa3Tuner
                    face1.Vertex3 == face2.Vertex1 || face1.Vertex3 == face2.Vertex2 || face1.Vertex3 == face2.Vertex3;
         }
 
-        private static List<CGeosetVertex> FindOuterVertices(List<CGeosetFace> surface)
+        private static List<CGeosetVertex> FindOuterVertices(List<CGeosetTriangle> surface)
         {
             List<CGeosetVertex> outerVertices = new List<CGeosetVertex>();
             // For simplicity, assume we get the outer vertices from the convex hull or boundary of the surface.
@@ -1776,9 +1810,9 @@ namespace Wa3Tuner
             return outerVertices;
         }
 
-        private static List<CGeosetFace> CreateNewTrianglesFromVertices(List<CGeosetVertex> vertices, CModel Model)
+        private static List<CGeosetTriangle> CreateNewTrianglesFromVertices(List<CGeosetVertex> vertices, CModel Model)
         {
-            List<CGeosetFace> newFaces = new List<CGeosetFace>();
+            List<CGeosetTriangle> newFaces = new List<CGeosetTriangle>();
 
             // For simplicity, assume the outer vertices form a simple polygon
             // We would typically triangulate the outer vertices (e.g., by using an ear clipping algorithm or similar)
@@ -1786,7 +1820,7 @@ namespace Wa3Tuner
             // Dummy triangulation example
             for (int i = 1; i < vertices.Count - 1; i++)
             {
-                CGeosetFace face = new CGeosetFace(Model);
+                CGeosetTriangle face = new CGeosetTriangle(Model);
                 face.Vertex1.Attach(vertices[0]);
                 face.Vertex2.Attach(vertices[i]);
                 face.Vertex3.Attach(vertices[i+1]);
@@ -1889,61 +1923,356 @@ namespace Wa3Tuner
             return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb((byte)r, (byte)g, (byte)b));
         }
 
+       
+        internal static float Magnitude(CVector3 vector)
+        {
+            return (float)Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
+        }
+
+        internal static float Magnitude(CVector4 vector)
+        {
+            return (float)Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z + vector.W * vector.W);
+        }
+
+        internal static float Difference(CAnimatorNode<CVector4> cAnimatorNode1, CAnimatorNode<CVector4> cAnimatorNode2, CAnimatorNode<CVector4> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null)
+            {
+                return 4;
+            }
+
+            // Convert Quaternion to Euler angles as CVector3
+            CVector3 one = QuaternionToEuler(cAnimatorNode1.Value);
+            CVector3 two = QuaternionToEuler(cAnimatorNode2.Value);
+            CVector3 three = QuaternionToEuler(cAnimatorNode3.Value);
+
+            // Calculate differences
+            CVector3 diffAbove = new CVector3(
+                Math.Abs(two.X - one.X),
+                Math.Abs(two.Y - one.Y),
+                Math.Abs(two.Z - one.Z)
+            );
+
+            CVector3 diffBelow = new CVector3(
+                Math.Abs(two.X - three.X),
+                Math.Abs(two.Y - three.Y),
+                Math.Abs(two.Z - three.Z)
+            );
+
+            // Calculate total magnitude of differences
+            float totalDifference = Magnitude(diffAbove) + Magnitude(diffBelow);
+
+            return totalDifference;
+        }
+
+
         internal static float Difference(CAnimatorNode<CVector3> cAnimatorNode1, CAnimatorNode<CVector3> cAnimatorNode2, CAnimatorNode<CVector3> cAnimatorNode3)
         {
-            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null)
+            {
+                return 4;
+            }
+
             // Get the CVector3 values
             CVector3 one = cAnimatorNode1.Value;
             CVector3 two = cAnimatorNode2.Value;
             CVector3 three = cAnimatorNode3.Value;
 
-            // Calculate the differences between each vector component
-            float diffX = one.X - two.X + two.X - three.X + three.X - one.X;
-            float diffY = one.Y - two.Y + two.Y - three.Y + three.Y - one.Y;
-            float diffZ = one.Z - two.Z + two.Z - three.Z + three.Z - one.Z;
+            // Calculate differences
+            CVector3 diffAbove = new CVector3(
+                Math.Abs(two.X - one.X),
+                Math.Abs(two.Y - one.Y),
+                Math.Abs(two.Z - one.Z)
+            );
 
-            // Calculate the overall difference (e.g., Euclidean distance for simplicity)
-            float totalDifference = (float)Math.Sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
+            CVector3 diffBelow = new CVector3(
+                Math.Abs(two.X - three.X),
+                Math.Abs(two.Y - three.Y),
+                Math.Abs(two.Z - three.Z)
+            );
 
-            return totalDifference;
-        }
-        internal static float Difference(CAnimatorNode<CVector4> cAnimatorNode1, CAnimatorNode<CVector4> cAnimatorNode2, CAnimatorNode<CVector4> cAnimatorNode3)
-        {
-            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
-
-            // Get the CVector3 values
-            CVector3 one = QuaternionToEuler(cAnimatorNode1.Value);
-            CVector3 two = QuaternionToEuler(cAnimatorNode2.Value);
-            CVector3 three = QuaternionToEuler(cAnimatorNode3.Value);
-
-            // Calculate the differences between each vector component
-            float diffX = one.X - two.X + two.X - three.X + three.X - one.X;
-            float diffY = one.Y - two.Y + two.Y - three.Y + three.Y - one.Y;
-            float diffZ = one.Z - two.Z + two.Z - three.Z + three.Z - one.Z;
-
-            // Calculate the overall difference (e.g., Euclidean distance for simplicity)
-            float totalDifference = (float)Math.Sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
+            // Calculate total magnitude of differences
+            float totalDifference = Magnitude(diffAbove) + Magnitude(diffBelow);
 
             return totalDifference;
         }
+
+
+
+
         internal static float Difference(CAnimatorNode<float> cAnimatorNode1, CAnimatorNode<float> cAnimatorNode2, CAnimatorNode<float> cAnimatorNode3)
         {
-            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null) { return 4; }
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null)
+            {
+                return 4; // Default return value when any of the nodes are null
+            }
+
             // Get the float values from the animator nodes
             float one = cAnimatorNode1.Value;
             float two = cAnimatorNode2.Value;
             float three = cAnimatorNode3.Value;
 
-            // Calculate the differences
-            float diff1 = Math.Abs(one - two);
-            float diff2 = Math.Abs(two - three);
-            float diff3 = Math.Abs(three - one);
+            // Calculate the absolute differences
+            float diffAbove = Math.Abs(two - one);
+            float diffBelow = Math.Abs(two - three);
 
-            // Aggregate the differences (e.g., sum of absolute differences)
-            float totalDifference = diff1 + diff2 + diff3;
+            // Combine the differences (you can choose how to aggregate these)
+            float totalDifference = diffAbove + diffBelow;
 
             return totalDifference;
         }
 
+        internal static void TransferGeosetData(CGeoset first, CGeoset second, CModel owner)
+        {
+            // Create a mapping of original vertices to their clones
+            Dictionary<CGeosetVertex, CGeosetVertex> reference = new Dictionary<CGeosetVertex, CGeosetVertex>();
+            foreach (CGeosetVertex vertex in second.Vertices)
+            {
+                CGeosetVertex copy = CloneVertex_Merge(vertex, owner, first);
+                reference.Add(vertex, copy);
+                first.Vertices.Add(copy);
+            }
+
+            // Transfer faces from the second geoset to the first
+            foreach (CGeosetTriangle face in second.Triangles)
+            {
+                CGeosetTriangle copy = new CGeosetTriangle(owner);
+                copy.Vertex1.Attach(reference[face.Vertex1.Object]);
+                copy.Vertex2.Attach(reference[face.Vertex2.Object]);
+                copy.Vertex3.Attach(reference[face.Vertex3.Object]);
+                first.Triangles.Add(copy);
+            }
+        }
+
+        internal static List<List<CGeosetTriangle>> CollectTriangleGroups(CGeoset geoset)
+        {
+            // A face is a triangle made of 3 vertices
+            List<List<CGeosetTriangle>> triangleGroups = new List<List<CGeosetTriangle>>();
+            if (geoset == null || geoset.Triangles.Count <= 1)
+            {
+                return triangleGroups;
+            }
+
+            // Track visited faces
+            HashSet<CGeosetTriangle> visited = new HashSet<CGeosetTriangle>();
+
+            // Helper function to find connected faces
+            void CollectConnectedFaces(CGeosetTriangle startFace, List<CGeosetTriangle> group)
+            {
+                Queue<CGeosetTriangle> toVisit = new Queue<CGeosetTriangle>();
+                toVisit.Enqueue(startFace);
+
+                while (toVisit.Count > 0)
+                {
+                    CGeosetTriangle currentFace = toVisit.Dequeue();
+                    if (visited.Contains(currentFace))
+                    {
+                        continue;
+                    }
+
+                    visited.Add(currentFace);
+                    group.Add(currentFace);
+
+                    // Check all other faces for shared vertices
+                    foreach (CGeosetTriangle otherFace in geoset.Triangles)
+                    {
+                        if (!visited.Contains(otherFace) && FacesShareVertex(currentFace, otherFace))
+                        {
+                            toVisit.Enqueue(otherFace);
+                        }
+                    }
+                }
+            }
+
+            // Check if two faces share at least one vertex
+            bool FacesShareVertex(CGeosetTriangle face1, CGeosetTriangle face2)
+            {
+                var vertices1 = new[] { face1.Vertex1.Object, face1.Vertex2.Object, face1.Vertex3.Object };
+                var vertices2 = new[] { face2.Vertex1.Object, face2.Vertex2.Object, face2.Vertex3.Object };
+
+                return vertices1.Intersect(vertices2).Any();
+            }
+
+            // Group faces into connected components
+            foreach (CGeosetTriangle face in geoset.Triangles)
+            {
+                if (!visited.Contains(face))
+                {
+                    List<CGeosetTriangle> group = new List<CGeosetTriangle>();
+                    CollectConnectedFaces(face, group);
+                    triangleGroups.Add(group);
+                }
+            }
+
+            return triangleGroups;
+        }
+
+        internal static void CopyVertex(CGeosetVertex  original, CGeosetVertex copy)
+        {
+            copy.Position = new CVector3(original.Position);
+            copy.Normal = new CVector3(original.Normal);
+            copy.TexturePosition = new CVector2(original.TexturePosition);
+            copy.Group.Attach(original.Group.Object);  
+        }
+
+        internal static void CopyGroup(CGeosetGroup original, CGeosetGroup copy, CModel model)
+        {
+            List<INode> nodes = new List<INode>();
+            foreach (var node in original.Nodes)
+            {
+                nodes.Add(node.Node.Node);
+            }
+          
+            foreach (var node in nodes)
+            {
+                CGeosetGroupNode gnode = new CGeosetGroupNode(model);
+                gnode.Node.Attach(node);
+                copy.Nodes.Add(gnode);
+            }
+        }
+
+        internal static void CleanFreeVertices(CGeoset geoset)
+        {
+            foreach (CGeosetVertex vertex in geoset.Vertices.ToList())
+            {
+                bool has = true;
+               foreach (CGeosetTriangle triangle in geoset.Triangles)
+                {
+                    if (triangle.Vertex1.Object == vertex || triangle.Vertex2.Object == vertex || triangle.Vertex3.Object == vertex)
+                    {
+                        has = true;
+                        break;
+                    }
+                }
+               if (!has)
+                {
+                    geoset.Vertices.Remove(vertex);
+                }
+            }
+        }
+
+        internal static CGeoset GeosetFromTriangles(List<CGeosetTriangle> collection, CModel model, CGeoset geoset)
+        {
+            CGeoset newGeoset = new CGeoset(model);
+            Dictionary<CGeosetVertex, CGeosetVertex> reference = new Dictionary<CGeosetVertex, CGeosetVertex>();
+
+            foreach (CGeosetTriangle triangle in collection)
+            {
+                CGeosetTriangle newTriangle = new CGeosetTriangle(model);
+
+                // Process each vertex of the triangle
+                newTriangle.Vertex1.Attach(GetOrCreateVertex(triangle.Vertex1.Object, newGeoset, reference, model));
+                newTriangle.Vertex2.Attach(GetOrCreateVertex(triangle.Vertex2.Object, newGeoset, reference, model));
+                newTriangle.Vertex3.Attach(GetOrCreateVertex(triangle.Vertex3.Object, newGeoset, reference, model));
+
+                newGeoset.Triangles.Add(newTriangle);
+            }
+            newGeoset.Material.Attach(geoset.Material.Object);
+            return newGeoset;
+        }
+
+        private static CGeosetVertex GetOrCreateVertex(
+            CGeosetVertex originalVertex,
+            CGeoset geoset,
+            Dictionary<CGeosetVertex, CGeosetVertex> reference,
+            CModel model)
+        {
+            if (reference.TryGetValue(originalVertex, out CGeosetVertex existingVertex))
+            {
+                return existingVertex;
+            }
+
+            // Create a new vertex and copy properties
+            CGeosetVertex newVertex = new CGeosetVertex(model);
+            CopyVertex(originalVertex, newVertex);
+            geoset.Vertices.Add(newVertex);
+
+            // Add to reference for future lookups
+            reference[originalVertex] = newVertex;
+
+            return newVertex;
+        }
+        internal static void GiveGroupToGeoset(CGeoset geoset, CModel model)
+        {
+            CGeosetGroup group = new CGeosetGroup(model);
+            CGeosetGroupNode node = new CGeosetGroupNode(model);
+            node.Node.Attach(GetBone(model));
+            group.Nodes.Add(node);
+           geoset.Groups.Add(group);
+        }
+
+        private static INode GetBone(CModel model)
+        {
+            if (model.Nodes.Any(x=>x is CBone))
+            {
+                return model.Nodes.First(x=>x is CBone);
+            }
+            else
+            {
+                CBone bone = new CBone(model);
+                bone.Name ="GeneratedBone_" +IDCounter.Next_();
+                model.Nodes.Add(bone);
+                return bone;
+            }
+        }
+
+        internal static CGeoset ReAddTriangles(List<List<CGeosetTriangle>> list,
+            CModel model, CGeoset geoset)
+        {
+           CGeoset _modified = new CGeoset(model);
+            _modified.Material.Attach(geoset.Material.Object);
+            GiveGroupToGeoset(_modified, model);
+            foreach (var triangleList in list)
+            {
+                Dictionary<CGeosetVertex, CGeosetVertex> reference = new Dictionary<CGeosetVertex, CGeosetVertex>();
+                foreach (var triangle in triangleList)
+                {
+                    CGeosetTriangle _triangle = new CGeosetTriangle(model);
+                    if (reference.ContainsKey(triangle.Vertex1.Object))
+                    {
+                        _triangle.Vertex1.Attach(reference[triangle.Vertex1.Object]);
+                    }
+                    else
+                    {
+                        CGeosetVertex _vertex = new CGeosetVertex(model);
+                        CopyVertex(triangle.Vertex1.Object, _vertex);
+                        _modified.Vertices.Add(_vertex);
+                        reference.Add(triangle.Vertex1.Object, _vertex);
+                        _triangle.Vertex1.Attach(_vertex);
+                        _vertex.Group.Attach(_modified.Groups[0]);
+                    }
+
+                    if (reference.ContainsKey(triangle.Vertex2.Object))
+                    {
+                        _triangle.Vertex2.Attach(reference[triangle.Vertex2.Object]);
+                    }
+                    else
+                    {
+                        CGeosetVertex _vertex = new CGeosetVertex(model);
+                        CopyVertex(triangle.Vertex2.Object, _vertex);
+                        _modified.Vertices.Add(_vertex);
+                        reference.Add(triangle.Vertex2.Object, _vertex);
+                        _triangle.Vertex2.Attach(_vertex);
+                        _vertex.Group.Attach(_modified.Groups[0]);
+                    }
+
+                    if (reference.ContainsKey(triangle.Vertex3.Object))
+                    {
+                        _triangle.Vertex3.Attach(reference[triangle.Vertex3.Object]);
+                    }
+                    else
+                    {
+                        CGeosetVertex _vertex = new CGeosetVertex(model);
+                        CopyVertex(triangle.Vertex3.Object, _vertex);
+                        _modified.Vertices.Add(_vertex);
+                        reference.Add(triangle.Vertex3.Object, _vertex);
+                        _triangle.Vertex3.Attach(_vertex);
+                        _vertex.Group.Attach(_modified.Groups[0]);
+                    }
+                    _modified.Triangles.Add(_triangle);
+                }
+            }
+            return _modified;
+        }
     }
 }

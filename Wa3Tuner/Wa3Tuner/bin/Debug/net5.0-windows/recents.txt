@@ -1,3 +1,4 @@
-C:\Users\stan0033_laptop\Desktop\MODELS\BOXY\Boxy_Helper_Robot_3.mdx
-C:\Users\stan0033_laptop\Desktop\Ghost Garithos\Ghost Garithos.mdx
-C:\Users\stan0033_laptop\Desktop\Ghost Garithos\g.mdl
+C:\Users\stan0033_laptop\Desktop\Kinexian World models\buildings\Tower\Building_Tower.mdx
+C:\Users\stan0033_laptop\Desktop\Kinexian World models\buildings\Tower\Tower2.mdl
+C:\Users\stan0033_laptop\Desktop\untitled.mdl
+C:\Users\stan0033_laptop\Desktop\cube.mdl

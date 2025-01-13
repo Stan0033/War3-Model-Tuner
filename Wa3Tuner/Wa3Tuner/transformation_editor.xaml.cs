@@ -922,6 +922,7 @@ namespace Wa3Tuner
                     {
                         Dummy_Vector3.Add(new CAnimatorNode<CVector3>(track.Time, new CVector3(track.X, track.Y, track.Z)));
                     }
+                    DialogResult = true;
                 }
                 }
                 if (Type == TransformationType.Alpha)
@@ -949,6 +950,7 @@ namespace Wa3Tuner
                         track.ToNormalizedPercentage();
                         Dummy_float.Add(new CAnimatorNode<float>(track.Time, track.X));
                     }
+                    DialogResult = true;
                 }
                     
                 }
@@ -970,6 +972,7 @@ namespace Wa3Tuner
                         track.ToNormalizedPercentage();
                         Dummy_Vector3.Add(new CAnimatorNode<CVector3>(track.Time, new CVector3(track.X, track.Y, track.Z)));
                     }
+                    DialogResult = true;
                 }
                   
                 }
@@ -991,6 +994,7 @@ namespace Wa3Tuner
                         track.ToQuaternion();
                         Dummy_Vector4.Add(new CAnimatorNode<CVector4>(track.Time, new CVector4(track.X, track.Y, track.Z, track.W)));
                     }
+                    DialogResult = true;
                 }
                   
                 }
@@ -1019,6 +1023,7 @@ namespace Wa3Tuner
 
                         Dummy_int.Add(new CAnimatorNode<int>(track.Time, (int)track.X));
                     }
+                    DialogResult = true;
                 }
                    
                 }
@@ -1048,6 +1053,7 @@ namespace Wa3Tuner
 
                         Dummy_float.Add(new CAnimatorNode<float>(track.Time, track.X));
                     }
+                    DialogResult = true;
                 }
                 
                 }
@@ -1071,6 +1077,7 @@ namespace Wa3Tuner
                         track.ToNormalizedColor();
                         Dummy_Vector3.Add(new CAnimatorNode<CVector3>(track.Time, new CVector3(track.X, track.Y, track.Z)));
                     }
+                    DialogResult = true;
                 }
                 
             }

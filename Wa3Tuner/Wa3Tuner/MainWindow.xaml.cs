@@ -18,11 +18,10 @@ using System.Windows.Controls;
 
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
+ 
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Media.TextFormatting;
-using System.Xml.Linq;
+ 
 using W3_Texture_Finder;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -283,6 +282,9 @@ namespace Wa3Tuner
             CurrentModel = TemporaryModel;
             MultiplyAlphasForEmitter2_MDL();
             RenameAllNodes();
+          Optimizer.RemoveInvalidGeosetAnimations(CurrentModel);
+
+
             Box_Errors.Text = "";
             LabelDisplayInfo.Text = "";
             CurrentSaveLocaiton = FromFileName;
@@ -367,16 +369,15 @@ namespace Wa3Tuner
 
                     if (texture.ReplaceableId == 0)
                     {
-                        if (MPQHelper.FileExists(texture.FileName))
-                        {
-                            image.Source = MPQHelper.GetImageSource(texture.FileName);
-                        }
-                        else
+
+                        image.Source = MPQHelper.GetImageSource(texture.FileName);
+                        if (image.Source == null)
                         {
                             string path = Path.Combine(CurrentSaveFolder, texture.FileName);
 
                             image.Source = MPQHelper.GetImageSourceExternal(path);
                         }
+
                     }
                     if (texture.ReplaceableId == 1)
                     {
@@ -410,7 +411,7 @@ namespace Wa3Tuner
             Report_sequences.Text = $"{CurrentModel.Sequences.Count} sequences";
             foreach (CSequence sequence in CurrentModel.Sequences)
             {
-                string looping = sequence.NonLooping ? "Nonlooping" : "looping";
+                string looping = sequence.NonLooping ? "Nonlooping" : "Looping";
                 string data = $"{sequence.Name} [{sequence.IntervalStart} - {sequence.IntervalEnd}] ({looping})";
                 ListSequenes.Items.Add(new ListBoxItem() { Content = data });
             }
@@ -433,14 +434,15 @@ namespace Wa3Tuner
 
             ListGeosets.Items.Clear();
             Report_Geosets.Text = $"{CurrentModel.Geosets.Count} geosets";
-
+            CleanGeosetVisible();
+            GeosetVisible.Clear();
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
                 ListBoxItem Item = new ListBoxItem();
 
                 int UsedMaterialIndex = CurrentModel.Materials.IndexOf(geo.Material.Object);
                 TextBlock Title = new TextBlock();
-                string TitleName = geo.ObjectId.ToString() + $" ({geo.Vertices.Count} vertices, {geo.Faces.Count} triangles) (material {UsedMaterialIndex})";
+                string TitleName = geo.ObjectId.ToString() + $" ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles) (material {UsedMaterialIndex})";
                 Title.Text = TitleName;
                 CheckBox CheckPart = new CheckBox();
                 StackPanel Container = new StackPanel();
@@ -448,19 +450,16 @@ namespace Wa3Tuner
                 Container.Children.Add(CheckPart);
                 Container.Children.Add(Title);
 
-                Item.Content = Container;
-                if (GeosetVisible.ContainsKey(geo)) { CheckPart.IsChecked = GeosetVisible[geo]; }
-                else
-                {
+                
                     CheckPart.IsChecked = true;
                     GeosetVisible.Add(geo, true);
                     CheckPart.Checked += (object sender, RoutedEventArgs e) => { GeosetVisible[geo] = true; RefreshViewPort(); };
                     CheckPart.Unchecked += (object sender, RoutedEventArgs e) => { GeosetVisible[geo] = false; RefreshViewPort(); };
-                }
-
+                
+                Item.Content = Container;
                 ListGeosets.Items.Add(Item);
             }
-            CleanGeosetVisible();
+            
         }
         private void CheckedGeosetVisibility(object sender, EventArgs e)
         {
@@ -725,75 +724,7 @@ namespace Wa3Tuner
             };
 
         }
-        private void RenderGeosets(Viewport3D viewport)
-        {
-            DrawCube(viewport, new Point3D(0, 0, 0), 1.0, Colors.Blue);
-            AdjustCam();
-
-            return; ;
-            // Clear existing children from the viewport
-            viewport.Children.Clear();
-
-            // Create a model group to hold all geosets
-            var modelGroup = new Model3DGroup();
-
-            foreach (CGeoset geoset in CurrentModel.Geosets)
-            {
-                // Create a mesh for the current geoset
-                var mesh = new MeshGeometry3D();
-
-                foreach (var face in geoset.Faces)
-                {
-                    // Add triangle vertices
-                    Point3D vertex1 = new Point3D(face.Vertex1.Object.Position.X, face.Vertex1.Object.Position.Y, face.Vertex1.Object.Position.Z);
-                    Point3D vertex2 = new Point3D(face.Vertex2.Object.Position.X, face.Vertex2.Object.Position.Y, face.Vertex2.Object.Position.Z);
-                    Point3D vertex3 = new Point3D(face.Vertex3.Object.Position.X, face.Vertex3.Object.Position.Y, face.Vertex3.Object.Position.Z);
-
-                    mesh.Positions.Add(vertex1);
-                    mesh.Positions.Add(vertex2);
-                    mesh.Positions.Add(vertex3);
-
-                    // Add triangle indices (assume vertices are added sequentially)
-                    int index = mesh.Positions.Count;
-                    mesh.TriangleIndices.Add(index - 3);
-                    mesh.TriangleIndices.Add(index - 2);
-                    mesh.TriangleIndices.Add(index - 1);
-                }
-
-                // Create material for the geoset
-                var material = new DiffuseMaterial(new SolidColorBrush(Colors.LightGray));
-
-                // Create the geometry model
-                var geometryModel = new GeometryModel3D(mesh, material);
-
-                // Add the geometry model to the group
-                modelGroup.Children.Add(geometryModel);
-            }
-
-            // Add lighting to the scene
-            var light = new DirectionalLight(Colors.White, new Vector3D(-1, -1, -1));
-            modelGroup.Children.Add(light);
-
-            // Create a visual 3D for the model group
-            var modelVisual = new ModelVisual3D { Content = modelGroup };
-
-            // Add a camera if not already set
-            if (viewport.Camera == null)
-            {
-                viewport.Camera = new PerspectiveCamera
-                {
-                    Position = new Point3D(0, 0, 10),
-                    LookDirection = new Vector3D(0, 0, -1),
-                    UpDirection = new Vector3D(0, 1, 0),
-                    FieldOfView = 60
-                };
-            }
-
-            // Add the model visual to the viewport
-            viewport.Children.Add(modelVisual);
-            AdjustCam();
-        }
-
+      
         private void delcameras(object sender, RoutedEventArgs e)
         {
             CurrentModel.Cameras.Clear();
@@ -1650,7 +1581,7 @@ namespace Wa3Tuner
                 t.Text = name;
             }
         }
-        private static class IDCounter
+        public static class IDCounter
         {
             private static int counter = 0;
             public static int Next() { counter++; return counter; }
@@ -1704,7 +1635,7 @@ namespace Wa3Tuner
             List<string> list = new List<string>();
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
-                list.Add($"Geoset {geo.ObjectId} ({geo.Vertices.Count} vertices, {geo.Faces.Count} triangles)");
+                list.Add($"Geoset {geo.ObjectId} ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles)");
             }
             return list;
         }
@@ -1896,7 +1827,7 @@ namespace Wa3Tuner
             int count = 0;
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
-                count += geo.Faces.Count;
+                count += geo.Triangles.Count;
             }
             return count;
         }
@@ -2072,6 +2003,7 @@ namespace Wa3Tuner
                     CurrentModel.Textures.Add(newTexture);
                 }
             }
+            RefreshTextures();
         }
 
         private void masscreeatesequences(object sender, RoutedEventArgs e)
@@ -2142,6 +2074,7 @@ namespace Wa3Tuner
             Optimizer.MergeMAtertials = check_mergeMaterials.IsChecked == true;
             Optimizer.MergeTAs = check_mergeTAs.IsChecked == true;
             Optimizer.MergeLayers = check_mergeLayers.IsChecked == true;
+            Optimizer.MinimizeMatrixGroups = Check_Minimiematrixgroups.IsChecked == true;
 
 
 
@@ -2739,11 +2672,13 @@ namespace Wa3Tuner
 
         private void SelectAllGeosets(object sender, RoutedEventArgs e)
         {
+            Pause = true;
             foreach (var item in ListGeosets.Items)
             {
                 ListGeosets.SelectedItems.Add(item);
             }
-
+            Pause = false;
+            RefreshViewPort();
         }
 
         private void DeselectAllGeosets(object sender, RoutedEventArgs e)
@@ -2986,44 +2921,39 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count > 1)
             {
+                Viewport_Main.Children.Clear();
+                Pause = true;
                 List<CGeoset> geosets = GetSelectedGeosets();
+                if (geosets.Count <= 1) { return; }
+                CGeoset First = geosets[0];
 
                 for (int i = 1; i < geosets.Count; i++)
                 {
-                    foreach (CGeosetVertex vertex in geosets[i].Vertices.ToList())
-                    {
-                        CGeosetVertex vertex_c = vertex;
+                    Calculator.TransferGeosetData(First, geosets[i], CurrentModel);
 
-                        geosets[i].Vertices.Remove(vertex);
-                        geosets[1].Vertices.Add(vertex_c);
-                    }
-                    foreach (CGeosetFace face in geosets[i].Faces.ToList())
-                    {
-                        CGeosetFace face_C = face;
-                        geosets[i].Faces.Remove(face);
-                        geosets[1].Faces.Add(face);
-                    }
-                    foreach (var item in geosets[i].Groups.ToList())
-                    {
-                        var item2 = item;
-                        geosets[i].Groups.Remove(item);
-                        geosets[1].Groups.Add(item2);
-                    }
+
+
 
                 }
+                // delete  
                 for (int i = 1; i < geosets.Count; i++)
                 {
                     DeleteGeosetAnimationOf(geosets[i]);
+                    CurrentModel.Geosets.Remove(geosets[i]);
 
                 }
+                Pause = false;
                 RefreshGeosetsList();
                 RefreshGeosetAnimationsList();
+
+
+                RefreshViewPort();
             }
             else
             {
                 MessageBox.Show("Select at least 2 geosets");
             }
-            RefreshViewPort();
+
         }
 
         private void negate(object sender, RoutedEventArgs e)
@@ -3194,9 +3124,9 @@ namespace Wa3Tuner
 
             Dictionary<CGeosetVertex, CGeosetVertex> VertexReference = new Dictionary<CGeosetVertex, CGeosetVertex>();
 
-            foreach (CGeosetFace face in inputGeoset.Faces)
+            foreach (CGeosetTriangle face in inputGeoset.Triangles)
             {
-                CGeosetFace _newFace = new CGeosetFace(whichModel);
+                CGeosetTriangle _newFace = new CGeosetTriangle(whichModel);
 
                 // Vertex 1
                 if (VertexReference.ContainsKey(face.Vertex1.Object))
@@ -3250,7 +3180,7 @@ namespace Wa3Tuner
                 }
 
                 // Add the face to the new geoset
-                _newGeoset.Faces.Add(_newFace);
+                _newGeoset.Triangles.Add(_newFace);
             }
 
             // Attach the material to the new geoset
@@ -4189,7 +4119,7 @@ namespace Wa3Tuner
                                 geoset.Vertices.Remove(vertex);
                             }
                         }
-                        foreach (CGeosetFace face in geoset.Faces.ToList())
+                        foreach (CGeosetTriangle face in geoset.Triangles.ToList())
                         {
                             if (
                                 geoset.Vertices.Contains(face.Vertex1.Object) == false ||
@@ -4199,7 +4129,7 @@ namespace Wa3Tuner
 
                                 )
                             {
-                                geoset.Faces.Remove(face);
+                                geoset.Triangles.Remove(face);
                             }
                         }
                     }
@@ -4259,7 +4189,7 @@ namespace Wa3Tuner
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.11 (07/01/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.12 (13/01/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
 
 
@@ -4344,17 +4274,20 @@ namespace Wa3Tuner
                 CTexture texture = CurrentModel.Textures[i];
                 if (texture.ReplaceableId == 0)
                 {
-                    if (MPQHelper.FileExists(texture.FileName))
-                    {
-                        Textures_Loaded[i] = MPQHelper.GetImageSource(texture.FileName);
+                    // if (MPQHelper.FileExists(texture.FileName))
+                    //{
+                    Textures_Loaded[i] = MPQHelper.GetImageSource(texture.FileName);
+                    /* if (Textures_Loaded[i] == null)
+                     {
+                         string path = Path.Combine(CurrentSaveFolder, texture.FileName);
+                         Textures_Loaded[i] = MPQHelper.GetImageSource(path);
 
-                    }
-                    else
-                    {
-                        string path = Path.Combine(CurrentSaveFolder, texture.FileName);
-                        Textures_Loaded[i] = MPQHelper.GetImageSource(path);
+                     }*/
+                    /* }
+                     else
+                     {
 
-                    }
+                     }*/
 
 
 
@@ -4387,6 +4320,8 @@ namespace Wa3Tuner
         private void RefreshViewPort()
         {
             if (CurrentModel.Geosets.Count == 0) { Scene_Viewport.Children.Clear(); return; }
+            if (Pause) { return; }
+
             CollectTextures();
             // Clear existing models in the viewport
             Viewport3D viewport = Scene_Viewport;
@@ -4418,7 +4353,7 @@ namespace Wa3Tuner
                 bool hasAlphaTransparency = geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.Additive || geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.AdditiveAlpha;
 
                 // Loop through each face in the geoset
-                foreach (CGeosetFace face in geo.Faces)
+                foreach (CGeosetTriangle face in geo.Triangles)
                 {
                     // Get vertex positions, normals, and texture coordinates
                     Point3D vertex1 = new Point3D(face.Vertex1.Object.Position.X, face.Vertex1.Object.Position.Y, face.Vertex1.Object.Position.Z);
@@ -5994,6 +5929,7 @@ namespace Wa3Tuner
 
         private void editvisibilitiesofgeoset(object sender, RoutedEventArgs e)
         {
+            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
             if (ListGeosets.SelectedItems.Count != 1)
             {
                 MessageBox.Show("Select a single geoset"); return;
@@ -6653,10 +6589,11 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void fragmentGeoset(object sender, RoutedEventArgs e)
+        private void FragmentTrianglesIntoGeosets(object sender, RoutedEventArgs e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
+                Pause = true;
                 List<CGeoset> geosets = GetSelectedGeosets();
                 List<CGeoset> fragments = new List<CGeoset>();
 
@@ -6670,8 +6607,8 @@ namespace Wa3Tuner
                 {
                     CurrentModel.Geosets.Add(geoset);
                 }
-                RefreshGeosetsList();
-                RefreshGeosetAnimationsList();
+                Pause = false;
+                RefreshAll();
 
             }
         }
@@ -6901,7 +6838,7 @@ namespace Wa3Tuner
                 List<CGeoset> geosets = GetSelectedGeosets();
                 foreach (CGeoset geoset in geosets)
                 {
-                    if (geoset.Faces.Count != 2) { continue; }
+                    if (geoset.Triangles.Count != 2) { continue; }
                     geoset.Vertices[0].TexturePosition = new CVector2(0, 0);
                     geoset.Vertices[1].TexturePosition = new CVector2(0, 1);
                     geoset.Vertices[2].TexturePosition = new CVector2(1, 0);
@@ -7489,6 +7426,198 @@ namespace Wa3Tuner
                 }
 
             }
+        }
+
+        private void delallgas(object sender, RoutedEventArgs e)
+        {
+            CurrentModel.GeosetAnimations.Clear();
+            List_GeosetAnims.Items.Clear();
+            Label_GAs.Text = "0 Geoset Animations";
+        }
+
+        private void createmissinggas(object sender, RoutedEventArgs e)
+        {
+            foreach (CGeoset geoset in CurrentModel.Geosets)
+            {
+                if (CurrentModel.GeosetAnimations.Any(x => x.Geoset.Object == geoset) == false)
+                {
+                    CGeosetAnimation _new = new CGeosetAnimation(CurrentModel);
+                    _new.Geoset.Attach(geoset);
+                    _new.Alpha.MakeStatic(1);
+                    CurrentModel.GeosetAnimations.Add(_new);
+                }
+            }
+            RefreshGeosetAnimationsList();
+        }
+
+        private void separate(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                Pause = true;
+                Scene_Viewport.Children.Clear();
+                List<CGeoset> geosets = GetSelectedGeosets();
+
+                foreach (CGeoset geoset in geosets)
+                {
+                    List<List<CGeosetTriangle>> triangleGroups = Calculator.CollectTriangleGroups(geoset);
+                    if (triangleGroups.Count > 1)
+                    {
+                        for (int i = 0; i < triangleGroups.Count; i++) // Process all groups
+                        {
+                            List<CGeosetTriangle> faces = triangleGroups[i];
+                            Dictionary<CGeosetVertex, CGeosetVertex> reference = new Dictionary<CGeosetVertex, CGeosetVertex>();
+                            CGeoset newGeoset = new CGeoset(CurrentModel);
+
+                            foreach (var face in faces)
+                            {
+                                CGeosetTriangle newFace = new CGeosetTriangle(CurrentModel);
+
+                                // Process Vertex1
+                                if (!reference.TryGetValue(face.Vertex1.Object, out var newVertex1))
+                                {
+                                    newVertex1 = new CGeosetVertex(CurrentModel);
+                                    Calculator.CopyVertex(face.Vertex1.Object, newVertex1);
+                                    reference[face.Vertex1.Object] = newVertex1;
+                                    newGeoset.Vertices.Add(newVertex1);
+                                }
+                                newFace.Vertex1.Attach(newVertex1);
+
+                                // Process Vertex2
+                                if (!reference.TryGetValue(face.Vertex2.Object, out var newVertex2))
+                                {
+                                    newVertex2 = new CGeosetVertex(CurrentModel);
+                                    Calculator.CopyVertex(face.Vertex2.Object, newVertex2);
+                                    reference[face.Vertex2.Object] = newVertex2;
+                                    newGeoset.Vertices.Add(newVertex2);
+                                }
+                                newFace.Vertex2.Attach(newVertex2);
+
+                                // Process Vertex3
+                                if (!reference.TryGetValue(face.Vertex3.Object, out var newVertex3))
+                                {
+                                    newVertex3 = new CGeosetVertex(CurrentModel);
+                                    Calculator.CopyVertex(face.Vertex3.Object, newVertex3);
+                                    reference[face.Vertex3.Object] = newVertex3;
+                                    newGeoset.Vertices.Add(newVertex3);
+                                }
+                                newFace.Vertex3.Attach(newVertex3);
+
+                                newGeoset.Triangles.Add(newFace);
+                            }
+
+                            // Assign the material
+                            newGeoset.Material.Attach(geoset.Material.Object);
+                            CGeosetGroup newGroup = new CGeosetGroup(CurrentModel);
+                            Calculator.CopyGroup(geoset.Groups[0], newGroup, CurrentModel);
+                            newGeoset.Groups.Add(newGroup);
+                            foreach (var vertex in newGeoset.Vertices)
+                            {
+                                vertex.Group.Attach(newGroup);
+                            }
+                            CurrentModel.Geosets.Add(newGeoset);
+                        }
+                    }
+                }
+
+                RefreshGeosetsList();
+                Pause = false;
+                RefreshViewPort();
+            }
+        }
+
+        private void drawshape(object sender, RoutedEventArgs e)
+        {
+            DrawShape ds = new DrawShape(CurrentModel);
+            if (ds.ShowDialog() == true)
+            {
+                RefreshGeosetsList();
+            }
+        }
+
+        private void extrudedpolygon(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void FragmentTrianglesInGeoset(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (var geoset in geosets)
+                {
+                    foreach (CGeosetTriangle triangle in geoset.Triangles)
+                    {
+                        CGeosetVertex vertex1 = new CGeosetVertex(CurrentModel);   Calculator.CopyVertex(triangle.Vertex1.Object, vertex1);
+                        CGeosetVertex vertex2 = new CGeosetVertex(CurrentModel); Calculator.CopyVertex(triangle.Vertex2.Object, vertex2);
+                        CGeosetVertex vertex3 = new CGeosetVertex(CurrentModel); Calculator.CopyVertex(triangle.Vertex3.Object, vertex3);
+                       triangle.Vertex1.Attach(vertex1);
+                        triangle.Vertex2.Attach(vertex2);
+                        triangle.Vertex3.Attach(vertex3);
+                    }
+                    Calculator.CleanFreeVertices(geoset);
+                }
+
+            }
+            RefreshGeosetsList();
+        }
+
+        private void FragmentFacesInGeoset(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                List<CGeoset> ModifiedGeosets = new List<CGeoset>();
+                foreach (var geoset in geosets)
+                {
+                    List<List<CGeosetTriangle>> list =  FlatCalculator.CollectFlatSurfaces(geoset);
+                    CGeoset fragmented = Calculator.ReAddTriangles(list, CurrentModel, geoset);
+                    ModifiedGeosets.Add(fragmented);
+
+                }
+
+                Pause = true;
+                foreach (var geoset in geosets)
+                {
+                    CurrentModel.Geosets.Remove(geoset);
+                }
+               foreach (var geoset in ModifiedGeosets)
+                {
+                    CurrentModel.Geosets.Add(geoset);
+                }
+               
+                RefreshGeosetsList();
+                Pause = false;
+                RefreshViewPort();
+            }
+           
+        }
+        private void FragmentFacesIntoGeosets(object sender, RoutedEventArgs e)
+        {
+            Viewport_Main.Children.Clear();
+            Pause = true;
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                foreach (var geoset in geosets)
+                {
+                    List<List<CGeosetTriangle>> list = FlatCalculator.CollectFlatSurfaces(geoset);
+                    if (list.Count <= 1) { continue; }
+
+                    foreach (var collection in list)
+                    {
+                        CGeoset _new = Calculator.GeosetFromTriangles(collection, CurrentModel, geoset);
+                       CurrentModel.Geosets.Add(_new);
+                    }
+                    CurrentModel.Geosets.Remove(geoset);
+                }
+            }
+          
+            RefreshGeosetsList();
+            Pause = false;
+            RefreshViewPort();
+          
         }
     }
 }

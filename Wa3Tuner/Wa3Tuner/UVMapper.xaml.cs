@@ -30,7 +30,7 @@ namespace Wa3Tuner
         CModel Model;
         CGeoset CurrenctlySelectedGeoset;
         ImageSource CurrentlyLoadedTexture;
-        List<CGeosetFace> SelectedTriangles = new List<CGeosetFace>();
+        List<CGeosetTriangle> SelectedTriangles = new List<CGeosetTriangle>();
         Dictionary<Ellipse, CGeosetVertex> VertexReference = new Dictionary<Ellipse, CGeosetVertex>();
         UVEditMode Mode = UVEditMode.Move;
         public UVMapper()
@@ -43,7 +43,7 @@ namespace Wa3Tuner
             List_Geosets_UV.Items.Clear();
             foreach (CGeoset geoset in model.Geosets)
             {
-                string item = $"Geoset {geoset.ObjectId} [{geoset.Faces.Count} triangles]";
+                string item = $"Geoset {geoset.ObjectId} [{geoset.Triangles.Count} triangles]";
                 List_Geosets_UV.Items.Add(new ListBoxItem() { Content = item });
             }
             List_Faces_UV.Items.Clear();    
@@ -81,7 +81,7 @@ namespace Wa3Tuner
             }
             if (MPQHelper.FileExists(path) == false)
             {
-                MessageBox.Show("The texture was not found in the MPQs"); CurrentlyLoadedTexture = null; return;
+              //  MessageBox.Show("The texture was not found in the MPQs"); CurrentlyLoadedTexture = null; return;
             }
             CurrentlyLoadedTexture = MPQHelper.GetImageSource(path);
             Displayer_Texture.Source = CurrentlyLoadedTexture;
@@ -97,7 +97,7 @@ namespace Wa3Tuner
                 List_Faces_UV.Items.Clear();
                 int index = List_Geosets_UV.SelectedIndex;
                 CurrenctlySelectedGeoset = Model.Geosets[index];
-                for (int i = 0; i < Model.Geosets[index].Faces.Count; i++)
+                for (int i = 0; i < Model.Geosets[index].Triangles.Count; i++)
                 {
                     List_Faces_UV.Items.Add(new ListBoxItem() { Content = $"Triangle {i}" });
                 }
@@ -106,16 +106,16 @@ namespace Wa3Tuner
                 LoadTexture();
             }
         }
-        private List<CGeosetFace> GetSelectedFaces()
+        private List<CGeosetTriangle> GetSelectedFaces()
         {
             
-            List<CGeosetFace> list = new List<CGeosetFace> ();
+            List<CGeosetTriangle> list = new List<CGeosetTriangle> ();
             CGeoset SelectedGeoset = Model.Geosets[List_Geosets_UV.SelectedIndex];
             for (int i = 0; i < List_Faces_UV.Items.Count; i++)
             {
                 if (List_Faces_UV.SelectedItems.Contains(List_Faces_UV.Items[i]))
                 {
-                    list.Add(SelectedGeoset.Faces[i]);
+                    list.Add(SelectedGeoset.Triangles[i]);
                 }
             }
             return list;
@@ -307,13 +307,13 @@ namespace Wa3Tuner
 
         private void selectall(object sender, RoutedEventArgs e)
         {
-            if (List_Geosets_UV.SelectedItem != null)
-            {
-                foreach (var item in List_Faces_UV.SelectedItems)
+            List_Faces_UV.SelectedItems.Clear();
+           
+                foreach (var item in List_Faces_UV.Items)
                 {
                     List_Faces_UV.SelectedItems.Add(item);
                 }
-            }
+          
             SelectFaces(null, null);
         }
 

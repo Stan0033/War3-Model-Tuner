@@ -50,12 +50,13 @@ namespace W3_Texture_Finder
         }
         internal static bool FileExists(string path, string Archive)
         {
-            if (Archive == MPQPaths.War3) { return Listfile_blp_War3.Contains(path); }
-            if (Archive == MPQPaths.War3X) { return Listfile_blp_War3x.Contains(path); }
-            if (Archive == MPQPaths.War3Patch) { return Listfile_blp_War3Patch.Contains(path); }
-            if (Archive == MPQPaths.War3xLocal) { return Listfile_blp_War3xLocal.Contains(path); }
+            if (Archive == MPQPaths.War3) { return Listfile_blp_War3.Contains(path, StringComparer.OrdinalIgnoreCase); }
+            if (Archive == MPQPaths.War3X) { return Listfile_blp_War3x.Contains(path, StringComparer.OrdinalIgnoreCase); }
+            if (Archive == MPQPaths.War3Patch) { return Listfile_blp_War3Patch.Contains(path, StringComparer.OrdinalIgnoreCase); }
+            if (Archive == MPQPaths.War3xLocal) { return Listfile_blp_War3xLocal.Contains(path, StringComparer.OrdinalIgnoreCase); }
             return false;
         }
+
         internal static void Export(string targetPath, string savePath)
         {
             string archive = string.Empty;
@@ -131,10 +132,10 @@ namespace W3_Texture_Finder
         {
             string archive = string.Empty;
             
-                if (FileExists(path, MPQPaths.War3)) { archive = MPQPaths.War3; }
-                if (FileExists(path, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
-                if (FileExists(path, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
-                if (FileExists(path, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
+                if (FileExists(path , MPQPaths.War3)) { archive = MPQPaths.War3; }
+                if (FileExists(path , MPQPaths.War3X)) { archive = MPQPaths.War3X; }
+                if (FileExists(path , MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
+                if (FileExists(path , MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
             
             if (archive.Length == 0) // Could be in local folder
             {

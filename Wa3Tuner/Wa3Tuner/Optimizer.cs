@@ -67,6 +67,7 @@ namespace Wa3Tuner
         internal static bool MergeMAtertials = false;
         internal static bool MergeTAs = false;
         internal static bool MergeLayers = false;
+        internal static bool MinimizeMatrixGroups = false;
 
         public static bool MergeIdenticalVertices { get; internal set; }
 
@@ -78,6 +79,7 @@ namespace Wa3Tuner
             RemoveEmptyGeosets();
             FixInvalidNodeRelationships();
             CreateLayerForMaterialsWithout();
+          
             if (Linearize) { Linearize_(); }
             if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
             if (DeleteIsolatedVertices) { DeleteIsolatedVertices_(); }
@@ -93,7 +95,7 @@ namespace Wa3Tuner
             if (MakeVisibilitiesNone) { MakeVisibilitiesNone_(); }
             if (EnumerateSequences) { EnumerateSequences_(); }
             if (AddOrigin) { AddOrigin_(); }
-            if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
+            
             if (DeleteUnAnimatedSequences) { DeleteUnAnimatedSequences_(); }
           
 
@@ -126,17 +128,89 @@ namespace Wa3Tuner
             if (MergeLayers) MergeLayers_();
             if (MergeMAtertials) MergeMatertials_();
             if (MergeTAs) MergeTAs_();
+            if (MinimizeMatrixGroups) MinimizeMatrixGroups_();
 
             
             if (DelUnusedMatrixGroups) { DelUnusedMatrixGroups_(); }
             if (DeleteUnusedBones) { DeleteUnusedBones_(); }
             FillMissingComponents();
-            MakeDynamicTransformationsWithOneOfNoKeyframeStatic();
+           MakeDynamicTransformationsWithOneOfNoKeyframeStatic();
             RearrangeKeyframes_();
-            MakeTransformationsWithZeroTracksStatic();
+           // MakeTransformationsWithZeroTracksStatic(); //unused
             FixSquirtOfEmitters2();
             DeleteEmptyGeosets();
             RemoveEmptyGeosetAnimations();
+        }
+
+        public static void RemoveInvalidGeosetAnimations(CModel model)
+        {
+            foreach (CGeosetAnimation ga in model.GeosetAnimations.ToList())
+            {
+                if (ga.Geoset == null)
+                {
+                    model.GeosetAnimations.Remove(ga); continue;
+                }
+                if (ga.Geoset.Object == null)
+                {
+                    model.GeosetAnimations.Remove(ga); continue;
+                }
+                if (model.Geosets.Contains(ga.Geoset.Object) == false)
+                {
+                    model.GeosetAnimations.Remove(ga); continue;
+                }
+                 
+            }
+        }
+
+        private static void MinimizeMatrixGroups_()
+        {
+
+            foreach (CGeoset geo in Model.Geosets)
+            {
+                 
+                repeat:
+                if (geo.Groups.Count <= 1) continue;
+                for (int i = 0; i < geo.Groups.Count; i++)
+                {
+                    if (i+1  >= geo.Groups.Count ) continue;
+                    if (MatrixGRoupsAreSame(geo.Groups[i], geo.Groups[i+1]))
+                    {
+                        ReassignGroup(geo, geo.Groups[i], geo.Groups[i + 1]);
+                        geo.Groups.Remove(geo.Groups[i + 1]);
+                        goto repeat;
+                    }
+                }
+            }
+        }
+
+        private static void ReassignGroup(CGeoset geo, CGeosetGroup attach, CGeosetGroup useless)
+        {
+            foreach (var vertex in geo.Vertices)
+            {
+                if (vertex.Group.Object == useless) {
+                    vertex.Group.Attach(attach);
+                }
+            }
+            
+        }
+
+        private static bool MatrixGRoupsAreSame(CGeosetGroup one, CGeosetGroup two)
+        {
+            if (one.Nodes.Count != two.Nodes.Count) { return false; }
+            // check for identicals
+            List<INode> nodes = new List<INode>();
+            bool match = true;
+            foreach (var node in one.Nodes)
+            {
+                nodes.Add(node.Node.Node);
+            }
+            foreach (var node in two.Nodes)
+            {
+                if (nodes.Contains(node.Node.Node)) { match = false; break; }
+            }
+           
+             
+                return match;
         }
 
         private static void MakeDynamicTransformationsWithOneOfNoKeyframeStatic()
@@ -363,7 +437,7 @@ namespace Wa3Tuner
                     if (MaterialsSame(mat1, mat2))
                     {
                         ReassignMaterial(mat1, mat2);
-                        Model.Materials.Remove(mat1);
+                        Model.Materials.Remove(mat2);
                         goto again;
                     }
                 }
@@ -390,6 +464,7 @@ namespace Wa3Tuner
             {
                 for (int i = 0; i < mat1.Layers.Count; i++)
                 {
+                    if (mat1.Layers[i] == null || mat2.Layers[i] == null) { continue; }
                     same = LayersSame(mat1.Layers[i], mat2.Layers[i]);
                 }
             }
@@ -420,6 +495,7 @@ namespace Wa3Tuner
 
         private static bool LayersSame(CMaterialLayer one, CMaterialLayer two)
         {
+            if (one == null || two == null) { return false; }
             bool same = true;
            same = one.Alpha.Static && two.Alpha.Static && one.Alpha.GetValue() == two.Alpha.GetValue();
            same = one.TextureId.Static && two.TextureId.Static && one.Texture.Object == two.Texture.Object;
@@ -535,19 +611,19 @@ namespace Wa3Tuner
         {
             foreach (CGeoset geoset in Model.Geosets.ToList())
             {
-              foreach (CGeosetFace face in geoset.Faces.ToList())
+              foreach (CGeosetTriangle face in geoset.Triangles.ToList())
                 {
                     if (face.Vertex1.Object == null || 
                         face.Vertex2.Object == null ||
                         face.Vertex3.Object == null)
                     {
-                        geoset.Faces.Remove(face);
+                        geoset.Triangles.Remove(face);
                     }
                 }
             }
             foreach (CGeoset geoset in Model.Geosets.ToList())
             {
-                if (geoset.Faces.Count == 0 || geoset.Vertices.Count < 3)
+                if (geoset.Triangles.Count == 0 || geoset.Vertices.Count < 3)
                 { 
                     Model.Geosets.Remove(geoset); 
                 } 
@@ -580,7 +656,7 @@ namespace Wa3Tuner
                 }
 
                 // Reassign vertices in faces using the map
-                foreach (CGeosetFace face in geoset.Faces)
+                foreach (CGeosetTriangle face in geoset.Triangles)
                 {
                     if (vertexMap.TryGetValue(face.Vertex1.Object, out var replacement1))
                         face.Vertex1.Attach(replacement1);
@@ -613,21 +689,21 @@ namespace Wa3Tuner
         {
             foreach (CGeoset geoset in Model.Geosets.ToList())
             {
-                foreach (CGeosetFace face in geoset.Faces.ToList())
+                foreach (CGeosetTriangle face in geoset.Triangles.ToList())
                 {
                     if (TriangleHasNoArea(face))
                     {
-                        geoset.Faces.Remove(face); continue;
+                        geoset.Triangles.Remove(face); continue;
                     }
                     if (TriangleRepeatVertices(face))
                     {
-                        geoset.Faces.Remove(face); continue;
+                        geoset.Triangles.Remove(face); continue;
                     }
                 }
             }
         }
 
-        private static bool TriangleRepeatVertices(CGeosetFace face)
+        private static bool TriangleRepeatVertices(CGeosetTriangle face)
         {
             if (
                 face.Vertex1.Object == face.Vertex2.Object ||
@@ -638,7 +714,7 @@ namespace Wa3Tuner
             return false;
         }
 
-        private static bool TriangleHasNoArea(CGeosetFace face)
+        private static bool TriangleHasNoArea(CGeosetTriangle face)
         {
             // Access the positions of the three vertices
             var v1 = face.Vertex1.Object.Position;
@@ -697,7 +773,7 @@ namespace Wa3Tuner
             foreach (CGeoset geoset in Model.Geosets)
             {
                 // Use ToList() to avoid modifying the collection while iterating
-                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                foreach (CGeosetTriangle face1 in geoset.Triangles.ToList())
                 {
                     if (
                         
@@ -707,7 +783,7 @@ namespace Wa3Tuner
 
                         )
                     {
-                        geoset.Faces.Remove(face1);
+                        geoset.Triangles.Remove(face1);
                     }
 
                     }
@@ -720,9 +796,9 @@ namespace Wa3Tuner
             foreach (CGeoset geoset in Model.Geosets)
             {
                 // Use ToList() to avoid modifying the collection while iterating
-                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                foreach (CGeosetTriangle face1 in geoset.Triangles.ToList())
                 {
-                    foreach (CGeosetFace face2 in geoset.Faces.ToList())
+                    foreach (CGeosetTriangle face2 in geoset.Triangles.ToList())
                     {
                         // Skip comparison with itself
                         if (face1 == face2) { continue; }
@@ -730,14 +806,14 @@ namespace Wa3Tuner
                         // If faces are fully overlapping, remove the second one
                         if (FacesFullyOverlapping(face1, face2))
                         {
-                            geoset.Faces.Remove(face2);
+                            geoset.Triangles.Remove(face2);
                         }
                     }
                 }
             }
         }
 
-        public static bool FacesFullyOverlapping(CGeosetFace face1, CGeosetFace face2)
+        public static bool FacesFullyOverlapping(CGeosetTriangle face1, CGeosetTriangle face2)
         {
             // Combination 1: All conditions combined with AND
             if (face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex2 &&
@@ -798,9 +874,9 @@ namespace Wa3Tuner
             foreach (CGeoset geoset in Model.Geosets)
             {
                 // Use ToList() to avoid modifying the collection while iterating
-                foreach (CGeosetFace face1 in geoset.Faces.ToList())
+                foreach (CGeosetTriangle face1 in geoset.Triangles.ToList())
                 {
-                    foreach (CGeosetFace face2 in geoset.Faces.ToList())
+                    foreach (CGeosetTriangle face2 in geoset.Triangles.ToList())
                     {
                         // Skip comparison with itself
                         if (face1 == face2) { continue; }
@@ -809,14 +885,14 @@ namespace Wa3Tuner
                         if (ShareSameVertices(face1, face2))
                         {
                             // If they share vertices, remove the second face
-                            geoset.Faces.Remove(face2);
+                            geoset.Triangles.Remove(face2);
                         }
                     }
                 }
             }
         }
 
-        private static bool ShareSameVertices(CGeosetFace face1, CGeosetFace face2)
+        private static bool ShareSameVertices(CGeosetTriangle face1, CGeosetTriangle face2)
         {
             // Compare all three vertices
             if (face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex1 || face1.Vertex3 == face2.Vertex1 ||
@@ -1078,7 +1154,8 @@ namespace Wa3Tuner
                     if (list[i - 1] == null || list[i] == null || list[i+1] == null) { continue; } 
                         if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                         {
-                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.05)
+                        float difference = Calculator.Difference(list[i - 1], list[i], list[i + 1]);
+                            if ( difference > 0 && difference<= 0.05)
                             {
 
                                 list.RemoveAt(i);
@@ -1090,6 +1167,80 @@ namespace Wa3Tuner
 
             }
         }
+        internal static float Difference(CAnimatorNode<CVector3> cAnimatorNode1, CAnimatorNode<CVector3> cAnimatorNode2, CAnimatorNode<CVector3> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null)
+            {
+                return 4;
+            }
+
+            // Get the CVector3 values
+            CVector3 one = cAnimatorNode1.Value;
+            CVector3 two = cAnimatorNode2.Value;
+            CVector3 three = cAnimatorNode3.Value;
+
+            // Calculate differences
+            CVector3 diffAbove = new CVector3(
+                Math.Abs(two.X - one.X),
+                Math.Abs(two.Y - one.Y),
+                Math.Abs(two.Z - one.Z)
+            );
+
+            CVector3 diffBelow = new CVector3(
+                Math.Abs(two.X - three.X),
+                Math.Abs(two.Y - three.Y),
+                Math.Abs(two.Z - three.Z)
+            );
+
+            // Calculate total magnitude of differences
+            float totalDifference = Magnitude(diffAbove) + Magnitude(diffBelow);
+
+            return totalDifference;
+        }
+
+        internal static float Difference(CAnimatorNode<CVector4> cAnimatorNode1, CAnimatorNode<CVector4> cAnimatorNode2, CAnimatorNode<CVector4> cAnimatorNode3)
+        {
+            if (cAnimatorNode1 == null || cAnimatorNode2 == null || cAnimatorNode3 == null)
+            {
+                return 4;
+            }
+
+            // Get the CVector4 values
+            CVector4 one = cAnimatorNode1.Value;
+            CVector4 two = cAnimatorNode2.Value;
+            CVector4 three = cAnimatorNode3.Value;
+
+            // Calculate differences
+            CVector4 diffAbove = new CVector4(
+                Math.Abs(two.X - one.X),
+                Math.Abs(two.Y - one.Y),
+                Math.Abs(two.Z - one.Z),
+                Math.Abs(two.W - one.W)
+            );
+
+            CVector4 diffBelow = new CVector4(
+                Math.Abs(two.X - three.X),
+                Math.Abs(two.Y - three.Y),
+                Math.Abs(two.Z - three.Z),
+                Math.Abs(two.W - three.W)
+            );
+
+            // Calculate total magnitude of differences
+            float totalDifference = Magnitude(diffAbove) + Magnitude(diffBelow);
+
+            return totalDifference;
+        }
+        internal static float Magnitude(CVector3 vector)
+        {
+            return (float)Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
+        }
+
+        internal static float Magnitude(CVector4 vector)
+        {
+            return (float)Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z + vector.W * vector.W);
+        }
+
+
         private static void RemoveSimilarAdjascentKeyframes(CAnimator<CVector4> list)
         {
             if (list.Static == true) { return; }
@@ -1103,13 +1254,14 @@ namespace Wa3Tuner
                     if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
                     if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                         {
-                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.57)
-                            {
+                        float difference = Calculator.Difference(list[i - 1], list[i], list[i + 1]);
+                        if (difference > 0 && difference <= 0.57)
+                        {
 
-                                list.RemoveAt(i);
-                                goto start;
-                            }
+                            list.RemoveAt(i);
+                            goto start;
                         }
+                    }
                     
                 }
 
@@ -1128,13 +1280,14 @@ namespace Wa3Tuner
                     if (list[i - 1] == null || list[i] == null || list[i + 1] == null) { continue; }
                     if (TracksBelongToSameSequence(list[i - 1].Time, list[i].Time, list[i + 1].Time))
                         {
-                            if (Calculator.Difference(list[i - 1], list[i], list[i + 1]) <= 0.2)
-                            {
+                        float difference = Calculator.Difference(list[i - 1], list[i], list[i + 1]);
+                        if (difference > 0 && difference <= 0.2)
+                        {
 
-                                list.RemoveAt(i);
-                                goto start;
-                            }
+                            list.RemoveAt(i);
+                            goto start;
                         }
+                    }
                      
 
                 }
@@ -1638,7 +1791,8 @@ namespace Wa3Tuner
                     var key1 = list[i];
                     var key2 = list[i + 1];
                     var key3 = list[i + 2];
-                    if (TracksHaveSameValues(key1.Value, key2.Value, key3.Value) && TracksBelongToSameSequence(key1.Time, key2.Time, key3.Time))
+                    if (TracksHaveSameValues(key1.Value, key2.Value, key3.Value) && 
+                        TracksBelongToSameSequence(key1.Time, key2.Time, key3.Time))
                     {
                         list.RemoveAt(i + 1);
                         goto start;
@@ -2437,9 +2591,9 @@ namespace Wa3Tuner
                             {
                                 geo1.Vertices.Add(vertex);
                             }
-                            foreach (CGeosetFace face in geo2.Faces)
+                            foreach (CGeosetTriangle face in geo2.Triangles)
                             {
-                                geo1.Faces.Add(face);
+                                geo1.Triangles.Add(face);
                             }
                         }
                     }
@@ -2690,19 +2844,37 @@ namespace Wa3Tuner
 
         private static void DeleteUnusedBones_()
         {
-            foreach (INode node in Model.Nodes.ToList())
+            List<INode> Remove = new List<INode>();
+            for (int i =0; i< Model.Nodes.Count; i++)
             {
-             
+                INode node = Model.Nodes[i];
                 if (node is CBone)
                 {
-                    if (BoneHasAttachees(node) == false && NodeHasChildren(node) == false)
+                    if (BoneHasAttachees(node) == false )
                     {
-                      Model.Nodes.Remove(node);
-                    
-                    }
+                        if (NodeHasChildren(node))
+                        {
+                            Model.Nodes.Remove(node);
+                            CAnimator<CVector3> t = node.Translation;
+                            CAnimator<CVector3> s = node.Scaling;
+                            CAnimator<CVector4> r = node.Rotation;
+                            node = new CHelper(Model);
+                            foreach (var item in t) node.Translation.Add(item);
+                            foreach (var item in r) node.Rotation.Add(item);
+                            foreach (var item in s) node.Scaling.Add(item);
+                        }
+                        else
+                        {
+                            Remove.Add(node);
+                        }
+                         
 
+                    }
+                  
                 }
             }
+            foreach (INode node in Remove) Model.Nodes.Remove(node);
+            
            
         }
         private static bool NodeHasChildren(INode checkedNode)
@@ -2710,11 +2882,38 @@ namespace Wa3Tuner
             foreach (INode loopedNode in Model.Nodes)
             {
                 if (loopedNode.Parent.Node == null) { continue; }
-                if (loopedNode.Parent.Node.ObjectId == checkedNode.ObjectId) { return true; }
+                if (loopedNode.Parent.Node == checkedNode) { return true; }
             }
             return false;
         }
         private static bool BoneHasAttachees(INode checkedBone)
+        {
+           // bool NoeExistInGroups = NoeExistInGroups_(checkedBone);
+            foreach (CGeoset geo in Model.Geosets)
+            {
+                foreach (CGeosetGroup group in geo.Groups)
+                {
+                    
+                    foreach (var node in group.Nodes)
+                    {
+                        if (node.Node.Node == checkedBone)
+                        {
+                            foreach (CGeosetVertex vertex in geo.Vertices)
+                            {
+                                if (vertex.Group.Object == group)
+                                {
+                                    return true;
+                                }
+                            }
+                            
+                             }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool NoeExistInGroups_(INode checkedBone)
         {
             foreach (CGeoset geo in Model.Geosets)
             {
@@ -2722,13 +2921,14 @@ namespace Wa3Tuner
                 {
                     foreach (var node in group.Nodes)
                     {
-                        if (node.Node.ObjectId == checkedBone.ObjectId) { return true; }
+                        if (node.Node.Node == checkedBone) { return true; }
                     }
                 }
+                
             }
             return false;
-        }
 
+        }
         private static void DeleteUnAnimatedSequences_()
         {
             foreach (CSequence sequence in Model.Sequences.ToList())
@@ -2844,7 +3044,7 @@ namespace Wa3Tuner
 
         private static bool Vertex_Used(CGeosetVertex vertex, CGeoset geo)
         {
-            foreach (CGeosetFace face in geo.Faces)
+            foreach (CGeosetTriangle face in geo.Triangles)
             {
                 if (face.Vertex1.Object == vertex ||
                  face.Vertex2.Object == vertex ||
@@ -2860,10 +3060,10 @@ namespace Wa3Tuner
 
         private static void RemoveEmptyGeosets()
         {
-            return;
+           
             foreach (CGeoset geo in Model.Geosets.ToList())
             {
-                if (geo.Faces.Count == 0 || geo.Vertices.Count < 3)
+                if (geo.Triangles.Count == 0 || geo.Vertices.Count < 3)
                 {
                     Model.Geosets.Remove(geo);
                 }
@@ -2873,23 +3073,23 @@ namespace Wa3Tuner
         {
             foreach (CGeoset geo in Model.Geosets)
             {
-                foreach (CGeosetFace face in geo.Faces.ToList())
+                foreach (CGeosetTriangle face in geo.Triangles.ToList())
                 {
                     var vertex1 = face.Vertex1;
                     var vertex2 = face.Vertex1;
                     var vertex3 = face.Vertex1;
                     if (TriangleIsIsolated(face, geo) == true)
                     {
-                        geo.Faces.Remove(face);
+                        geo.Triangles.Remove(face);
                     }
                 }
 
             }
             RemoveEmptyGeosets();
         }
-        private static bool TriangleIsIsolated(CGeosetFace face_input, CGeoset geoset)
+        private static bool TriangleIsIsolated(CGeosetTriangle face_input, CGeoset geoset)
         {
-            foreach (CGeosetFace face in geoset.Faces)
+            foreach (CGeosetTriangle face in geoset.Triangles)
             {
                 if (face_input == face) { continue; }
                 if (
