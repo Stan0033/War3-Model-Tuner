@@ -1,0 +1,30 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.ImportGeosetDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="LightGray"
+        Title="Finalize import geoset" Height="180" Width="450">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="2">
+            <TextBlock Text="Attach to bone:" Width="100"/>
+            <ComboBox Name="ComboAttachTo" Width="200"/>
+            <CheckBox Name="Check_NewBone" Checked="CheckedNB" Unchecked="CheckedNB">Create new bone</CheckBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="2">
+            <TextBlock Text="Give material:" Width="100"/>
+            <ComboBox Name="ComboMaterial" Width="200"/>
+        </StackPanel>
+        <Button Click="ok" Grid.Row="2" Margin="5">OK</Button>
+    </Grid>
+  
+</Window>

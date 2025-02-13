@@ -1,0 +1,24 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.PushGeosets"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+               ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="LightGray"
+        Title="PushGeosets" Height="150" Width="200">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <RadioButton Name="CheckFirst" Content="Push first from second" IsChecked="True"/>
+        <RadioButton Name="CheckSecond" Content="Push second from fist" Grid.Row="1"/>
+        <RadioButton Name="CheckBoth" Content="Push each other" Grid.Row="2"/>
+         
+        <Button Grid.Row="3" Click="ok">OK</Button>
+    </Grid>
+</Window>

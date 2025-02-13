@@ -7,87 +7,111 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="cameraManager.xaml.cs">
+    <Compile Update="Dialogs\cameraManager.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="copyTrackToNode.xaml.cs">
+    <Compile Update="Dialogs\copyTrackToNode.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="createextrudedpolygon.xaml.cs">
+    <Compile Update="Dialogs\createextrudedpolygon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="DrawShape.xaml.cs">
+    <Compile Update="Dialogs\DrawShape.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="edit_emitter1.xaml.cs">
+    <Compile Update="Dialogs\ImportGeoset.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="edit_emitter2.xaml.cs">
+    <Compile Update="Dialogs\modelstructure.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Edit_light.xaml.cs">
+    <Compile Update="Dialogs\PivoPointOffsetWkndow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="edit_ribbon.xaml.cs">
+    <Compile Update="Dialogs\PushGeosets.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="FlattenSide.xaml.cs">
+    <Compile Update="Node Dialogs\edit_emitter1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="loopdialog.xaml.cs">
+    <Compile Update="Node Dialogs\edit_emitter2.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="presets.xaml.cs">
+    <Compile Update="Node Dialogs\Edit_light.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="TextureBrowser.xaml.cs">
+    <Compile Update="Node Dialogs\edit_ribbon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UVMapper.xaml.cs">
+    <Compile Update="Dialogs\FlattenSide.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\loopdialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\ModelBrowser.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\presets.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\TextureBrowser.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="cameraManager.xaml">
+    <Page Update="Dialogs\cameraManager.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="copyTrackToNode.xaml">
+    <Page Update="Dialogs\copyTrackToNode.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="createextrudedpolygon.xaml">
+    <Page Update="Dialogs\createextrudedpolygon.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="DrawShape.xaml">
+    <Page Update="Dialogs\DrawShape.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="edit_emitter1.xaml">
+    <Page Update="Dialogs\ImportGeoset.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="edit_emitter2.xaml">
+    <Page Update="Dialogs\modelstructure.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Edit_light.xaml">
+    <Page Update="Dialogs\PivoPointOffsetWkndow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="edit_ribbon.xaml">
+    <Page Update="Dialogs\PushGeosets.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="FlattenSide.xaml">
+    <Page Update="Node Dialogs\edit_emitter1.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="loopdialog.xaml">
+    <Page Update="Node Dialogs\edit_emitter2.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Node Dialogs\Edit_light.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Node Dialogs\edit_ribbon.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\FlattenSide.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\loopdialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="presets.xaml">
+    <Page Update="Dialogs\ModelBrowser.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="TextureBrowser.xaml">
+    <Page Update="Dialogs\presets.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="UVMapper.xaml">
+    <Page Update="Dialogs\TextureBrowser.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

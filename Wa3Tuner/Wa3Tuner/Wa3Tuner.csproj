@@ -1,28 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>tune.ico</ApplicationIcon>
-    <FileVersion>1.11</FileVersion>
-    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <FileVersion>1.15</FileVersion>
+    <AssemblyVersion>1.1.5</AssemblyVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="tune.ico" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="War3Net.Drawing.Blp" Version="5.6.1" />
     <PackageReference Include="War3Net.IO.Mpq" Version="5.6.1" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="MdxLib">
       <HintPath>bin\Debug\net5.0-windows\MdxLib.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>
