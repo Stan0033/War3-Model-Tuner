@@ -1,0 +1,28 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.SpreadVerticesIWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="LightGray"
+        Title="Spread overlapping vertices" Height="150" Width="400">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Threshold"/>
+        <TextBox Name="inputT" Grid.Column="1" Text="0.001"/>
+        <TextBlock Text="Set Distance from centroid" Grid.Row="1"/>
+        <TextBox Name="inputD" Grid.Column="1" Grid.Row="1" Text="1"/>
+        <Button Click="ok" Grid.Row="2" Grid.ColumnSpan="2">OK</Button>
+    </Grid>
+</Window>

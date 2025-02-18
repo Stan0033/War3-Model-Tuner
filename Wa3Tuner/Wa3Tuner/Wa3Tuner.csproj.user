@@ -7,6 +7,12 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Dialogs\axis_picker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Boolean_Window.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\cameraManager.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -19,6 +25,12 @@
     <Compile Update="Dialogs\DrawShape.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Edit_Extent.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\GeosetExtents.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\ImportGeoset.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -29,6 +41,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\PushGeosets.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\SpreadVerticesIWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\vis_v.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Node Dialogs\edit_emitter1.xaml.cs">
@@ -60,6 +78,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Dialogs\axis_picker.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\Boolean_Window.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Dialogs\cameraManager.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -72,6 +96,12 @@
     <Page Update="Dialogs\DrawShape.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Dialogs\Edit_Extent.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\GeosetExtents.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Dialogs\ImportGeoset.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -82,6 +112,12 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\PushGeosets.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\SpreadVerticesIWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\vis_v.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Node Dialogs\edit_emitter1.xaml">

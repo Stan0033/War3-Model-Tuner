@@ -1,0 +1,57 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Edit_Extent"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="Edit Extent" Height="300" Width="400">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="Min X:" Grid.Row="0" Grid.Column="0" Margin="5" />
+        <TextBox Name="minx_" Grid.Row="0" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Min Y:" Grid.Row="1" Grid.Column="0" Margin="5" />
+        <TextBox x:Name="miny_" Grid.Row="1" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Min Z:" Grid.Row="2" Grid.Column="0" Margin="5" />
+        <TextBox Name="minz_" Grid.Row="2" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Max X:" Grid.Row="3" Grid.Column="0" Margin="5" />
+        <TextBox Name="maxx_" Grid.Row="3" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Max Y:" Grid.Row="4" Grid.Column="0" Margin="5" />
+        <TextBox Name="maxy_" Grid.Row="4" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Max Z:" Grid.Row="5" Grid.Column="0" Margin="5" />
+        <TextBox Name="maxz_" Grid.Row="5" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Bounds Radius:" Grid.Row="6" Grid.Column="0" Margin="5" />
+        <TextBox Name="bounds_" Grid.Row="6" Grid.Column="1" Margin="5" />
+
+        <StackPanel Orientation="Horizontal"  Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2">
+            <Button Content="Reset" Click="reset"   Width="80" Margin="5"  />
+            <Button Content="Copy" Click="copy"   Width="80" Margin="5"  />
+            <Button Content="Paste" Click="paste"  Width="80" Margin="5"  />
+            <Button Content="OK" Click="ok" Padding="10"  Width="80" Margin="5"   />
+
+        </StackPanel>
+    </Grid>
+</Window>

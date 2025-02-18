@@ -1,0 +1,27 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.axis_picker"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+                Background="LightGray"
+        ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
+        WindowStartupLocation="CenterScreen"
+        Title="Axis Picker" Height="150" Width="150">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <RadioButton Name="Check_x" IsChecked="True">X</RadioButton>
+        <RadioButton Name="Check_y" Grid.Row="1">Y</RadioButton>
+        <RadioButton Name="Check_z" Grid.Row="2">Z</RadioButton>
+        <Button Content="OK" Grid.Row="3" Click="ok"/>
+    </Grid>
+
+</Window>

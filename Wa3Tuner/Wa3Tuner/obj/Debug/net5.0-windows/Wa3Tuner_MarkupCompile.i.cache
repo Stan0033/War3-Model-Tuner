@@ -1,5 +1,5 @@
 ﻿Wa3Tuner
-1.1.5
+1.1.7
 
 winexe
 C#
@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET5_0;NETCOREAPP
 C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\App.xaml
-42461540824
+481445315389
 178170099
-61-898604351
+691781266642
 2001659848956
-Dialogs\axis_selector.xaml;Dialogs\cameraManager.xaml;Dialogs\color_selector.xaml;Dialogs\copyTrackToNode.xaml;Dialogs\createextrudedpolygon.xaml;Dialogs\createnode.xaml;Dialogs\DrawShape.xaml;Dialogs\editvisibilities_window.xaml;Dialogs\FlattenSide.xaml;Dialogs\howmodel.xaml;Dialogs\ImportGeoset.xaml;Dialogs\Input.xaml;Dialogs\InputVector.xaml;Dialogs\loopdialog.xaml;Dialogs\Mass_Create_Sequences.xaml;Dialogs\Mass_Create_Textures.xaml;Dialogs\ModelBrowser.xaml;Dialogs\modelstructure.xaml;Dialogs\Multiselector.xaml;Dialogs\newsequence.xaml;Dialogs\PivoPointOffsetWkndow.xaml;Dialogs\presets.xaml;Dialogs\PushGeosets.xaml;Dialogs\putonground.xaml;Dialogs\resizeSequence_window.xaml;Dialogs\SCALETOFIT.xaml;Dialogs\Selector.xaml;Dialogs\select_Transformations.xaml;Dialogs\TextureBrowser.xaml;Dialogs\Transformations_viewer.xaml;Dialogs\transformation_editor.xaml;Dialogs\translation_selector.xaml;MainWindow.xaml;Node Dialogs\edit_emitter1.xaml;Node Dialogs\edit_emitter2.xaml;Node Dialogs\edit_eventobject.xaml;Node Dialogs\Edit_light.xaml;Node Dialogs\edit_ribbon.xaml;Node Dialogs\import_nodes_choice.xaml;Node Dialogs\window_EditAttachment.xaml;Node Dialogs\window_editbone_data.xaml;Node Dialogs\window_edit_cols.xaml;
+Dialogs\axis_picker.xaml;Dialogs\axis_selector.xaml;Dialogs\Boolean_Window.xaml;Dialogs\cameraManager.xaml;Dialogs\color_selector.xaml;Dialogs\copyTrackToNode.xaml;Dialogs\createextrudedpolygon.xaml;Dialogs\createnode.xaml;Dialogs\DrawShape.xaml;Dialogs\editvisibilities_window.xaml;Dialogs\Edit_Extent.xaml;Dialogs\FlattenSide.xaml;Dialogs\GeosetExtents.xaml;Dialogs\howmodel.xaml;Dialogs\ImportGeoset.xaml;Dialogs\Input.xaml;Dialogs\InputVector.xaml;Dialogs\loopdialog.xaml;Dialogs\Mass_Create_Sequences.xaml;Dialogs\Mass_Create_Textures.xaml;Dialogs\ModelBrowser.xaml;Dialogs\modelstructure.xaml;Dialogs\Multiselector.xaml;Dialogs\newsequence.xaml;Dialogs\PivoPointOffsetWkndow.xaml;Dialogs\presets.xaml;Dialogs\PushGeosets.xaml;Dialogs\putonground.xaml;Dialogs\resizeSequence_window.xaml;Dialogs\SCALETOFIT.xaml;Dialogs\Selector.xaml;Dialogs\select_Transformations.xaml;Dialogs\SpreadVerticesIWindow.xaml;Dialogs\TextureBrowser.xaml;Dialogs\Transformations_viewer.xaml;Dialogs\transformation_editor.xaml;Dialogs\translation_selector.xaml;Dialogs\vis_v.xaml;MainWindow.xaml;Node Dialogs\edit_emitter1.xaml;Node Dialogs\edit_emitter2.xaml;Node Dialogs\edit_eventobject.xaml;Node Dialogs\Edit_light.xaml;Node Dialogs\edit_ribbon.xaml;Node Dialogs\import_nodes_choice.xaml;Node Dialogs\window_EditAttachment.xaml;Node Dialogs\window_editbone_data.xaml;Node Dialogs\window_edit_cols.xaml;
 
-True
+False
 

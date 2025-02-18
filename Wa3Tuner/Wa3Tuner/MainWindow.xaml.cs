@@ -13,6 +13,7 @@ using System.Numerics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -447,12 +448,23 @@ namespace Wa3Tuner
                     Image image = new Image();
                     if (texture.ReplaceableId == 0)
                     {
-                        image.Source = MPQHelper.GetImageSource(texture.FileName);
-                        if (image.Source == null)
+                        if (Path.GetExtension(texture.FileName).ToLower() == ".blp")
                         {
-                            string path = Path.Combine(CurrentSaveFolder, texture.FileName);
-                            image.Source = MPQHelper.GetImageSourceExternal(path);
+                            image.Source = MPQHelper.GetImageSource(texture.FileName);
+                            if (image.Source == null)
+                            {
+                                string path = Path.Combine(CurrentSaveFolder, texture.FileName);
+                                image.Source = MPQHelper.GetImageSourceExternal(path);
+                            }
+
                         }
+                        else
+                        {
+                            MessageBox.Show($"Could not load {texture.FileName}, because it is not a BLP image");
+                            image.Source = MPQHelper.GetImageSource(White);
+
+                        }
+
                     }
                     if (texture.ReplaceableId == 1)
                     {
@@ -2180,7 +2192,7 @@ namespace Wa3Tuner
             Optimizer.DeleteIdenticalAdjascentKEyframes = Check_DeleteIdenticalAdjascentKEyframes.IsChecked == true;
             Optimizer.Check_DeleteIdenticalAdjascentKEyframes_times = Check_DeleteIdenticalAdjascentKEyframes_times.IsChecked == true;
             Optimizer.DeleteSimilarSimilarKEyframes = Check_DeleteSimilarSimilarKEyframes.IsChecked == true;
-            Optimizer.ReducematrixGruops = Check_ReducematrixGruops.IsChecked == true;
+           // Optimizer.ReducematrixGruops = Check_ReducematrixGruops.IsChecked == true;
             // missing opening/closing keyframes
             if (MissingKeyframesCheck1.IsChecked == true)
             {
@@ -3528,6 +3540,7 @@ namespace Wa3Tuner
                 // new sequence name and interval
                 CSequence sequence = GetSelectedSequence();
                 Input i = new Input("", "Duplicated sequence name");
+                i.Width = 300;
                 i.ShowDialog();
                 if (i.DialogResult == true)
                 {
@@ -3542,6 +3555,11 @@ namespace Wa3Tuner
                         if (_new[0] != _new[1])
                         {
                             DuplicateSequence(sequence.IntervalStart, sequence.IntervalEnd, _new[0], _new[1]);
+                            CSequence duplicated = new CSequence(CurrentModel);
+                            duplicated.IntervalStart = _new[0];
+                            duplicated.IntervalEnd = _new[0];
+                            CurrentModel.Sequences.Add(duplicated);
+                            duplicated.Name = name;
                         }
                         else
                         {
@@ -4179,7 +4197,7 @@ namespace Wa3Tuner
 
         private void about(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("War3ModelTuner v1.15 (13/02/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
+            MessageBox.Show("War3ModelTuner v1.17 (18/02/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.\n\n Would not be possible without Magos' MDXLib v1.0.4 that reads/writes Warcraft 3 MDL/MDX model format 800.");
         }
         private void Checked_MatFullRes(object sender, RoutedEventArgs e)
         {
@@ -4254,18 +4272,19 @@ namespace Wa3Tuner
                 CTexture texture = CurrentModel.Textures[i];
                 if (texture.ReplaceableId == 0)
                 {
-                    // if (MPQHelper.FileExists(texture.FileName))
-                    //{
-                    Textures_Loaded[i] = MPQHelper.GetImageSource(texture.FileName);
-                    /* if (Textures_Loaded[i] == null)
-                     {
-                         string path = Path.Combine(CurrentSaveFolder, texture.FileName);
-                         Textures_Loaded[i] = MPQHelper.GetImageSource(path);
-                     }*/
-                    /* }
-                     else
-                     {
-                     }*/
+                    if (Path.GetExtension(texture.FileName).ToLower() == ".blp")
+                    {
+                        Textures_Loaded[i] = MPQHelper.GetImageSource(texture.FileName);
+
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Could not load {texture.FileName}, because it is not a BLP image");
+                        Textures_Loaded[i] = MPQHelper.GetImageSource(White);
+
+                    }
+
+
                 }
                 if (texture.ReplaceableId == 1)
                 {
@@ -4287,6 +4306,7 @@ namespace Wa3Tuner
         }
         private void RefreshViewPort()
         {
+            if (!RenderEnabled) { Scene_Viewport.Children.Clear(); return; }
             CollectTextures();
             // Clear existing models in the viewport
             Viewport3D viewport = Scene_Viewport;
@@ -5722,10 +5742,12 @@ namespace Wa3Tuner
                 {
                     string temp = selected.Name;
                     selected.Name = target.Name;
-                    selected.Name = temp;
+                    target.Name = temp; // Fix: Assign temp to target.Name
+                    RefreshSequencesList();
                 }
             }
         }
+
         private void newsequence_(object sender, RoutedEventArgs e)
         {
             newsequence ns = new newsequence(CurrentModel);
@@ -6764,6 +6786,7 @@ namespace Wa3Tuner
             if (!parse) { MessageBox.Show("Expected integer"); return; }
             else
             {
+                if (duration<= 0) { MessageBox.Show("Expected positive integer");return; }
                 if (CurrentModel.GlobalSequences.Any(x => x.Duration == duration))
                 {
                     MessageBox.Show("There is already a global sequence with this duration"); return;
@@ -7282,7 +7305,7 @@ namespace Wa3Tuner
                 {
                     CTexture texture = CurrentModel.Textures.First(x => x.FileName == cloned.RequiredTexturePath);
                     cloned.Texture.Attach(texture);
-                    
+
                     RefreshTextures();
                 }
                 else
@@ -9298,7 +9321,7 @@ namespace Wa3Tuner
 
             }
         }
-       
+
 
         private CVector3 GetPolarOffsetPoint(CVector3 Point, float Distance, Axes axes, float angle)
         {
@@ -9333,7 +9356,7 @@ namespace Wa3Tuner
                 List<CGeosetVertex> attached = GetAttachedVerticesToNode(selected);
                 CVector3 centroid = Calculator.GetCentroidOfVertices(attached);
                 selected.PivotPoint = new CVector3(centroid);
-                
+
             }
         }
         private List<CGeosetVertex> GetAttachedVerticesToNode(INode node)
@@ -9419,7 +9442,7 @@ namespace Wa3Tuner
                     CVector3 result = GetPolarOffsetPoint(w.Point, w.Distance, w.axes, w.Angle);
                     selected.PivotPoint = new CVector3(result);
                 }
-                
+
 
             }
         }
@@ -9459,7 +9482,7 @@ namespace Wa3Tuner
             if (CurrentModel.Nodes.Count > 1)
             {
                 var first = CurrentModel.Nodes[0];
-                for (int i =1; i< CurrentModel.Nodes.Count; i++)
+                for (int i = 1; i < CurrentModel.Nodes.Count; i++)
                 {
                     CurrentModel.Nodes[i].PivotPoint.X = first.PivotPoint.X;
                 }
@@ -9549,6 +9572,709 @@ namespace Wa3Tuner
             RefreshGeosetsList();
         }
 
+        private void setGeosetUnselectable(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count > 0)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                if (geosets.Count == 1)
+                {
+                    Boolean_Window bw = new Boolean_Window("Unselectable");
+                    bw.Val.IsChecked = geosets[0].Unselectable;
+                    if (bw.ShowDialog() == true)
+                    {
+                        geosets[0].Unselectable = bw.Val.IsChecked == true;
+                    }
+                }
+                else
+                {
+                    Boolean_Window bw = new Boolean_Window("Unselectable");
+                    bw.Val.IsChecked = geosets[0].Unselectable;
+                    if (bw.ShowDialog() == true)
+                    {
+                        bool checked_ = bw.Val.IsChecked == true;
+                        foreach (var geoset in geosets)
+                        {
+                            geoset.Unselectable = checked_;
+                        }
+
+                    }
+                }
+            }
+
+        }
+
+        private void setGeosetSelection(object sender, RoutedEventArgs e)
+        {
+            List<CGeoset> geosets = GetSelectedGeosets();
+            if (geosets.Count == 1)
+            {
+                Input i = new(geosets[0].SelectionGroup.ToString(), "Selection group");
+                if (i.ShowDialog() == true)
+                {
+                    bool parsed = int.TryParse(i.Result, out int result);
+                    if (parsed) { geosets[0].SelectionGroup = result; }
+                }
+            }
+            else
+            {
+                Input i = new("Selection group");
+                if (i.ShowDialog() == true)
+                {
+                    bool parsed = int.TryParse(i.Result, out int result);
+                    foreach (var geoset in geosets)
+                    {
+                        geoset.SelectionGroup = result;
+                    }
+
+                }
+            }
+        }
+
+        private void rootchildren(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+
+                RootChildrenOf(node);
+                RefreshNodesTree();
+
+            }
+        }
+        void RootChildrenOf(INode node)
+        {
+            foreach (var nod in CurrentModel.Nodes)
+            {
+                if (nod.Parent.Node == node)
+                {
+                    nod.Parent.Detach();
+                }
+            }
+        }
+        void RootChildrenOf_All(INode node)
+        {
+            foreach (var nod in CurrentModel.Nodes)
+            {
+                if (nod.Parent.Node == node)
+                {
+                    nod.Parent.Detach();
+                    RootChildrenOf_All(nod);
+                }
+            }
+        }
+        private void rootchildreninfinite(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode node = GetSeletedNode();
+
+                RootChildrenOf_All(node);
+                RefreshNodesTree();
+            }
+        }
+
+        private void setallnodespoint(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Nodes.Count > 0)
+            {
+                InputVector vector = new InputVector(AllowedValue.Both);
+                if (vector.ShowDialog() == true)
+                {
+                    foreach (var node in CurrentModel.Nodes)
+                    {
+                        node.PivotPoint = new CVector3(vector.X, vector.Y, vector.Z);
+                    }
+                }
+            }
+        }
+
+        private void setGeosetExtent(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+                List<CGeoset> geosets = GetSelectedGeosets();
+                Edit_Extent ee = new Edit_Extent(geosets[0].Extent);
+                ee.ShowDialog();
+            }
+        }
+
+        private void setGeosetExtents(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+
+                List<CGeoset> geosets = GetSelectedGeosets();
+                if (geosets[0].Extents.Count == 0) { return; }
+                GeosetExtents gx = new GeosetExtents(geosets[0], CurrentModel.Sequences.Select(x => x).ToList());
+                gx.ShowDialog();
+            }
+        }
+
+        private void setSEquenceExtent(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = GetSelectedSequence();
+                Edit_Extent ee = new Edit_Extent(sequence.Extent);
+                ee.ShowDialog();
+            }
+        }
+
+        private void setRarity(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = GetSelectedSequence();
+                Input i = new Input(sequence.Rarity.ToString());
+                if (i.ShowDialog() == true)
+                {
+                    bool parsed = float.TryParse(i.Result, out float value);
+                    sequence.Rarity = value;
+                }
+
+            }
+        }
+
+        private void setMovespeed(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = GetSelectedSequence();
+                Input i = new Input(sequence.MoveSpeed.ToString());
+                if (i.ShowDialog() == true)
+                {
+                    bool parsed = float.TryParse(i.Result, out float value);
+                    sequence.MoveSpeed = value;
+                }
+
+            }
+        }
+        bool RenderEnabled = true;
+        private void S62(object sender, RoutedEventArgs e)
+        {
+            RenderEnabled = Menuitem_Enabled.IsChecked == true;
+            if (RenderEnabled) { RefreshViewPort(); }
+        }
+
+        private void leavesequenceatframe(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = GetSelectedSequence();
+                List<int> Keyframes = GetKeyframesOfSequence(sequence);
+                if (Keyframes.Count >= 2)
+                {
+                    Selector s = new Selector(Keyframes.Select(x=>x.ToString()).ToList());
+                    if (s.ShowDialog() == true)
+                    {
+                        int selected = int.Parse(s.Selected);
+                        LeaveSequenceAtFrame_Finalize(sequence, selected);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("A sequence must have at lesat 2 keyframes for this action"); return;
+                }
+            }
+        }
+
+        private void LeaveSequenceAtFrame_Finalize(CSequence sequence, int selected)
+        {
+            int from = sequence.IntervalStart;
+            int to = sequence.IntervalEnd;
+            int keep = selected;
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                LeaveSequenceAtFrame_Single(from, to, keep, node.Translation);
+                LeaveSequenceAtFrame_Single(from, to, keep, node.Rotation);
+                LeaveSequenceAtFrame_Single(from, to, keep, node.Scaling);
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter item = node as CParticleEmitter;
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.EmissionRate);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.LifeSpan);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.InitialVelocity);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Gravity);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Longitude);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Latitude);
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Gravity);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Width);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Length);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Speed);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Variation);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Latitude);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.EmissionRate);
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter item = node as CRibbonEmitter;
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.HeightAbove);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.HeightBelow);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.TextureSlot);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Alpha);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Color);
+                }
+                if (node is CLight)
+                {
+                    CLight item = node as CLight;
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Color);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.AmbientColor);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.Intensity);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.AmbientIntensity);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.AttenuationStart);
+                    LeaveSequenceAtFrame_Single(from, to, keep, item.AttenuationEnd);
+                }
+            }
+            foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
+            {
+                LeaveSequenceAtFrame_Single(from, to, keep, ga.Color);
+                LeaveSequenceAtFrame_Single(from, to, keep, ga.Alpha);
+            }
+            foreach (CMaterial mat in CurrentModel.Materials)
+            {
+                foreach (CMaterialLayer layer in mat.Layers)
+                {
+                    LeaveSequenceAtFrame_Single(from, to, keep, layer.Alpha);
+                    LeaveSequenceAtFrame_Single(from, to, keep, layer.TextureId);
+                }
+            }
+            foreach (CCamera camera in CurrentModel.Cameras)
+            {
+                LeaveSequenceAtFrame_Single(from, to, keep, camera.Rotation);
+            }
+            foreach (CTextureAnimation ta in CurrentModel.TextureAnimations)
+            {
+                LeaveSequenceAtFrame_Single(from, to, keep, ta.Translation);
+                LeaveSequenceAtFrame_Single(from, to, keep, ta.Rotation);
+                LeaveSequenceAtFrame_Single(from, to, keep, ta.Scaling);
+            }
+        }
+
+        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<float> animator)
+        {
+            if (animator.NodeList.Any(x => x.Time == keep))
+            {
+                var item = animator.NodeList.First(x => x.Time == keep);
+                animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to);
+
+
+                animator.Add(item);
+                animator.NodeList = animator.NodeList.OrderBy(x => x.Time).ToList();
+            }
+            else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
+
+        }
+        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector4> animator)
+        {
+            if (animator.NodeList.Any(x => x.Time == keep))
+            {
+                var item = animator.NodeList.First(x => x.Time == keep);
+                animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to);
+
+
+                animator.Add(item);
+                animator.NodeList = animator.NodeList.OrderBy(x => x.Time).ToList();
+            }
+            else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
+
+        }
+        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector3> animator)
+        {
+            if (animator.NodeList.Any(x => x.Time == keep))
+            {
+                var item = animator.NodeList.First(x => x.Time == keep);
+                animator.NodeList.RemoveAll(x=>x.Time >= from && x.Time <= to);
+
+
+                animator.Add(item);
+                animator.NodeList = animator.NodeList.OrderBy(x => x.Time).ToList();
+            }
+            else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
+            
+
+        }
+        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<int> animator)
+        {
+            if (animator.NodeList.Any(x => x.Time == keep))
+            {
+                var item = animator.NodeList.First(x => x.Time == keep);
+                animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to);
+
+
+                animator.Add(item);
+                animator.NodeList = animator.NodeList.OrderBy(x => x.Time).ToList();
+            }
+            else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
+
+        }
+        private void GetKeyframes(List<int> list_, CAnimator<int> animator) {  foreach (var frame in animator) {  if (!list_.Contains(frame.Time)) list_.Add(frame.Time); }  }
+        private void GetKeyframes(List<int> list_, CAnimator<float> animator) {  foreach (var frame in animator) {  if (!list_.Contains(frame.Time)) list_.Add(frame.Time); }  }
+        private void GetKeyframes(List<int> list_, CAnimator<CVector3> animator) {  foreach (var frame in animator) {  if (!list_.Contains(frame.Time)) list_.Add(frame.Time); }  }
+        private void GetKeyframes(List<int> list_, CAnimator<CVector4> animator) {  foreach (var frame in animator) {  if (!list_.Contains(frame.Time)) list_.Add(frame.Time); }  }
+        private List<int> GetKeyframesOfSequence(CSequence sequence)
+        {
+            List<int> list = new List<int>();
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                GetKeyframes(list, node.Translation);
+                GetKeyframes(list, node.Rotation);
+                GetKeyframes(list, node.Scaling);
+                if (node is CParticleEmitter)
+                {
+                    CParticleEmitter item = node as CParticleEmitter;
+                    GetKeyframes(list, item.EmissionRate);
+                    GetKeyframes(list, item.LifeSpan);
+                    GetKeyframes(list, item.InitialVelocity);
+                    GetKeyframes(list, item.Gravity);
+                    GetKeyframes(list, item.Longitude);
+                    GetKeyframes(list, item.Latitude);
+                }
+                if (node is CParticleEmitter2)
+                {
+                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    GetKeyframes(list, item.Gravity);
+                    GetKeyframes(list, item.Width);
+                    GetKeyframes(list, item.Length);
+                    GetKeyframes(list, item.Speed);
+                    GetKeyframes(list, item.Variation);
+                    GetKeyframes(list, item.Latitude);
+                    GetKeyframes(list, item.EmissionRate);
+                }
+                if (node is CRibbonEmitter)
+                {
+                    CRibbonEmitter item = node as CRibbonEmitter;
+                    GetKeyframes(list, item.HeightAbove);
+                    GetKeyframes(list, item.HeightBelow);
+                    GetKeyframes(list, item.TextureSlot);
+                    GetKeyframes(list, item.Alpha);
+                    GetKeyframes(list, item.Color);
+                }
+                if (node is CLight)
+                {
+                    CLight item = node as CLight;
+                    GetKeyframes(list, item.Color);
+                    GetKeyframes(list, item.AmbientColor);
+                    GetKeyframes(list, item.Intensity);
+                    GetKeyframes(list, item.AmbientIntensity);
+                    GetKeyframes(list, item.AttenuationStart);
+                    GetKeyframes(list, item.AttenuationEnd);
+                }
+            }
+            foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
+            {
+                GetKeyframes(list, ga.Color);
+                GetKeyframes(list, ga.Alpha);
+            }
+            foreach (CMaterial mat in CurrentModel.Materials)
+            {
+                foreach (CMaterialLayer layer in mat.Layers)
+                {
+                    GetKeyframes(list, layer.Alpha);
+                    GetKeyframes(list, layer.TextureId);
+                }
+            }
+            foreach (CCamera camera in CurrentModel.Cameras)
+            {
+                GetKeyframes(list, camera.Rotation);
+            }
+            foreach (CTextureAnimation ta in CurrentModel.TextureAnimations)
+            {
+                GetKeyframes(list, ta.Translation);
+                GetKeyframes(list, ta.Rotation);
+                GetKeyframes(list, ta.Scaling);
+            }
+            return list;
+        }
+
+        private void deleteinbetweenkeyframes(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = GetSelectedSequence();
+                int from = sequence.IntervalStart;
+                int to = sequence.IntervalEnd;
+
+                foreach (INode node in CurrentModel.Nodes)
+                {
+                    LeaveStartEnd(from, to,   node.Translation);
+                    LeaveStartEnd(from, to,    node.Rotation);
+                    LeaveStartEnd(from, to, node.Scaling);
+                    if (node is CParticleEmitter)
+                    {
+                        CParticleEmitter item = node as CParticleEmitter;
+                        LeaveStartEnd(from, to, item.EmissionRate);
+                        LeaveStartEnd(from, to, item.LifeSpan);
+                        LeaveStartEnd(from, to, item.InitialVelocity);
+                        LeaveStartEnd(from, to, item.Gravity);
+                        LeaveStartEnd(from, to, item.Longitude);
+                        LeaveStartEnd(from, to, item.Latitude);
+                    }
+                    if (node is CParticleEmitter2)
+                    {
+                        CParticleEmitter2 item = node as CParticleEmitter2;
+                        LeaveStartEnd(from, to, item.Gravity);
+                        LeaveStartEnd(from, to, item.Width);
+                        LeaveStartEnd(from, to, item.Length);
+                        LeaveStartEnd(from, to, item.Speed);
+                        LeaveStartEnd(from, to, item.Variation);
+                        LeaveStartEnd(from, to, item.Latitude);
+                        LeaveStartEnd(from, to, item.EmissionRate);
+                    }
+                    if (node is CRibbonEmitter)
+                    {
+                        CRibbonEmitter item = node as CRibbonEmitter;
+                        LeaveStartEnd(from, to, item.HeightAbove);
+                        LeaveStartEnd(from, to, item.HeightBelow);
+                        LeaveStartEnd(from, to, item.TextureSlot);
+                        LeaveStartEnd(from, to, item.Alpha);
+                        LeaveStartEnd(from, to, item.Color);
+                    }
+                    if (node is CLight)
+                    {
+                        CLight item = node as CLight;
+                        LeaveStartEnd(from, to, item.Color);
+                        LeaveStartEnd(from, to, item.AmbientColor);
+                        LeaveStartEnd(from, to, item.Intensity);
+                        LeaveStartEnd(from, to, item.AmbientIntensity);
+                        LeaveStartEnd(from, to, item.AttenuationStart);
+                        LeaveStartEnd(from, to, item.AttenuationEnd);
+                    }
+                }
+                foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
+                {
+                    LeaveStartEnd(from, to, ga.Color);
+                    LeaveStartEnd(from, to, ga.Alpha);
+                }
+                foreach (CMaterial mat in CurrentModel.Materials)
+                {
+                    foreach (CMaterialLayer layer in mat.Layers)
+                    {
+                        LeaveStartEnd(from, to, layer.Alpha);
+                        LeaveStartEnd(from, to, layer.TextureId);
+                    }
+                }
+                foreach (CCamera camera in CurrentModel.Cameras)
+                {
+                    LeaveStartEnd(from, to, camera.Rotation);
+                }
+                foreach (CTextureAnimation ta in CurrentModel.TextureAnimations)
+                {
+                    LeaveStartEnd(from, to, ta.Translation);
+                    LeaveStartEnd(from, to, ta.Rotation);
+                    LeaveStartEnd(from, to, ta.Scaling);
+                }
+
+            }
+        }
+
+        private void LeaveStartEnd(int from, int to, CAnimator<CVector3> animator)  {  animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to);  }
+        private void LeaveStartEnd(int from, int to, CAnimator<CVector4> animator)  {  animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to);  }
+        private void LeaveStartEnd(int from, int to, CAnimator<float> animator)  {  animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to);  }
+        private void LeaveStartEnd(int from, int to, CAnimator<int> animator)  {  animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to);  }
+
+        private void CentergeosetAtNode(object sender, RoutedEventArgs e)
+        {
+            List<CGeoset> gesoets = GetSelectedGeosets();
+            if (gesoets.Count > 0)
+            {
+                List<string> nodes = CurrentModel.Nodes.Select(x=>x.Name).ToList();
+                Selector s = new Selector(nodes);
+                s.ShowDialog();
+                if (s.ShowDialog() == true)
+                {
+                    INode node = CurrentModel.Nodes[s.box.SelectedIndex];
+                    var pos = node.PivotPoint;
+                    foreach (var geoset in gesoets)
+                    {
+                        Calculator.CenterGeoset(geoset, pos.X, pos.Y, pos.Z);
+                    }
+                    
+                }
+            }
+        }
+
+        private void spreadv(object sender, RoutedEventArgs e)
+        {
+            List<CGeoset> geosets = GetSelectedGeosets();
+            if (geosets.Count > 0)
+            {
+                SpreadVerticesIWindow sw = new SpreadVerticesIWindow();
+                if (sw.ShowDialog() == true)
+                {
+                    float distance = sw.Distance;
+                    float threshold = sw.Threshold;
+                    foreach (var geoset in geosets)
+                    {
+                        SpreadVertices(geoset, threshold, distance);
+                    }
+                }
+                
+            }
+        }
+        private void SpreadVertices(CGeoset geoset, float Threshold, float SetDistance)
+        {
+            // collect all groups of overlapping vertices
+          var lists=   Calculator.FindOverlappingVertexGroups(geoset, Threshold);
+            // then for each group, spread them from their collective centroid, based on the given distance
+
+            foreach (var list in lists)
+            {
+                SpreadVertexGroup(list, SetDistance);
+            }
+        }
+
+        private void SpreadVertexGroup(List<CGeosetVertex> list, float distance)
+        {
+            if (list.Count == 0)
+            {
+                return;
+            }
+
+            CVector3 centroid = Calculator.GetCentroidOfVertices(list);
+
+            foreach (CGeosetVertex vertex in list)
+            {
+                CVector3 direction = new CVector3(
+                    vertex.Position.X - centroid.X,
+                    vertex.Position.Y - centroid.Y,
+                    vertex.Position.Z - centroid.Z
+                );
+
+                float magnitude = Calculator. GetVectorMagnitude(direction);
+
+                if (magnitude == 0)
+                {
+                    // If the vertex is exactly at the centroid, move it along an arbitrary axis
+                    direction = new CVector3(1, 0, 0);
+                    magnitude = 1; // Prevent division by zero
+                }
+
+                // Normalize manually
+                CVector3 normalizedDirection = new CVector3(
+                    direction.X / magnitude,
+                    direction.Y / magnitude,
+                    direction.Z / magnitude
+                );
+
+                // Push outward by the given distance
+                vertex.Position = new CVector3(
+                    vertex.Position.X + normalizedDirection.X * distance,
+                    vertex.Position.Y + normalizedDirection.Y * distance,
+                    vertex.Position.Z + normalizedDirection.Z * distance
+                );
+            }
+        }
+
+        private void editVisallseq(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Geosets.Count == 0) { return; }
+            if (CurrentModel.Sequences.Count == 0) { return; }
+            vis_v v = new vis_v(CurrentModel); v.ShowDialog();
+        }
+        private CMaterial CreateMaterialForTargetTexture(CTexture texture)
+        {
+            CMaterial mat = new CMaterial(CurrentModel);
+            CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+            layer.TwoSided = true;
+            layer.Unshaded = true;
+            layer.Texture.Attach(texture);
+            mat.Layers.Add(layer);
+            return mat;
+        }
+        private void createplane_t(object sender, RoutedEventArgs e)
+        {
+            if (List_Textures.SelectedItem != null)
+            {
+                axis_picker ax = new axis_picker("Facing");
+                if (ax.ShowDialog() == true)
+                {
+                    var selected = ax.axis;
+
+                    CTexture texture = CurrentModel.Textures[List_Textures.SelectedIndex];
+                   
+                        var material = CreateMaterialForTargetTexture(texture);
+                        CGeoset plane = CreatePlane(material, selected);
+                        CurrentModel.Geosets.Add(plane);
+                        RefreshGeosetsList();
+                        RefreshViewPort();
+                    
+                }
+            }
+        }
+
+        private CGeoset CreatePlane(CMaterial whichMaterial, Axes PlaneFacingWhichAxes)
+        {
+            CGeoset geoset = new CGeoset(CurrentModel);
+            geoset.Material.Attach(whichMaterial);
+
+            CGeosetVertex vertex1 = new CGeosetVertex(CurrentModel);
+            CGeosetVertex vertex2 = new CGeosetVertex(CurrentModel);
+            CGeosetVertex vertex3 = new CGeosetVertex(CurrentModel);
+            CGeosetVertex vertex4 = new CGeosetVertex(CurrentModel);
+
+            CGeosetTriangle triangle1 = new CGeosetTriangle(CurrentModel);
+            CGeosetTriangle triangle2 = new CGeosetTriangle(CurrentModel);
+
+            triangle1.Vertex1.Attach(vertex1);
+            triangle1.Vertex2.Attach(vertex2);
+            triangle1.Vertex3.Attach(vertex3);
+
+            triangle2.Vertex1.Attach(vertex1);
+            triangle2.Vertex2.Attach(vertex3);
+            triangle2.Vertex3.Attach(vertex4);
+
+            geoset.Vertices.Add(vertex1);
+            geoset.Vertices.Add(vertex2);
+            geoset.Vertices.Add(vertex3);
+            geoset.Vertices.Add(vertex4);
+
+            geoset.Triangles.Add(triangle1);
+            geoset.Triangles.Add(triangle2);
+
+            // Set positions, normals, and texture coordinates according to the selected axis
+            switch (PlaneFacingWhichAxes)
+            {
+                case Axes.X:
+                    vertex1.Position = new CVector3(0, -1, -1);
+                    vertex2.Position = new CVector3(0, 1, -1);
+                    vertex3.Position = new CVector3(0, 1, 1);
+                    vertex4.Position = new CVector3(0, -1, 1);
+
+                    vertex1.Normal = vertex2.Normal = vertex3.Normal = vertex4.Normal = new CVector3(1, 0, 0);
+                    break;
+
+                case Axes.Y:
+                    vertex1.Position = new CVector3(-1, 0, -1);
+                    vertex2.Position = new CVector3(1, 0, -1);
+                    vertex3.Position = new CVector3(1, 0, 1);
+                    vertex4.Position = new CVector3(-1, 0, 1);
+
+                    vertex1.Normal = vertex2.Normal = vertex3.Normal = vertex4.Normal = new CVector3(0, 1, 0);
+                    break;
+
+                case Axes.Z:
+                    vertex1.Position = new CVector3(-1, -1, 0);
+                    vertex2.Position = new CVector3(1, -1, 0);
+                    vertex3.Position = new CVector3(1, 1, 0);
+                    vertex4.Position = new CVector3(-1, 1, 0);
+
+                    vertex1.Normal = vertex2.Normal = vertex3.Normal = vertex4.Normal = new CVector3(0, 0, 1);
+                    break;
+            }
+
+            // Assign texture coordinates (UV mapping)
+            vertex1.TexturePosition = new CVector2(0, 0);
+            vertex2.TexturePosition = new CVector2(1, 0);
+            vertex3.TexturePosition = new CVector2(1, 1);
+            vertex4.TexturePosition = new CVector2(0, 1);
+
+            return geoset;
+        }
 
 
     }

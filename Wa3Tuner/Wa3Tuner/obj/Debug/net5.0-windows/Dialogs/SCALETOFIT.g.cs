@@ -117,7 +117,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.1.5;component/dialogs/scaletofit.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.1.7;component/dialogs/scaletofit.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\SCALETOFIT.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

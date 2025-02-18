@@ -136,5 +136,43 @@ namespace Wa3Tuner
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }
+
+        private void Translate(object sender, RoutedEventArgs e)
+        {
+            InputVector iv = new InputVector(AllowedValue.Both);
+            if (iv.ShowDialog() == true)
+            {
+                float x = iv.X;
+                float y = iv.Y;
+                float z = iv.Z;
+                cols.Vertex1.X += x;
+                cols.Vertex1.Y += y;
+                cols.Vertex1.Z += z;
+                cols.Vertex2.X += x;
+                cols.Vertex2.Y += y;
+                cols.Vertex2.Z += z;
+                cols.Radius *= x;
+                FillData();
+            }
+        }
+
+        private void Scale(object sender, RoutedEventArgs e)
+        {
+            InputVector iv = new InputVector(AllowedValue.Positive, "Percentage");
+            if (iv.ShowDialog() == true)
+            {
+                float x = iv.X;
+                float y = iv.Y;
+                float z = iv.Z;
+                cols.Vertex1.X *= x;
+                cols.Vertex1.Y *= y;
+                cols.Vertex1.Z *= z;
+                cols.Vertex2.X *= x;
+                cols.Vertex2.Y *= y;
+                cols.Vertex2.Z *= z;
+                cols.Radius *= x;
+                FillData();
+            }
+        }
     }
 }

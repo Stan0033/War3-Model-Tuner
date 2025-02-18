@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>tune.ico</ApplicationIcon>
-    <FileVersion>1.15</FileVersion>
-    <AssemblyVersion>1.1.5</AssemblyVersion>
+    <FileVersion>1.17</FileVersion>
+    <AssemblyVersion>1.1.7</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="tune.ico" />

@@ -293,10 +293,11 @@ namespace Wa3Tuner
         }
         internal static int PercentageToByte(int percentage)
         {
-            if ( percentage <= 0) { return 0; }
-            if (percentage >= 100) { return 255; }
-            return (int)Math.Ceiling(percentage *( 255.0 / 100.0));
+            if (percentage <= 0) return 0;
+            if (percentage >= 100) return 255;
+            return (int)Math.Round(percentage * (255.0 / 100.0));
         }
+
         private float GetPercentage255(TextBox inputAlpha1)
         {
            int value = GetInt(inputAlpha1);
@@ -311,7 +312,7 @@ namespace Wa3Tuner
         {
             if (!Initialized) { return; }
             CVector3 color = GetColor(ButtonColor1);
-            float alpha = GetPercentage255(InputAlpha1);
+            float alpha = GetPercentage255(InputAlpha1); // from percentage
             float scaling = GetFloat(InputScaling1)  ;
             Emitter.Segment1 = new CSegment(color, alpha, scaling);
         }

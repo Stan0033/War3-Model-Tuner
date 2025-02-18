@@ -5,14 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
+        Background="LightGray"
         ResizeMode="NoResize"
         KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Title="Axis Selector" Height="150" Width="150">
-    <StackPanel Margin="10">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+    
         <CheckBox Name="Check_x">X</CheckBox>
-        <CheckBox Name="Check_y">Y</CheckBox>
-        <CheckBox Name="Check_z">Z</CheckBox>
-        <Button Content="OK" Click="ok"/>
-    </StackPanel>
+        <CheckBox Name="Check_y" Grid.Row="1">Y</CheckBox>
+        <CheckBox Name="Check_z" Grid.Row="2">Z</CheckBox>
+        <Button Content="OK" Grid.Row="3" Click="ok"/>
+    </Grid>
+
 </Window>

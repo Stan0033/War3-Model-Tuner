@@ -1,6 +1,8 @@
 ﻿
 
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\axis_picker.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\axis_selector.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Boolean_Window.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\cameraManager.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\color_selector.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\copyTrackToNode.xaml;;
@@ -8,7 +10,9 @@ FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createextrudedpolygon.xaml
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createnode.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\DrawShape.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\editvisibilities_window.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Edit_Extent.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\FlattenSide.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\GeosetExtents.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\howmodel.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ImportGeoset.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Input.xaml;;
@@ -22,15 +26,18 @@ FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Multiselector.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\newsequence.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\PivoPointOffsetWkndow.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\presets.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\PushGeosets.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\putonground.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\resizeSequence_window.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SCALETOFIT.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Selector.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\select_Transformations.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SpreadVerticesIWindow.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextureBrowser.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Transformations_viewer.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\transformation_editor.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\translation_selector.xaml;;
+FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\vis_v.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\edit_emitter1.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\edit_emitter2.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\edit_eventobject.xaml;;
@@ -39,5 +46,4 @@ FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\edit_ribbon.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\import_nodes_choice.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_EditAttachment.xaml;;
 FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_editbone_data.xaml;;
-FC:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\PushGeosets.xaml;;
 

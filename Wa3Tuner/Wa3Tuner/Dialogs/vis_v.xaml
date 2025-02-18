@@ -1,0 +1,35 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.vis_v"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Background="LightGray"
+        Title="Set visiblity of all geoset per sequence" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Margin="10">
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <RadioButton Name="check_start" Content="At Start" IsChecked="True" Width="80"/>
+                <RadioButton Name="check_end" Content="At End" Width="80"/>
+                <RadioButton Content="Custom" Width="80" Name="ccustom" Checked="setc" Unchecked="setc"/>
+                 
+            </StackPanel>
+            <TextBox Name="inputCustom" Width="100" IsEnabled="False"/>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <RadioButton Name="check1" Content="Visible" Width="80" IsChecked="True"/>
+                <RadioButton  Content="Invsible" Width="80"/>
+            </StackPanel>
+            <Button Padding="5" Margin="10" Content="Set" Click="set"/>
+        </StackPanel>
+        
+        
+        
+        <ListBox Name="slist" Grid.Column="1" SelectionChanged="selected"/>
+    </Grid>
+</Window>

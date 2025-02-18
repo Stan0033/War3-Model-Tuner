@@ -1711,8 +1711,7 @@ namespace Wa3Tuner
         }
         public static int _255To100(float value)
         {
-            if (value < 0 || value > 255)
-                throw new ArgumentOutOfRangeException(nameof(value), "The value must be between 0 and 255.");
+            if (value < 0 || value > 255) { throw new ArgumentOutOfRangeException(nameof(value), "The value must be between 0 and 255."); }
             return (int)((value / 255) * 100);
         }
         internal static System.Windows.Media.Brush RGBToBrush(int r, int g, int b)
@@ -2156,7 +2155,17 @@ namespace Wa3Tuner
 
             return (float)distance; // Convert to float and return
         }
+        internal static float GetDistanceBetweenPoints(CVector3 one, CVector3 two)
+        {
+            // Calculate the distance between centroidP and farthest using the Euclidean distance formula
+            double distance = Math.Sqrt(
+                Math.Pow(one.X - two.X, 2) +
+                Math.Pow(one.Y - two.Y, 2) +
+                Math.Pow(one.Z - two.Z, 2)
+            );
 
+            return (float)distance; // Convert to float and return
+        }
         internal static void ClampScaling(CAnimatorNode<CVector3> node)
         {
             if (node.Value.X < 0) node.Value.X = 0;
@@ -2331,6 +2340,47 @@ namespace Wa3Tuner
 
             float count = attached.Count;
             return new CVector3(sumX / count, sumY / count, sumZ / count);
+        }
+
+        internal static List<List<CGeosetVertex>> FindOverlappingVertexGroups(CGeoset geoset, float Threshold)
+        {
+            if (geoset.Vertices.Count <= 1)
+            {
+                throw new Exception("Not enough vertices");
+            }
+
+            List<List<CGeosetVertex>> lists = new();
+            HashSet<CGeosetVertex> visited = new();
+
+            foreach (CGeosetVertex vertex in geoset.Vertices)
+            {
+                if (visited.Contains(vertex))
+                {
+                    continue;
+                }
+
+                List<CGeosetVertex> group = new() { vertex };
+                visited.Add(vertex);
+
+                for (int j = 0; j < geoset.Vertices.Count; j++)
+                {
+                    CGeosetVertex other = geoset.Vertices[j];
+                    if (!visited.Contains(other) && GetDistanceBetweenPoints(vertex.Position, other.Position) <= Threshold)
+                    {
+                        group.Add(other);
+                        visited.Add(other);
+                    }
+                }
+
+                lists.Add(group);
+            }
+
+            return lists;
+        }
+
+        public static float GetVectorMagnitude(CVector3 vector)
+        {
+            return MathF.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
         }
 
     }

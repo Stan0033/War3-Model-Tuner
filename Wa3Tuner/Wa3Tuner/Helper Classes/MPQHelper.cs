@@ -12,6 +12,7 @@ using System.Drawing;
 using War3Net.IO.Mpq;
 using War3Net.Drawing.Blp;
 using System.Drawing.Imaging;
+using System.Windows.Documents;
 namespace W3_Texture_Finder
 {
     internal static class MPQHelper
@@ -122,8 +123,12 @@ namespace W3_Texture_Finder
                 return null;
             }
         }
-        internal static ImageSource GetImageSource(string path )
+        internal static ImageSource GetImageSource(string path)
         {
+
+           
+            
+                
             string archive = string.Empty;
                 if (FileExists(path , MPQPaths.War3)) { archive = MPQPaths.War3; }
                 if (FileExists(path , MPQPaths.War3X)) { archive = MPQPaths.War3X; }
