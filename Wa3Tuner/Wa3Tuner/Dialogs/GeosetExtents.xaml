@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
         mc:Ignorable="d"
         ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Title="Geoset sequence extents" Height="250" Width="300">
     <ListBox Name="ListExtents" MouseDoubleClick="ListExtents_MouseDoubleClick" Background="LightGray"/>

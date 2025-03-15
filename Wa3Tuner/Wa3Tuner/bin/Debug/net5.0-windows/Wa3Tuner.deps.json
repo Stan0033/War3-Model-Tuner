@@ -10,7 +10,11 @@
         "dependencies": {
           "War3Net.Drawing.Blp": "5.6.1",
           "War3Net.IO.Mpq": "5.6.1",
-          "MdxLib": "1.0.0.0"
+          "Dsafa.WpfColorPicker": "1.3.0",
+          "MdxLib": "1.0.0.0",
+          "SharpGL": "3.1.1.0",
+          "SharpGL.SceneGraph": "3.1.1.0",
+          "SharpGL.WPF": "3.1.1.0"
         },
         "runtime": {
           "Wa3Tuner.dll": {}
@@ -25,6 +29,17 @@
           "lib/netstandard2.0/DotNetZip.dll": {
             "assemblyVersion": "1.16.0.0",
             "fileVersion": "1.16.0.0"
+          }
+        }
+      },
+      "Dsafa.WpfColorPicker/1.3.0": {
+        "dependencies": {
+          "WpfScreenHelper": "0.3.0"
+        },
+        "runtime": {
+          "lib/net462/Dsafa.WpfColorPicker.dll": {
+            "assemblyVersion": "1.3.0.0",
+            "fileVersion": "1.3.0.0"
           }
         }
       },
@@ -138,11 +153,43 @@
           }
         }
       },
+      "WpfScreenHelper/0.3.0": {
+        "runtime": {
+          "lib/net40/WpfScreenHelper.dll": {
+            "assemblyVersion": "0.3.0.0",
+            "fileVersion": "0.3.0.0"
+          }
+        }
+      },
       "MdxLib/1.0.0.0": {
         "runtime": {
           "MdxLib.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SharpGL/3.1.1.0": {
+        "runtime": {
+          "SharpGL.dll": {
+            "assemblyVersion": "3.1.1.0",
+            "fileVersion": "3.1.1.0"
+          }
+        }
+      },
+      "SharpGL.SceneGraph/3.1.1.0": {
+        "runtime": {
+          "SharpGL.SceneGraph.dll": {
+            "assemblyVersion": "3.1.1.0",
+            "fileVersion": "3.1.1.0"
+          }
+        }
+      },
+      "SharpGL.WPF/3.1.1.0": {
+        "runtime": {
+          "SharpGL.WPF.dll": {
+            "assemblyVersion": "3.1.1.0",
+            "fileVersion": "3.1.1.0"
           }
         }
       }
@@ -160,6 +207,13 @@
       "sha512": "sha512-CS9sjjXF23FLIbwlLT5k/jXBYxVnLMn01lyAvN/hxFM+UDvSicjTPB9ZMA+Wp/QlvBPbD2pzkAXUp1O50gP/Lw==",
       "path": "dotnetzip/1.16.0",
       "hashPath": "dotnetzip.1.16.0.nupkg.sha512"
+    },
+    "Dsafa.WpfColorPicker/1.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Nt52G5E6P1hQxwgsKXcDZO5Hyphl3DhNqGEKvB8c7gBFpFWDgNp03zkVQvCqC2YHyJOMagYJcYJS48buMasJIQ==",
+      "path": "dsafa.wpfcolorpicker/1.3.0",
+      "hashPath": "dsafa.wpfcolorpicker.1.3.0.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/3.1.1": {
       "type": "package",
@@ -245,7 +299,29 @@
       "path": "war3net.io.mpq/5.6.1",
       "hashPath": "war3net.io.mpq.5.6.1.nupkg.sha512"
     },
+    "WpfScreenHelper/0.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9PfW5alD+uKUK1r3T89rACifeRf+adJ8Zrx7rMivjUYUugDXSDnSSKA6gVh/mq7aW4zMyj/S0Du3+SIcJYX61w==",
+      "path": "wpfscreenhelper/0.3.0",
+      "hashPath": "wpfscreenhelper.0.3.0.nupkg.sha512"
+    },
     "MdxLib/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SharpGL/3.1.1.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SharpGL.SceneGraph/3.1.1.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SharpGL.WPF/3.1.1.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

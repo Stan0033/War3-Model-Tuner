@@ -24,6 +24,17 @@ namespace W3_Texture_Finder
         internal static List<string> Listfile_blp_War3xLocal = new List<string>();
         internal static List<string> Listfile_Models = new List<string>();
         internal static List<string> Listfile_All = new List<string>();
+        internal static List<string> Listfile_Everything_war3 = new List<string>();
+        internal static List<string> Listfile_Everything_war3x = new List<string>();
+        internal static List<string> Listfile_Everything_war3xLocal = new List<string>();
+        internal static List<string> Listfile_Everything_war3Patch = new List<string>();
+        internal static void FillAllArchives()
+        {
+            Listfile_Everything_war3 =  LoadArchive(MPQPaths.War3);
+            Listfile_Everything_war3x =  LoadArchive(MPQPaths.War3X);
+            Listfile_Everything_war3xLocal =  LoadArchive(MPQPaths.War3xLocal);
+            Listfile_Everything_war3Patch =  LoadArchive(MPQPaths.War3Patch);
+        }
         internal static void Initialize()
         {
             string War3PatchPath = Path.Combine(MPQPaths.local, "Paths\\War3Patch.txt");
@@ -36,6 +47,7 @@ namespace W3_Texture_Finder
             Listfile_All.AddRange(Listfile_blp_War3x);
             Listfile_All.AddRange(Listfile_blp_War3Patch);
             Listfile_All.AddRange(Listfile_blp_War3xLocal);
+            FillAllArchives();
         }
         internal static bool FileExists(string path)
         {
@@ -349,6 +361,32 @@ namespace W3_Texture_Finder
                     }
                 }
             }
+        }
+        private static List<string> LoadArchive(string Archive)
+        {
+            List<string> list = new List<string>();
+            string searched = "(listfile)";
+            using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
+            {
+                using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
+                {
+                    // Read from the stream
+                    byte[] buffer = new byte[mpqStream.Length];
+                    mpqStream.Read(buffer, 0, buffer.Length);
+                    //-----------------------
+                    // save the file
+                    //-----------------------
+                    string outputPath = MPQPaths.temp;
+                    File.WriteAllBytes(outputPath, buffer);
+                    foreach (string item in File.ReadAllLines(outputPath))
+                    {
+                        list.Add(item);
+                    }
+
+                }
+                
+            }
+            return list;
         }
         internal static BitmapImage getBitmapImage_image(string path)
         {

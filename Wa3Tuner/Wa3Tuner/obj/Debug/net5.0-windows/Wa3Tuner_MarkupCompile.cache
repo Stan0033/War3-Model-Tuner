@@ -1,20 +1,20 @@
 ﻿Wa3Tuner
-1.1.7
+1.2
 
 winexe
 C#
 .cs
-C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\
 Wa3Tuner
 none
 false
 TRACE;DEBUG;NET;NET5_0;NETCOREAPP
-C:\Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\App.xaml
-481445315389
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\App.xaml
+641735672713
 178170099
-67-2114658683
-2001659848956
-Dialogs\axis_picker.xaml;Dialogs\axis_selector.xaml;Dialogs\Boolean_Window.xaml;Dialogs\cameraManager.xaml;Dialogs\color_selector.xaml;Dialogs\copyTrackToNode.xaml;Dialogs\createextrudedpolygon.xaml;Dialogs\createnode.xaml;Dialogs\DrawShape.xaml;Dialogs\editvisibilities_window.xaml;Dialogs\Edit_Extent.xaml;Dialogs\FlattenSide.xaml;Dialogs\GeosetExtents.xaml;Dialogs\howmodel.xaml;Dialogs\ImportGeoset.xaml;Dialogs\Input.xaml;Dialogs\InputVector.xaml;Dialogs\loopdialog.xaml;Dialogs\Mass_Create_Sequences.xaml;Dialogs\Mass_Create_Textures.xaml;Dialogs\ModelBrowser.xaml;Dialogs\modelstructure.xaml;Dialogs\Multiselector.xaml;Dialogs\newsequence.xaml;Dialogs\PivoPointOffsetWkndow.xaml;Dialogs\presets.xaml;Dialogs\PushGeosets.xaml;Dialogs\putonground.xaml;Dialogs\resizeSequence_window.xaml;Dialogs\SCALETOFIT.xaml;Dialogs\Selector.xaml;Dialogs\select_Transformations.xaml;Dialogs\SpreadVerticesIWindow.xaml;Dialogs\TextureBrowser.xaml;Dialogs\Transformations_viewer.xaml;Dialogs\transformation_editor.xaml;Dialogs\translation_selector.xaml;Dialogs\vis_v.xaml;MainWindow.xaml;Node Dialogs\edit_emitter1.xaml;Node Dialogs\edit_emitter2.xaml;Node Dialogs\edit_eventobject.xaml;Node Dialogs\Edit_light.xaml;Node Dialogs\edit_ribbon.xaml;Node Dialogs\import_nodes_choice.xaml;Node Dialogs\window_EditAttachment.xaml;Node Dialogs\window_editbone_data.xaml;Node Dialogs\window_edit_cols.xaml;
+102-1018906370
+205-1762494732
+Dialogs\about_w.xaml;Dialogs\axis_picker.xaml;Dialogs\axis_selector.xaml;Dialogs\Boolean_Window.xaml;Dialogs\CameraController.xaml;Dialogs\cameraManager.xaml;Dialogs\color_selector.xaml;Dialogs\copyTrackToNode.xaml;Dialogs\createextrudedpolygon.xaml;Dialogs\createnode.xaml;Dialogs\DistanceSelector.xaml;Dialogs\DrawShape.xaml;Dialogs\editvisibilities_window.xaml;Dialogs\Edit_Extent.xaml;Dialogs\Explanation.xaml;Dialogs\Extent Orientation Selector.xaml;Dialogs\ExtentSelector.xaml;Dialogs\FlattenSide.xaml;Dialogs\Generate Keyframe in Range.xaml;Dialogs\GeosetExtents.xaml;Dialogs\Gradual Keyframe Maker.xaml;Dialogs\howmodel.xaml;Dialogs\ImportGeoset.xaml;Dialogs\Input.xaml;Dialogs\InputVector.xaml;Dialogs\KeyframesCopier.xaml;Dialogs\KeyframeSeuqnceDuplicator.xaml;Dialogs\loopdialog.xaml;Dialogs\Mass create global sequences.xaml;Dialogs\Mass_Create_Sequences.xaml;Dialogs\Mass_Create_Textures.xaml;Dialogs\ModelBrowser.xaml;Dialogs\modelstructure.xaml;Dialogs\MPQBrowser.xaml;Dialogs\Multiselector.xaml;Dialogs\newsequence.xaml;Dialogs\NoKeyframesActions.xaml;Dialogs\ObjImporter.xaml;Dialogs\PivoPointOffsetWkndow.xaml;Dialogs\presets.xaml;Dialogs\PushGeosets.xaml;Dialogs\putonground.xaml;Dialogs\resizeSequence_window.xaml;Dialogs\SCALETOFIT.xaml;Dialogs\Selector.xaml;Dialogs\select_Transformations.xaml;Dialogs\Shatter animation maker.xaml;Dialogs\SpreadVerticesIWindow.xaml;Dialogs\TextColorizer_Window.xaml;Dialogs\TextureBrowser.xaml;Dialogs\Transformations_viewer.xaml;Dialogs\transformation_editor.xaml;Dialogs\translation_selector.xaml;Dialogs\vis_v.xaml;MainWindow.xaml;Node Dialogs\edit_emitter1.xaml;Node Dialogs\edit_emitter2.xaml;Node Dialogs\edit_eventobject.xaml;Node Dialogs\Edit_light.xaml;Node Dialogs\edit_ribbon.xaml;Node Dialogs\import_nodes_choice.xaml;Node Dialogs\window_EditAttachment.xaml;Node Dialogs\window_editbone_data.xaml;Node Dialogs\window_edit_cols.xaml;
 
 False
 

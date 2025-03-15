@@ -1,0 +1,43 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.TextColorizer_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="Text colorizer for warcraft 3 tooltips" Height="250" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+             
+        </Grid.ColumnDefinitions>
+         
+        <Grid.RowDefinitions>
+           
+            <RowDefinition/>
+            
+            
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <RichTextBox  Name="MainTextBox"  Grid.Row="0"    Grid.ColumnSpan="7"
+                      Background="#D80E0E0E" Foreground="White"   />
+
+        <Button Click="SelectColor1" Content="Color 1" Name="ButtonColor1Select" Grid.Row="1" />
+        <Button Click="SetColor1" Content="Set" Grid.Row="1"  Grid.Column="1"  />
+            <Button  Click="SelectColor2" Content="Color 2" Name="ButtonColor2Select" Grid.Row="1"  Grid.Column="2"  />
+        <Button Click="SetColor2" Content="Set" Name="ButtonColor2Set" Grid.Row="1"  Grid.Column="3"  />
+        <Button Click="CopyTexts" Content="Copy all"   Grid.Row="2"  Grid.ColumnSpan="6" />
+        <Button Click="ClearSeletion" Content="Clear" Grid.Row="1" Grid.Column="4"/>
+        <Button Click="ClearAllColors" Content="Clear All" Grid.Row="1" Grid.Column="5"/>
+    </Grid>
+</Window>

@@ -153,6 +153,7 @@ namespace Wa3Tuner
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null, null);
         }
 
         private void CheckRadio1(object sender, RoutedEventArgs e)

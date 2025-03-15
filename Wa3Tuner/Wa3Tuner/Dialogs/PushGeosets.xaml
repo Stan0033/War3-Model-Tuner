@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
                ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Background="LightGray"
         Title="PushGeosets" Height="150" Width="200">

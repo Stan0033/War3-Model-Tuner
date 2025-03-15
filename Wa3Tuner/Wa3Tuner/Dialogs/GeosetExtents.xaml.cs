@@ -38,5 +38,10 @@ namespace Wa3Tuner.Dialogs
             Edit_Extent ee = new Edit_Extent(CurrentGeoset.Extents[ListExtents.SelectedIndex].Extent);
             ee.ShowDialog();
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) Close();
+        }
     }
 }

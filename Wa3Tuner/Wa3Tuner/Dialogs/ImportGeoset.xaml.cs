@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 using static Wa3Tuner.MainWindow;
 
 namespace Wa3Tuner.Dialogs
@@ -102,6 +103,12 @@ namespace Wa3Tuner.Dialogs
         {
             bool nb = Check_NewBone.IsChecked == true;
             ComboAttachTo.IsEnabled = !nb;
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null, null);
         }
     }
 }

@@ -213,5 +213,11 @@ namespace Wa3Tuner
                 MessageBox.Show("Invalid input for durataion. Integer greater than 100");
             }
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null, null);
+        }
     }
 }

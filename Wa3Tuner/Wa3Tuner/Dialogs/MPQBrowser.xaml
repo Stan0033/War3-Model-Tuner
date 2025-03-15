@@ -1,0 +1,43 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.MPQBrowser"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+       KeyDown="Window_MouseDown"
+        Background="LightGray"
+        WindowStartupLocation="CenterScreen"
+        Title="MPQ Browser" Height="450" MinHeight="100" MinWidth="600" Width="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <Button Width="100" Click="openwar3">War3.mpq</Button>
+            <Button Width="100" Click="openwar3x">War3x.mpq</Button>
+            <Button Width="100" Click="openwar3xlocal">War3xLocal.mpq</Button>
+            <Button Width="100" Click="openpatch">War3Patch.mpq</Button>
+            <Button Width="100" Content="Filters" Visibility="Collapsed">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="All"/>
+                        <MenuItem Header="None"/>
+                         
+                    </ContextMenu>
+                </Button.ContextMenu>
+                
+            </Button>
+            <Button Width="100" Content="Refresh" Click="refresh" Visibility="Collapsed"/>
+        </StackPanel>
+        <TreeView Name="Tree" Grid.Row="1"  Background="LightGray">
+            <TreeView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy path to clipboard" Click="copy"/>
+                    <MenuItem Header="Export..." Click="export"/>
+                </ContextMenu>
+            </TreeView.ContextMenu>
+        </TreeView>
+    </Grid>
+</Window>

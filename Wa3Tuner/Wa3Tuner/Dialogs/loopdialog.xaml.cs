@@ -213,6 +213,7 @@ namespace Wa3Tuner
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) OK(null, null);
         }
     }
 }

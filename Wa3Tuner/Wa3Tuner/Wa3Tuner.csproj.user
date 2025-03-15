@@ -7,10 +7,16 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Dialogs\about_w.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\axis_picker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Boolean_Window.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\CameraController.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\cameraManager.xaml.cs">
@@ -22,10 +28,28 @@
     <Compile Update="Dialogs\createextrudedpolygon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\DistanceSelector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\DrawShape.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Gradual Keyframe Maker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\KeyframeSeuqnceDuplicator.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\Edit_Extent.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Extent Orientation Selector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\ExtentSelector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Generate Keyframe in Range.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\GeosetExtents.xaml.cs">
@@ -34,7 +58,22 @@
     <Compile Update="Dialogs\ImportGeoset.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\KeyframesCopier.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Mass create global sequences.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\modelstructure.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\MPQBrowser.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\NoKeyframesActions.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\ObjImporter.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\PivoPointOffsetWkndow.xaml.cs">
@@ -43,7 +82,13 @@
     <Compile Update="Dialogs\PushGeosets.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Shatter animation maker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\SpreadVerticesIWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\TextColorizer_Window.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\vis_v.xaml.cs">

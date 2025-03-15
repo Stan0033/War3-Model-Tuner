@@ -1,0 +1,62 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.NoKeyframesActions"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        Background="LightGray"
+        Title="Node's keyframes action" Height="340" Width="500">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="90"/>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <StackPanel Margin="10">
+            <TextBlock Text="Transformation:"/>
+            <CheckBox Name="check_1">Translation</CheckBox>
+            <CheckBox Name="check_2">Rotation</CheckBox>
+            <CheckBox Name="check_3">Scaling</CheckBox>
+        </StackPanel>
+        <StackPanel Margin="10" Grid.Column="1">
+            <TextBlock Text="Action Type:"/>
+            <RadioButton Name="action_1" IsChecked="True">Copy</RadioButton>
+            <RadioButton Name="action_2">Cut/Move</RadioButton>
+           
+        </StackPanel >
+        <StackPanel Margin="10" Grid.Column="2" Grid.RowSpan="2">
+            <StackPanel>
+                <TextBlock Text="Paste method:"/>
+                <RadioButton Name="method_1" IsChecked="True">Don't Resize</RadioButton>
+                <RadioButton Name="method_2">Resize if needed</RadioButton>
+            </StackPanel>
+            <StackPanel>
+                
+                <RadioButton Name="method_3" IsChecked="True">Overwrite all</RadioButton>
+                <RadioButton Name="method_4">Overwrite duplicates</RadioButton>
+                <RadioButton Name="method_5">Skip duplicates</RadioButton>
+                <RadioButton Name="method_6">Only duplicates</RadioButton>
+            </StackPanel>
+
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="10">
+            <TextBlock Text="From sequence"/>
+            <ListBox Height="150" Name="list1"></ListBox>
+        </StackPanel>
+        
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="10">
+            <TextBlock Text="To sequence"/>
+            <ListBox Height="150" Name="list2"></ListBox>
+           
+        </StackPanel>
+        <Button Click="ok" Grid.Row="2" Grid.Column="1"   Height="30">Apply</Button>
+
+    </Grid>
+</Window>

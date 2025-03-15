@@ -1,0 +1,117 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Explanation"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        Background="LightGray"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        Title="How do warcraft III Models work?" Height="450" Width="800">
+    <ScrollViewer>
+        <StackPanel Margin="20">
+            <TextBlock TextWrapping="Wrap" FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                3D Modeling Concepts
+            </TextBlock>
+
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a vertex?</Bold> A vertex is a point in 3D space that forms the corner of a polygon. It defines the shape of the model. Vertices belong to geosets along with triangles. Vertices are attached to bones, which can be animated with transformations, thereby animating the model in specific sequences. Animating geosets happens when a node pulls a vertex, which pulls triangle(s) belonging to it, moving and/or stretching that triangle.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a face/polygon?</Bold> A face or polygon (poly = many, gon = angle) is a flat surface made up of three or more vertices. In 3D modeling, there are 3 types of faces: Triangle, Quad, and Ngon. Warcraft 3 uses only triangles. Polygons are the fundamental building blocks of 3D geometry.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is an edge?</Bold> An edge is a line connecting two vertices in a 3D model. Edges can only belong to existing triangles.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a normal?</Bold> A normal is a vector that points perpendicular to a surface, used to determine how light interacts with that surface. It affects shading and lighting in 3D rendering and has a 3D coordinate that defines the direction in which the normal points from the vertex's position.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a transformation?</Bold> A transformation is a collection of keyframes, each defined by a track and instructions. It tells how the object it belongs to is transformed in that particular track.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a texture?</Bold> A texture is a 2D image applied to the surface of a 3D model. It gives the model details like colors, patterns, and surface properties.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a material?</Bold> A material and its layers define the visual properties of a geoset, such as texture, transparency, and how it interacts with the game. Tags explained:
+                <LineBreak/>
+                <Bold>- Unshaded</Bold> – Not affected by shading/normals.
+                <LineBreak/>
+                <Bold>- Unfogged</Bold> – Not affected by fog of war.
+                <LineBreak/>
+                <Bold>- Two-sided</Bold> – The texture is rendered from both sides.
+                <LineBreak/>
+                <Bold>- "No Depth Test"</Bold> – The model’s layer will not be tested against the depth buffer. This means that the layer will always be drawn on top, regardless of its actual position relative to other objects in 3D space.
+                <LineBreak/>
+                <Bold>- "No Depth Set"</Bold> – The model’s layer will not update the depth buffer. This means that even if the layer is in front of other objects, it won't block them from being drawn behind it.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>Filter modes:</Bold>
+                <LineBreak/>
+                <Bold>- Transparent</Bold> - The texture uses its alpha channel to control transparency. The more transparent parts of the texture will show the background behind it.
+                <LineBreak/>
+                <Bold>- Additive</Bold> - The texture’s color is added to the background color, resulting in brightening. Black parts of the texture become invisible, and brighter parts intensify the colors behind them.
+                <LineBreak/>
+                <Bold>- Add Alpha</Bold> - Similar to Additive, but the alpha channel also influences the intensity of the blending. The texture is added to the background based on both its color and alpha values.
+                <LineBreak/>
+                <Bold>- Blend</Bold> - The texture is blended with the background using standard alpha blending, where the texture's alpha value controls how much of the texture is blended with the background.
+                <LineBreak/>
+                <Bold>- Modulate</Bold> - The texture's color is multiplied with the background color, making darker areas more transparent and bright areas more visible.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a sequence?</Bold> A sequence is an animation that defines a specific movement or action for the model. It contains keyframes that show how the model changes over time.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a global sequence?</Bold> A global sequence is an animation that loops throughout the entire model, independent of other sequences. It is often used for constant movements, like rotating effects. It only has a property duration, which is in milliseconds.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a geoset?</Bold> A geoset is a group of vertices and triangles that form a specific part of the model. It represents a portion of the model’s geometry. Triangles reference vertices from the list to form a renderable surface.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a geoset animation?</Bold> A geoset animation controls how a specific geoset appears with the help of transparency control and color during each sequence.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a texture animation?</Bold> A texture animation moves or changes the appearance of a texture over time. This can be used for effects like scrolling or rotating textures.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a camera?</Bold> A camera in 3D modeling defines a viewpoint from which the scene is rendered. It mimics a real-world camera, controlling the perspective and field of view. Cameras in Warcraft 3 are mostly used for portraits of the units and rarely for campaign screens.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What are nodes and skeletons?</Bold> Nodes are control points that define the position of different parts of a model during different sequences. Bones also hold vertices and help them be animated. A skeleton is the hierarchy of nodes in parent-child relationships that further help to animate the model. Nodes contain properties that can alter the rendering and/or vertices belonging to it, like transformation inheritance and billboarded rendering.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+     • <Bold>What is rigging?</Bold> Rigging is the relationships between vertices and bones. You can edit which is attached to which, and this determines how when animating, the triangles will be deformed. Anoter related concept is skinning, which deals with skinweight of the bones, which determines how much influence a bone has on transformations, but warcraft 3 Non-Reforged models don't have that.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What does billboarded mean?</Bold> Billboarded means that any geometry or visual data attached to that node will always face the camera, creating the illusion of a 2D image.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What does render mean?</Bold> Rendering is the process of generating the final image or animation from a 3D model. It calculates lighting, shading, and textures to produce the visual output.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a collision shape?</Bold> A collision shape defines an extent, which is used by Warcraft 3 to decide which part(s) of a unit’s model can be hovered by the mouse and clicked.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is an extent?</Bold> An extent defines the bounding box or sphere that encompasses a model. It is used for collision detection and rendering optimization, ensuring that only the visible parts of a model are rendered.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a sequence extent?</Bold> A sequence extent inherits from the geoset’s extent in combination with all related transformations to determine the extent of the geoset in each sequence.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a helper?</Bold> A helper is a type of node that assists other nodes by connecting them. It can also be animated with transformations like any other node but does not contain additional properties.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is the ‘path’ property in attachments used for?</Bold> The ‘path’ property allows you to load other models from the MPQ archives of Warcraft 3 or custom-imported models in the map, which will be attached to the main model.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is an event object?</Bold> An event object is an object that can play sounds or create sprites during specific tracks while animating the model. For example, it could play a gunfire sound during an attack animation or create footsteps during a walk animation.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is a ribbon emitter?</Bold> A ribbon emitter is a special effect that appears only when the model’s unit is moving in-game.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
+                • <Bold>What is optimization?</Bold> Optimization is the process of refining the model’s quality by removing unused components, adding missing components, fixing components that may cause the model to not function properly in-game, fixing invalid components, rearranging the order of components, and improving the geometry.
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

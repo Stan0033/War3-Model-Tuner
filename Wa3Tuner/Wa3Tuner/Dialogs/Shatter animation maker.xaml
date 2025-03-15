@@ -1,0 +1,54 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.ShatterAnimationMaker"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        Background="LightGray"
+        Title="Shatter Animation Maker" Height="400" Width="400">
+    <Grid>
+        <StackPanel Margin="10">
+
+            <!-- Target Geoset Selection -->
+            <StackPanel Orientation="Horizontal" Margin="0 5 0 5">
+                <TextBlock Text="Target Geoset:" VerticalAlignment="Center"/>
+                <TextBox Name="TargetGeosetDropdown" IsReadOnly="True" Background="LightGray" Width="200" Margin="10 0 0 0"/>
+            </StackPanel>
+
+            <!-- Sequence Selection -->
+            <TextBlock Text="Select Sequence(s):"/>
+            <ListBox Name="SequenceList" Height="100" SelectionMode="Multiple"/>
+
+            <!-- Movement Distance -->
+            <StackPanel Orientation="Horizontal" Margin="0 5 0 5">
+                <TextBlock Text="Travel Distance:" VerticalAlignment="Center"/>
+                <TextBox Name="ShatterDistanceInput" Width="50" Margin="5"/>
+                <TextBlock Text="-" VerticalAlignment="Center"/>
+                <TextBox Name="ShatterDistanceInput2" Width="50" Margin="5"/>
+                <CheckBox Name="RandomizeDistanceCheck" Content="Randomize" Margin="10 0 0 0"/>
+            </StackPanel>
+            
+            <!-- Optional Effects -->
+            <CheckBox Name="ApplyRotationCheck" Content="Apply Random Rotation" IsChecked="True"/>
+            <CheckBox Name="ApplyFallCheck" Content="Apply Fall to Ground" IsChecked="True"/>
+            <CheckBox Name="ApplyFadeCheck" Content="Apply Alpha Fade" IsChecked="True"/>
+
+            <!-- Warning -->
+            <Border BorderBrush="Red" BorderThickness="1" Margin="5" Padding="5">
+                <TextBlock Foreground="Red" TextWrapping="Wrap">
+                    Warning: This operation creates a large number of bones and increases file size significantly.
+                    It will be difficult to edit later.
+                </TextBlock>
+            </Border>
+
+            <!-- Buttons -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10 0 0 0">
+                <Button Name="OkButton" Click="ok" Content="Generate" Width="100" Margin="5"/>
+                <Button Name="CancelButton" Content="Cancel" Click="cancel" Width="100" Margin="5"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Grid>
+</Window>

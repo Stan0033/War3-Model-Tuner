@@ -1,9 +1,14 @@
-﻿<Window x:Class="Wa3Tuner.MainWindow" Name="App_window"
+﻿<Window
+   
+    Name="App_window"
+        x:Class="Wa3Tuner.MainWindow" 
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"   
+        xmlns:sharpGL1="clr-namespace:SharpGL.WPF;assembly=SharpGL.WPF"
         Background="LightGray"
         Loaded="loaded"
         KeyDown="Hotkeys"
+        SizeChanged="Resized"
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing"
         Title="War3 Model Tuner" Height="500" Width="600" MinWidth="600" MinHeight="600">
@@ -42,7 +47,8 @@
             <RowDefinition Height="20"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0"     Background="LightGray" Grid.ColumnSpan="2" Height="20">
+        <Menu Grid.Row="0"     Background="LightGray" Grid.ColumnSpan="2" Height="20"  >
+
             <MenuItem Header="Model">
                 <MenuItem Header="Load" Click="load" InputGestureText="Ctrl+O"></MenuItem>
                 <MenuItem Header="Load from MPQs..." Click="load_from_mpqs"  ></MenuItem>
@@ -50,9 +56,19 @@
                 <MenuItem Name="ButtonSave" Header="Save" Click="save"   InputGestureText="Ctrl+S"/>
                 <MenuItem Name="ButtonSaveAs" Header="Save as..." Click="saveas"  InputGestureText="Alt+S"/>
                 <MenuItem Name="ButtonSaveAsCopy" Header="Save as copy with timestamp" Click="saveasCopy"  />
+                <MenuItem Header="Export">
+                    <MenuItem Name="ButtonExportModelOBJ" Header="Export as OBJ" Click="exportallobj"  />
+                    <MenuItem Name="ButtonExportModelSTL1" Header="Export as STL (ASCII)" Click="exportstl1"  />
+                    <MenuItem Name="ButtonExportModelSTL2" Header="Export as STL (Binary)" Click="exportstl2"  />
+
+
+                </MenuItem>
+                <MenuItem Name="ButtonOptimizeOnSave" Header="Optimize on save" ToolTip="Removes unused components, and does all the mandatory optimizations" IsCheckable="True" IsChecked="False"  Checked="ToggleOOS" Unchecked="ToggleOOS"/>
                 <MenuItem Name="ButtonOpenModelFolder" Header="Open containing folder" Click="opentargetfolder"  />
                 <MenuItem Header="Cameras"  Click="cameras"  />
                 <MenuItem Header="Set model name"  Click="setModelName"/>
+                <MenuItem Header="Set model extents"  Click="setModelExtents"/>
+                <MenuItem Header="Adjust model position" ToolTip="All geometry and nodes are offset by given amounts" Click="adjustmdlpoa"/>
                 <MenuItem Header="Close"  Click="closemodel"/>
             </MenuItem>
             <MenuItem Header="Recents" Name="Item_Recents"/>
@@ -61,47 +77,113 @@
                 <MenuItem Header="Make a screenshot"  Click="scr"/>
                 <MenuItem Header="Make a screenshot of the model"  Click="scr2"/>
             </MenuItem>
+            <MenuItem Header="View">
+                <MenuItem Header="Top" Click="view_top"/>
+                <MenuItem Header="Bottom" Click="view_bot"/>
+                <MenuItem Header="Left" Click="view_left"/>
+                <MenuItem Header="Right" Click="view_right"/>
+                <MenuItem Header="Front" Click="view_front"/>
+                <MenuItem Header="Back" Click="view_back"/>
+                <MenuItem Header="Custom..." Click="custom_view"/>
+                <MenuItem Header="Create camera from currect view" Click="createcam"/>
+                <MenuItem >
+                    <MenuItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Viewport zoom increment:"/>
+                            <TextBox Width="100" Name="InputZoomIncrement" TextChanged="SetViewportZoomIncrement"/>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+            </MenuItem>
             <MenuItem Header="Render">
+                <MenuItem Name="Menuitem_rfrd" IsCheckable="False"   Header="Refresh Render Data"  Click="refresh_rData" ToolTip="Edges, lines, and textures"/>
                 <MenuItem Name="Menuitem_Enabled" IsCheckable="True" IsChecked="True" Header="Enabled" Checked="S62" Unchecked="S62"/>
+                <MenuItem Name="Menuitem_fps" IsCheckable="True" IsChecked="False" Header="Draw FPS" Checked="fps" Unchecked="fps"/>
                 <MenuItem Name="Menuitem_Geometry" IsCheckable="True" IsChecked="True" Header="Geometry"
                           Checked="ToggleGeometry" Unchecked="ToggleGeometry"  />
                 <MenuItem Name="Menuitem_Textured" IsCheckable="True" IsChecked="True" Header="Textured"
            Checked="ToggleTextures" Unchecked="ToggleTextures"
            InputGestureText="Ctrl+T"/>
+                <MenuItem Name="Menuitem_Triangles" Header="Triangles"  Visibility="Collapsed" IsCheckable="True" IsChecked="True" Unchecked="Check_Triangles" Checked="Check_Triangles"/>
                 <MenuItem Name="Menuitem_Shading" IsCheckable="True" IsChecked="True" Header="Shading" Checked="ToggleShading" Unchecked="ToggleShading"/>
                 <MenuItem Name="Menuitem_Cols" IsCheckable="True" IsChecked="False" Header="Collision Shapes" Checked="ToggleCols" Unchecked="ToggleCols"/>
-                <MenuItem Name="Menuitem_GAE" IsCheckable="True" IsChecked="False" Header="Geoset Extents (Box)" Checked="ToggleGAE" Unchecked="ToggleGAE"/>
-                <MenuItem Name="Menuitem_GAES" IsCheckable="True" IsChecked="False" Header="Geoset Extents (Sphere)" Checked="ToggleGAES" Unchecked="ToggleGAES"/>
+                <MenuItem Name="Menuitem_GAE" IsCheckable="True" IsChecked="False" Header="Geoset Extents  " Checked="ToggleGAE" Unchecked="ToggleGAE"/>
+                <MenuItem Name="Menuitem_GAES" IsCheckable="True" IsChecked="False" Visibility="Collapsed" Header="Geoset Extents (Sphere)" Checked="ToggleGAES" Unchecked="ToggleGAES"/>
                 <MenuItem Name="Menuitem_Nodes" IsCheckable="True" IsChecked="False" Header="Nodes" Checked="ToggleNodes" Unchecked="ToggleNodes"/>
-                <MenuItem Name="Menuitem_ground" IsCheckable="True" IsChecked="False" Header="Ground Plane" Checked="ToggleGround" Unchecked="ToggleGround" Visibility="Collapsed"/>
-                <MenuItem Name="Menuitem_skinning" IsCheckable="True" IsChecked="False" Header="Skinning (In Rigging editor)" Checked="ToggleSkinning" Unchecked="ToggleSkinning" Visibility="Collapsed"/>
+                <MenuItem Name="Menuitem_ground" IsCheckable="True" IsChecked="False" Header="Ground Plane" Checked="ToggleGround" Unchecked="ToggleGround" />
+                <MenuItem Name="Menuitem_skinning" IsCheckable="True" IsChecked="False" Header="Skinning" ToolTip="The relationships between vertices and bones" Checked="ToggleSkinning" Unchecked="ToggleSkinning" />
+                <MenuItem Name="Menuitem_groundGrid" IsCheckable="True" IsChecked="False" Header="Ground Grid" Checked="ToggleGroundGrid" Unchecked="ToggleGroundGrid" />
+                <MenuItem Name="Menuitem_groundGridX" IsCheckable="True" IsChecked="False" Header="Grid X" Checked="ToggleGroundGridX" Unchecked="ToggleGroundGridX" />
+                <MenuItem Name="Menuitem_groundGridY" IsCheckable="True" IsChecked="False" Header="Grid Z" Checked="ToggleGroundGridZ" Unchecked="ToggleGroundGridZ" />
+                <MenuItem Name="Menuitem_vertices" IsCheckable="True" IsChecked="False" Header="Vertices" Checked="ToggleVertices" Unchecked="ToggleVertices" />
+                <MenuItem Name="Menuitem_edges" IsCheckable="True" IsChecked="False" Header="Edges" Checked="ToggleEdges" Unchecked="ToggleEdges" />
+                <MenuItem Name="Menuitem_skeleton" IsCheckable="True" IsChecked="False" Header="Skeleton" Checked="ToggleSkeleton" ToolTip="The relationships between nodes" Unchecked="ToggleSkeleton" />
+                <MenuItem Name="Menuitem_normals" IsCheckable="True" IsChecked="False" Header="Normals" Checked="ToggleNormals" Unchecked="ToggleNormals" />
+                <MenuItem Name="Menuitem_axis" IsCheckable="True" IsChecked="False" Header="Axis" Checked="ToggleAxis" Unchecked="ToggleAxis" />
+                <MenuItem  >
+                    <MenuItem.Header>
+                        <StackPanel>
+
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Viewport Grid:" Width="120"/>
+                                <TextBox Text="0" Width="50" Name="ViewPortGrid" TextChanged="SetViewportGrid"  />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Viewport Line spacing:" Width="120"/>
+                                <TextBox Text="0" Width="50" Name="ViewPortLineSpacing" TextChanged="SetViewportGridSpacing"  />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Grid size Overlay:" Margin="2" />
+                                <TextBox Name="InputGridOverlay" Width="100" Margin="2" Text="0" TextChanged="inputGridOverlaySet"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+
             </MenuItem>
             <MenuItem  Background="LightGray" Header="Import">
                 <MenuItem Click="ImportAllGeosetsOf" Header="Import all geosets of..." ></MenuItem>
                 <MenuItem Click="ImportAllNodesOf" Header="Import all nodes of.."></MenuItem>
                 <MenuItem Click="ImportTextures" Header="Import all textures of..."></MenuItem>
                 <MenuItem Click="ImportSequences" Header="Overwrite the list of sequences with another model's..."></MenuItem>
+                <MenuItem Click="importObj" Header="Batch import OBJ/s as geoset/s"></MenuItem>
+                <MenuItem Click="importSTL" Header="Import STL as geoset/s"></MenuItem>
+                <MenuItem Click="import3DS" Header="Import 3DS as new model"></MenuItem>
             </MenuItem>
             <MenuItem Header="Cleaner">
-                <MenuItem Header="Remove all lights" Click="RemoveAllLights" />
-                <MenuItem Header="Remove all emitter 1s" Click="RemoveEmitters1" />
-                <MenuItem Header="Remove all emitter 2s" Click="RemoveEmitters2" />
-                <MenuItem Header="Remove all attachments" Click="RemoveAllAttachments" />
-                <MenuItem Header="Remove all collision shapes" Click="RemoAllCOLS" />
-                <MenuItem Header="Remove all helpers" Click="removeAllHelpers" />
-                <MenuItem Header="Remove all event objects" Click="RemoveAllEventObjects" />
-                <MenuItem Header="Remove all nodes" Click="removeAllNodes" />
-                 
-                <MenuItem Header="Remove all texture animations" Click="deltxa" />
-                <MenuItem Header="Remove all cameras" Click="delcameras" />
-                <MenuItem Header="Remove all sequences" Click="delsequences" />
-                <MenuItem Header="Remove all global sequences" Click="delgss" />
-                <MenuItem Click="DelAllGeosets" Header="Remove all geosets"/>
-                <MenuItem Header="Remove all node animations" Click="RemoveAllAnimations" />
+                <MenuItem Header="Remove all lights" Click="RemoveAllLights" Padding="0"/>
+                <MenuItem Header="Remove all emitter 1s" Click="RemoveEmitters1"  Padding="0"/>
+                <MenuItem Header="Remove all emitter 2s" Click="RemoveEmitters2"  Padding="0"/>
+                <MenuItem Header="Remove all attachments" Click="RemoveAllAttachments" Padding="0" />
+                <MenuItem Header="Remove all collision shapes" Click="RemoAllCOLS" Padding="0" />
+                <MenuItem Header="Remove all helpers" Click="removeAllHelpers"  Padding="0"/>
+                <MenuItem Header="Remove all event objects" Click="RemoveAllEventObjects" Padding="0" />
+                <MenuItem Header="Remove all nodes" Click="removeAllNodes" Padding="0"  />
+                <MenuItem Header="Remove all lone nodes at root" Click="REmoveAllLoneNodes" Padding="0"  />
+
+                <MenuItem Header="Remove all texture animations" Click="deltxa"  Padding="0"/>
+                <MenuItem Header="Remove all cameras" Click="delcameras"  Padding="0" />
+                <MenuItem Header="Remove all sequences" Click="delsequences"  Padding="0" />
+                <MenuItem Header="Remove all global sequences" Click="delgss"  Padding="0" />
+                <MenuItem Click="DelAllGeosets" Header="Remove all geosets"  Padding="0" />
+                <MenuItem Header="Remove all node animations" Click="RemoveAllAnimations"   Padding="0"/>
             </MenuItem>
             <MenuItem Name="MenuTeamColor" Header="Team Color">
             </MenuItem>
-
+            <MenuItem Header="Tools">
+                <MenuItem Header="Batch Convert MDL&lt;-&gt;MDX" Click="batch_convert"/>
+                <MenuItem Header="Batch Convert BLP-&gt;PNG" Click="batch_convertImages"/>
+                <MenuItem Header="Batch Convert Image-&gt;BLP" Click="batch_images"/>
+                <MenuItem Header="Batch Optimize based on selected optimizations in optimizer..." Click="batch_optimize"/>
+                <MenuItem Header="Text Colorizer for game tooltips" Click="textColorizer"/>
+                <MenuItem Header="Loading Screen Maker" Click="lsmak"/>
+                <MenuItem Header="Pathing Texture Maker" Click="txm"/>
+                <MenuItem Header="MPQ Browser" Click="mpqbrowser"/>
+                <MenuItem Header="Standalone OBJ Batch converter" Click="stobj"/>
+                <MenuItem Header="Calculate extents with exception..." Click="calcexex"/>
+            </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="How a model works?"  Click="explain"/>
                 <MenuItem Header="How values work in this app?"  Click="explain2"/>
@@ -156,9 +238,10 @@
                             <CheckBox Name="Check_ClampUVs">Clamp all uv coordinates</CheckBox>
                             <CheckBox Name="Check_ClampNormals">Clamp invalid normals</CheckBox>
                             <CheckBox Name="Check_Minimiematrixgroups" ToolTip="If two or more matrix groups contain the same nodes regardless of order, they will be merged">Minimize repeating matrix groups</CheckBox>
-                             <!-- <CheckBox Name="Check_ReducematrixGruops" ToolTip="if a matrix group has two or more of the same node, remove excess ">Deduplicate matrix group nodes</CheckBox>
-                            --> <CheckBox Name="Check_CalculateExtents">Recalculate extents</CheckBox>
-                            
+                            <!-- <CheckBox Name="Check_ReducematrixGruops" ToolTip="if a matrix group has two or more of the same node, remove excess ">Deduplicate matrix group nodes</CheckBox>
+                            -->
+                            <CheckBox Name="Check_CalculateExtents">Recalculate extents</CheckBox>
+
 
                             <CheckBox Name="Check_DetachFromNonBone">Detach vertices from non-bone nodes and if empy, reattach to dummy bone</CheckBox>
                             <CheckBox Name="Check_FixNoMatrixGroups">Attach geosets with no matrix group to a dummy bone</CheckBox>
@@ -169,7 +252,7 @@
                             <CheckBox Name="check_mergeMaterials"   >Merge identical materials</CheckBox>
 
                             <CheckBox Name="check_mergeTAs"   >Merge identical texture animations</CheckBox>
-                            
+
                             <CheckBox Name="Check_MergeGeosets">Merge geosets that use the same materials</CheckBox>
                             <TextBlock Text="Delete" FontSize="16"/>
 
@@ -183,7 +266,7 @@
                             <CheckBox Name="Check_DeleteUnusedMaterials">Delete unused materials</CheckBox>
                             <CheckBox Name="Check_DeleteUnusedTextures">Delete unused textures</CheckBox>
                             <CheckBox Name="Check_DeleteUnusedTextureAnimations">Delete unused texture animations</CheckBox>
-                           
+
 
 
 
@@ -203,6 +286,7 @@
                             <CheckBox Name="Check_ClampLights">Clamp all light attentuations</CheckBox>
 
                             <CheckBox Name="Check_AddMissingOrigin">Add origin ref if missing</CheckBox>
+                            <CheckBox Name="Check_ClampTimeMiddle">Clamp Invalid Time Middle or Particle2 </CheckBox>
                             <TextBlock FontSize="16" Text="What to do about missing opening/closing keyframes?"/>
                             <RadioButton IsChecked="True">Nothing</RadioButton>
                             <RadioButton Name="MissingKeyframesCheck1">Stretch keyframes times to fit its sequence</RadioButton>
@@ -231,21 +315,39 @@
                     </Button>
                 </Grid>
             </TabItem>
-            <TabItem Header="Geosets"  Background="LightGray" >
+            <TabItem Header="Geosets"  Background="LightGray" HorizontalAlignment="Left" Width="54" >
                 <Grid Background="LightGray">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="31*"/>
+
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
                         <RowDefinition Height="10"  />
                     </Grid.RowDefinitions>
-                    <Viewport3D    Name="Scene_Viewport" Grid.Column="0"   />
-                    <Canvas Name="SceneOVerlay"  Grid.Column="0"  MouseWheel="Scene_MouseWheel"  
-MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background="Transparent">
-                    </Canvas>
-                    <StackPanel Name="GeometryOptionsHolder" Grid.Row="1" Grid.Column="0"  Visibility="Collapsed" > 
+                    <!--
+                  <Viewport3D    Name="Scene_Viewport3D" Grid.Column="0" Visibility="Collapsed" Grid.ColumnSpan="3"   />
+                      
+                    -->
+                    <sharpGL1:OpenGLControl  RenderTrigger="Manual" 
+                                            Name="Scene_ViewportGL"      Background="Black"
+                                            Initialized="InitializeSharpGL"
+                                            OpenGLDraw="DrawScene" Grid.ColumnSpan="2" />
+                    <Canvas Name="Canvas_Grid_Overlay"  Grid.Column="0" 
+                            Background="Transparent" Grid.ColumnSpan="2"  />
+
+
+                    <Canvas Name="Scene_Selection_Overlay"   Background="Transparent" 
+                            Grid.ColumnSpan="2" 
+                              MouseWheel="Scene_MouseWheelGL"  
+  MouseMove="Scene_MouseMove" 
+  MouseDown="Scene_MouseDown" 
+  MouseUp="Scene_MouseUp" 
+                            />
+                   
+                    <StackPanel Name="GeometryOptionsHolder" Grid.Column="0"  Visibility="Collapsed" Grid.ColumnSpan="3"  Grid.RowSpan="2" >
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Manually:" Width="100"/>
                             <TextBox Width="60" Name="InputAnimatorX"/>
@@ -266,7 +368,7 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
                             <Button Name="ButtonAnimatorT" Click="SetAnimatorTranslate"  Width="50" Background="Yellow">Translate</Button>
                             <Button Name="ButtonAnimatorR" Click="SetAnimatorRotate" Width="50">Rotate</Button>
                             <Button Name="ButtonAnimatorS" Click="SetAnimatorScale" Width="50">Scale</Button>
-                          
+
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" >
                             <TextBlock Text="Axis mode:"  Width="100"/>
@@ -279,7 +381,7 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
 
 
                     </StackPanel>
-                    <TabControl Name="Tabs_Geosets" Grid.Column="1" Grid.RowSpan="2" SelectionChanged="SelectionChanged_Geosets">
+                    <TabControl Name="Tabs_Geosets" Grid.Column="2" Grid.RowSpan="2" SelectionChanged="SelectionChanged_Geosets">
                         <TabItem Header="Geosets"  Background="LightGray" >
                             <Grid   Background="LightGray"  >
 
@@ -299,20 +401,24 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
                                                 <ContextMenu>
                                                     <MenuItem Header="Edit visibilities" Click="editvisibilitiesofgeoset" />
                                                     <MenuItem Header="set all visibilities in a sequence  ..." Click="editVisallseq" />
-                                                   
+
                                                     <MenuItem Header="Properties">
+                                                        <MenuItem Header="Rename" Click="renamegeoset" ToolTip="Only works in-app" />
                                                         <MenuItem Header="Set 'unselectable'" Click="setGeosetUnselectable" />
                                                         <MenuItem Header="Set 'selection group'" Click="setGeosetSelection" />
                                                         <MenuItem Header="Change used material" Click="changegeosetusedmaterial" />
                                                         <MenuItem Header="Set Extent" Click="setGeosetExtent" />
                                                         <MenuItem Header="Set Geoset' sequence Extents" Click="setGeosetExtents" />
                                                     </MenuItem>
-                                                   
+
                                                     <MenuItem Header="Go to material" Click="gotogeosettexture" />
                                                     <MenuItem Header="Go to bone" Click="gotogeosetbone" />
                                                     <MenuItem Header="Export/Import">
                                                         <MenuItem Header="Import" Click="ImportGeoset" />
                                                         <MenuItem Header="Export" Click="ExportGeoset" />
+                                                        <MenuItem Header="Export as OBJ" Click="exportGeosetOBJ" />
+                                                        <MenuItem  Header="Export as PLY (ASCII)" Click="exportply1"  />
+                                                        <MenuItem  Header="Export as PLY (Binary)" Click="exportply2"  />
                                                     </MenuItem>
                                                     <MenuItem Header="Normals">
                                                         <MenuItem Header="Average normals" Click="AverageNormals" />
@@ -329,12 +435,14 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
                                                             <MenuItem Header="Flatten..." Click="flattengeosets" />
                                                             <MenuItem Header="Flatten side..." Click="flattengeosetsside" />
                                                         </MenuItem>
-                                                      
+
                                                         <MenuItem Header="Translate">
                                                             <MenuItem Header="Custom..." Click="TranslateGeoserts" />
                                                             <MenuItem Header="Put on ground..." Click="putonground_click" />
                                                             <MenuItem Header="Pull together..." Click="PullTogether" />
-                                                            <MenuItem Header="SEt distance between 2 geosets..." Click="SetDistanceBetween2Geosets" />
+                                                            <MenuItem Header="Set distance between 2 geosets..." Click="SetDistanceBetween2Geosets" />
+                                                            <MenuItem Header="Distance from point..." Click="distanceGeosFromPoint" />
+                                                            <MenuItem Header="Swap locations" Click="SwapGeoPos" />
                                                         </MenuItem>
 
                                                         <MenuItem Header="Rotate">
@@ -349,11 +457,14 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
                                                             <MenuItem Header="Scale to fit..." Click="scaleToFit" />
                                                         </MenuItem>
 
+                                                        <MenuItem Header="Copy centroid to clipboard" Click="copycentroid" />
                                                         <MenuItem Header="Negate..." Click="negate" />
+                                                        <MenuItem Header="Mirror..." Click="mirrorgeosets" ToolTip="Flips the geometry on the selected axis while preserving its location" />
                                                         <MenuItem Header="Merge" ToolTip="All selected geosets will be merged into one and use the first's material" Click="MergeGeosets" />
                                                         <MenuItem Header="Separate" ToolTip="if a geoset contains 2 or more meshes, split them into different gesets" Click="separate" />
                                                         <MenuItem Header="Spread overlapping vertices" ToolTip="Finds all vertices that are overlapping based o na threshold, and sets a given dsitance between them" Click="spreadv" />
 
+                                                        <MenuItem Header="Change geometry based on a keyframe..."  Click="changeoebasedonkef" />
                                                         <MenuItem Header="Subdivide" ToolTip="Splits each triangle into 3 triangles. Preserves texture coordinates." Click="subdivide" />
                                                         <MenuItem Header="Simplify" ToolTip="For each flat surface found inside the selected geoset, reduces it to the minimum required triangles to form it" Click="Simplify" />
                                                         <MenuItem Header="Duplicate" Click="DuplicateGeoset" />
@@ -395,6 +506,9 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
                                                         <MenuItem Header="Swap Us and Vs" Click="swapusvsgeosets"/>
                                                         <MenuItem Header="Fit" Click="fituvgeoet" ToolTip="If the geoset has 2 triangles, their textue coordintes will be fitted onto the texture"/>
                                                     </MenuItem>
+                                                    <MenuItem Header="Animate">
+                                                        <MenuItem Header="Shatter" Click="shatterGeoset" IsEnabled="False"/>
+                                                    </MenuItem>
                                                 </ContextMenu>
                                             </Button.ContextMenu>
                                         </Button>
@@ -414,8 +528,8 @@ MouseMove="RotateMoved"   MouseDown="RotateOn"   MouseUp="RotateOff"  Background
 VerticalContentAlignment="Top" BorderBrush="LightGray">
                                         <Button.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Header="view transformations" Click="ViewGaTransformatons" />
-                                                <MenuItem Header="Make use/not use color" Click="MakeGAUseColor" />
+                                                <MenuItem Header="View transformations" Click="ViewGaTransformatons" />
+                                                <MenuItem Header="Reset all static colors to default" Click="ResetStaticColorToDefault" />
                                                 <MenuItem Header="Make all use color" Click="makeallGAUseColor" />
                                                 <MenuItem Header="Make all NOT use color" Click="makeallGAUseColorNOT" />
                                                 <MenuItem Header="Make all geoset animations alpha static" Click="MakeAllGAAlphaStatic" />
@@ -436,33 +550,33 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         </TabItem>
                         <TabItem Header="Vertex Editor" Background="LightGray" Visibility="Collapsed" >
                             <StackPanel Background="LightGray">
-                                
-                             
-                            <StackPanel Background="LightGray"  >
-                                
-                                <StackPanel Name="Options_Vertices" Margin="5">
-                                    <Button ToolTip="Turn positiive to negtive or negative to positive of the position">Negate</Button>
-                                    <Button ToolTip="Create a triangle from the 3 selected vertices, if they dont already form one">Create triangle</Button>
-                                    <Button>Delete</Button>
-                                    <Button ToolTip="2 selected, connected vertices are merged and moved to their relative center">Weld</Button>
-                                    <Button ToolTip="All selected verties are merged into 1 and its triangles destroyed">Collapse</Button>
-                                    <Button ToolTip="Selected vertices' position values are rounded down">Floor</Button>
-                                    <Button  ToolTip="Selected vertices' position values are rounded up">Ceiling</Button>
-                                    <Button >Snap...</Button>
-                                    <Button ToolTip="For each selected vertices, create copies of it, one per triangle (if it belongs to more than 1 triangle)">Split</Button>
-                                    <Button ToolTip="The selected vertices' position are arranged into a regular polygon">Arrange</Button>
-                                    <Button ToolTip="Finds the centroid of the selected verties and moves them way from it by a given value. Useful for overlapping vertices.">Spread</Button>
-                                    <Button  >Flatten...</Button>
+
+
+                                <StackPanel Background="LightGray"  >
+
+                                    <StackPanel Name="Options_Vertices" Margin="5">
+                                        <Button ToolTip="Turn positiive to negtive or negative to positive of the position">Negate</Button>
+                                        <Button ToolTip="Create a triangle from the 3 selected vertices, if they dont already form one">Create triangle</Button>
+                                        <Button>Delete</Button>
+                                        <Button ToolTip="2 selected, connected vertices are merged and moved to their relative center">Weld</Button>
+                                        <Button ToolTip="All selected verties are merged into 1 and its triangles destroyed">Collapse</Button>
+                                        <Button ToolTip="Selected vertices' position values are rounded down">Floor</Button>
+                                        <Button  ToolTip="Selected vertices' position values are rounded up">Ceiling</Button>
+                                        <Button >Snap...</Button>
+                                        <Button ToolTip="For each selected vertices, create copies of it, one per triangle (if it belongs to more than 1 triangle)">Split</Button>
+                                        <Button ToolTip="The selected vertices' position are arranged into a regular polygon">Arrange</Button>
+                                        <Button ToolTip="Finds the centroid of the selected verties and moves them way from it by a given value. Useful for overlapping vertices.">Spread</Button>
+                                        <Button  >Flatten...</Button>
+                                    </StackPanel>
+                                    <StackPanel Margin="5">
+                                        <Button>Copy position</Button>
+                                        <Button>Paste Position</Button>
+                                        <Button>Copy normal data</Button>
+                                        <Button>Paste normal data</Button>
+                                        <Button>Copy UV Coordinate</Button>
+                                        <Button>Paste UV Coordinate</Button>
+                                    </StackPanel>
                                 </StackPanel>
-                                <StackPanel Margin="5">
-                                    <Button>Copy position</Button>
-                                    <Button>Paste Position</Button>
-                                    <Button>Copy normal data</Button>
-                                    <Button>Paste normal data</Button>
-                                    <Button>Copy UV Coordinate</Button>
-                                    <Button>Paste UV Coordinate</Button>
-                                </StackPanel>
-                            </StackPanel>
                                 <StackPanel Name="Options_Triangles">
                                     <Button>Detach</Button>
                                     <Button>Detach as new Geoset</Button>
@@ -478,7 +592,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         </TabItem>
                         <TabItem Header="Rigging"   Background="LightGray"  Visibility="Collapsed"  HorizontalAlignment="Left" Margin="-2,-2,0,0" Width="57"    >
                             <Grid   Background="LightGray">
-                                
+
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="20"/>
                                     <RowDefinition/>
@@ -511,7 +625,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                         </TabItem>
                         <TabItem Header="Animator" Background="LightGray"    Visibility="Collapsed"  >
                             <Grid   Background="LightGray">
-                                
+
 
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="20"/>
@@ -523,7 +637,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                     <RowDefinition  />
                                     <RowDefinition Height="40"/>
                                 </Grid.RowDefinitions>
-                                
+
                                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.ColumnSpan="2">
                                     <Button Name="ButtonRiggingNodes" Content="Nodes" Width="100" Cursor="Help" Click="ShowMenuNodesRigging" >
                                         <Button.ContextMenu>
@@ -622,7 +736,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                         <TextBox Name="InputCurrentFrame" Width="50"/>
 
                                         <Button Click="gototrack" Width="70">Go to</Button>
-                                            
+
                                     </StackPanel>
 
 
@@ -743,8 +857,10 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                     </Grid.RowDefinitions>
                     <TextBlock Name="Report_sequences" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"  />
                     <TextBlock Name="Report_gsequences" Grid.Row="0" Grid.Column="2" />
-                    <ListBox Name="ListSequenes"  Grid.RowSpan="2"  Background="LightGray"   SelectionMode="Single" 
-                             Grid.Row="1" Grid.ColumnSpan="2"  SelectionChanged="SelectedSequence" MouseDoubleClick="SetSequenceLoop">
+                    <ListBox Name="ListSequenes"  Grid.RowSpan="2"  Background="LightGray"  
+                             SelectionMode="Single" 
+                             Grid.Row="1" Grid.ColumnSpan="2" 
+                             SelectionChanged="SelectedSequence" MouseDoubleClick="SetSequenceLoop">
                         <ListBox.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="New sequence" Click="newsequence_" />
@@ -753,7 +869,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                     <MenuItem Header="Rename" Click="renamesequence" />
                                     <MenuItem Header="Swap names with..." Click="swapnames" />
                                 </MenuItem>
-                               
+
                                 <MenuItem Header="Set all sequences' extents' celings..." Click="SEtCeilings"  ToolTip="This is for issues with the health bar height in-game"/>
 
                                 <MenuItem Header="Duplicate (with matching keyframes)" Click="DuplicateSEquenceWithMAtchingkeyframes" />
@@ -762,26 +878,27 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                 <MenuItem Header="Properties">
                                     <MenuItem Header="Make looping/Nonlooping" Click="switchLooping" />
                                     <MenuItem Header="Set extent" Click="setSEquenceExtent" />
+                                    <MenuItem Header="Set all extents" Click="setAllSqExtents" />
                                     <MenuItem Header="Set rarity" Click="setRarity" />
                                     <MenuItem Header="Set Movespeed" Click="setMovespeed" />
                                 </MenuItem>
-                                
-                                
+
+
                                 <MenuItem Header="Reverse">
                                     <MenuItem Header="Reverse sequence" Click="reverseSequence" />
                                     <MenuItem Header="Reverse all sequences" Click="ReverseAllSequences" />
                                 </MenuItem>
-                               
-                                
+
+
                                 <MenuItem Header="Mass create sequences..." Click="masscreeatesequences" />
                                 <MenuItem Header="Clear">
-                                    
+
                                     <MenuItem Header="Clear translations" Click="clearsequencetranslations" />
                                     <MenuItem Header="Clear scalings" Click="clearsequencescalings" />
                                     <MenuItem Header="Clear rotations" Click="clearsequencerotations" />
                                     <MenuItem Header="Clear all animations" Click="ClearAllAnimationsOfSequence" />
                                 </MenuItem>
-                                
+
                                 <MenuItem Header="Merge" Click="MergeSelectedSequences" />
                                 <MenuItem Header="Split" Click="SplitSequences" />
                                 <MenuItem Header="Sync with..." Click="syncwhith">
@@ -809,17 +926,19 @@ to the second sequence, sync their times.
                         <Button Cursor="Hand"  Click="addgs">Add</Button>
                         <Button Cursor="Hand"  Click="editgs">Edit</Button>
                         <Button Cursor="Hand"  Click="delgs">Remove</Button>
+                        <Button Cursor="Hand"  Click="massCreateGS">Mass create...</Button>
                     </StackPanel>
                     <TextBox Name="Report_Sequence_UsedNodes" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" IsReadOnly="True"  AcceptsReturn="True" 
     AcceptsTab="True" 
     TextWrapping="Wrap" 
     VerticalScrollBarVisibility="Auto"
     HorizontalScrollBarVisibility="Disabled" />
-                    <TextBox Name="Report_GSequence_UsedNodes" Grid.Column="2"  Grid.Row="3" IsReadOnly="True"  AcceptsReturn="True" 
+      <TextBox Name="Report_GSequence_UsedNodes" Grid.Column="2"  Grid.Row="3" IsReadOnly="True"  AcceptsReturn="True" 
     AcceptsTab="True" 
     TextWrapping="Wrap" 
     VerticalScrollBarVisibility="Auto"
     HorizontalScrollBarVisibility="Disabled" />
+                    
                 </Grid>
             </TabItem>
             <TabItem Header="Nodes"  Background="LightGray">
@@ -839,7 +958,7 @@ to the second sequence, sync their times.
                              Background="LightGray"         SelectedItemChanged="ListNodes_SelectedItemChanged">
 
                         <TreeView.ContextMenu>
-                            <ContextMenu x:Name="NodeContextMenu">
+                            <ContextMenu  Name="NodeContextMenu">
                                 <MenuItem Header="Create Node..." Click="createnode_click"/>
                                 <MenuItem Header="Create presets" >
 
@@ -853,14 +972,15 @@ to the second sequence, sync their times.
                                 <MenuItem Header="Find by name..." Click="findnode"/>
                                 <MenuItem Header="View Transformations" Click="ViewNodeTransformations"/>
 
-                                
-                                    <MenuItem Header="Delete" Click="DelNode"/>
-                                    <MenuItem Header="Delete all geometry attached to this bone" Click="DelBonesGeometry"/>
+
+                                <MenuItem Header="Delete" Click="DelNode"/>
+                                <MenuItem Header="Delete all geometry attached to this bone" Click="DelBonesGeometry"/>
                                 <MenuItem Header="Reattach attached vertices to anoter bone" Click="ReattachNodeGeometryToAnotherBone"/>
-                              
+
                                 <MenuItem Header="Move">
                                     <MenuItem Header="Move to root" Click="movetoroot"/>
                                     <MenuItem Header="Move under node..." Click="movetargetnodeundernode"/>
+                                    <MenuItem Header="Swap locations in tree" Click="swapnodesintree"/>
                                 </MenuItem>
                                 <MenuItem Header="Adjust">
                                     <MenuItem Header="Translate all nodes by..." Click="Tranlateallnodes"/>
@@ -871,12 +991,15 @@ to the second sequence, sync their times.
                                 <MenuItem Header="Duplicate" Click="duplicatenode"/>
                                 <MenuItem Header="Pivot Point">
                                     <MenuItem Header="Set Pivot Point to Geoset's centroid..." Click="Setpiv"/>
+                                    <MenuItem Header="Adjust at extent...." Click="centeratextent"/>
                                     <MenuItem Header="Set same as parent" Click="SetSamePPAsParent"/>
+                                    <MenuItem Header="Align with parent" Click="alignNodeWithParent"/>
                                     <MenuItem Header="Polar offset the position from custom point..." Click="SetPolarOffsetPP"/>
-                                    <MenuItem Header="Set Pivot Point to Geoset's centroid..." Click="Setpiv"/>
+
                                     <MenuItem Header="Center at its attached vertices" Click="CenterAtItsAttachedVertices"/>
+                                    <MenuItem Header="Swap pivot points" Click="swappivotswith"/>
                                     <MenuItem Header="Reset" Click="REsetNode"/>
-                                 
+
                                     <MenuItem Header="Negate">
                                         <MenuItem Header="X" Click="NegatePPX"/>
                                         <MenuItem Header="Y" Click="NegatePPY"/>
@@ -899,22 +1022,56 @@ to the second sequence, sync their times.
                                         <MenuItem Header="X" Click="alignallnodes_x"/>
                                         <MenuItem Header="Y" Click="alignallnodes_y"/>
                                         <MenuItem Header="Z" Click="alignallnodes_z"/>
-                                        
-                                    </MenuItem>
-                                </MenuItem>
-                                <MenuItem Header="Transformations">
-                                   
 
+                                    </MenuItem>
                                     <MenuItem Header="Rotate all nodes collectively..." Click="RotateAllNodesCollectively"/>
                                     <MenuItem Header="Scale all nodes collectively..." Click="scalenodes"/>
+                                </MenuItem>
+                                <MenuItem Header="Transformations">
+
+
+                                   
                                     <MenuItem Header="Reverse Transformations..." Click="reversenodetr"/>
                                     <MenuItem Header="Space Transformations..." Click="SpaceTras" ToolTip="Makes the distance between keyframes equal"/>
                                 </MenuItem>
                                 <MenuItem Header="Keyframes">
-                                    <MenuItem Header="Remove sequences from keyframes..." Click="removesequencesfromnodetransfromations"/>
-                                    <MenuItem Header="Reset all keyframes to default" Click="resetkeyframes"/>
+
+                                    <MenuItem Header="Copy/Move node's sequence keyframes to a sequence..." >
+                                        <MenuItem Header="Copy">
+                                            <MenuItem Header="Translation" Click="CopyNodeSequenceKeyframes_Translation"/>
+                                            <MenuItem Header="Rotation" Click="CopyNodeSequenceKeyframes_Rotation"/>
+                                            <MenuItem Header="Scaling" Click="CopyNodeSequenceKeyframes_Scaling"/>
+                                        </MenuItem>
+                                        <MenuItem Header="Cut">
+                                            <MenuItem Header="Translation" Click="CutNodeSequenceKeyframes_Translation"/>
+                                            <MenuItem Header="Rotation" Click="CutNodeSequenceKeyframes_Rotation"/>
+                                            <MenuItem Header="Scaling" Click="CutNodeSequenceKeyframes_Scaling"/>
+                                        </MenuItem>
+                                        <MenuItem Header="Paste" Click="PaseNodeSpecificKeyframesSEquence"/>
+                                        <MenuItem Header="Paste to multiple..." Click="PaseNodeSpecificKeyframesSEquenceMultiple"/>
+
+
+                                    </MenuItem>
+                                    <MenuItem Header="Keyframes">
+
+                                        <MenuItem Header="Copy/Cut node's keyframes..." >
+                                            <MenuItem Header="Copy">
+                                                <MenuItem Header="Translation" Click="CopyNodeKeyframes_Translation"/>
+                                                <MenuItem Header="Rotation" Click="CopyNodeKeyframes_Rotation"/>
+                                                <MenuItem Header="Scaling" Click="CopyNodeKeyframes_Scaling"/>
+                                            </MenuItem>
+                                            <MenuItem Header="Cut">
+                                                <MenuItem Header="Translation" Click="CutNodeKeyframes_Translation"/>
+                                                <MenuItem Header="Rotation" Click="CutNodeKeyframes_Rotation"/>
+                                                <MenuItem Header="Scaling" Click="CutNodeKeyframes_Scaling"/>
+                                            </MenuItem>
+                                            <MenuItem Header="Paste" Click="PaseNodeSpecificKeyframes"/>
+
+
+                                        </MenuItem>
+                                    <MenuItem Header="Reset all node's keyframes to default" Click="resetkeyframes"/>
                                     <MenuItem Header="Clear transformations..." Click="clearnodeTrans"/>
-                                    <MenuItem Header="Clear all nodes of transformations" Click="clearAllnodetrans"/>
+                                    <MenuItem Header="Clear ALL NODES of transformations" Click="clearAllnodetrans"/>
                                     <MenuItem Header="Reverse rotations of this node's rotations..." Click="reversenodekeyframesrotations"/>
                                     <MenuItem Header="Shift translations of this node..." Click="shiftnodetranslations"/>
                                     <MenuItem Header="Shrink/inflate scalings of this node..." Click="scalekeyframesofnode"/>
@@ -932,10 +1089,11 @@ to the second sequence, sync their times.
                                     <MenuItem Header="Root all child nodes and sub child nodes of selected node" Click="rootchildreninfinite"/>
                                     <MenuItem Header="Copy node transformations" Click="copyNodeTranslations"/>
                                     <MenuItem Header="Paste node transformations" Click="pastenodetranslations"/>
-                                    
+
                                 </MenuItem>
                                 <MenuItem Header="Info">
                                     <MenuItem Header="Which geosets are attached to this bone?" Click="geosetInfobone"/>
+                                </MenuItem>
                                 </MenuItem>
                             </ContextMenu>
 
@@ -999,6 +1157,11 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                                 <ContextMenu>
                                     <MenuItem Cursor="Hand"  Click="CreateMAterial" Header="New" Margin="5,0,5,0" />
                                     <MenuItem Cursor="Hand"  Click="DelMAterial" Header="Delete" Margin="5,0,5,0"  />
+                                    <MenuItem   Header="Other" Margin="5,0,5,0"   >
+                                        <MenuItem Cursor="Hand"  Click="atmtag" Header="Apply this material to all geosets" Margin="5,0,5,0"  />
+                                    </MenuItem>
+
+
 
                                 </ContextMenu>
                             </ListBox.ContextMenu>
@@ -1094,14 +1257,22 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                             <ListBox.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Cursor="Hand"  Click="findTexture" Header="Find texture..." />
+                                    <MenuItem Cursor="Hand"  Click="importTexture_" Header="Import" />
                                     <MenuItem Cursor="Hand"  Click="newtexturefrominput" Header="New from input..." />
                                     <MenuItem Cursor="Hand"  Click="createTextures" Header="Mass create textures from paths..." />
                                     <MenuItem Cursor="Hand"  Click="delTexture" Header="Delete" />
+                                    <MenuItem Cursor="Hand"  Click="delTexture2" Header="Delete texture and all materials using it" />
                                     <MenuItem Cursor="Hand"  Click="creatematerialfortargettexture" Header="Create material for this texture" />
                                     <MenuItem Cursor="Hand"  Click="creatematsforalltextures" Header="Create materials for all textures" />
                                     <MenuItem Cursor="Hand"  Click="createplane_t" Header="Create 3d plane for texture" />
                                     <MenuItem Cursor="Hand"  Click="createTC" Header="Create Team color" />
                                     <MenuItem Cursor="Hand"  Click="createTG" Header="Create Team glow" />
+                                    <MenuItem  Header="Path" >
+
+                                        <MenuItem Cursor="Hand"  Click="addw3imp" Header="Prepend War3Imported" />
+                                        <MenuItem Cursor="Hand"  Click="stripPath" Header="Strip path" />
+
+                                    </MenuItem>
                                 </ContextMenu>
                             </ListBox.ContextMenu>
 
@@ -1155,13 +1326,14 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                             </ScrollViewer>
                             <StackPanel VerticalAlignment="Top" Grid.Column="1">
                                 <Button Cursor="Hand"  Click="showunanimatedseq">Which sequences are not animated?</Button>
+                                <Button Cursor="Hand"  Click="whichnodesnotanimated">Which bones are not animated?</Button>
                                 <Button Cursor="Hand"  Click="CopySQData">Copy sequences data for keyframes</Button>
                                 <Button Cursor="Hand"  Click="ShowGaps">show me sequence gaps up to 999,999</Button>
                             </StackPanel>
                         </Grid>
                     </TabItem>
                     <TabItem Header="Check for errors">
-                        <TextBox Name="Box_Errors" Background="LightGray"  VerticalScrollBarVisibility="Visible"/>
+                        <TextBox Name="Box_Errors" IsReadOnly="True" Background="LightGray"  VerticalScrollBarVisibility="Visible"/>
                     </TabItem>
                 </TabControl>
             </TabItem>
@@ -1171,14 +1343,14 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                         <ColumnDefinition/>
                         <ColumnDefinition Width="200"/>
                     </Grid.ColumnDefinitions>
-                
-                <StackPanel Grid.Column="1">
-                    <ListBox Name="List_SEquences_Viewer" Height="350"/>
-                    <TextBlock Text="Play mode:" HorizontalAlignment="Center"/>
-                    <RadioButton IsChecked="True">Default</RadioButton>
+
+                    <StackPanel Grid.Column="1">
+                        <ListBox Name="List_SEquences_Viewer" Height="350"/>
+                        <TextBlock Text="Play mode:" HorizontalAlignment="Center"/>
+                        <RadioButton IsChecked="True">Default</RadioButton>
                         <RadioButton>Loop</RadioButton>
                         <RadioButton>None</RadioButton>
-                </StackPanel>
+                    </StackPanel>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Background="LightGray"
         Title="Create Sequences from presets" Height="350" Width="300">

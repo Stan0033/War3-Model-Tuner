@@ -1,14 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\",
+  "WorkspaceRootPath": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\wa3tuner.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\wa3tuner.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,42 +18,40 @@
       "DocumentGroups": [
         {
           "DockedHeight": 227,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAFUQAAAAAAAAAAAiwGcQAAA1AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-17T23:01:13.859Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Wa3Tuner",
-              "DocumentMoniker": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Wa3Tuner.csproj",
-              "ToolTip": "C:\\Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
-              "RelativeToolTip": "Wa3Tuner\\Wa3Tuner.csproj",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-02-17T23:00:51.785Z",
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ViewState": "AgIAALErAAAAAAAAAAArwL4rAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-15T17:53:01.923Z",
               "EditorCaption": ""
-            }
-          ]
-        },
-        {
-          "DockedHeight": 227,
-          "SelectedChildIndex": -1,
-          "Children": [
+            },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-03-15T17:52:14.892Z",
+              "EditorCaption": ""
             }
           ]
         }

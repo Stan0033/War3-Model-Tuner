@@ -3,12 +3,16 @@ using MdxLib.Primitives;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 using static Wa3Tuner.MainWindow;
 namespace Wa3Tuner
 {
@@ -445,6 +449,7 @@ namespace Wa3Tuner
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.LeftCtrl) { ControlHeld = true; }
+            if (e.Key == Key.Enter) finish(null, null);
         }
         private void Window_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -453,6 +458,105 @@ namespace Wa3Tuner
         private void EnableExtruded(object sender, RoutedEventArgs e)
         {
             ExtrusionInput.IsEnabled = CheckExtruded.IsChecked == true;
+        }
+
+        private void import(object sender, RoutedEventArgs e)
+        {
+            string loadPath = GetOpenPath();
+            if (loadPath.Length > 0)
+            {
+               
+                 
+                    string[] lines = File.ReadLines(loadPath).Select(x=>x.Trim()).ToArray();
+                foreach (var item in lines)
+                {
+                    if (item.Split(' ').Length != 2) { MessageBox.Show("Invalid file"); return; }
+                }
+
+                if (lines.Length < 3  || lines.Length > 100) { MessageBox.Show("Invalid file"); return; }
+                Vertices.Clear();
+                List< Vector2> tempList = new List< Vector2>();
+                SelectedVerticesCount = lines.Length;
+                DrawPolygon(SelectedVerticesCount);
+                
+                for (int i = 0; i< Vertices.Count; i++)
+                {
+                    string[] parts = lines[i].Split(" ");
+                    float x = float.Parse(parts[0]);  float y = float.Parse(parts[1]);
+                    Vertices[i].Position = new Point(x,y);
+                    
+                }
+                ReDraw();
+                
+            }
+        }
+        private string GetOpenPath()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "TLI Files (*.tli)|*.tli",
+                DefaultExt = ".tli",
+                Title = "Open File"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                return openFileDialog.FileName;
+            }
+
+            return "";
+        }
+        private void export(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(InputTextBox.Text, out int val))
+            {
+                if (val > 2 && val < 101)
+                {
+                    SelectedVerticesCount = val;
+                    string content = GetVerticesList();
+                    string savePath = GetSavePath();
+                        if (savePath.Length > 0)
+                    {
+                        File.WriteAllText(savePath, content);
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Invalid input for nuber of vertices. Must be between 3 and 100");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Invalid input for nuber of vertices");
+            }
+        }
+
+        private string GetSavePath()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "TLI Files (*.tli)|*.tli",
+                DefaultExt = ".tli",
+                Title = "Save File"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                return saveFileDialog.FileName;
+            }
+
+            return "";
+        }
+
+        string GetVerticesList()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var vertex in Vertices)
+            {
+                sb.AppendLine($"{vertex.Position.X} {vertex.Position.Y}");
+            }
+            return sb.ToString();
         }
     }
 }

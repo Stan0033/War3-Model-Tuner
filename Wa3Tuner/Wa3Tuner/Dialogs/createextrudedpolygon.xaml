@@ -39,10 +39,13 @@
                 <TextBlock Text="Extrusion:" Margin="5"/>
                 <TextBox Name="ExtrusionInput" Width="100" Margin="5" Text="2"/>
             </StackPanel>
-            <Button  Content="Load image..." Click="loadimage" Width="100" Margin="0,50,0,0" />
+            
+            <Button  Content="Import" Click="import" Width="100" Margin="2" />
+            <Button  Content="Export" Click="export" Width="100" Margin="2"/>
+            <Button  Content="Load image..." Click="loadimage" Width="100" Margin="0,30,0,0" />
            
             <StackPanel  Margin="10,50,0,0" >
-                <CheckBox Name="CheckRotate"  >Rotate Toward Camera</CheckBox>
+                <CheckBox Name="CheckRotate"  Margin="5" >Rotate Toward Camera</CheckBox>
                 <Button  Content="Finish" Width="100" Click="finish"/>
             </StackPanel>
             

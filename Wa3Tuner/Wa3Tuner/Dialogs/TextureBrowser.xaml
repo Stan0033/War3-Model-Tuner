@@ -9,9 +9,8 @@
         KeyDown="Window_KeyDown"
         Closing="Window_Closing"
         Background="LightGray"
-        Title="Texture Finder" Height="450" Width="400">
+        Title="Texture Finder" Height="450" Width="500">
     <Window.Resources>
-        <!-- Style for the TextBox and Buttons -->
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="30"/>
             <Setter Property="Padding" Value="5"/>
@@ -25,31 +24,65 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <!-- Row Definitions: First row for search box, second for ListBox, third for canvas, fourth for buttons -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <!-- Search box -->
             <RowDefinition Height="*"/>
-            <!-- ListBox takes remaining space -->
+            <!-- TabControl -->
             <RowDefinition Height="*"/>
-            <!-- Canvas for displaying the image -->
+            <!-- Image -->
             <RowDefinition Height="Auto"/>
             <!-- Buttons -->
         </Grid.RowDefinitions>
-        <!-- Column Definitions: Full width for each element -->
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <!-- Search Box -->
-        <TextBox Name="SearchBox" Grid.Row="0" KeyDown="SearchBox_KeyDown"/>
-        <!-- List Box: Takes most of the space -->
-        <ListBox Name="ItemListBox" Grid.Row="1" SelectionChanged="DispalyImage" SelectionMode="Single"/>
-        <!-- Canvas for displaying image -->
-        <Image Name="ImageHolder" Grid.Row="2"   />
-        <!-- Buttons: Placed in the fourth row -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Stretch">
+
+        <!-- TabControl containing Find and Favourites tabs -->
+        <TabControl Name="Tabs" Grid.Row="0" SelectionChanged="TabsChange">
+            <TabItem Header="Find">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="37*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Name="FindSearchBox" Grid.Row="0" KeyDown="FindSearchBox_KeyDown" Grid.ColumnSpan="2" Margin="5,5,5,5"/>
+                    <ListBox Name="FindItemListBox" Grid.Row="1" SelectionChanged="DispalyImage"
+                             SelectionMode="Single" Grid.ColumnSpan="2">
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Export" Click="export"/>
+                                <MenuItem Header="Export as PNG" Click="exportPNG"/>
+                                <MenuItem Header="Copy path to clipboard" Click="copy"/>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Favourites">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="42*"/>
+                        <ColumnDefinition Width="205*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Name="FavSearchBox" Grid.Row="0" KeyDown="FavSearchBox_KeyDown" Grid.ColumnSpan="2" Margin="5,5,5,5"/>
+                    <ListBox Name="FavItemListBox" Grid.Row="1" SelectionChanged="DispalyImage" SelectionMode="Single" Grid.ColumnSpan="2"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Image display -->
+        <Image Name="ImageHolder" Grid.Row="1"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch">
             <Button Name="AddTextureButton" Click="addTexture" Content="Add texture" Width="100"/>
             <Button Name="AddTextureAndMaterialButton" Click="AddTextureMat" Content="Add Texture and Material" Width="200"/>
+            <Button Name="ButtonAddFavourites" Click="AddFavourite" Content="Add Favourite" Width="150"/>
+            <Button Name="DelFavouriteButton" Click="DelFavourite" Content="Del" Width="150" Visibility="Collapsed"/>
         </StackPanel>
     </Grid>
 </Window>

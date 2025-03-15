@@ -66,6 +66,7 @@ namespace Wa3Tuner
 
         public static bool MergeIdenticalVertices = false;
         internal static bool ReducematrixGruops = false;
+        internal static bool TimeMiddle = false;
 
         public static void Optimize(CModel model_)
         {
@@ -76,11 +77,12 @@ namespace Wa3Tuner
             FixInvalidNodeRelationships();
             CreateLayerForMaterialsWithout();
             if (Linearize) { Linearize_(); }
+            if (TimeMiddle) { TimeMiddle_(); }
             if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
             if (DeleteIsolatedVertices) { DeleteIsolatedVertices_(); }
             if (Delete0LengthSequences) { Delete0LengthSequences_(); }
             if (Delete0LengthGlobalSequences) { Delete0LengthGlobalSequences_(); }
-            if (DeleteUnusedGlobalSequences) { DeleteUnusedGlobalSequences_(); }
+           
             if (DeleteUnusedHelpers) { DeleteUnusedHelpers_(); }
             if (DeleteUnusedMAterials) { DeleteUnusedMaterials_(); }
             if (DeleteUnusedTextures) { DeleteUnusedTextures_(); }
@@ -100,12 +102,12 @@ namespace Wa3Tuner
             if (DeleteDuplicateGAs) { DeleteDuplicateGAs_(); }
             if (AddMissingGAs) { AddMissingGAs_(); }
             if (SetAllStaticGAS) { SetAllStaticGAS_(); }
-            if (CalculateExtents) { CalculateExtents_(); }
+            if (CalculateExtents) { CalculateExtents_(new List<int>()); }
             if (DeleteIdenticalAdjascentKEyframes) { DeleteIdenticalAdjascentKEyframes_(); }
             if (Check_DeleteIdenticalAdjascentKEyframes_times) { Check_DeleteIdenticalAdjascentKEyframes_times_(); }
            if (DeleteSimilarSimilarKEyframes) { DeleteSimilarSimilarKEyframes_(); }
             if (DeleteUnusedKeyframes) { DeleteUnusedKeyframes_(); }
-           
+            if (DeleteUnusedGlobalSequences) { DeleteUnusedGlobalSequences_(); }
             if (_DetachFromNonBone) { _DetachFromNonBone_(); }
             if (ReducematrixGruops) { ReducematrixGruops_(); }
             if (DleteOverlapping1) DeleteIdenticalFaces();
@@ -132,8 +134,39 @@ namespace Wa3Tuner
             DeleteEmptyGeosets();
             RemoveEmptyGeosetAnimations();
             DeleteEventObjectsWithNoTRacks();
+           
         }
 
+        private static void TimeMiddle_()
+        {
+           foreach (var node in Model.Nodes)
+            {
+                if (node is CParticleEmitter2 e)
+                {
+                    if (e.Time < 0 || e.Time > 1)
+                    {
+                        e.Time = 1;
+                    }
+                   
+                }
+            }
+        }
+
+
+        public static void  HandleInvalidTextures(CModel model)
+        {
+              string White = "Textures\\white.blp";
+            List<int> ids = new List<int>() { 0, 1, 2, 11, 31, 32, 33, 34, 35, 36, 37 };
+            foreach (var t in model.Textures)
+            {
+                if (ids.Contains(t.ReplaceableId) == false)
+                {
+                    t.ReplaceableId = 0;
+                    t.FileName = White;
+                }
+               
+            }
+        }
         private static void ReducematrixGruops_()
         {
             foreach (var geoset in Model.Geosets)
@@ -1009,6 +1042,7 @@ namespace Wa3Tuner
         {
             foreach (INode node in Model.Nodes)
             {
+               
                 if (node is CAttachment)
                 {
                     CAttachment cAttachment = (CAttachment)node;
@@ -1061,15 +1095,15 @@ namespace Wa3Tuner
             }
             foreach (CGeosetAnimation ga in Model.GeosetAnimations)
             {
-                ClampStatic(ga.Alpha);
-                ClampStatic(ga.Color);
+                ClampStatic(ga.Alpha, 1);
+                ClampStatic(ga.Color, 1,1,1);
             }
             foreach (CMaterial material in Model.Materials)
             {
                 foreach
                     (CMaterialLayer layer in material.Layers)
                 {
-                    ClampStatic(layer.Alpha);
+                    ClampStatic(layer.Alpha, 1);
                     ClampStatic(layer.TextureId);
                 }
             }
@@ -1077,7 +1111,7 @@ namespace Wa3Tuner
             {
                 ClampStatic(ta.Translation);
                 ClampStatic(ta.Rotation);
-                ClampStatic(ta.Scaling);
+                ClampStatic(ta.Scaling,1,1,1);
             }
             foreach (CCamera camera in Model.Cameras)
             {
@@ -1086,36 +1120,44 @@ namespace Wa3Tuner
                 ClampStatic(camera.TargetTranslation);
             }
         }
-        private static void ClampStatic(CAnimator<float> animator)
+        private static void ClampStatic(CAnimator<float> animator, float def = 0)
         {
+            float d = 0;
+            if (animator.Count == 1) { d = animator.NodeList[0].Value; }
             if (animator.Static == false && animator.Count <= 1)
             {
                 animator.Clear();
-                animator.MakeStatic(0);
+                animator.MakeStatic(d);
             }
         }
-        private static void ClampStatic(CAnimator<CVector3> animator)
+        private static void ClampStatic(CAnimator<CVector3> animator, float def1 = 0, float def2 = 0, float def3 = 0)
         {
+            CVector3 d = new CVector3(def1,def2,def3);
+            if (animator.Count == 1) { d = animator.NodeList[0].Value; }
             if (animator.Static == false && animator.Count <= 1)
             {
                 animator.Clear();
-                animator.MakeStatic(new CVector3(0,0,0));
+                animator.MakeStatic(d);
             }
         }
         private static void ClampStatic(CAnimator<CVector4> animator)
         {
+            CVector4 d = new CVector4(0,0,0,1);
+            if (animator.Count == 1) { d = animator.NodeList[0].Value; }
             if (animator.Static == false && animator.Count <= 1)
             {
                 animator.Clear();
-                animator.MakeStatic(new CVector4(0, 0, 0,1));
+                animator.MakeStatic(d);
             }
         }
         private static void ClampStatic(CAnimator<int> animator)
         {
+            int d = 0;
+            if (animator.Count == 1) { d = animator.NodeList[0].Value; }
             if (animator.Static == false && animator.Count <= 1)
             {
                 animator.Clear();
-                animator.MakeStatic(0);
+                animator.MakeStatic(d);
             }
         }
         private static void DelUnusedMatrixGroups_()
@@ -2920,10 +2962,29 @@ namespace Wa3Tuner
             return (one.X == two.X && one.Y == two.Y && one.Z == two.Z && one.W == two.W) &&
                    (three.X == two.X && three.Y == two.Y && three.Z == two.Z && three.W == two.W);
         }
-        private static void CalculateExtents_()
+        private static void CalculateExtents_(List<int> exceptions )
         {
             // calculate the extent of each geoset
-            foreach (CGeoset geo in Model.Geosets)  CalculateGeosetExtent(geo);
+            foreach (CGeoset geo in Model.Geosets)
+            {
+                if (exceptions.Count == 0)
+                {
+                    CalculateGeosetExtent(geo);
+                }
+                else
+                {
+                    if (exceptions.Contains(Model.Geosets.IndexOf(geo))){
+                        geo.Extent = new CExtent();
+                    }
+                    else
+                    {
+                        CalculateGeosetExtent(geo);
+                    }
+                }
+                
+                
+
+            }
              // calculate model extent
             Model.Extent = Calculator.CalculateModelExtent(Model.Geosets.Select(x=>x.Extent).ToList());
             // calculate sequences' extents
@@ -2945,17 +3006,59 @@ namespace Wa3Tuner
         {
             foreach (CSequence sequence in Model.Sequences)
             {
-                sequence.Extent = new CExtent(Model.Extent);
+                sequence.Extent = GetHighestExtentForVisibleGeoset(sequence);
             }
         }
+
+        private static CExtent GetHighestExtentForVisibleGeoset(CSequence sequence)
+        {
+            CExtent extent = new();
+            List<CExtent> all = new List<CExtent>();
+            foreach (var geoset in Model.Geosets)
+            {
+                if (Model.GeosetAnimations.Any(x=>x.Geoset.Object == geoset))
+                {
+                    var gs = Model.GeosetAnimations.First(x => x.Geoset.Object == geoset);
+                    if (gs.Alpha.Animated)
+                    {
+                        if (gs.Alpha.Any(x=>x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd))
+                        {
+                            var kf = gs.Alpha.First(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd);
+                            if (kf.Value  > 0)
+                            {
+
+                            }
+                            else
+                            {
+                                all.Add(geoset.Extent);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        all.Add(geoset.Extent);
+                    }
+                }
+                else
+                {
+                    all.Add(geoset.Extent);
+                }
+            }
+            return Calculator.GetMaxExtent(all);
+             
+        }
+
         public  static void CalculateGeosetExtent(CGeoset geoset)
         {
-            List<CVector3> vectors = new List<CVector3> ();
-            foreach (CGeosetVertex vertex in geoset.Vertices)
-            {
-                vectors.Add(vertex.Position);
-            }
-            geoset.Extent = Calculator.GetExent(vectors);
+            
+                List<CVector3> vectors = new List<CVector3>();
+                foreach (CGeosetVertex vertex in geoset.Vertices)
+                {
+                    vectors.Add(vertex.Position);
+                }
+                geoset.Extent = Calculator.GetExtent(vectors);
+             
+            
         }
         private static void ClampKeyframes_()
         {
@@ -3564,181 +3667,189 @@ namespace Wa3Tuner
                 }
             }
         }
+        private static void RemoveUnusedKeyframes_Action(CAnimator<int> animator, bool CanBeStatic = true,  int df = 0)
+        {
+            if (animator.Animated == true)
+            {
+                foreach (var item in animator.NodeList.ToList())
+                {
+                    if (item.Time < 0) { animator.NodeList.Remove(item); continue; }
+                    if (ValueExistsInSequences(item.Time) == false)
+                    {
+                        animator.NodeList.Remove(item);
+                    }
+                }
+                if (!CanBeStatic) return;
+                if (animator.Count == 0)
+                {
+                    animator.MakeStatic(df);
+                }
+                if (animator.Count == 1)
+                {
+                    var temp = animator.NodeList[0].Value;
+                    animator.NodeList.Clear();
+                    animator.MakeStatic(temp); 
+                }
+            }
+        }
+        private static void RemoveUnusedKeyframes_Action(CAnimator<float> animator, bool CanBeStatic = true, int df = 0)
+        {
+            if (animator.Animated == true)
+            {
+                foreach (var item in animator.NodeList.ToList())
+                {
+                    if (item.Time < 0) { animator.NodeList.Remove(item); continue; }
+                    if (ValueExistsInSequences(item.Time) == false)
+                    {
+                        animator.NodeList.Remove(item);
+                    }
+                }
+                if (!CanBeStatic) return;
+                if (animator.Count == 0)
+                {
+                    animator.MakeStatic(df);
+                }
+                else if (animator.Count == 1)
+                {
+                    var temp = animator.NodeList[0].Value;
+                    if (temp <= 0) { temp = df; }
+                    animator.NodeList.Clear();
+                    animator.MakeStatic(temp);
+                }
+            }
+        }
+        private static void RemoveUnusedKeyframes_Action(CAnimator<CVector3> animator, bool canBeStatic = true, float one =0, float two = 0, float three = 0)
+        {
+            if (animator.Animated == true)
+            {
+                foreach (var item in animator.NodeList.ToList())
+                {
+                    if (item.Time < 0) { animator.NodeList.Remove(item); continue; }
+                    if (ValueExistsInSequences(item.Time) == false)
+                    {
+                        animator.NodeList.Remove(item);
+                    }
+                }
+                if (!canBeStatic) { return; }
+                if (animator.Count == 0)
+                {
+                    animator.MakeStatic(new CVector3(one, two, three));
+                }
+                else if (animator.Count == 1)
+                {
+                    var temp = animator.NodeList[0].Value;
+                    animator.NodeList.Clear();
+                    animator.MakeStatic(temp);
+                }
+            }
+        }
+        private static void RemoveUnusedKeyframes_Action(CAnimator<CVector4> animator, bool canBeStatic = true, float one = 0, float two = 0, float three = 0, float four = 1)
+        {
+            if (animator.Animated == true)
+            {
+                foreach (var item in animator.NodeList.ToList())
+                {
+                    if (item.Time < 0) { animator.NodeList.Remove(item); continue; }
+                    if (ValueExistsInSequences(item.Time) == false)
+                    {
+                        animator.NodeList.Remove(item);
+                    }
+                }
+                if (!canBeStatic) { return; }
+                if (animator.Count == 0)
+                {
+                    animator.MakeStatic(new CVector4(one, two, three, four));
+                }
+                else if (animator.Count == 1)
+                {
+                    var temp = animator.NodeList[0].Value;
+                    animator.NodeList.Clear();
+                    animator.MakeStatic(temp);
+                }
+            }
+        }
         private static void DeleteUnusedKeyframes_()
         {
             foreach (CGeosetAnimation ga in Model.GeosetAnimations)
             {
-                if (ga.Alpha.Static == false)
-                {
-                    foreach (var item in ga.Alpha.ToList())
-                    {
-                        if (item.Time < 0) {ga.Alpha.Remove(item); continue;  }
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            ga.Alpha.Remove(item);
-                        }
-                    }
-                }
-                if (ga.Color.Static == false)
-                {
-                    foreach (var item in ga.Color.ToList())
-                    {
-                        if (item.Time < 0) ga.Color.Remove(item);
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            ga.Color.Remove(item);
-                        }
-                    }
-                }
+                RemoveUnusedKeyframes_Action(ga.Alpha,true, 1);
+                RemoveUnusedKeyframes_Action(ga.Color, true, 1,1,1);
+                 
             }
             foreach (CMaterial material in Model.Materials)
             {
+                
                 foreach (CMaterialLayer layer in material.Layers)
                 {
-                    if (layer.Alpha.Static == false)
-                    {
-                        foreach (var item in layer.Alpha.ToList())
-                        {
-                            if (item.Time < 0) { layer.Alpha.Remove(item); }
-                            if (ValueExistsInSequences(item.Time) == false)
-                            {
-                                layer.Alpha.Remove(item);
-                            }
-                        }
-                    }
-                    if (layer.TextureId.Static == false)
-                    {
-                        foreach (var item in layer.TextureId.ToList())
-                        {
-                            if (item.Time < 0) { layer.TextureId.Remove(item); }
-                            if (ValueExistsInSequences(item.Time) == false)
-                            {
-                                layer.TextureId.Remove(item);
-                            }
-                        }
-                    }
+                    RemoveUnusedKeyframes_Action(layer.Alpha,true, 1);
+                    RemoveUnusedKeyframes_Action(layer.TextureId);
+                    
                 }
             }
             foreach (CTextureAnimation ta in Model.TextureAnimations)
             {
-                if (ta.Translation.Static == false)
-                {
-                    foreach (var item in ta.Translation.ToList())
-                    {
-                        if (item.Time < 0) { ta.Translation.Remove(item); }
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            ta.Translation.Remove(item);
-                        }
-                    }
-                }
-                if (ta.Scaling.Static == false)
-                {
-                    foreach (var item in ta.Scaling.ToList())
-                    {
-                        if (item.Time < 0) { ta.Scaling.Remove(item); }
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            ta.Scaling.Remove(item);
-                        }
-                    }
-                }
-                if (ta.Rotation.Static == false)
-                {
-                    foreach (var item in ta.Rotation.ToList())
-                    {
-                        if (item.Time < 0) { ta.Rotation.Remove(item); }
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            ta.Rotation.Remove(item);
-                        }
-                    }
-                }
+                RemoveUnusedKeyframes_Action(ta.Translation);
+                RemoveUnusedKeyframes_Action(ta.Rotation);
+                RemoveUnusedKeyframes_Action(ta.Scaling,true, 1,1,1);
+                 
             }
             foreach (CCamera cam in Model.Cameras)
             {
-                if (cam.Rotation.Static == false)
-                {
-                    foreach (var item in cam.Rotation.ToList())
-                    {
-                        if (item.Time < 0) { cam.Rotation.Remove(item); }
-                        if (ValueExistsInSequences(item.Time) == false)
-                        {
-                            cam.Rotation.Remove(item);
-                        }
-                    }
-                }
+                RemoveUnusedKeyframes_Action(cam.Rotation);
+                RemoveUnusedKeyframes_Action(cam.Translation);
+                RemoveUnusedKeyframes_Action(cam.TargetTranslation);
             }
             foreach (INode node in Model.Nodes)
             {
-                foreach (var item in node.Translation.ToList())
+                RemoveUnusedKeyframes_Action(node.Scaling, false,1,1,1);
+                RemoveUnusedKeyframes_Action(node.Rotation);
+                RemoveUnusedKeyframes_Action(node.Translation);
+                
+                if (node is CAttachment att)
                 {
-                    if (item.Time < 0) {  node.Translation.Remove(item); }
-                    if (!ValueExistsInSequences(item.Time)) { node.Translation.Remove(item); }
+                    RemoveUnusedKeyframes_Action(att.Visibility, false);
                 }
-                foreach (var item in node.Rotation.ToList())
+                if (node is CParticleEmitter emitter)
                 {
-                    if (item.Time < 0) { node.Rotation.Remove(item); }
-                    if (!ValueExistsInSequences(item.Time)) { node.Rotation.Remove(item); }
-                }
-                foreach (var item in node.Scaling.ToList())
+                    RemoveUnusedKeyframes_Action(emitter.InitialVelocity);
+                    RemoveUnusedKeyframes_Action(emitter.LifeSpan);
+                    RemoveUnusedKeyframes_Action(emitter.EmissionRate);
+                    RemoveUnusedKeyframes_Action(emitter.Longitude);
+                    RemoveUnusedKeyframes_Action(emitter.Visibility,true, 1);
+                    RemoveUnusedKeyframes_Action(emitter.Latitude );
+                    RemoveUnusedKeyframes_Action(emitter.Gravity);
+                  }
+                if (node is CParticleEmitter2 emitter2)
                 {
-                    if (item.Time < 0) { node.Scaling.Remove(item); }
-                    if (!ValueExistsInSequences(item.Time)) { node.Scaling.Remove(item); }
-                }
-                if (node is CAttachment)
+                    RemoveUnusedKeyframes_Action(emitter2.Visibility, true, 1);
+                    RemoveUnusedKeyframes_Action(emitter2.Gravity);
+                    RemoveUnusedKeyframes_Action(emitter2.Speed);
+                    RemoveUnusedKeyframes_Action(emitter2.Width);
+                    RemoveUnusedKeyframes_Action(emitter2.Length);
+                    RemoveUnusedKeyframes_Action(emitter2.EmissionRate);
+                    RemoveUnusedKeyframes_Action(emitter2.Variation);
+                    RemoveUnusedKeyframes_Action(emitter2.Latitude);
+                 }
+                if (node is CRibbonEmitter ribbon)
                 {
-                    CAttachment cAttachment = (CAttachment)node;
-                    foreach (var item in cAttachment.Visibility.ToList())
-                    {
-                        if (item.Time < 0) { cAttachment.Visibility.Remove(item); }
-                        if (!ValueExistsInSequences(item.Time)) { cAttachment.Visibility.Remove(item); }
-                    }
-                }
-                if (node is CParticleEmitter)
+                    RemoveUnusedKeyframes_Action(ribbon.Visibility, true, 1);
+                    RemoveUnusedKeyframes_Action(ribbon.Color, true,1,1,1);
+                    RemoveUnusedKeyframes_Action(ribbon.HeightAbove);
+                    RemoveUnusedKeyframes_Action(ribbon.HeightBelow);
+                    RemoveUnusedKeyframes_Action(ribbon.TextureSlot);
+                    RemoveUnusedKeyframes_Action(ribbon.Alpha, true, 1);
+                   }
+                if (node is CLight light)
                 {
-                    CParticleEmitter element = (CParticleEmitter)node;
-                    if (!element.InitialVelocity.Static) { foreach (var item in element.InitialVelocity.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.InitialVelocity.Remove(item); } } }
-                    if (!element.LifeSpan.Static) { foreach (var item in element.LifeSpan.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.LifeSpan.Remove(item); } } }
-                    if (!element.EmissionRate.Static) { foreach (var item in element.EmissionRate.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.EmissionRate.Remove(item); } } }
-                    if (!element.Longitude.Static) { foreach (var item in element.Longitude.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Longitude.Remove(item); } } }
-                    if (!element.Visibility.Static) { foreach (var item in element.Visibility.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Visibility.Remove(item); } } }
-                    if (!element.Latitude.Static) { foreach (var item in element.Latitude.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Latitude.Remove(item); } } }
-                    if (!element.Gravity.Static) { foreach (var item in element.Gravity.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Gravity.Remove(item); } } }
-                }
-                if (node is CParticleEmitter2)
-                {
-                    CParticleEmitter2 element = (CParticleEmitter2)node;
-                    if (!element.Speed.Static) { foreach (var item in element.Speed.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Speed.Remove(item); } } }
-                    if (!element.Width.Static) { foreach (var item in element.Width.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Width.Remove(item); } } }
-                    if (!element.Length.Static) { foreach (var item in element.Length.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Length.Remove(item); } } }
-                    if (!element.EmissionRate.Static) { foreach (var item in element.EmissionRate.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.EmissionRate.Remove(item); } } }
-                    if (!element.Variation.Static) { foreach (var item in element.Variation.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Variation.Remove(item); } } }
-                    if (!element.Visibility.Static) { foreach (var item in element.Visibility.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Visibility.Remove(item); } } }
-                    if (!element.Latitude.Static) { foreach (var item in element.Latitude.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Latitude.Remove(item); } } }
-                    if (!element.Gravity.Static) { foreach (var item in element.Gravity.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Gravity.Remove(item); } } }
-                }
-                if (node is CRibbonEmitter)
-                {
-                    CRibbonEmitter element = (CRibbonEmitter)node;
-                    if (!element.Color.Static) { foreach (var item in element.Color.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Color.Remove(item); } } }
-                    if (!element.HeightBelow.Static) { foreach (var item in element.HeightBelow.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.HeightBelow.Remove(item); } } }
-                    if (!element.HeightAbove.Static) { foreach (var item in element.HeightAbove.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.HeightAbove.Remove(item); } } }
-                    if (!element.Alpha.Static) { foreach (var item in element.Alpha.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Alpha.Remove(item); } } }
-                    if (!element.TextureSlot.Static) { foreach (var item in element.TextureSlot.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.TextureSlot.Remove(item); } } }
-                    if (!element.Visibility.Static) { foreach (var item in element.Visibility.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Visibility.Remove(item); } } }
-                }
-                if (node is CLight)
-                {
-                    CLight element = (CLight)node;
-                    if (!element.Color.Static) { foreach (var item in element.Color.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Color.Remove(item); } } }
-                    if (!element.AmbientColor.Static) { foreach (var item in element.AmbientColor.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.AmbientColor.Remove(item); } } }
-                    if (!element.Intensity.Static) { foreach (var item in element.Intensity.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Intensity.Remove(item); } } }
-                    if (!element.AmbientIntensity.Static) { foreach (var item in element.AmbientIntensity.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.AmbientIntensity.Remove(item); } } }
-                    if (!element.AttenuationEnd.Static) { foreach (var item in element.AttenuationEnd.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.AttenuationEnd.Remove(item); } } }
-                    if (!element.AttenuationStart.Static) { foreach (var item in element.AttenuationStart.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.AttenuationStart.Remove(item); } } }
-                    if (!element.Visibility.Static) { foreach (var item in element.Visibility.ToList()) { if (!ValueExistsInSequences(item.Time)) { element.Visibility.Remove(item); } } }
-                }
+                    RemoveUnusedKeyframes_Action(light.Color, true, 1, 1, 1);
+                    RemoveUnusedKeyframes_Action(light.Visibility, true, 1);
+
+                    RemoveUnusedKeyframes_Action(light.AmbientColor);
+                    RemoveUnusedKeyframes_Action(light.Intensity);
+                    RemoveUnusedKeyframes_Action(light.AmbientIntensity);
+                    RemoveUnusedKeyframes_Action(light.AttenuationEnd);
+                    RemoveUnusedKeyframes_Action(light.AttenuationStart);
+                   }
             }
         }
         private static bool ValueExistsInSequences(int track)
@@ -4667,6 +4778,72 @@ namespace Wa3Tuner
                     att.Visibility.Type = MdxLib.Animator.EInterpolationType.None;
                 }
             }
+        }
+
+        internal static void FalseAll()
+        {
+            Optimizer.Linearize = false;
+            Optimizer.DeleteIsolatedTriangles = false;
+            Optimizer.DeleteIsolatedVertices = false;
+            Optimizer.Delete0LengthSequences = false;
+            Optimizer.Delete0LengthGlobalSequences = false;
+            Optimizer.DeleteUnAnimatedSequences = false;
+            Optimizer.DeleteUnusedGlobalSequences = false;
+            Optimizer.DeleteUnusedBones = false;
+            Optimizer.DeleteUnusedHelpers = false;
+            Optimizer.DeleteUnusedMAterials = false;
+            Optimizer.DeleteUnusedTextures = false;
+            Optimizer.DeleteUnusedTextureAnimations = false;
+            Optimizer.DeleteUnusedKeyframes = false;
+            Optimizer.MergeGeosets = false;
+            Optimizer.DelUnusedMatrixGroups = false;
+            Optimizer.CalculateExtents = false;
+            Optimizer.MakeVisibilitiesNone = false;
+            Optimizer.AddMissingVisibilities = false;
+            Optimizer.ClampUVs = false;
+            Optimizer.ClampLights =   false;
+            Optimizer.DeleteDuplicateGAs =  false;
+            Optimizer.AddMissingGAs =  false;
+            Optimizer.SetAllStaticGAS = false;
+            Optimizer.ClampKeyframes = false;
+            Optimizer.DeleteIdenticalAdjascentKEyframes =       false;
+            Optimizer.Check_DeleteIdenticalAdjascentKEyframes_times = false;
+            Optimizer.DeleteSimilarSimilarKEyframes = false;
+            
+            Optimizer.StretchKeyframes = false;
+
+
+            Optimizer.OtherMissingKeyframes = false;
+            Optimizer.AddDefaultMissingOpeningKeyframes = false;
+            Optimizer.AddDefaultMissingClosingKeyframes = false;
+
+            Optimizer.MoveFirstKeyframeToStart = false;
+            Optimizer.MoveLastKeyframeToEnd = false;
+
+            Optimizer.DuplicateFirstKEyframeToStart = false;
+            Optimizer.DuplicateLastKeyframeToEnd = false;
+
+
+
+            Optimizer._DetachFromNonBone = false;
+            Optimizer.DleteOverlapping1 = false;
+            Optimizer.DleteOverlapping2 = false;
+            Optimizer.ClampNormals = false;
+            Optimizer.DeleteTrianglesWithNoArea = false;
+            Optimizer.MergeIdenticalVertices = false;
+            Optimizer.DeleteDuplicateGEosets = false;
+            Optimizer.MergeTextures = false;
+            Optimizer.MergeMAtertials = false;
+            Optimizer.MergeTAs = false;
+            Optimizer.MergeLayers = false;
+            Optimizer.MinimizeMatrixGroups = false;
+            Optimizer.FixNoMatrixGroups = false;
+        }
+
+        internal static void CalculateExtentsWithException(CModel model, List<int> indexes)
+        {
+            Model = model;
+            CalculateExtents_(indexes);
         }
     }
 }

@@ -1,0 +1,58 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Gradual_Keyframe_Maker"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        Background="LightGray"
+        
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="Gradual Keyframe Maker" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="37*"/>
+            <ColumnDefinition Width="163*"/>
+            <ColumnDefinition Width="200*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition  />
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="5,5,5,5" Grid.ColumnSpan="2">
+            <RadioButton IsChecked="True" Name="c1" Checked="chek1" Width="170">With number of keyframes</RadioButton>
+            <RadioButton  Name="c2" Checked="chek2">With step</RadioButton>
+        </StackPanel>
+        <ListBox Grid.Row="1" Name="list" SelectionChanged="list_SelectionChanged" Grid.ColumnSpan="2">
+
+        </ListBox>
+        <StackPanel Grid.Row="1" Grid.Column="2">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="From:" Width="150"/>
+                <TextBox Name="inputFrom" Width="100"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="To:" Width="150"/>
+                <TextBox Name="inputTo" Width="100"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Initial value:" Width="150"/>
+                <TextBox Name="inputValue" Width="100"/>
+
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Name="d1">
+                <TextBlock Text="Number of keyframes total:" Width="150"/>
+                <TextBox Name="inputKF" Width="100" Text="2"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Name="d2">
+                <TextBlock Text="Step:" Width="150"/>
+                <TextBox Name="inputStep" Width="100" Text="1"/>
+                <CheckBox Name="checkIncrement" IsChecked="True">Increment</CheckBox>
+            </StackPanel>
+            <Button Click="ok" Margin="20" Height="40">OK</Button>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -42,10 +42,12 @@ namespace Wa3Tuner
             y.Text = pivotPoint.Y.ToString();
             z.Text = pivotPoint.Z.ToString();
             Title = title;
+            allowedValue = allowed;
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null,null);
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -62,19 +64,19 @@ namespace Wa3Tuner
                 {
                     DialogResult = true;
                 }
-                if (allowedValue == AllowedValue.Positive)
+                else if (allowedValue == AllowedValue.Positive)
                 {
-                   if (X < 0 || Y < 0 || Z < 0)
+                    if (X < 0 || Y < 0 || Z < 0)
                     {
                         MessageBox.Show("Expected positive values"); return;
                     }
                     DialogResult = true;
                 }
-                if (allowedValue == AllowedValue.Negative)
+                else if (allowedValue == AllowedValue.Negative)
                 {
                     if (X > 0 || Y > 0 || Z > 0)
                     {
-                        MessageBox.Show("Expected positive values"); return;
+                        MessageBox.Show("Expected negative values"); return;
                     }
                     DialogResult = true;
                 }

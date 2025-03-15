@@ -46,6 +46,10 @@ namespace W3_Texture_Finder
         {
             File.WriteAllText(MPQPaths.paths, $"{MPQPaths.War3}\n{MPQPaths.War3X}\n{MPQPaths.War3Patch}\n{MPQPaths.War3xLocal}");
         }
+        private static bool Found_War3 = false;
+        private static bool Found_War3x = false;
+        private static bool Found_War3xLocal = false;
+        private static bool Found_War3Patch = false;
         private static void FindLost()
         {
             if (Findwar3() == false) { Environment.Exit(0); }

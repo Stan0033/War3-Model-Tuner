@@ -1,0 +1,54 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Extent_Orientation_Selector"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="Extent Orientation Selector" Height="600" Width="200">
+    <Grid>
+
+        <StackPanel Margin="5">
+            <RadioButton Name="RadioTop">Top</RadioButton>
+            <RadioButton Name="RadioBottom">Bottom</RadioButton>
+            <RadioButton Name="RadioLeft">Left</RadioButton>
+            <RadioButton Name="RadioRight">Right</RadioButton>
+            <RadioButton Name="RadioFront">Front</RadioButton>
+            <RadioButton Name="RadioBack">Back</RadioButton>
+
+            <!-- Diagonal Combinations -->
+            <RadioButton Name="RadioTopLeft">Top Left</RadioButton>
+            <RadioButton Name="RadioTopRight">Top Right</RadioButton>
+            <RadioButton Name="RadioBottomLeft">Bottom Left</RadioButton>
+            <RadioButton Name="RadioBottomRight">Bottom Right</RadioButton>
+
+            <RadioButton Name="RadioTopFront">Top Front</RadioButton>
+            <RadioButton Name="RadioTopBack">Top Back</RadioButton>
+            <RadioButton Name="RadioBottomFront">Bottom Front</RadioButton>
+            <RadioButton Name="RadioBottomBack">Bottom Back</RadioButton>
+
+            <RadioButton Name="RadioLeftFront">Left Front</RadioButton>
+            <RadioButton Name="RadioLeftBack">Left Back</RadioButton>
+            <RadioButton Name="RadioRightFront">Right Front</RadioButton>
+            <RadioButton Name="RadioRightBack">Right Back</RadioButton>
+
+            <!-- Corner Combinations -->
+            <RadioButton Name="RadioTopLeftFront">Top Left Front</RadioButton>
+            <RadioButton Name="RadioTopLeftBack">Top Left Back</RadioButton>
+            <RadioButton Name="RadioTopRightFront">Top Right Front</RadioButton>
+            <RadioButton Name="RadioTopRightBack">Top Right Back</RadioButton>
+            <RadioButton Name="RadioBottomLeftFront">Bottom Left Front</RadioButton>
+            <RadioButton Name="RadioBottomLeftBack">Bottom Left Back</RadioButton>
+            <RadioButton Name="RadioBottomRightFront">Bottom Right Front</RadioButton>
+            <RadioButton Name="RadioBottomRightBack">Bottom Right Back</RadioButton>
+
+            <RadioButton Name="RadioCenter" IsChecked="True">Center</RadioButton>
+            <Button Name="ButtonOK" Click="ok" Margin="50" Height="30" VerticalAlignment="Bottom">OK</Button>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

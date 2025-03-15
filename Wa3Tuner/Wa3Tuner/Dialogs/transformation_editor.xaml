@@ -52,6 +52,9 @@
                         <MenuItem Header="Copy to clipboard"    Click="CopyToClipboard" />
                         <MenuItem Header="Copy everything to clipboard"    Click="CopyAllToClipboard" />
                         <MenuItem Header="Loop..."    Click="loop" />
+                        <MenuItem Header="Remove sequences..."    Click="RemoveSequences" />
+                        <MenuItem Header="Duplicate sequence to sequence/s"    Click="dups2ss" />
+                        <MenuItem Header="Gradual Keyframes maker"    Click="gkm" />
                         <MenuItem   Header="Clear all"  Click="clearall"  />
                         <MenuItem     Header="Reverse instructions"   Click="reverseinstructions"/>
                         <MenuItem      Header="Leave only starts"   Click="leaveonlystarts"/>
@@ -67,7 +70,17 @@
                         <MenuItem     Header="Add the input to all"   Click="addtoall"/>
                         <MenuItem     Header="Subtract the input from all"   Click="subtractfromall"/>
                         <MenuItem     Header="Multiply all with the input"   Click="multiplyall"/>
-                        <MenuItem     Header="Divide all with the input"   Click="divideall"/>
+                        <MenuItem     Header="Set all keyframes to..."   Click="sak"/>
+                        <MenuItem     Header="Set all keyframes of sequence to..."   Click="sak2"/>
+                        <MenuItem     Header="Start each sequence with default data"   Click="starte"/>
+                        <MenuItem     Header="End each sequence with default data"   Click="ende"/>
+                        <MenuItem     Header="Stretch sequence keyframes..."   Click="stretch1"/>
+                        <MenuItem     Header="Stretch all sequences' keyframes..."   Click="stretch2"/>
+                        <MenuItem     Header="Copy/Move keyframes..."   >
+                            <MenuItem     Header="Copy"   Click="copymovekfs"/>
+                            <MenuItem     Header="Cut"   Click="cutmovekfs"/>
+                            <MenuItem     Header="Paste"   Click="pasteseelctkfs"/>
+                        </MenuItem>
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>

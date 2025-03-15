@@ -340,13 +340,12 @@ namespace Wa3Tuner
         }
         private void SetColor(Button? button)
         {
-          color_selector cs = new color_selector(button.Background);
-            cs.ShowDialog();
-            if (cs.DialogResult == true)
-            {
-              Color color=  cs.SelectedColor;
-                button.Background = Calculator.ColorToBrush(color);
-            }
+
+            //pik color
+            System.Windows.Media.Brush newColor = ColorPickerHandler.Pick(button.Background);
+            // set to button
+                button.Background = newColor;
+            
         }
         private void SetColor2(object sender, RoutedEventArgs e)
         {

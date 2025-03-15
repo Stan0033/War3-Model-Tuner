@@ -1,4 +1,5 @@
-﻿using MdxLib.Primitives;
+﻿using MdxLib.Model;
+using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,9 @@ namespace Wa3Tuner.Dialogs
     public partial class Edit_Extent : Window
     {
         CExtent Current;
+        private CModel currentModel;
+        private bool all;
+
         public Edit_Extent(CExtent extent)
         {
             InitializeComponent();
@@ -37,6 +41,12 @@ namespace Wa3Tuner.Dialogs
             bounds_.Text = extent.Radius.ToString();    
         }
 
+        public Edit_Extent(CModel currentModel, bool all)
+        {
+            this.currentModel = currentModel;
+            this.all =  all;
+        }
+
         private void ok(object sender, RoutedEventArgs e)
         {
             bool parse1 = float.TryParse(minx_.Text, out float minx);
@@ -46,16 +56,33 @@ namespace Wa3Tuner.Dialogs
             bool parse5 = float.TryParse(maxx_.Text, out float maxy);
             bool parse6 = float.TryParse(maxx_.Text, out float maxz);
             bool parse7 = float.TryParse(bounds_.Text, out float bound);
+
             if (parse1 && parse2 && parse3 && parse4 && parse5 && parse6 && parse7)
             {
                 if (bound < 0) { return; }
                 if (minx >= maxx) { return; }
                 if (miny >= maxy) { return; }
                 if (minz >= maxz) { return; }
-                Current.Min.X = minx; Current.Min.Y = miny; Current.Min.Z = minz;
-                Current.Max.X = maxx; Current.Max.Y = maxy; Current.Max.Z = maxz;
-                Current.Radius = bound;
-                DialogResult = true;
+                if (all)
+                {
+                    foreach (var s in currentModel.Sequences)
+                    {
+                        s.Extent  .Min.X = minx; s.Extent.Min.Y = miny; s.Extent.Min.Z = minz;
+                        s.Extent.Max.X = maxx; s.Extent.Max.Y = maxy; s.Extent.Max.Z = maxz;
+                        s.Extent.Radius = bound;
+                       
+                    }
+                    DialogResult = true;
+                }
+                else
+                {
+                    Current.Min.X = minx; Current.Min.Y = miny; Current.Min.Z = minz;
+                    Current.Max.X = maxx; Current.Max.Y = maxy; Current.Max.Z = maxz;
+                    Current.Radius = bound;
+                    DialogResult = true;
+                }
+               
+              
 
             }
 
@@ -108,6 +135,12 @@ namespace Wa3Tuner.Dialogs
             maxy_.Text = Current.Max.Y.ToString();
             maxz_.Text = Current.Max.Z.ToString();
             bounds_.Text = Current.Radius.ToString();
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null, null);
         }
     }
     public static class ExtentCopier

@@ -15,10 +15,11 @@ namespace Wa3Tuner
     /// <summary>
     /// Interaction logic for Multiselector.xaml
     /// </summary>
-    public partial class Multiselector : Window
+    public partial class Multiselector_Window : Window
     {
         public List<string> selected = new List<string>();
-        public Multiselector(List<string> items)
+        public List<int> selectedIndexes = new List<int>();
+        public Multiselector_Window(List<string> items)
         {
             InitializeComponent();
             foreach (var item in items)
@@ -52,6 +53,7 @@ namespace Wa3Tuner
                 {
                     string s = (item as ListBoxItem).Content.ToString();
                     selected.Add(s);
+                    selectedIndexes.Add(list.Items.IndexOf(item));
                 }
                 DialogResult = true;
             }
@@ -59,6 +61,7 @@ namespace Wa3Tuner
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
+            if (e.Key == Key.Enter) ok(null, null);
         }
     }
 }

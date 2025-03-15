@@ -1,8 +1,10 @@
-﻿using MdxLib.Animator;
+﻿using Dsafa.WpfColorPicker;
+using MdxLib.Animator;
 using MdxLib.Model;
 using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -15,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Dialogs;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -26,7 +29,8 @@ namespace Wa3Tuner
         Scaling,
         Visibility,
         Rotation,
-        Alpha
+        Alpha,
+        None
     }
     public class Ttrack
     {
@@ -68,12 +72,12 @@ namespace Wa3Tuner
         }
         public Ttrack(Ttrack copiedTrack)
         {
-             Time = copiedTrack.Time;
+            Time = copiedTrack.Time;
             X = copiedTrack.X;
             Y = copiedTrack.Y;
             Z = copiedTrack.Z;
         }
-        public   string ToStringData(TransformationType type)
+        public string ToStringData(TransformationType type)
         {
 
             return $"{Time}: {GetValue(type)}";
@@ -86,8 +90,8 @@ namespace Wa3Tuner
             else if (type == TransformationType.Scaling) { return $"{X}, {Y}, {Z}"; }
             else if (type == TransformationType.Visibility)
             {
-                if (X>= 1) { return "Visible"; }
-                   return "Invisible";  
+                if (X >= 1) { return "Visible"; }
+                return "Invisible";
             }
             else { return X.ToString(); }
         }
@@ -169,7 +173,8 @@ namespace Wa3Tuner
         {
             if (type == TransformationType.Alpha)
             {
-                if (values[0] > 100) { X = 100; } else
+                if (values[0] > 100) { X = 100; }
+                else
                 {
                     X += values[0];
                     if (X > 100) X = 100;
@@ -177,17 +182,18 @@ namespace Wa3Tuner
             }
             if (type == TransformationType.Scaling || type == TransformationType.Translation)
             {
-                X+= values[0];
-                Y+= values[1];
-                Z+= values[2];
+                X += values[0];
+                Y += values[1];
+                Z += values[2];
             }
-            if ( type == TransformationType.Color)  {
+            if (type == TransformationType.Color)
+            {
                 X += values[0];
                 Y += values[1];
                 Z += values[2];
                 if (X > 255) X = 255;
                 if (Y > 255) Y = 255;
-                if ( Z > 255) Z = 255;
+                if (Z > 255) Z = 255;
             }
             if (type == TransformationType.Rotation)
             {
@@ -207,10 +213,10 @@ namespace Wa3Tuner
         {
             if (type == TransformationType.Alpha)
             {
-                    X -= values[0];
-                    if (X  <0) X = 0;
+                X -= values[0];
+                if (X < 0) X = 0;
             }
-            if (  type == TransformationType.Translation)
+            if (type == TransformationType.Translation)
             {
                 X -= values[0];
                 Y -= values[1];
@@ -296,33 +302,33 @@ namespace Wa3Tuner
             }
         }
     }
-        public partial class transformation_editor : Window
+    public partial class transformation_editor : Window
+    {
+        CModel Model;
+        public bool Initialized = false;
+        private TransformationType Type;
+        public CAnimator<int> Dummy_int;
+        public CAnimator<float> Dummy_float;
+        public CAnimator<CVector3> Dummy_Vector3;
+        public CAnimator<CVector4> Dummy_Vector4;
+        private List<Ttrack> Tracks = new List<Ttrack>();
+        public transformation_editor(CModel model, CAnimator<float> animator, bool canBeStatic, TransformationType type)
         {
-            CModel Model;
-            public bool Initialized = false;
-            private TransformationType Type;
-            public CAnimator<int> Dummy_int;
-            public CAnimator<float> Dummy_float;
-            public CAnimator<CVector3> Dummy_Vector3;
-            public CAnimator<CVector4> Dummy_Vector4;
-            private List<Ttrack> Tracks = new List<Ttrack>();
-            public transformation_editor(CModel model, CAnimator<float> animator, bool canBeStatic, TransformationType type)
-            {
-               InitializeComponent();
+            InitializeComponent();
             if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
             Initialized = true;
-                Dummy_float = animator;
-                Type = type;
-                Model = model;
-                if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
-                if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
-                Combo_InterpType.SelectedIndex = (int)animator.Type;
-                ButtonColor.IsEnabled = false;
-                foreach (var item in animator)
-                {
-                    Tracks.Add(new Ttrack(item.Time, item.Value));
-                }
-                if (type == TransformationType.Alpha) ConvertAlphaTracks(); SetSpecial.IsEnabled = true;
+            Dummy_float = animator;
+            Type = type;
+            Model = model;
+            if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
+            if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
+            Combo_InterpType.SelectedIndex = (int)animator.Type;
+            ButtonColor.IsEnabled = false;
+            foreach (var item in animator)
+            {
+                Tracks.Add(new Ttrack(item.Time, item.Value));
+            }
+            if (type == TransformationType.Alpha) ConvertAlphaTracks(); SetSpecial.IsEnabled = true;
             if (type == TransformationType.Visibility)
             {
                 StaticInput.Visibility = Visibility.Collapsed;
@@ -330,227 +336,242 @@ namespace Wa3Tuner
                 ButtonColor.Visibility = Visibility.Collapsed;
                 Check_InputVisible.Visibility = Visibility.Visible;
                 Check_StaticVisible.Visibility = Visibility.Visible;
-                SetSpecial.IsEnabled = true; 
+                SetSpecial.IsEnabled = true;
             }
-                RefreshTracks();
-                FillSequences();
-                Title = $"Transformation Editor - {type}";
-                FillGlobalSEquence(animator.GlobalSequence.Object);
-            }
-            private void FillStaticValue()
-            {
-                if (Type == TransformationType.Alpha) { StaticInput.Text = (Dummy_float.GetValue() * 100).ToString(); }
-                if (Type == TransformationType.Color) { StaticInput.Text = Calculator.BGRnToRGB(Dummy_Vector3.GetValue()); }
-                if (Type == TransformationType.Translation) { StaticInput.Text = GetStatic(Dummy_Vector3.GetValue()); }
-                if (Type == TransformationType.Scaling) { { StaticInput.Text = GetStaticP(Dummy_Vector3.GetValue()); } }
-                if (Type == TransformationType.Rotation) { StaticInput.Text = Calculator.QuaternionToEuler_(Dummy_Vector4.GetValue()); }
-                if (Type == TransformationType.Visibility) { Check_StaticVisible.IsChecked = GetVisibileBool( Dummy_float.GetValue()); }
-                if (Type == TransformationType.Int) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
-                if (Type == TransformationType.Float) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
-            }
+            RefreshTracks();
+            FillSequences();
+            Title = $"Transformation Editor - {type}";
+            FillGlobalSEquence(animator.GlobalSequence.Object);
+        }
+        private void FillStaticValue()
+        {
+            if (Type == TransformationType.Alpha) { StaticInput.Text = (Dummy_float.GetValue() * 100).ToString(); }
+            if (Type == TransformationType.Color) { StaticInput.Text = Calculator.BGRnToRGB(Dummy_Vector3.GetValue()); }
+            if (Type == TransformationType.Translation) { StaticInput.Text = GetStatic(Dummy_Vector3.GetValue()); }
+            if (Type == TransformationType.Scaling) { { StaticInput.Text = GetStaticP(Dummy_Vector3.GetValue()); } }
+            if (Type == TransformationType.Rotation) { StaticInput.Text = Calculator.QuaternionToEuler_(Dummy_Vector4.GetValue()); }
+            if (Type == TransformationType.Visibility) { Check_StaticVisible.IsChecked = GetVisibileBool(Dummy_float.GetValue()); }
+            if (Type == TransformationType.Int) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
+            if (Type == TransformationType.Float) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
+        }
         private bool GetVisibileBool(float value)
         {
             if (value >= 1) { return true; }
             return false;
         }
-            private string GetStaticP(CVector3 cVector3)
+        private string GetStaticP(CVector3 cVector3)
+        {
+            return $"{cVector3.X * 100}, {cVector3.Y * 100}, {cVector3.Z * 100}";
+        }
+        private string GetStatic(CVector3 cVector3)
+        {
+            return $"{cVector3.X}, {cVector3.Y}, {cVector3.Z}";
+        }
+        private void FillGlobalSEquence(CGlobalSequence gs_)
+        {
+            Combo_GlobalSequence.Items.Add(new ComboBoxItem() { Content = "None" });
+            foreach (CGlobalSequence gs in Model.GlobalSequences)
             {
-                return $"{cVector3.X * 100}, {cVector3.Y * 100}, {cVector3.Z * 100}";
+                Combo_GlobalSequence.Items.Add(new ComboBoxItem() { Content =$"{gs.ObjectId} ({gs.Duration})"   });
             }
-            private string GetStatic(CVector3 cVector3)
+            if (gs_ != null)
             {
-                return $"{cVector3.X}, {cVector3.Y}, {cVector3.Z}";
+                Combo_GlobalSequence.SelectedIndex = Model.GlobalSequences.IndexOf(gs_) + 1;
             }
-            private void FillGlobalSEquence(CGlobalSequence gs_)
+            else
             {
-                Combo_GlobalSequence.Items.Add(new ComboBoxItem() { Content = "None" });
-                foreach (CGlobalSequence gs in Model.GlobalSequences)
-                {
-                    Combo_GlobalSequence.Items.Add(new ComboBoxItem() { Content = gs.ObjectId.ToString() });
-                }
-                if (gs_ != null)
-                {
-                    Combo_GlobalSequence.SelectedIndex = Model.GlobalSequences.IndexOf(gs_) + 1;
-                }
-                else
-                {
-                    Combo_GlobalSequence.SelectedIndex = 0;
-                }
+                Combo_GlobalSequence.SelectedIndex = 0;
             }
-            private void ConvertAlphaTracks()
+        }
+        private void ConvertAlphaTracks()
+        {
+            foreach (var track in Tracks)
             {
-                foreach (var track in Tracks)
-                {
-                    track.ToPercentage();
-                }
+                track.ToPercentage();
             }
-            public transformation_editor(CModel model, CAnimator<int> animator, bool canBeStatic)
+        }
+        public transformation_editor(CModel model, CAnimator<int> animator, bool canBeStatic)
         {
             InitializeComponent();
             if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-                Initialized = true;
-                Type = TransformationType.Int;
-                if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
-                if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
-                Model = model;
-                Combo_InterpType.SelectedIndex = (int)animator.Type;
-                ButtonColor.IsEnabled = false;
-                Dummy_int = animator;
-                foreach (var item in animator)
-                {
-                    Tracks.Add(new Ttrack(item.Time, item.Value));
-                }
-                RefreshTracks();
-                FillSequences(); Title = $"Transformation Editor - Int";
-                FillGlobalSEquence(animator.GlobalSequence.Object);
-            }
-            public transformation_editor(CModel model, CAnimator<CVector3> animator, bool canBeStatic, TransformationType type)
+            Initialized = true;
+            Type = TransformationType.Int;
+            if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
+            if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
+            Model = model;
+            Combo_InterpType.SelectedIndex = (int)animator.Type;
+            ButtonColor.IsEnabled = false;
+            Dummy_int = animator;
+            foreach (var item in animator)
             {
-           InitializeComponent();
+                Tracks.Add(new Ttrack(item.Time, item.Value));
+            }
+            RefreshTracks();
+            FillSequences(); Title = $"Transformation Editor - Int";
+            FillGlobalSEquence(animator.GlobalSequence.Object);
+        }
+        public transformation_editor(CModel model, CAnimator<CVector3> animator, bool canBeStatic, TransformationType type)
+        {
+            InitializeComponent();
             if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
             Initialized = true;
-                Type = type;
-                Dummy_Vector3 = animator;
-                Model = model;
-                Combo_InterpType.SelectedIndex = (int)animator.Type;
-                if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
-                if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
-                ButtonColor.IsEnabled = type == TransformationType.Color;
-                foreach (var item in animator)
-                {
-                    Tracks.Add(new Ttrack(item.Time, item.Value.X, item.Value.Y, item.Value.Z));
-                }
+            Type = type;
+            Dummy_Vector3 = animator;
+            Model = model;
+            Combo_InterpType.SelectedIndex = (int)animator.Type;
+            if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
+            if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
+            ButtonColor.IsEnabled = type == TransformationType.Color;
+            foreach (var item in animator)
+            {
+                Tracks.Add(new Ttrack(item.Time, item.Value.X, item.Value.Y, item.Value.Z));
+            }
             if (type == TransformationType.Color)
             {
                 ConvertColorTracks();
                 StaticInputColor.Visibility = Visibility.Visible;
                 StaticInput.Visibility = Visibility.Collapsed;
                 ValueInput.Visibility = Visibility.Collapsed;
-                StaticInputColor.Background = Calculator.War3ColorToBrush(animator.GetValue());
+                //------------------------------------------
+                var test = animator.GetValue();
+
+                // MessageBox.Show($"{test.X} {test.Y} {test.Z}");
+                //------------------------------------------
+                SolidColorBrush brush = new SolidColorBrush();
+                System.Windows.Media.Color color = new System.Windows.Media.Color();
+                color.A = 255;
+                color.R = (byte)(test.X * 255f);
+                color.G = (byte)(test.Y * 255f);
+                color.B = (byte)(test.Z * 255f);
+                brush.Color = color;
+                StaticInputColor.Background = brush;
+
+                //---------------------------------------------------------------------
             }
-                if (type == TransformationType.Scaling) ConvertScalingTracks();
-                RefreshTracks();
-                FillSequences(); Title = $"Transformation Editor - {type}";
-                FillGlobalSEquence(animator.GlobalSequence.Object);
-            } //GetStaticQuaternion(animator.GetValue());
-            private string GetStaticValue(CVector3 val, TransformationType type)
+            if (type == TransformationType.Scaling) ConvertScalingTracks();
+            RefreshTracks();
+            FillSequences(); Title = $"Transformation Editor - {type}";
+            FillGlobalSEquence(animator.GlobalSequence.Object);
+        } //GetStaticQuaternion(animator.GetValue());
+        private string GetStaticValue(CVector3 val, TransformationType type)
+        {
+            if (type == TransformationType.Scaling)
             {
-                if (type == TransformationType.Scaling)
-                {
-                    return $"{val.X * 100}, {val.Y * 100}, {val.Z * 100}";
-                }
-                if (type == TransformationType.Color)
-                {
-                    return Calculator.BGRnToRGB(val);
-                }
-                return $"{val.X}, {val.Y}, {val.Z}";
+                return $"{val.X * 100}, {val.Y * 100}, {val.Z * 100}";
             }
-            public transformation_editor(CModel model, CAnimator<CVector4> animator, bool canBeStatic)
+            if (type == TransformationType.Color)
             {
+                return Calculator.BGRnToRGB(val);
+            }
+            return $"{val.X}, {val.Y}, {val.Z}";
+        }
+        public transformation_editor(CModel model, CAnimator<CVector4> animator, bool canBeStatic)
+        {
             InitializeComponent();
             if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-                Initialized = true;
-                Type = TransformationType.Rotation;
-                Dummy_Vector4 = animator;
-                if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
-                Model = model;
-                if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
-                if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
-                ButtonColor.IsEnabled = false;
-                Combo_InterpType.SelectedIndex = (int)animator.Type;
-                foreach (var item in animator)
-                {
-                    Tracks.Add(new Ttrack(item.Time, item.Value.X, item.Value.Y, item.Value.Z, item.Value.W));
-                }
-                ConvertRotationTracks();
-                RefreshTracks();
-                FillSequences(); Title = $"Transformation Editor - Rotation";
-                FillGlobalSEquence(animator.GlobalSequence.Object);
-            }
-            private void ConvertRotationTracks()
+            Initialized = true;
+            Type = TransformationType.Rotation;
+            Dummy_Vector4 = animator;
+            if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
+            Model = model;
+            if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
+            if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
+            ButtonColor.IsEnabled = false;
+            Combo_InterpType.SelectedIndex = (int)animator.Type;
+            foreach (var item in animator)
             {
-                foreach (Ttrack track in Tracks)
-                {
-                    track.ToEuler();
-                }
+                Tracks.Add(new Ttrack(item.Time, item.Value.X, item.Value.Y, item.Value.Z, item.Value.W));
             }
-            private void FillSequences()
+            ConvertRotationTracks();
+            RefreshTracks();
+            FillSequences(); Title = $"Transformation Editor - Rotation";
+            FillGlobalSEquence(animator.GlobalSequence.Object);
+        }
+        private void ConvertRotationTracks()
+        {
+            foreach (Ttrack track in Tracks)
             {
-                foreach (CSequence sequence in Model.Sequences)
-                {
-                    string name = $"{sequence.Name} [{sequence.IntervalStart} - {sequence.IntervalEnd}]";
-                    SequenceSelector.Items.Add(new ComboBoxItem() { Content = name });
-                }
+                track.ToEuler();
             }
-            private void RefreshTracks()
+        }
+        private void FillSequences()
+        {
+            foreach (CSequence sequence in Model.Sequences)
             {
-                Tracks = Tracks.OrderBy(x => x.Time).ToList(); ;
-                Info_Keyframes.Text = $"{Tracks.Count} keyframes";
-                MainList.Items.Clear();
+                string name = $"{sequence.Name} [{sequence.IntervalStart} - {sequence.IntervalEnd}]";
+                SequenceSelector.Items.Add(new ComboBoxItem() { Content = name });
+            }
+        }
+        private void RefreshTracks()
+        {
+            Tracks = Tracks.OrderBy(x => x.Time).ToList(); ;
+            Info_Keyframes.Text = $"{Tracks.Count} keyframes";
+            MainList.Items.Clear();
             int count = 0;
-                foreach (Ttrack track in Tracks)
-                {
-                    ListBoxItem item = new ListBoxItem();
-                    StackPanel panel = new StackPanel();
-                    TextBlock number = new TextBlock();
-                    TextBlock sequence = new TextBlock();
-                    sequence.Foreground = Brushes.White;
-                    sequence.Background = Brushes.Gray;
-                    sequence.Width = 200;
-                    sequence.Text = GetSequence(track.Time);
-                    TextBlock value = new TextBlock();
-                    value.Margin = new Thickness(5, 0, 5, 0);
-                    value.Width = 400;
-                    value.Text =  track.GetValue(Type);
+            foreach (Ttrack track in Tracks)
+            {
+                ListBoxItem item = new ListBoxItem();
+                StackPanel panel = new StackPanel();
+                TextBlock number = new TextBlock();
+                TextBlock sequence = new TextBlock();
+                sequence.Foreground = System.Windows.Media.Brushes.White;
+                sequence.Background = System.Windows.Media.Brushes.Gray;
+                sequence.Width = 200;
+                sequence.Text = GetSequence(track.Time);
+                TextBlock value = new TextBlock();
+                value.Margin = new Thickness(5, 0, 5, 0);
+                value.Width = 400;
+                value.Text = track.GetValue(Type);
                 number.Width = 50;
                 number.Text = count.ToString();
                 count++;
-                    TextBlock time = new TextBlock();
-                    time.Width = 50;
-                    time.Text = track.Time.ToString();
-                    time.Margin = new Thickness(5, 0, 5, 0);
-                    panel.Orientation = Orientation.Horizontal;
+                TextBlock time = new TextBlock();
+                time.Width = 50;
+                time.Text = track.Time.ToString();
+                time.Margin = new Thickness(5, 0, 5, 0);
+                panel.Orientation = Orientation.Horizontal;
                 panel.Children.Add(number);
                 panel.Children.Add(sequence);
-                    panel.Children.Add(time);
-                    panel.Children.Add(value);
-                    item.Content = panel;
-                    MainList.Items.Add(item);
-                }
+                panel.Children.Add(time);
+                panel.Children.Add(value);
+                item.Content = panel;
+                MainList.Items.Add(item);
             }
-            private string GetSequence(int time)
+        }
+        private string GetSequence(int time)
+        {
+            foreach (CSequence sequence in Model.Sequences)
             {
-                foreach (CSequence sequence in Model.Sequences)
-                {
-                    if (time >= sequence.IntervalStart && time <= sequence.IntervalEnd) { return sequence.Name; }
-                }
-                return "";
+                if (time >= sequence.IntervalStart && time <= sequence.IntervalEnd) { return sequence.Name; }
             }
-            private void ConvertScalingTracks()
+            return "";
+        }
+        private void ConvertScalingTracks()
+        {
+            foreach (var track in Tracks)
             {
-                foreach (var track in Tracks)
-                {
-                    track.ToPercentage();
-                }
+                track.ToPercentage();
             }
-            private void ConvertColorTracks()
+        }
+        private void ConvertColorTracks()
+        {
+            foreach (var track in Tracks)
             {
-                foreach (var track in Tracks)
-                {
-                    track.ToColor();
-                }
+                track.ToColor();
             }
-            private void SetStatic(object sender, RoutedEventArgs e)
-            {
-                if (!Initialized) return;
-                StaticInput.IsEnabled = true;
-                MainList.IsEnabled = false;
-                stack1.IsEnabled = false;
-                stack2.IsEnabled = false;
-                stack0.IsEnabled = false;
+        }
+        private void SetStatic(object sender, RoutedEventArgs e)
+        {
+            if (!Initialized) return;
+            StaticInput.IsEnabled = true;
+            StaticInputColor.IsEnabled = true;
+            MainList.IsEnabled = false;
+            stack1.IsEnabled = false;
+            stack2.IsEnabled = false;
+            stack0.IsEnabled = false;
             Check_StaticVisible.IsEnabled = true; ;
             FillStaticValue();
-            }
+        }
         private void explain(object sender, RoutedEventArgs e)
         {
             var messageBuilder = new StringBuilder();
@@ -563,118 +584,118 @@ namespace Wa3Tuner
             MessageBox.Show(messageBuilder.ToString());
         }
         private void SeletedSequence(object sender, SelectionChangedEventArgs e)
+        {
+            int index = SequenceSelector.SelectedIndex;
+            TrackInput.Text = Model.Sequences[index].IntervalStart.ToString();
+        }
+        private void del(object sender, RoutedEventArgs e)
+        {
+            if (MainList.SelectedItem != null)
             {
-                int index = SequenceSelector.SelectedIndex;
-                TrackInput.Text = Model.Sequences[index].IntervalStart.ToString();
+                int index = MainList.SelectedIndex;
+                Tracks.RemoveAt(index);
+                MainList.Items.Remove(MainList.SelectedItem);
             }
-            private void del(object sender, RoutedEventArgs e)
+        }
+        private int GetSelectedIndex()
+        {
+            return 0;
+        }
+        private bool TimeExists(int time)
+        {
+            foreach (CSequence sequence in Model.Sequences)
             {
-                if (MainList.SelectedItem != null)
+                if (time >= sequence.IntervalStart && time <= sequence.IntervalEnd)
                 {
-                    int index = MainList.SelectedIndex;
-                    Tracks.RemoveAt(index);
-                    MainList.Items.Remove(MainList.SelectedItem);
+                    return true;
                 }
             }
-            private int GetSelectedIndex()
+            return false;
+        }
+        private bool InputTrackCorrect(string time_, string input_)
+        {
+            bool parseTime = int.TryParse(time_, out int time);
+            if (!parseTime) { return false; }
+            if (time < 0) { MessageBox.Show("Negative track", "Error"); return false; }
+            if (TimeExists(time) == false) { MessageBox.Show("This track does not exist in any sequence", "Error"); return false; }
+            if (input_.Length == 0) { return false; }
+            string[] parts = input_.Split(',').Select(x => x.Trim()).ToArray();
+            if (Type == TransformationType.Int)
             {
-                return 0;
+                bool parsed1 = int.TryParse(parts[0], out int x);
+                if (parsed1) { return true; }
             }
-            private bool TimeExists(int time)
+            if (Type == TransformationType.Visibility)
             {
-                foreach (CSequence sequence in Model.Sequences)
+                bool parsed1 = int.TryParse(parts[0], out int x);
+                if (parsed1)
                 {
-                    if (time >= sequence.IntervalStart && time <= sequence.IntervalEnd)
+                    if (x == 0 | x == 1) { return true; }
+                }
+            }
+            if (Type == TransformationType.Float)
+            {
+                bool parsed1 = float.TryParse(parts[0], out float x);
+                if (parsed1) { return true; }
+            }
+            if (Type == TransformationType.Translation)
+            {
+                bool parsed1 = float.TryParse(parts[0], out float x);
+                bool parsed2 = float.TryParse(parts[1], out float y);
+                bool parsed3 = float.TryParse(parts[2], out float z);
+                if (parsed1 && parsed2 && parsed3)
+                {
+                    if (x >= 0 && y >= 0 && z >= 0)
                     {
                         return true;
                     }
                 }
-                return false;
             }
-            private bool InputTrackCorrect(string time_, string input_)
+            if (Type == TransformationType.Rotation)
             {
-                bool parseTime = int.TryParse(time_, out int time);
-                if (!parseTime) { return false; }
-                if (time < 0) { MessageBox.Show("Negative track", "Error"); return false; }
-                if (TimeExists(time) == false) { MessageBox.Show("This track does not exist in any sequence", "Error"); return false; }
-                if (input_.Length == 0) { return false; }
-                string[] parts = input_.Split(',').Select(x => x.Trim()).ToArray();
-                if (Type == TransformationType.Int)
+                bool parsed1 = float.TryParse(parts[0], out float x);
+                bool parsed2 = float.TryParse(parts[1], out float y);
+                bool parsed3 = float.TryParse(parts[2], out float z);
+                if (parsed1 && parsed2 && parsed3)
                 {
-                    bool parsed1 = int.TryParse(parts[0], out int x);
-                    if (parsed1) { return true; }
-                }
-                if (Type == TransformationType.Visibility)
-                {
-                    bool parsed1 = int.TryParse(parts[0], out int x);
-                    if (parsed1)
+                    if (
+                        x >= -360 && x <= 360 &&
+                        y >= -360 && y <= 360 &&
+                        z >= -360 && z <= 360)
                     {
-                        if (x == 0 | x == 1) { return true; }
+                        return true;
                     }
                 }
-                if (Type == TransformationType.Float)
-                {
-                    bool parsed1 = float.TryParse(parts[0], out float x);
-                    if (parsed1) { return true; }
-                }
-                if (Type == TransformationType.Translation)
-                {
-                    bool parsed1 = float.TryParse(parts[0], out float x);
-                    bool parsed2 = float.TryParse(parts[1], out float y);
-                    bool parsed3 = float.TryParse(parts[2], out float z);
-                    if (parsed1 && parsed2 && parsed3)
-                    {
-                        if (x >= 0 && y >= 0 && z >= 0)
-                        {
-                            return true;
-                        }
-                    }
-                }
-                if (Type == TransformationType.Rotation)
-                {
-                    bool parsed1 = float.TryParse(parts[0], out float x);
-                    bool parsed2 = float.TryParse(parts[1], out float y);
-                    bool parsed3 = float.TryParse(parts[2], out float z);
-                    if (parsed1 && parsed2 && parsed3)
-                    {
-                        if (
-                            x >= -360 && x <= 360 &&
-                            y >= -360 && y <= 360 &&
-                            z >= -360 && z <= 360)
-                        {
-                            return true;
-                        }
-                    }
-                }
-                if (Type == TransformationType.Color)
-                {
-                    bool parsed1 = float.TryParse(parts[0], out float x);
-                    bool parsed2 = float.TryParse(parts[1], out float y);
-                    bool parsed3 = float.TryParse(parts[2], out float z);
-                    if (parsed1 && parsed2 && parsed3)
-                    {
-                        if (
-                            x >= 0 && x <= 255 &&
-                            y >= 0 && y <= 255 &&
-                            z >= 0 && z <= 255)
-                        {
-                            return true;
-                        }
-                    }
-                }
-                if (Type == TransformationType.Alpha)
-                {
-                    bool parsed1 = float.TryParse(parts[0], out float x);
-                    return x >= 0 && x <= 100;
-                }
-                return false;
             }
-            private void newItem(object sender, RoutedEventArgs e)
+            if (Type == TransformationType.Color)
             {
-                string time = TrackInput.Text.Trim();
-                string input = ValueInput.Text.Trim();
+                bool parsed1 = float.TryParse(parts[0], out float x);
+                bool parsed2 = float.TryParse(parts[1], out float y);
+                bool parsed3 = float.TryParse(parts[2], out float z);
+                if (parsed1 && parsed2 && parsed3)
+                {
+                    if (
+                        x >= 0 && x <= 255 &&
+                        y >= 0 && y <= 255 &&
+                        z >= 0 && z <= 255)
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (Type == TransformationType.Alpha)
+            {
+                bool parsed1 = float.TryParse(parts[0], out float x);
+                return x >= 0 && x <= 100;
+            }
+            return false;
+        }
+        private void newItem(object sender, RoutedEventArgs e)
+        {
+            string time = TrackInput.Text.Trim();
+            string input = ValueInput.Text.Trim();
             bool parsedTime = int.TryParse(time, out int time_);
-            if (!parsedTime) { MessageBox.Show("Expected integer for time");return; }
+            if (!parsedTime) { MessageBox.Show("Expected integer for time"); return; }
             Ttrack track = new Ttrack();
             if (Type == TransformationType.Visibility)
             {
@@ -709,7 +730,7 @@ namespace Wa3Tuner
                     MessageBox.Show("Incorrect input or format"); return;
                 }
             }
-            }
+        }
         private void edit(object sender, RoutedEventArgs e)
         {
             if (MainList.SelectedItem != null)
@@ -741,20 +762,20 @@ namespace Wa3Tuner
             }
         }
         private float[] ExtractValues(string item)
+        {
+            List<float> vals = new List<float>();
+            string[] i = item.Split(',').Select(x => x.Trim()).ToArray();
+            foreach (string s in i)
             {
-                List<float> vals = new List<float>();
-                string[] i = item.Split(',').Select(x => x.Trim()).ToArray();
-                foreach (string s in i)
-                {
-                    vals.Add(float.Parse(s));
-                }
-                return vals.ToArray();
+                vals.Add(float.Parse(s));
             }
-            private void SelectedTrack(object sender, SelectionChangedEventArgs e)
-            {
-                int index = MainList.SelectedIndex;
-                if (index == -1) { return; }
-                TrackInput.Text = Tracks[index].Time.ToString();
+            return vals.ToArray();
+        }
+        private void SelectedTrack(object sender, SelectionChangedEventArgs e)
+        {
+            int index = MainList.SelectedIndex;
+            if (index == -1) { return; }
+            TrackInput.Text = Tracks[index].Time.ToString();
             if (Type == TransformationType.Visibility)
             {
                 string value = Tracks[index].GetValue(Type);
@@ -762,50 +783,50 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Color)
             {
-                int r =(int) Tracks[index].X;
+                int r = (int)Tracks[index].X;
                 int g = (int)Tracks[index].Y;
-                int b = (int)Tracks[index].Z; 
-                ButtonColor.Background = Calculator.RGBToBrush(r,g,b);
+                int b = (int)Tracks[index].Z;
+                ButtonColor.Background = Calculator.RGBToBrush(r, g, b);
             }
             else
             {
                 ValueInput.Text = Tracks[index].GetValue(Type);
             }
-            }
-            private void setColor(object sender, RoutedEventArgs e)
+        }
+        private void setColor(object sender, RoutedEventArgs e)
+        {
+            color_selector selector = new color_selector(ButtonColor.Background);
+            selector.ShowDialog();
+            if (selector.DialogResult == true)
             {
-                color_selector selector = new color_selector(ButtonColor.Background);
-                selector.ShowDialog();
-                if (selector.DialogResult == true)
-                {
-                    ButtonColor.Background = selector.SelectedBrush;
-                    ValueInput.Text = $"{selector.SelectedColor.R}, {selector.SelectedColor.G}, {selector.SelectedColor.B}";
-                }
+                ButtonColor.Background = selector.SelectedBrush;
+                ValueInput.Text = $"{selector.SelectedColor.R}, {selector.SelectedColor.G}, {selector.SelectedColor.B}";
             }
-            private CVector3 GetStaticV3(bool scaling = false)
+        }
+        private CVector3 GetStaticV3(bool scaling = false)
+        {
+            string input = StaticInput.Text.Trim();
+            if (input.Length == 0) { return null; }
+            string[] parts = input.Split(',').Select(u => u.Trim()).ToArray(); ;
+            if (parts.Length != 3) { return null; }
+            bool parse1 = float.TryParse(parts[0], out float x);
+            bool parse2 = float.TryParse(parts[1], out float y);
+            bool parse3 = float.TryParse(parts[2], out float z);
+            if (scaling)
             {
-                string input = StaticInput.Text.Trim();
-                if (input.Length == 0) { return null; }
-                string[] parts = input.Split(',').Select(u => u.Trim()).ToArray(); ;
-                if (parts.Length != 3) { return null; }
-                bool parse1 = float.TryParse(parts[0], out float x);
-                bool parse2 = float.TryParse(parts[1], out float y);
-                bool parse3 = float.TryParse(parts[2], out float z);
-                if (scaling)
-                {
-                    x /= 100;
-                    y /= 100;
-                    z /= 100;
-                }
-                if (!parse1 || !parse2 || !parse3) { return null; }
-                return new CVector3(x, y, z);
+                x /= 100;
+                y /= 100;
+                z /= 100;
             }
-            private void update_click(object sender, RoutedEventArgs e)
+            if (!parse1 || !parse2 || !parse3) { return null; }
+            return new CVector3(x, y, z);
+        }
+        private void update_click(object sender, RoutedEventArgs e)
+        {
+            Tracks = Tracks.OrderBy(X => X.Time).ToList();
+            if (Type == TransformationType.Translation)
             {
-                Tracks = Tracks.OrderBy(X => X.Time).ToList();
-                if (Type == TransformationType.Translation)
-                {
-                    Dummy_Vector3.Clear();
+                Dummy_Vector3.Clear();
                 if (RadioStatic.IsChecked == true)
                 {
                     CVector3 vector = GetStaticV3();
@@ -823,23 +844,23 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
-                }
-                if (Type == TransformationType.Alpha)
+            }
+            if (Type == TransformationType.Alpha)
+            {
+                if (RadioStatic.IsChecked == true)
                 {
-                    if (RadioStatic.IsChecked == true)
+                    bool parsed = float.TryParse(StaticInput.Text, out float value);
+                    if (parsed)
                     {
-                        bool parsed = float.TryParse(StaticInput.Text, out float value);
-                        if (parsed)
-                        {
-                            Dummy_float.MakeStatic(value / 100);
-                            DialogResult = true;
-                            return;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Invalid input for static value");
-                            return;
-                        }
+                        Dummy_float.MakeStatic(value / 100);
+                        DialogResult = true;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid input for static value");
+                        return;
+                    }
                 }
                 else
                 {
@@ -851,17 +872,17 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
-                }
-                if (Type == TransformationType.Scaling)
+            }
+            if (Type == TransformationType.Scaling)
+            {
+                if (RadioStatic.IsChecked == true)
                 {
-                    if (RadioStatic.IsChecked == true)
-                    {
-                        CVector3 vector = GetStaticV3(true);
-                        if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
-                        Dummy_Vector3.MakeStatic(vector);
-                        DialogResult = true;
-                        return;
-                    }
+                    CVector3 vector = GetStaticV3(true);
+                    if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
+                    Dummy_Vector3.MakeStatic(vector);
+                    DialogResult = true;
+                    return;
+                }
                 else
                 {
                     Dummy_Vector3.MakeAnimated();
@@ -872,16 +893,16 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
-                }
-                if (Type == TransformationType.Rotation)
+            }
+            if (Type == TransformationType.Rotation)
+            {
+                if (RadioStatic.IsChecked == true)
                 {
-                    if (RadioStatic.IsChecked == true)
-                    {
-                        CVector4 vector = GetStaticV4();
-                        if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
-                        Dummy_Vector4.MakeStatic(vector);
-                        DialogResult = true;
-                        return;
+                    CVector4 vector = GetStaticV4();
+                    if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
+                    Dummy_Vector4.MakeStatic(vector);
+                    DialogResult = true;
+                    return;
                 }
                 else
                 {
@@ -893,23 +914,23 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
-                }
-                if (Type == TransformationType.Int)
+            }
+            if (Type == TransformationType.Int)
+            {
+                if (RadioStatic.IsChecked == true)
                 {
-                    if (RadioStatic.IsChecked == true)
+                    bool parsed = int.TryParse(StaticInput.Text, out int value);
+                    if (parsed)
                     {
-                        bool parsed = int.TryParse(StaticInput.Text, out int value);
-                        if (parsed)
-                        {
-                            Dummy_int.MakeStatic(value);
-                            DialogResult = true;
-                            return;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Invalid input for static value");
-                            return;
-                        }
+                        Dummy_int.MakeStatic(value);
+                        DialogResult = true;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid input for static value");
+                        return;
+                    }
                 }
                 else
                 {
@@ -920,34 +941,34 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
-                }
-                if (Type == TransformationType.Float)
+            }
+            if (Type == TransformationType.Float)
+            {
+                if (RadioStatic.IsChecked == true)
                 {
-                    if (RadioStatic.IsChecked == true)
+                    bool parsed = float.TryParse(StaticInput.Text, out float value);
+                    if (parsed)
                     {
-                        bool parsed = float.TryParse(StaticInput.Text, out float value);
-                        if (parsed)
-                        {
-                            Dummy_float.MakeStatic(value);
-                            DialogResult = true;
-                            return;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Invalid input for static value");
-                            return;
-                        }
+                        Dummy_float.MakeStatic(value);
+                        DialogResult = true;
+                        return;
                     }
+                    else
+                    {
+                        MessageBox.Show("Invalid input for static value");
+                        return;
+                    }
+                }
                 else
                 {
-                        Dummy_float.MakeAnimated();
+                    Dummy_float.MakeAnimated();
                     foreach (var track in Tracks)
                     {
                         Dummy_float.Add(new CAnimatorNode<float>(track.Time, track.X));
                     }
                     DialogResult = true;
                 }
-                }
+            }
             if (Type == TransformationType.Color)
             {
                 Dummy_Vector3.Clear();
@@ -976,7 +997,7 @@ namespace Wa3Tuner
                 {
                     float visible = GetStaticVisibility();
                     Dummy_float.MakeStatic(visible);
-                     DialogResult = true;
+                    DialogResult = true;
                 }
                 else
                 {
@@ -988,336 +1009,336 @@ namespace Wa3Tuner
                     DialogResult = true;
                 }
             }
-            }
+        }
         private float GetStaticVisibility()
         {
             bool parsed = float.TryParse(StaticInput.Text, out float value);
             if (parsed)
             {
-                if (value >= 1)   return 1;   
+                if (value >= 1) return 1;
             }
             return 0;
         }
         private CVector3 getstaticColorInput()
         {
-            Color color = Calculator.BrushToColor(StaticInputColor.Background);
-            CVector3 colorv = Calculator.ColorToWar3Color(color);
-            //MessageBox.Show(color.ToString());
-           // MessageBox.Show(colorv.ToString());
-            return colorv;
+            var color = Calculator.BrushToColor(StaticInputColor.Background);
+            return Calculator.ColorToWar3Color(color);
+
         }
         private CVector4 GetStaticV4()
+        {
+            string input = StaticInput.Text.Trim();
+            if (input.Length == 0) { return null; }
+            string[] parts = input.Split(',').Select(u => u.Trim()).ToArray(); ;
+            if (parts.Length != 3) { return null; }
+            bool parse1 = float.TryParse(parts[0], out float x);
+            bool parse2 = float.TryParse(parts[1], out float y);
+            bool parse3 = float.TryParse(parts[2], out float z);
+            if (!parse1 || !parse2 || !parse3) { return null; }
+            float[] quaternion = Calculator.EulerToQuaternion(x, y, z);
+            return new CVector4(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
+        }
+        private void clearall(object sender, RoutedEventArgs e)
+        {
+            Tracks.Clear();
+            RefreshTracks();
+        }
+        private void reverseinstructions(object sender, RoutedEventArgs e)
+        {
+            ReverseData(Tracks);
+            RefreshTracks();
+        }
+        private void leaveonlystarts(object sender, RoutedEventArgs e)
+        {
+            foreach (var track in Tracks.ToList())
             {
-                string input = StaticInput.Text.Trim();
-                if (input.Length == 0) { return null; }
-                string[] parts = input.Split(',').Select(u => u.Trim()).ToArray(); ;
-                if (parts.Length != 3) { return null; }
-                bool parse1 = float.TryParse(parts[0], out float x);
-                bool parse2 = float.TryParse(parts[1], out float y);
-                bool parse3 = float.TryParse(parts[2], out float z);
-                if (!parse1 || !parse2 || !parse3) { return null; }
-                float[] quaternion = Calculator.EulerToQuaternion(x, y, z);
-                return new CVector4(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
-            }
-            private void clearall(object sender, RoutedEventArgs e)
-            {
-                Tracks.Clear();
-                RefreshTracks();
-            }
-            private void reverseinstructions(object sender, RoutedEventArgs e)
-            {
-                ReverseData(Tracks);
-                RefreshTracks();
-            }
-            private void leaveonlystarts(object sender, RoutedEventArgs e)
-            {
-                foreach (var track in Tracks.ToList())
+                if (TrackIsStart(track.Time) == false)
                 {
-                    if (TrackIsStart(track.Time) == false)
-                    {
-                        Tracks.Remove(track);
-                    }
-                }
-                RefreshTracks();
-            }
-            private bool TrackIsStart(int time)
-            {
-                foreach (CSequence sequence in Model.Sequences)
-                {
-                    if (time == sequence.IntervalStart) { return true; }
-                }
-                return false;
-            }
-            private bool TrackInEnd(int time)
-            {
-                foreach (CSequence sequence in Model.Sequences)
-                {
-                    if (time == sequence.IntervalEnd) { return true; }
-                }
-                return false;
-            }
-            public static void ReverseData(List<Ttrack> tracks)
-            {
-                int count = tracks.Count;
-                // Reverse the tracks list, but leave the time property intact
-                for (int i = 0; i < count / 2; i++)
-                {
-                    // Use GetData to copy the data between tracks without changing the Time
-                    Ttrack temp = new Ttrack { Time = tracks[i].Time };
-                    temp.GetData(tracks[count - i - 1]);
-                    tracks[count - i - 1].GetData(tracks[i]);
-                    tracks[i].GetData(temp);
+                    Tracks.Remove(track);
                 }
             }
-            private void removeallof(object sender, RoutedEventArgs e)
+            RefreshTracks();
+        }
+        private bool TrackIsStart(int time)
+        {
+            foreach (CSequence sequence in Model.Sequences)
             {
-                if (SequenceSelector.SelectedIndex != -1 && SequenceSelector.Items.Count > 0)
-                {
-                    int index = SequenceSelector.SelectedIndex;
-                    foreach (var track in Tracks.ToList())
-                    {
-                        if (track.Time >= Model.Sequences[index].IntervalStart && track.Time <= Model.Sequences[index].IntervalEnd)
-                        {
-                            Tracks.Remove(track);
-                        }
-                    }
-                    RefreshTracks();
-                }
+                if (time == sequence.IntervalStart) { return true; }
             }
-            private void removeallofexcept(object sender, RoutedEventArgs e)
+            return false;
+        }
+        private bool TrackInEnd(int time)
+        {
+            foreach (CSequence sequence in Model.Sequences)
+            {
+                if (time == sequence.IntervalEnd) { return true; }
+            }
+            return false;
+        }
+        public static void ReverseData(List<Ttrack> tracks)
+        {
+            int count = tracks.Count;
+            // Reverse the tracks list, but leave the time property intact
+            for (int i = 0; i < count / 2; i++)
+            {
+                // Use GetData to copy the data between tracks without changing the Time
+                Ttrack temp = new Ttrack { Time = tracks[i].Time };
+                temp.GetData(tracks[count - i - 1]);
+                tracks[count - i - 1].GetData(tracks[i]);
+                tracks[i].GetData(temp);
+            }
+        }
+        private void removeallof(object sender, RoutedEventArgs e)
+        {
+            if (SequenceSelector.SelectedIndex != -1 && SequenceSelector.Items.Count > 0)
             {
                 int index = SequenceSelector.SelectedIndex;
                 foreach (var track in Tracks.ToList())
                 {
-                    if ((track.Time >= Model.Sequences[index].IntervalStart && track.Time <= Model.Sequences[index].IntervalEnd) == false)
+                    if (track.Time >= Model.Sequences[index].IntervalStart && track.Time <= Model.Sequences[index].IntervalEnd)
                     {
                         Tracks.Remove(track);
                     }
                 }
                 RefreshTracks();
             }
-            private void reversetimes(object sender, RoutedEventArgs e)
+        }
+        private void removeallofexcept(object sender, RoutedEventArgs e)
+        {
+            int index = SequenceSelector.SelectedIndex;
+            foreach (var track in Tracks.ToList())
             {
-                ReverseTimes(Tracks);
+                if ((track.Time >= Model.Sequences[index].IntervalStart && track.Time <= Model.Sequences[index].IntervalEnd) == false)
+                {
+                    Tracks.Remove(track);
+                }
+            }
+            RefreshTracks();
+        }
+        private void reversetimes(object sender, RoutedEventArgs e)
+        {
+            ReverseTimes(Tracks);
+            RefreshTracks();
+        }
+        public static void ReverseTimes(List<Ttrack> tracks)
+        {
+            if (tracks == null || tracks.Count == 0)
+                return;
+            int n = tracks.Count;
+            for (int i = 0; i < n / 2; i++)
+            {
+                // Swap Time values
+                int tempTime = tracks[i].Time;
+                tracks[i].Time = tracks[n - 1 - i].Time;
+                tracks[n - 1 - i].Time = tempTime;
+            }
+        }
+        private void leaveonlystartsends(object sender, RoutedEventArgs e)
+        {
+            foreach (var track in Tracks.ToList())
+            {
+                if (TrackIsStart(track.Time) == false && TrackInEnd(track.Time) == false)
+                {
+                    Tracks.Remove(track);
+                }
+            }
+            RefreshTracks();
+        }
+        private void SetDynamix(object sender, RoutedEventArgs e)
+        {
+            if (!Initialized) return;
+            StaticInput.IsEnabled = false;
+            StaticInputColor.IsEnabled = false;
+            MainList.IsEnabled = true;
+            stack1.IsEnabled = true;
+            stack2.IsEnabled = true;
+            stack0.IsEnabled = true;
+            Check_StaticVisible.IsEnabled = false; ;
+            switch (Type)
+            {
+                case TransformationType.Scaling:
+                case TransformationType.Translation:
+                case TransformationType.Vector4:
+                case TransformationType.Color:
+                    Dummy_Vector3.MakeAnimated();
+                    break;
+                case TransformationType.Rotation:
+                    Dummy_Vector4.MakeAnimated();
+                    break;
+                case TransformationType.Alpha:
+                case TransformationType.Float:
+                    Dummy_float.MakeAnimated();
+                    break;
+                case TransformationType.Int:
+                    Dummy_int.MakeAnimated();
+                    break;
+            }
+        }
+        private void createstartsends(object sender, RoutedEventArgs e)
+        {
+            Tracks.Clear();
+            foreach (CSequence sequence in Model.Sequences)
+            {
+                if (Type == TransformationType.Translation)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0));
+                }
+                else if (Type == TransformationType.Scaling)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 100, 100, 100));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 100, 100, 100));
+                }
+                else if (Type == TransformationType.Vector4)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0));
+                }
+                else if (Type == TransformationType.Alpha)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 100));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 100));
+                }
+                else if (Type == TransformationType.Float)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
+                }
+                else if (Type == TransformationType.Int)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
+                }
+                else if (Type == TransformationType.Visibility)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 1));
+                }
                 RefreshTracks();
             }
-            public static void ReverseTimes(List<Ttrack> tracks)
+        }
+        private void createstarts(object sender, RoutedEventArgs e)
+        {
+            Tracks.Clear();
+            foreach (CSequence sequence in Model.Sequences)
             {
-                if (tracks == null || tracks.Count == 0)
-                    return;
-                int n = tracks.Count;
-                for (int i = 0; i < n / 2; i++)
+                if (Type == TransformationType.Translation)
                 {
-                    // Swap Time values
-                    int tempTime = tracks[i].Time;
-                    tracks[i].Time = tracks[n - 1 - i].Time;
-                    tracks[n - 1 - i].Time = tempTime;
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
                 }
-            }
-            private void leaveonlystartsends(object sender, RoutedEventArgs e)
-            {
-                foreach (var track in Tracks.ToList())
+                else if (Type == TransformationType.Scaling)
                 {
-                    if (TrackIsStart(track.Time) == false && TrackInEnd(track.Time) == false)
-                    {
-                        Tracks.Remove(track);
-                    }
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 100, 100, 100));
+                }
+                else if (Type == TransformationType.Vector4)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
+                }
+                else if (Type == TransformationType.Alpha)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 100));
+                }
+                else if (Type == TransformationType.Float)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                }
+                else if (Type == TransformationType.Int)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                }
+                else if (Type == TransformationType.Visibility)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
                 }
                 RefreshTracks();
             }
-            private void SetDynamix(object sender, RoutedEventArgs e)
+        }
+        private void SelectedGS(object sender, SelectionChangedEventArgs e)
+        {
+            if (Combo_GlobalSequence.SelectedItem != null)
             {
-                if (!Initialized) return;
-                StaticInput.IsEnabled = false;
-                MainList.IsEnabled = true;
-                stack1.IsEnabled = true;
-                stack2.IsEnabled = true;
-                stack0.IsEnabled = true;
-                     Check_StaticVisible.IsEnabled = false; ;
-                switch (Type)
+                int index = Combo_GlobalSequence.SelectedIndex;
+                int indexIn = index - 1;
+                if (Type == TransformationType.Alpha || Type == TransformationType.Float || Type == TransformationType.Visibility)
                 {
-                    case TransformationType.Scaling:
-                    case TransformationType.Translation:
-                    case TransformationType.Vector4:
-                    case TransformationType.Color:
-                        Dummy_Vector3.MakeAnimated();
-                        break;
-                    case TransformationType.Rotation:
-                        Dummy_Vector4.MakeAnimated();
-                        break;
-                    case TransformationType.Alpha:
-                    case TransformationType.Float:
-                        Dummy_float.MakeAnimated();
-                        break;
-                    case TransformationType.Int:
-                        Dummy_int.MakeAnimated();
-                        break;
+                    if (Combo_GlobalSequence.SelectedIndex == 0)
+                    {
+                        Dummy_float.GlobalSequence.Detach();
+                    }
+                    else
+                    {
+                        Dummy_float.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
+                    }
                 }
-            }
-            private void createstartsends(object sender, RoutedEventArgs e)
-            {
-                Tracks.Clear();
-                foreach (CSequence sequence in Model.Sequences)
+                else if (Type == TransformationType.Int)
                 {
-                    if (Type == TransformationType.Translation)
+                    if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0));
+                        Dummy_int.GlobalSequence.Detach();
                     }
-                    else if (Type == TransformationType.Scaling)
+                    else
                     {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100, 100, 100));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 100, 100, 100));
+                        Dummy_int.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
                     }
-                    else if (Type == TransformationType.Vector4)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0));
-                    }
-                    else if (Type == TransformationType.Alpha)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 100));
-                    }
-                    else if (Type == TransformationType.Float)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
-                    }
-                    else if (Type == TransformationType.Int)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
-                    }
-                    else if (Type == TransformationType.Visibility)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
-                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 1));
-                    }
-                    RefreshTracks();
                 }
-            }
-            private void createstarts(object sender, RoutedEventArgs e)
-            {
-                Tracks.Clear();
-                foreach (CSequence sequence in Model.Sequences)
+                else if (Type == TransformationType.Rotation)
                 {
-                    if (Type == TransformationType.Translation)
+                    if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
+                        Dummy_Vector4.GlobalSequence.Detach();
                     }
-                    else if (Type == TransformationType.Scaling)
+                    else
                     {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100, 100, 100));
+                        Dummy_Vector4.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
                     }
-                    else if (Type == TransformationType.Vector4)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
-                    }
-                    else if (Type == TransformationType.Alpha)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100));
-                    }
-                    else if (Type == TransformationType.Float)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
-                    }
-                    else if (Type == TransformationType.Int)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
-                    }
-                    else if (Type == TransformationType.Visibility)
-                    {
-                        Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
-                    }
-                    RefreshTracks();
                 }
-            }
-            private void SelectedGS(object sender, SelectionChangedEventArgs e)
-            {
-                if (Combo_GlobalSequence.SelectedItem != null)
+                else if (Type == TransformationType.Color || Type == TransformationType.Translation || Type == TransformationType.Scaling)
                 {
-                    int index = Combo_GlobalSequence.SelectedIndex;
-                    int indexIn = index - 1;
-                    if (Type == TransformationType.Alpha || Type == TransformationType.Float || Type == TransformationType.Visibility)
+                    if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
-                        if (Combo_GlobalSequence.SelectedIndex == 0)
-                        {
-                            Dummy_float.GlobalSequence.Detach();
-                        }
-                        else
-                        {
-                            Dummy_float.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
-                        }
+                        Dummy_Vector3.GlobalSequence.Detach();
                     }
-                    else if (Type == TransformationType.Int)
+                    else
                     {
-                        if (Combo_GlobalSequence.SelectedIndex == 0)
-                        {
-                            Dummy_int.GlobalSequence.Detach();
-                        }
-                        else
-                        {
-                            Dummy_int.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
-                        }
-                    }
-                    else if (Type == TransformationType.Rotation)
-                    {
-                        if (Combo_GlobalSequence.SelectedIndex == 0)
-                        {
-                            Dummy_Vector4.GlobalSequence.Detach();
-                        }
-                        else
-                        {
-                            Dummy_Vector4.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
-                        }
-                    }
-                    else if (Type == TransformationType.Color || Type == TransformationType.Translation || Type == TransformationType.Scaling)
-                    {
-                        if (Combo_GlobalSequence.SelectedIndex == 0)
-                        {
-                            Dummy_Vector3.GlobalSequence.Detach();
-                        }
-                        else
-                        {
-                            Dummy_Vector3.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
-                        }
+                        Dummy_Vector3.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
                     }
                 }
             }
-            private void Flip(object sender, MouseButtonEventArgs e)
+        }
+        private void Flip(object sender, MouseButtonEventArgs e)
+        {
+            if (MainList.SelectedItem != null && Type == TransformationType.Visibility)
             {
-                if (MainList.SelectedItem != null && Type == TransformationType.Visibility)
-                {
-                    int index = MainList.SelectedIndex;
-                    bool visible = Tracks[index].X >= 1;
-                    Tracks[index].X = visible ? 0 : 1;
-                    RefreshTracks();
-                }
+                int index = MainList.SelectedIndex;
+                bool visible = Tracks[index].X >= 1;
+                Tracks[index].X = visible ? 0 : 1;
+                RefreshTracks();
             }
-            private void loop(object sender, RoutedEventArgs e)
+        }
+        private void loop(object sender, RoutedEventArgs e)
+        {
+            loopdialog ld = new loopdialog(Model, Tracks, Type);
+            ld.ShowDialog();
+            if (ld.DialogResult == true) RefreshTracks();
+            /*
+             in sequence
+            times
+            value 1
+            value 2
+             */
+        }
+        private void showmore(object sender, RoutedEventArgs e)
+        {
+            ButtonMore.ContextMenu.IsOpen = true;
+        }
+        private void SetInterpolation(object sender, SelectionChangedEventArgs e)
+        {
+            if (Initialized)
             {
-                loopdialog ld = new loopdialog(Model, Tracks, Type);
-                ld.ShowDialog();
-                if (ld.DialogResult == true) RefreshTracks();
-                /*
-                 in sequence
-                times
-                value 1
-                value 2
-                 */
-            }
-            private void showmore(object sender, RoutedEventArgs e)
-            {
-                ButtonMore.ContextMenu.IsOpen = true;
-            }
-            private void SetInterpolation(object sender, SelectionChangedEventArgs e)
-            {
-            if ( Initialized) {
                 if (
                     Type == TransformationType.Color ||
                     Type == TransformationType.Scaling ||
-                    Type == TransformationType.Translation  
+                    Type == TransformationType.Translation
                     )
                 {
                     Dummy_Vector3.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
@@ -1335,16 +1356,16 @@ namespace Wa3Tuner
                     Dummy_float.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
                 }
             }
-            }
-            private void negatetrack(object sender, RoutedEventArgs e)
+        }
+        private void negatetrack(object sender, RoutedEventArgs e)
+        {
+            if (MainList.SelectedItem != null)
             {
-                if (MainList.SelectedItem != null)
-                {
-                    int index = MainList.SelectedIndex;
-                    Tracks[index].Negate(Type);
+                int index = MainList.SelectedIndex;
+                Tracks[index].Negate(Type);
                 RefreshTracks();
-                }
             }
+        }
         private void negatetrackall(object sender, RoutedEventArgs e)
         {
             if (MainList.SelectedItem != null)
@@ -1462,7 +1483,7 @@ namespace Wa3Tuner
                 {
                     if (value == 0)
                     {
-                        MessageBox.Show("Cannot divide by zero");return;
+                        MessageBox.Show("Cannot divide by zero"); return;
                     }
                 }
                 foreach (Ttrack target in Tracks)
@@ -1478,15 +1499,15 @@ namespace Wa3Tuner
         }
         private void setColorStatic(object sender, RoutedEventArgs e)
         {
-            color_selector selector = new color_selector(StaticInputColor.Background);
-            selector.ShowDialog();
-            if (selector.DialogResult == true)
-            {
-                StaticInputColor.Background = selector.SelectedBrush;
-               Color color =  Calculator.BrushToColor(StaticInputColor.Background);
-                CVector3 c = Calculator.ColorToWar3Color(color);
-                Dummy_Vector3.MakeStatic(c);
-             }
+            //pik color
+            System.Windows.Media.Brush newColor = ColorPickerHandler.Pick(StaticInputColor.Background);
+            // set to button
+            StaticInputColor.Background = newColor;
+            //set to data
+            var color = Calculator.BrushToColor(newColor);
+            CVector3 c = Calculator.ColorToWar3Color(color);
+            Dummy_Vector3.MakeStatic(c);
+
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -1501,7 +1522,7 @@ namespace Wa3Tuner
         private void Checked_StaticVisibility(object sender, RoutedEventArgs e)
         {
             bool visible = Check_StaticVisible.IsChecked == true;
-            Dummy_float.MakeStatic(visible? 1 : 0);
+            Dummy_float.MakeStatic(visible ? 1 : 0);
         }
         private Ttrack copiedTrack;
         private void Copy(object sender, RoutedEventArgs e)
@@ -1515,7 +1536,7 @@ namespace Wa3Tuner
         {
             if (int.TryParse(TrackInput.Text, out int value))
             {
-                if (Model.Sequences.Any(x=> value>= x.IntervalStart && value<= x.IntervalEnd))
+                if (Model.Sequences.Any(x => value >= x.IntervalStart && value <= x.IntervalEnd))
                 {
                     if (Tracks.Any(x => x.Time == value))
                     {
@@ -1538,7 +1559,7 @@ namespace Wa3Tuner
         }
         private void Paste(object sender, RoutedEventArgs e)
         {
-            if (copiedTrack != null )
+            if (copiedTrack != null)
             {
                 if (ValidTime())
                 {
@@ -1555,8 +1576,8 @@ namespace Wa3Tuner
             if (MainList.SelectedItem != null)
             {
                 int index = MainList.SelectedIndex;
-                Clipboard.SetText( Tracks[index].ToStringData(Type));
-                
+                Clipboard.SetText(Tracks[index].ToStringData(Type));
+
             }
         }
 
@@ -1567,8 +1588,790 @@ namespace Wa3Tuner
             {
                 sb.AppendLine(track.ToStringData(Type));
             }
-            Clipboard.SetText( sb.ToString() );
+            Clipboard.SetText(sb.ToString());
+        }
+
+        private void sak(object sender, RoutedEventArgs e)
+        {
+            if (Type == TransformationType.Translation
+
+               )
+            {
+                InputVector i = new InputVector(AllowedValue.Both);
+
+                if (i.ShowDialog() == true)
+                {
+                    float x = i.X;
+                    float y = i.Y;
+                    float z = i.Z;
+                    foreach (var trac in Tracks)
+                    {
+                        trac.X = x;
+                        trac.Y = y;
+                        trac.Z = z;
+                    }
+                }
+            }
+
+            else if (
+              Type == TransformationType.Scaling)
+            {
+                InputVector i = new InputVector(AllowedValue.Positive);
+
+                if (i.ShowDialog() == true)
+                {
+                    float x = i.X;
+                    float y = i.Y;
+                    float z = i.Z;
+                    foreach (var trac in Tracks)
+                    {
+                        trac.X = x;
+                        trac.Y = y;
+                        trac.Z = z;
+                    }
+                }
+            }
+
+            else if (
+              Type == TransformationType.Rotation)
+            {
+                InputVector i = new InputVector(AllowedValue.Positive);
+
+                if (i.ShowDialog() == true)
+                {
+                    float x = i.X;
+                    float y = i.Y;
+                    float z = i.Z;
+                    if (x < -360 || x > 360 || y < -360 || y > 360 || z < -360 || z > 360)
+                    {
+                        MessageBox.Show("Invalid input for rotation"); return;
+                    }
+                    foreach (var trac in Tracks)
+                    {
+                        trac.X = x;
+                        trac.Y = y;
+                        trac.Z = z;
+                    }
+                }
+            }
+            else if (Type == TransformationType.Color)
+            {
+                InputVector i = new InputVector(AllowedValue.Positive);
+
+                if (i.ShowDialog() == true)
+                {
+                    float x = i.X;
+                    float y = i.Y;
+                    float z = i.Z;
+                    if (x < 0 || x > 255 || y < 0 || y > 255 || z < 0 || z > 255)
+                    {
+                        MessageBox.Show("Invalid input for color"); return;
+                    }
+                    foreach (var trac in Tracks)
+                    {
+                        trac.X = x;
+                        trac.Y = y;
+                        trac.Z = z;
+                    }
+                }
+            }
+            else if (Type == TransformationType.Visibility)
+            {
+                Input i = new Input("0");
+                if (i.ShowDialog() == true)
+                {
+                    if (i.Result.Trim().ToLower() == "false")
+                    {
+                        foreach (var trac in Tracks)
+                        {
+                            trac.X = 0;
+
+                        }
+                    }
+                    if (i.Result.Trim().ToLower() == "true")
+                    {
+                        foreach (var trac in Tracks)
+                        {
+                            trac.X = 1;
+
+                        }
+                    }
+                    bool parsed = int.TryParse(i.Result.Trim(), out int v);
+                    if (parsed)
+                    {
+                        if (v == 0 || v == 1)
+                        {
+                            foreach (var trac in Tracks)
+                            {
+                                trac.X = v;
+
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Expected 1 or 0");
+                        }
+
+                    }
+                }
+            }
+            else if (Type == TransformationType.Alpha)
+            {
+                Input i = new Input("100");
+                if (i.ShowDialog() == true)
+                {
+
+                    bool parsed = int.TryParse(i.Result.Trim(), out int v);
+                    if (parsed)
+                    {
+                        if (v >= 0 && v <= 100)
+                        {
+                            foreach (var trac in Tracks)
+                            {
+                                trac.X = v;
+
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Expected 0 to 100");
+                        }
+
+                    }
+                }
+            }
+
+            else
+            {
+                Input i = new Input("0");
+                if (i.ShowDialog() == true)
+                {
+                    bool parsed = int.TryParse(i.Result, out int v);
+                    if (parsed)
+                    {
+                        foreach (var trac in Tracks)
+                        {
+                            trac.X = v;
+
+                        }
+                    }
+                }
+            }
+            RefreshTracks();
+        }
+
+        private void sak2(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0)
+            {
+                MessageBox.Show("There are no sequences"); return;
+            }
+            List<string> ss = Model.Sequences.Select(x => x.Name).ToList();
+            Selector s = new Selector(ss);
+            if (s.ShowDialog() == true)
+            {
+                CSequence sq = Model.Sequences[s.box.SelectedIndex];
+                int from = sq.IntervalStart;
+                int to = sq.IntervalEnd;
+
+                //------------------------------------
+                if (Type == TransformationType.Translation)
+                {
+                    InputVector i = new InputVector(AllowedValue.Both);
+
+                    if (i.ShowDialog() == true)
+                    {
+                        float x = i.X;
+                        float y = i.Y;
+                        float z = i.Z;
+                        foreach (var trac in Tracks)
+                        {
+                            if (trac.Time < from || trac.Time > to) { continue; }
+                            trac.X = x;
+                            trac.Y = y;
+                            trac.Z = z;
+                        }
+                    }
+                }
+
+                else if (Type == TransformationType.Scaling)
+                {
+                    InputVector i = new InputVector(AllowedValue.Positive);
+
+                    if (i.ShowDialog() == true)
+                    {
+                        float x = i.X;
+                        float y = i.Y;
+                        float z = i.Z;
+                        foreach (var trac in Tracks)
+                        {
+                            if (trac.Time < from || trac.Time > to) { continue; }
+                            trac.X = x;
+                            trac.Y = y;
+                            trac.Z = z;
+                        }
+                    }
+                }
+
+                else if (Type == TransformationType.Rotation)
+                {
+                    InputVector i = new InputVector(AllowedValue.Positive);
+
+                    if (i.ShowDialog() == true)
+                    {
+                        float x = i.X;
+                        float y = i.Y;
+                        float z = i.Z;
+                        if (x < -360 || x > 360 || y < -360 || y > 360 || z < -360 || z > 360)
+                        {
+                            MessageBox.Show("Invalid input for rotation"); return;
+                        }
+                        foreach (var trac in Tracks)
+                        {
+                            if (trac.Time < from || trac.Time > to) { continue; }
+                            trac.X = x;
+                            trac.Y = y;
+                            trac.Z = z;
+                        }
+                    }
+                }
+                else if (Type == TransformationType.Color)
+                {
+                    InputVector i = new InputVector(AllowedValue.Positive);
+
+                    if (i.ShowDialog() == true)
+                    {
+                        float x = i.X;
+                        float y = i.Y;
+                        float z = i.Z;
+                        if (x < 0 || x > 255 || y < 0 || y > 255 || z < 0 || z > 255)
+                        {
+                            MessageBox.Show("Invalid input for rotation"); return;
+                        }
+                        foreach (var trac in Tracks)
+                        {
+                            if (trac.Time < from || trac.Time > to) { continue; }
+                            trac.X = x;
+                            trac.Y = y;
+                            trac.Z = z;
+                        }
+                    }
+                }
+
+                else if (Type == TransformationType.Visibility)
+                {
+                    Input i = new Input("0");
+                    if (i.ShowDialog() == true)
+                    {
+                        if (i.Result.Trim().ToLower() == "false")
+                        {
+                            foreach (var trac in Tracks)
+                            {
+                                if (trac.Time < from || trac.Time > to) { continue; }
+                                trac.X = 0;
+
+                            }
+                        }
+                        if (i.Result.Trim().ToLower() == "true")
+                        {
+                            foreach (var trac in Tracks)
+                            {
+                                if (trac.Time < from || trac.Time > to) { continue; }
+                                trac.X = 1;
+
+                            }
+                        }
+                        bool parsed = int.TryParse(i.Result.Trim(), out int v);
+                        if (parsed)
+                        {
+                            if (v == 0 || v == 1)
+                            {
+                                foreach (var trac in Tracks)
+                                {
+                                    if (trac.Time < from || trac.Time > to) { continue; }
+                                    trac.X = v;
+
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("Expected 1 or 0");
+                            }
+
+                        }
+                    }
+                }
+                else if (Type == TransformationType.Alpha)
+                {
+                    Input i = new Input("100");
+                    if (i.ShowDialog() == true)
+                    {
+
+                        bool parsed = int.TryParse(i.Result.Trim(), out int v);
+                        if (parsed)
+                        {
+                            if (v >= 0 && v <= 100)
+                            {
+                                foreach (var trac in Tracks)
+                                {
+                                    if (trac.Time < from || trac.Time > to) { continue; }
+                                    trac.X = v;
+
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("Expected 0 to 100");
+                            }
+
+                        }
+                    }
+                }
+                else
+                {
+                    Input i = new Input("0");
+                    if (i.ShowDialog() == true)
+                    {
+                        bool parsed = int.TryParse(i.Result, out int v);
+                        if (parsed)
+                        {
+                            foreach (var trac in Tracks)
+                            {
+                                if (trac.Time < from || trac.Time > to) { continue; }
+                                trac.X = v;
+
+                            }
+                        }
+                    }
+                }
+            }
+            RefreshTracks();
+        }
+
+        private void starte(object sender, RoutedEventArgs e)
+        {
+            foreach (var sequence in Model.Sequences)
+            {
+                if (Type == TransformationType.Visibility)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 1;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
+                    }
+                }
+                if (Type == TransformationType.Translation)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 0;
+                        track.Y = 0;
+                        track.Z = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0));
+                    }
+                }
+                if (Type == TransformationType.Rotation)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 0;
+                        track.Y = 0;
+                        track.Z = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0, 0, 0, 1));
+                    }
+                }
+                if (Type == TransformationType.Scaling)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 100;
+                        track.Y = 100;
+                        track.Z = 100;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100, 100, 100));
+                    }
+                }
+                if (Type == TransformationType.Int)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                    }
+                }
+                if (Type == TransformationType.Float)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 0));
+                    }
+                }
+                if (Type == TransformationType.Color)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 255;
+                        track.Y = 255;
+                        track.Z = 255;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 255, 255, 255));
+                    }
+                }
+                if (Type == TransformationType.Alpha)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalStart))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalStart);
+                        track.X = 100;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalStart, 100));
+                    }
+                }
+
+            }
+            Tracks = Tracks.OrderBy(x => x.Time).ToList();
+            RefreshTracks();
+        }
+
+        private void ende(object sender, RoutedEventArgs e)
+        {
+            foreach (var sequence in Model.Sequences)
+            {
+                if (Type == TransformationType.Visibility)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 1;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 1));
+                    }
+                }
+                if (Type == TransformationType.Translation)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 0;
+                        track.Y = 0;
+                        track.Z = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0));
+                    }
+                }
+                if (Type == TransformationType.Rotation)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 0;
+                        track.Y = 0;
+                        track.Z = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0, 0, 0, 1));
+                    }
+                }
+                if (Type == TransformationType.Scaling)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 100;
+                        track.Y = 100;
+                        track.Z = 100;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 100, 100, 100));
+                    }
+                }
+                if (Type == TransformationType.Int)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
+                    }
+                }
+                if (Type == TransformationType.Float)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 0;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 0));
+                    }
+                }
+                if (Type == TransformationType.Color)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 255;
+                        track.Y = 255;
+                        track.Z = 255;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 255, 255, 255));
+                    }
+                }
+                if (Type == TransformationType.Alpha)
+                {
+                    if (Tracks.Any(x => x.Time == sequence.IntervalEnd))
+                    {
+                        var track = Tracks.First(x => x.Time == sequence.IntervalEnd);
+                        track.X = 100;
+                    }
+                    else
+                    {
+                        Tracks.Add(new Ttrack(sequence.IntervalEnd, 100));
+                    }
+                }
+
+            }
+            Tracks = Tracks.OrderBy(x => x.Time).ToList();
+            RefreshTracks();
+        }
+
+        private void stretch2(object sender, RoutedEventArgs e)
+        {
+            // Stretch the times of all keyframes/tracks to fit inside the selected sequence
+            if (Model.Sequences.Count == 0)
+            {
+                MessageBox.Show("There are no sequences");
+                return;
+            }
+                    foreach (CSequence sq in Model.Sequences)
+            {
+                
+                int from = sq.IntervalStart;
+                int to = sq.IntervalEnd;
+
+                List<Ttrack> isolated = Tracks.Where(x => x.Time >= from && x.Time <= to).ToList();
+
+                if (isolated.Count <= 1) { return; } // No keyframes or only one keyframe cannot be stretched
+                if (isolated.Any(x => x.Time == from) && isolated.Any(x => x.Time == to)) { return; } // Already fits the interval
+
+                // Find min and max keyframe times in the isolated tracks
+                int minTime = isolated.Min(x => x.Time);
+                int maxTime = isolated.Max(x => x.Time);
+
+                if (minTime == maxTime) { return; } // Avoid division by zero if all keyframes have the same time
+
+                // Stretch keyframes to fit within the new interval
+                foreach (var track in isolated)
+                {
+                    track.Time = from + (track.Time - minTime) * (to - from) / (maxTime - minTime);
+                }
+            }
+        }
+
+        private void stretch1(object sender, RoutedEventArgs e)
+        {
+            // Stretch the times of all keyframes/tracks to fit inside the selected sequence
+            if (Model.Sequences.Count == 0)
+            {
+                MessageBox.Show("There are no sequences");
+                return;
+            }
+
+            List<string> ss = Model.Sequences.Select(x => x.Name).ToList();
+            Selector s = new Selector(ss);
+            if (s.ShowDialog() == true)
+            {
+                CSequence sq = Model.Sequences[s.box.SelectedIndex];
+                int from = sq.IntervalStart;
+                int to = sq.IntervalEnd;
+
+                List<Ttrack> isolated = Tracks.Where(x => x.Time >= from && x.Time <= to).ToList();
+
+                if (isolated.Count <= 1) { return; } // No keyframes or only one keyframe cannot be stretched
+                if (isolated.Any(x => x.Time == from) && isolated.Any(x => x.Time == to)) { return; } // Already fits the interval
+
+                // Find min and max keyframe times in the isolated tracks
+                int minTime = isolated.Min(x => x.Time);
+                int maxTime = isolated.Max(x => x.Time);
+
+                if (minTime == maxTime) { return; } // Avoid division by zero if all keyframes have the same time
+
+                // Stretch keyframes to fit within the new interval
+                foreach (var track in isolated)
+                {
+                    track.Time = from + (track.Time - minTime) * (to - from) / (maxTime - minTime);
+                }
+            }
+        }
+       
+        TransformationType CopiedNodeKeyframeType;
+        private void copymovekfs(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0) return;
+            transformation_selector ts = new transformation_selector();
+            ts.ShowDialog();
+            if (ts.DialogResult == true)
+            {
+                if (ts.C1.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Translation; }
+                else if (ts.C2.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Rotation; }
+                else if (ts.C3.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Scaling; }
+                CopiedNoeKEyframesData.Sequence = Model.Sequences.Count == 1 ? Model.Sequences[0] : SelectSequence();
+                CopiedNoeKEyframesData.Cut = false;
+            }
+            
+        }
+
+        private CSequence SelectSequence()
+        {
+            var list = Model.Sequences.Select(x => x.Name).ToList();
+            Selector s = new Selector(list);
+            if (s.ShowDialog() == true)
+            {
+                return Model.Sequences[s.box.SelectedIndex];
+            }
+            return Model.Sequences[0];
+        }
+
+        private void cutmovekfs(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0) return;
+            transformation_selector ts = new transformation_selector();
+            ts.ShowDialog();
+            if (ts.DialogResult == true)
+            {
+                if (ts.C1.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Translation; }
+                else if (ts.C2.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Rotation; }
+                else if (ts.C3.IsChecked == true) { CopiedNoeKEyframesData.CopiedNodeKeyframeType = Wa3Tuner.TransformationType.Scaling; }
+                CopiedNoeKEyframesData.Sequence = Model.Sequences.Count == 1 ? Model.Sequences[0] : SelectSequence();
+                CopiedNoeKEyframesData.Cut = true;
+            }
+        }
+
+        private void pasteseelctkfs(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+            if (Model.Sequences.Count == 1) { MessageBox.Show("There is only one sequence"); return; }
+            if (CopiedNoeKEyframesData.Sequence == null) return;
+            var seq2 =   SelectSequence();
+            if (CopiedNoeKEyframesData.Sequence == seq2) { MessageBox.Show("Copied and pasted sequences cannot be the same"); return; }
+            var seq1 = CopiedNoeKEyframesData.Sequence;
+            List<Ttrack> isolated = Tracks.Where(X => X.Time >= seq1.IntervalStart && X.Time <= seq1.IntervalEnd).ToList();
+            if (isolated.Count == 0)
+            {
+                MessageBox.Show("There are no keyframes belonging to the first sequence"); return;
+            }
+             CopyList(isolated, Tracks, seq2);
+            Tracks = Tracks.OrderBy(x => x.Time).ToList();
+            if (CopiedNoeKEyframesData.Cut)
+            {
+                foreach (var track in isolated) { Tracks.Remove(track); }
+                
+            }
+            RefreshTracks();
+        }
+
+        private void CopyList(List<Ttrack> isolatedTracks, List<Ttrack> FullTrackList, CSequence ToWhichSequence)
+        {
+            int offset = ToWhichSequence.IntervalStart; // Use 'from', not 'to'
+
+            foreach (var track in isolatedTracks)
+            {
+                var TrackCopy = new Ttrack(track); // Create a copy of the track
+                TrackCopy.Time += offset; // Modify the copy, not the original
+                FullTrackList.Add(TrackCopy);
+            }
+
+        }
+
+        private void RemoveSequences(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); }
+
+            List<string> names = Model.Sequences.Select(x=>x.Name).ToList();
+            Multiselector_Window s = new Multiselector_Window(names); 
+            if (s.ShowDialog() == true)
+            {
+                foreach (int index in s.selectedIndexes)
+                {
+                    int from = Model.Sequences[index].IntervalStart;
+                    int to = Model.Sequences[index].IntervalEnd;
+                    Tracks.RemoveAll(x => x.Time >= from && x.Time <= to);
+                }
+            }
+            RefreshTracks();
+        }
+
+        private void dups2ss(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count<=1)
+            {
+                MessageBox.Show("At least 2 sequences must be present");return;
+            }
+            KeyframeSeuqnceDuplicator d = new(Model.Sequences.ObjectList, Tracks);
+            if (d.ShowDialog() == true) { RefreshTracks(); }
+        }
+
+        private void gkm(object sender, RoutedEventArgs e)
+        {
+            if (Model.Sequences.Count == 0) { return; }
+            if (Type == TransformationType.Visibility)
+            {
+                MessageBox.Show("This command cannot work for visibility transformation");return;
+            }
+            Gradual_Keyframe_Maker gk = new Gradual_Keyframe_Maker(Model.Sequences.ObjectList, Tracks, Type);
+            if (gk.ShowDialog() == true)
+            {
+                RefreshTracks();
+            }
         }
     }
+    static class CopiedNoeKEyframesData
+    {
+       public static TransformationType CopiedNodeKeyframeType = TransformationType.None; 
+        public static bool Cut = false;
+        public static INode CopiedNode;
+        public static CSequence Sequence;
     }
- 
+
+}

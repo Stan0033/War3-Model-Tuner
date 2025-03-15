@@ -9,11 +9,14 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection.Emit;
 using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Xml.Linq;
+using Wa3Tuner.Dialogs;
+using Wa3Tuner.Helper_Classes;
 using static Wa3Tuner.MainWindow;
 namespace Wa3Tuner
 {
@@ -21,6 +24,99 @@ namespace Wa3Tuner
 
     public static class Calculator
     {
+        public enum ExtentPosition
+        {
+            Center,
+
+            // Single-axis positions
+            Top, Bottom,
+            Left, Right,
+            Front, Back,
+
+            // Edge combinations
+            TopLeft, TopRight,
+            BottomLeft, BottomRight,
+            TopFront, TopBack,
+            BottomFront, BottomBack,
+            LeftFront, LeftBack,
+            RightFront, RightBack,
+
+            // Corner combinations
+            TopLeftFront, TopLeftBack,
+            TopRightFront, TopRightBack,
+            BottomLeftFront, BottomLeftBack,
+            BottomRightFront, BottomRightBack
+        }
+        public static void CenterVectorAtExtent(CVector3 v, CExtent e, ExtentPosition p)
+        {
+            v = GetPositionAtExtent(e,p);
+        }
+        
+        public static CVector3 GetPositionAtExtent(CExtent extent, ExtentPosition position)
+        {
+            // Get min and max bounds
+            float minX = extent.Min.X;
+            float maxX = extent.Max.X;
+            float minY = extent.Min.Y;
+            float maxY = extent.Max.Y;
+            float minZ = extent.Min.Z;
+            float maxZ = extent.Max.Z;
+
+            // Compute center
+            float centerX = (minX + maxX) / 2;
+            float centerY = (minY + maxY) / 2;
+            float centerZ = (minZ + maxZ) / 2;
+
+            return position switch
+            {
+                ExtentPosition.Center => new CVector3(centerX, centerY, centerZ),
+
+                // Single-axis positions
+                ExtentPosition.Top => new CVector3(centerX, maxY, centerZ),
+                ExtentPosition.Bottom => new CVector3(centerX, minY, centerZ),
+                ExtentPosition.Left => new CVector3(minX, centerY, centerZ),
+                ExtentPosition.Right => new CVector3(maxX, centerY, centerZ),
+                ExtentPosition.Front => new CVector3(centerX, centerY, maxZ),
+                ExtentPosition.Back => new CVector3(centerX, centerY, minZ),
+
+                // Edge positions
+                ExtentPosition.TopLeft => new CVector3(minX, maxY, centerZ),
+                ExtentPosition.TopRight => new CVector3(maxX, maxY, centerZ),
+                ExtentPosition.BottomLeft => new CVector3(minX, minY, centerZ),
+                ExtentPosition.BottomRight => new CVector3(maxX, minY, centerZ),
+
+                ExtentPosition.TopFront => new CVector3(centerX, maxY, maxZ),
+                ExtentPosition.TopBack => new CVector3(centerX, maxY, minZ),
+                ExtentPosition.BottomFront => new CVector3(centerX, minY, maxZ),
+                ExtentPosition.BottomBack => new CVector3(centerX, minY, minZ),
+
+                ExtentPosition.LeftFront => new CVector3(minX, centerY, maxZ),
+                ExtentPosition.LeftBack => new CVector3(minX, centerY, minZ),
+                ExtentPosition.RightFront => new CVector3(maxX, centerY, maxZ),
+                ExtentPosition.RightBack => new CVector3(maxX, centerY, minZ),
+
+                // Corner positions
+                ExtentPosition.TopLeftFront => new CVector3(minX, maxY, maxZ),
+                ExtentPosition.TopLeftBack => new CVector3(minX, maxY, minZ),
+                ExtentPosition.TopRightFront => new CVector3(maxX, maxY, maxZ),
+                ExtentPosition.TopRightBack => new CVector3(maxX, maxY, minZ),
+                ExtentPosition.BottomLeftFront => new CVector3(minX, minY, maxZ),
+                ExtentPosition.BottomLeftBack => new CVector3(minX, minY, minZ),
+                ExtentPosition.BottomRightFront => new CVector3(maxX, minY, maxZ),
+                ExtentPosition.BottomRightBack => new CVector3(maxX, minY, minZ),
+
+                _ => new CVector3(0, 0, 0), // Fallback (should never happen)
+            };
+        }
+    public static CExtent GetExtentFromAttachedVertices(CModel model, INode node)
+        {
+            // unfinished
+            return new CExtent();
+        }
+        internal static float DegreesToRadians(float value)
+        {
+            return value * (float)Math.PI / 180f;
+        }
         public static int ChangeWithPercentage(int min, int max, int current, bool increase, int percentage)
         {
             // Calculate the change in value based on the percentage
@@ -208,52 +304,49 @@ namespace Wa3Tuner
             return new CAnimatorNode<float>(v.Time, v.Value < 0 ? 9 : v.Value);
         }
         
-        private class Vector3
-        {
-            public float X, Y, Z = 0;
-            public Vector3(float x, float y, float z) { X = x; Y = y; Z = z; }
-        }
-        internal static CExtent GetExent(List<CVector3> vectors)
+        
+        public static CExtent GetExtent(List<CVector3> vectors)
         {
             if (vectors == null || vectors.Count == 0)
             {
                 throw new ArgumentException("The list of vectors cannot be null or empty.");
             }
-            // Temporary holders for min and max
-            Vector3 min = new Vector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
-            Vector3 max = new Vector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
-            // Iterate through the vectors to find min and max values
+
+            // Initialize min and max bounds
+            CVector3 min = new CVector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
+            CVector3 max = new CVector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
+
+            // Find min and max coordinates
             foreach (CVector3 vector in vectors)
             {
-                if (vector.X < min.X) min.X = vector.X;
-                if (vector.Y < min.Y) min.Y = vector.Y;
-                if (vector.Z < min.Z) min.Z = vector.Z;
-                if (vector.X > max.X) max.X = vector.X;
-                if (vector.Y > max.Y) max.Y = vector.Y;
-                if (vector.Z > max.Z) max.Z = vector.Z;
+                min = new CVector3(Math.Min(min.X, vector.X), Math.Min(min.Y, vector.Y), Math.Min(min.Z, vector.Z));
+                max = new CVector3(Math.Max(max.X, vector.X), Math.Max(max.Y, vector.Y), Math.Max(max.Z, vector.Z));
             }
-            // Calculate the center of the extent
+
+            // Compute the center
             CVector3 center = new CVector3(
                 (min.X + max.X) / 2,
                 (min.Y + max.Y) / 2,
                 (min.Z + max.Z) / 2
             );
-            // Calculate the radius as the maximum distance from the center to any vector
-            float radius = 0;
+
+            // Compute the maximum squared distance from the center
+            float maxDistanceSquared = 0;
             foreach (CVector3 vector in vectors)
             {
                 float distanceSquared =
                     (vector.X - center.X) * (vector.X - center.X) +
                     (vector.Y - center.Y) * (vector.Y - center.Y) +
                     (vector.Z - center.Z) * (vector.Z - center.Z);
-                radius = Math.Max(radius, (float)Math.Sqrt(distanceSquared));
+                maxDistanceSquared = Math.Max(maxDistanceSquared, distanceSquared);
             }
-            // Finalize the CExtent
-            CVector3 extentMin = new CVector3(min.X, min.Y, min.Z);
-            CVector3 extentMax = new CVector3(max.X, max.Y, max.Z);
-            CExtent extent = new CExtent(extentMin, extentMax, radius);
-            return extent;
+
+            // Compute the radius once at the end
+            float radius = (float)Math.Sqrt(maxDistanceSquared);
+
+            return new CExtent(min, max, radius);
         }
+
         internal static CExtent CalculateModelExtent(List<CExtent> extents)
         {
             if (extents == null || extents.Count == 0)
@@ -1063,6 +1156,8 @@ namespace Wa3Tuner
             AddFace(geoset, ModelOwner, v1, v6, v5); // Front face 2
             AddFace(geoset, ModelOwner, v4, v3, v7); // Back face 1
             AddFace(geoset, ModelOwner, v4, v7, v8); // Back face 2
+
+
             return geoset;
         }
         private static void AddFace(CGeoset geoset, CModel ModelOwner, CGeosetVertex v1, CGeosetVertex v2, CGeosetVertex v3)
@@ -1665,11 +1760,12 @@ namespace Wa3Tuner
         }
         internal static System.Windows.Media.Brush War3ColorToBrush(CVector3 color)
         {
-            float R = color.Z * 255;
-            float G = color.Y * 255;
-            float B = color.X * 255;
+            float R = color.Z * 255f;
+            float G = color.Y * 255f;
+            float B = color.X * 255f;
+           // MessageBox.Show($"{R} {G} {B}");
             return BrushFromRGB(R, G, B);
-            throw new NotImplementedException();
+             
         }
         private static System.Windows.Media.Brush BrushFromRGB(float r, float g, float b)
         {
@@ -1677,13 +1773,18 @@ namespace Wa3Tuner
             r = Math.Max(0, Math.Min(1, r));
             g = Math.Max(0, Math.Min(1, g));
             b = Math.Max(0, Math.Min(1, b));
+
             // Convert the values to the 0-255 range
             byte red = (byte)(r * 255);
             byte green = (byte)(g * 255);
             byte blue = (byte)(b * 255);
+
             // Create and return the SolidColorBrush
-            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
+            var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
+            brush.Freeze(); // Improves performance by making it immutable
+            return brush;
         }
+
         internal static System.Windows.Media.Color BrushToColor(System.Windows.Media.Brush brush)
         {
             if (brush is System.Windows.Media.SolidColorBrush solidColorBrush)
@@ -1697,10 +1798,10 @@ namespace Wa3Tuner
         }
         internal static CVector3 ColorToWar3Color(System.Windows.Media.Color color)
         {
-            float r = color.B / 255;
-            float g = color.G / 255;
-            float b = color.R / 255;
-           return new CVector3(r, g, b);
+            float r = color.B / 255f;
+            float g = color.G / 255f;
+            float b = color.R / 255f;
+           return new CVector3(b, g, r);
         }
         internal static int _255ToPercentage(float alpha)
         {
@@ -2060,9 +2161,9 @@ namespace Wa3Tuner
             CVector3 centroid = GetCentroid(geosets);
 
             // Calculate the rotation matrix (assuming Euler angles in degrees for simplicity)
-            float radiansX = MathHelper.DegreesToRadians(x);
-            float radiansY = MathHelper.DegreesToRadians(y);
-            float radiansZ = MathHelper.DegreesToRadians(z);
+            float radiansX = Calculator.DegreesToRadians(x);
+            float radiansY = Calculator.DegreesToRadians(y);
+            float radiansZ = Calculator.DegreesToRadians(z);
 
             Matrix4x4 rotationMatrix = Matrix4x4.CreateFromYawPitchRoll(radiansY, radiansX, radiansZ);
 
@@ -2381,6 +2482,237 @@ namespace Wa3Tuner
         public static float GetVectorMagnitude(CVector3 vector)
         {
             return MathF.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
+        }
+
+        internal static void MirrorGeoset(CGeoset geoset, bool x, bool y, bool z)
+        {
+            var centroid = GetCentroidOfGeoset(geoset);
+
+            // Negate positions relative to the origin
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (x) vertex.Position.X = -vertex.Position.X;
+                if (y) vertex.Position.Y = -vertex.Position.Y;
+                if (z) vertex.Position.Z = -vertex.Position.Z;
+            }
+
+            // Translate back to original position
+            foreach (var vertex in geoset.Vertices)
+            {
+                if (x) vertex.Position.X += 2 * centroid.X;
+                if (y) vertex.Position.Y += 2 * centroid.Y;
+                if (z) vertex.Position.Z += 2 * centroid.Z;
+            }
+        }
+
+        internal static void DistanceGeosetFromPoint(CGeoset geoset, float x, float y, float z, float distance, DistaningMethod method)
+        {
+            CVector3 fromPoint = new CVector3(x, y, z);
+
+            foreach (var vertex in geoset.Vertices)
+            {
+                // Manually compute the direction
+                float dirX = vertex.Position.X - fromPoint.X;
+                float dirY = vertex.Position.Y - fromPoint.Y;
+                float dirZ = vertex.Position.Z - fromPoint.Z;
+
+                float currentDistance = (float)Math.Sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+
+                if (currentDistance == 0)
+                    continue; // Avoid division by zero
+
+                // Normalize direction
+                float normX = dirX / currentDistance;
+                float normY = dirY / currentDistance;
+                float normZ = dirZ / currentDistance;
+
+                float newDistance = currentDistance; // Start with the current distance
+
+                switch (method)
+                {
+                    case DistaningMethod.Set:
+                        newDistance = distance;
+                        break;
+                    case DistaningMethod.Add:
+                        newDistance += distance;
+                        break;
+                    case DistaningMethod.Subtract:
+                        newDistance -= distance;
+                        break;
+                    case DistaningMethod.Multiply:
+                        newDistance *= distance;
+                        break;
+                    case DistaningMethod.Divide:
+                        if (distance != 0)
+                            newDistance /= distance;
+                        break;
+                    case DistaningMethod.Modulo:
+                        if (distance != 0)
+                            newDistance %= distance;
+                        break;
+                }
+
+                // Compute the new position
+                float newX = fromPoint.X + normX * newDistance;
+                float newY = fromPoint.Y + normY * newDistance;
+                float newZ = fromPoint.Z + normZ * newDistance;
+
+                // Assign new position
+                vertex.Position = new CVector3(newX, newY, newZ);
+            }
+        }
+
+        internal static CExtent GetMaxExtent(List<CExtent> extents)
+        {
+            // Create a new extent with the biggest proportions taken from all geosets
+            if (extents.Count == 0) return new CExtent();
+            if (extents.Count == 1) return extents[0];
+
+            CExtent max = new CExtent
+            {
+                Min = new CVector3(float.MaxValue, float.MaxValue, float.MaxValue),
+                Max = new CVector3(float.MinValue, float.MinValue, float.MinValue)
+            };
+
+            foreach (var extent in extents)
+            {
+                max.Min = new CVector3(
+                    Math.Min(max.Min.X, extent.Min.X),
+                    Math.Min(max.Min.Y, extent.Min.Y),
+                    Math.Min(max.Min.Z, extent.Min.Z)
+                );
+
+                max.Max = new CVector3(
+                    Math.Max(max.Max.X, extent.Max.X),
+                    Math.Max(max.Max.Y, extent.Max.Y),
+                    Math.Max(max.Max.Z, extent.Max.Z)
+                );
+            }
+
+            return max;
+        }
+
+        internal static void ScaleGeoset(CGeoset geoset, CVector3 pivotPoint, CVector3 value)
+        {
+            foreach (var vertex in geoset.Vertices)
+            {
+                // Move vertex relative to pivot
+                CVector3 relativePosition = new CVector3(
+                    vertex.Position.X - pivotPoint.X,
+                    vertex.Position.Y - pivotPoint.Y,
+                    vertex.Position.Z - pivotPoint.Z
+                );
+
+                // Scale the relative position
+                relativePosition = new CVector3(
+                    relativePosition.X * value.X,
+                    relativePosition.Y * value.Y,
+                    relativePosition.Z * value.Z
+                );
+
+                // Move vertex back
+                vertex.Position = new CVector3(
+                    pivotPoint.X + relativePosition.X,
+                    pivotPoint.Y + relativePosition.Y,
+                    pivotPoint.Z + relativePosition.Z
+                );
+            }
+        }
+
+
+        internal static void RotateGeosetAroundPivotPoint(CVector3 pivotPoint, CGeoset geoset, float x, float y, float z)
+        {
+            foreach (var vertex in geoset.Vertices)
+            {
+                // Translate vertex to pivot-centered coordinates
+                CVector3 relativePosition = new CVector3(
+                    vertex.Position.X - pivotPoint.X,
+                    vertex.Position.Y - pivotPoint.Y,
+                    vertex.Position.Z - pivotPoint.Z
+                );
+
+                // Apply rotation in order: Z → Y → X (or change order if needed)
+                relativePosition = RotateAroundZ(relativePosition, z);
+                relativePosition = RotateAroundY(relativePosition, y);
+                relativePosition = RotateAroundX(relativePosition, x);
+
+                // Translate vertex back to original space
+                vertex.Position = new CVector3(
+                    pivotPoint.X + relativePosition.X,
+                    pivotPoint.Y + relativePosition.Y,
+                    pivotPoint.Z + relativePosition.Z
+                );
+            }
+        }
+
+        // Rotates a point around the X-axis
+        private static CVector3 RotateAroundX(CVector3 point, float angle)
+        {
+            float rad = angle * (float)Math.PI / 180f;
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+
+            return new CVector3(
+                point.X,
+                cos * point.Y - sin * point.Z,
+                sin * point.Y + cos * point.Z
+            );
+        }
+
+        // Rotates a point around the Y-axis
+        private static CVector3 RotateAroundY(CVector3 point, float angle)
+        {
+            float rad = angle * (float)Math.PI / 180f;
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+
+            return new CVector3(
+                cos * point.X + sin * point.Z,
+                point.Y,
+                -sin * point.X + cos * point.Z
+            );
+        }
+
+        // Rotates a point around the Z-axis
+        private static CVector3 RotateAroundZ(CVector3 point, float angle)
+        {
+            float rad = angle * (float)Math.PI / 180f;
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+
+            return new CVector3(
+                cos * point.X - sin * point.Y,
+                sin * point.X + cos * point.Y,
+                point.Z
+            );
+        }
+
+        internal static  Vector3 GetOutwardFacingDirection(CVector3 one, CVector3 two, CVector3 three)
+        {
+            // Compute two edge vectors
+            Vector3 u = new Vector3(two.X - one.X, two.Y - one.Y, two.Z - one.Z);
+            Vector3 v = new Vector3(three.X - one.X, three.Y - one.Y, three.Z - one.Z);
+
+            // Compute normal (cross product)
+            Vector3 normal = Vector3.Cross(u, v);
+
+            // Normalize the normal
+            normal = Vector3.Normalize(normal);
+
+            // Check if the normal is pointing toward the origin
+            Vector3 centroid = new Vector3((one.X + two.X + three.X) / 3,
+                                           (one.Y + two.Y + three.Y) / 3,
+                                           (one.Z + two.Z + three.Z) / 3);
+
+            Vector3 toOrigin = Vector3.Normalize(new Vector3(0, 0, 0) - centroid);
+
+            // If the normal is pointing toward the origin, flip it
+            if (Vector3.Dot(normal, toOrigin) > 0)
+            {
+                normal = -normal;
+            }
+
+            return normal;
         }
 
     }
