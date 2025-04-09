@@ -51,7 +51,8 @@ namespace W3_Texture_Finder
         }
         internal static bool FileExists(string path)
         {
-            if (Listfile_All.Contains(path)) { return true; }
+            string searched = path.ToLower().Trim();
+            if (Listfile_All.Any(x=>x.ToLower() == searched)) { return true; }
             return File.Exists(path);
         }
         internal static bool FileExists(string path, string Archive)
@@ -234,18 +235,19 @@ namespace W3_Texture_Finder
             return blackBitmapSource;
         }
         //         MPQPaths.temp
-        internal static Bitmap getBitmapImage(string path)
+        internal static Bitmap getBitmapImage(string path, string modelFolder = "")
         {
             string archive = string.Empty;
+            string FullPath = System.IO.Path.Combine(modelFolder, path);
             if (FileExists(path, MPQPaths.War3)) { archive = MPQPaths.War3; }
             if (FileExists(path, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
             if (FileExists(path, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
             if (FileExists(path, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
             if (archive.Length == 0) // could be in local folder
             {
-                if (File.Exists(path))
+                if (File.Exists(FullPath))
                 {
-                    using (FileStream mpqStream = File.OpenRead(path))
+                    using (FileStream mpqStream = File.OpenRead(FullPath))
                     {
                         // Read from the stream
                         byte[] buffer = new byte[mpqStream.Length];
@@ -265,7 +267,8 @@ namespace W3_Texture_Finder
                             bitmapSource.CopyPixels(Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
                             bitmap.UnlockBits(data);
                             // Delete the temporary file
-                            File.Delete(outputPath);
+                            try { File.Delete(outputPath); }
+                           catch { return bitmap; }
                             // Return the Bitmap
                             return bitmap;
                         }
@@ -273,7 +276,7 @@ namespace W3_Texture_Finder
                 }
                 else
                 {
-                    MessageBox.Show($"Could not find the texture at \"{path}\"");
+                    MessageBox.Show($"Could not find the texture at \"{FullPath}\"");
                       return GetWhiteBitmap();
                 }
             }

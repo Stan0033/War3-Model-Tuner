@@ -139,7 +139,7 @@ namespace Wa3Tuner.Helper_Classes
                               }
                               else
                               {
-                                  bone.Name = "Generated3DsBone_" + IDCounter.Next_();
+                                  bone.Name = "Generated3DsBone_" + IDCounter.Next_;
                               }
                               gnode.Node.Attach(bone);
                               group.Nodes.Add(gnode);

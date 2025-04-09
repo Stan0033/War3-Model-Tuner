@@ -94,41 +94,88 @@ namespace Wa3Tuner
         }
         private void addTexture(object sender, RoutedEventArgs e)
         {
-            if (FindItemListBox.SelectedItem != null)
+            if (Tabs.SelectedIndex == 0)
             {
-                string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
-                if  (Main_Window.CurrentModel.Textures.Any(x=>x.FileName == name))
+                if (FindItemListBox.SelectedItem != null)
                 {
-                    MessageBox.Show("This texture is already used by the model");return;
+                    string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == name))
+                    {
+                        MessageBox.Show("This texture is already used by the model"); return;
+                    }
+                    CTexture texture = new CTexture(Main_Window.CurrentModel);
+                    texture.FileName = name;
+                    Main_Window.CurrentModel.Textures.Add(texture);
+                    Main_Window.RefreshTexturesList();
+                    Main_Window.SelectedLayer(null, null);
                 }
-                CTexture texture = new CTexture(Main_Window.CurrentModel);
-                texture.FileName = name;
-                Main_Window.CurrentModel.Textures.Add(texture);
-                Main_Window.RefreshTextures();
-                Main_Window.SelectedLayer(null,null);
             }
-            }
-            private void AddTextureMat(object sender, RoutedEventArgs e)
-        {
-            if (FindItemListBox.SelectedItem != null)
+            else
             {
-                string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
-                if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == name))
+                string name = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == Favourites[name]))
                 {
                     MessageBox.Show("This texture is already used by the model"); return;
                 }
                 CTexture texture = new CTexture(Main_Window.CurrentModel);
-                texture.FileName = name;
-                CMaterial material = new CMaterial(Main_Window.CurrentModel);
-                CMaterialLayer layer = new CMaterialLayer(Main_Window.CurrentModel);
-                layer.Texture.Attach(texture);
-                material.Layers.Add(layer);
+                texture.FileName = Favourites[name];
                 Main_Window.CurrentModel.Textures.Add(texture);
-                Main_Window.CurrentModel.Materials.Add(material);
-                Main_Window.RefreshMaterialsList();
-                Main_Window.RefreshTextures();
+                Main_Window.RefreshTexturesList();
                 Main_Window.SelectedLayer(null, null);
+
             }
+            }
+            private void AddTextureMat(object sender, RoutedEventArgs e)
+        {
+            if (Tabs.SelectedIndex == 0)
+            {
+                if (FindItemListBox.SelectedItem != null)
+                {
+
+                    string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == name))
+                    {
+                        MessageBox.Show("This texture is already used by the model"); return;
+                    }
+                    CTexture texture = new CTexture(Main_Window.CurrentModel);
+                    texture.FileName = name;
+                    CMaterial material = new CMaterial(Main_Window.CurrentModel);
+                    CMaterialLayer layer = new CMaterialLayer(Main_Window.CurrentModel);
+                    layer.Texture.Attach(texture);
+                    material.Layers.Add(layer);
+                    Main_Window.CurrentModel.Textures.Add(texture);
+                    Main_Window.CurrentModel.Materials.Add(material);
+                    Main_Window.RefreshMaterialsList();
+                    Main_Window.RefreshTexturesList();
+                    Main_Window.SelectedLayer(null, null);
+                }
+            }
+            else
+            {
+
+                if (FavItemListBox.SelectedItem != null)
+                {
+
+                    string name = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == Favourites[name]))
+                    {
+                        MessageBox.Show("This texture is already used by the model"); return;
+                    }
+                    CTexture texture = new CTexture(Main_Window.CurrentModel);
+                    texture.FileName = Favourites[name];
+                    CMaterial material = new CMaterial(Main_Window.CurrentModel);
+                    CMaterialLayer layer = new CMaterialLayer(Main_Window.CurrentModel);
+                    layer.Texture.Attach(texture);
+                    material.Layers.Add(layer);
+                    Main_Window.CurrentModel.Textures.Add(texture);
+                    Main_Window.CurrentModel.Materials.Add(material);
+                    Main_Window.RefreshMaterialsList();
+                    Main_Window.RefreshTexturesList();
+                    Main_Window.SelectedLayer(null, null);
+                }
+            }
+
+            
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -188,7 +235,7 @@ namespace Wa3Tuner
         }
         void SaveFavourites()
         {
-            string path = System.IO. Path.Combine(AppHelper.Local, "FavouriteTextures.txt");
+            string path = System.IO. Path.Combine(AppHelper.Local, "Paths\\FavouriteTextures.txt");
             StringBuilder sb = new StringBuilder();
             foreach (var item in Favourites)
             {
@@ -199,7 +246,7 @@ namespace Wa3Tuner
         }
         void LoadFavourites()
         {
-            string path = System.IO.Path.Combine(AppHelper.Local, "FavouriteTextures.txt");
+            string path = System.IO.Path.Combine(AppHelper.Local, "Paths\\FavouriteTextures.txt");
             Favourites.Clear();
             if (!File.Exists(path)) return;
             foreach (var item in File.ReadAllLines(path))
@@ -207,7 +254,7 @@ namespace Wa3Tuner
                 string[] parts = item.Split("|");
                 Favourites.Add(parts[0], parts[1]);
             }
-
+            RefreshFavouritesList();
         }
 
         private void AddFavourite(object sender, RoutedEventArgs e)

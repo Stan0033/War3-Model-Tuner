@@ -174,5 +174,16 @@ namespace Wa3Tuner
                 FillData();
             }
         }
+
+        private void do100(object sender, RoutedEventArgs e)
+        {
+            BoxRadioButton.IsChecked = true;
+            NegativeExtentXTextBox.Text = "-100";
+            NegativeExtentYTextBox.Text = "-100";
+            NegativeExtentZTextBox.Text = "0";
+            PositiveExtentXTextBox.Text = "100";
+            PositiveExtentYTextBox.Text = "100";
+            PositiveExtentZTextBox.Text = "100";
+        }
     }
 }

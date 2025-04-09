@@ -1,0 +1,136 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.UVMapper"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        Closing="Window_Closing"
+        Background="LightGray"
+       
+        Title="UVMapper" Height="600" Width="900" MinHeight="600" MinWidth="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="34"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2">
+            <StackPanel>
+                <TextBlock Text="Left Mouse Button for selecting" FontSize="8"/>
+                <TextBlock Text="Right Mouse Button for modifying" FontSize="8"/>
+                <TextBlock Text="Scroll for zooming" FontSize="8"/>
+            </StackPanel>
+            <TextBlock Text="U" Margin="5" VerticalAlignment="Center"/>
+            <TextBox Name="inputU" Width="100" KeyDown="inputU_KeyDown" Height="20" VerticalAlignment="Center"/>
+            <Button  Name="buttonLockU" Click="lockunlockU" KeyDown="buttonLockU_KeyDown" Width="20" Height="20" VerticalAlignment="Center"  Margin="5" BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/Lock.png"/>
+                </Button.Background>
+            </Button>
+
+            <TextBlock Text="V" Margin="5" VerticalAlignment="Center"/>
+            <TextBox Name="inputV" Width="100" Height="20" VerticalAlignment="Center" KeyDown="inputV_KeyDown"/>
+            <Button  Name="buttonLockV" Click="lockunlockV" Width="20" Height="20" VerticalAlignment="Center" 
+                     Margin="5" BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/Lock.png"/>
+                </Button.Background>
+            </Button>
+            <CheckBox Name="checkCEntroid" Content="as group" IsChecked="True" VerticalAlignment="Center" ToolTip="The selected vertices will move as group instead of setting each to that value"/>
+            <Button   Click="copy" Width="20" Height="20" VerticalAlignment="Center"  Margin="5"   >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/copy.png"/>
+                </Button.Background>
+            </Button>
+            <Button   Click="paste1" Width="20" Height="20" VerticalAlignment="Center"  Margin="5"   >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/paste.png"/>
+                </Button.Background>
+            </Button>
+            <TextBlock Text="Modify Mode:" Margin="5" VerticalAlignment="Center"/>
+            <Button Name="buttonMove" Width="20" Height="20" VerticalAlignment="Center" Click="setmode_move" Margin="5" BorderThickness="3" BorderBrush="Green" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/move.png"/>
+                </Button.Background>
+            </Button>
+            <Button Name="buttonRotate" Width="20" Height="20" Click="setmode_rotate" VerticalAlignment="Center" Margin="5"  BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/rotate.png"/>
+                </Button.Background>
+            </Button>
+            <Button Name="buttonScale" Width="20" Height="20" Click="setmode_scale" VerticalAlignment="Center" Margin="5"  BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/scale.png"/>
+                </Button.Background>
+            </Button>
+            
+            <Button Name="buttonScaleX" Width="20" Height="20" Click="setmode_scaleX" ToolTip="Scale Vertically" VerticalAlignment="Center" Margin="5"  BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/ScaleX.png"/>
+                </Button.Background>
+            </Button>
+            <Button Name="buttonScaleY" Width="20" Height="20" ToolTip="Scale horizontally" Click="setmode_scaleY" VerticalAlignment="Center" Margin="5"  BorderThickness="3" >
+                <Button.Background>
+                    <ImageBrush ImageSource="/Dialogs/ScaleY.png"/>
+                </Button.Background>
+            </Button>
+            <TextBlock Text="Grid size:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox TextChanged="inputGrid_TextChanged" Text="0" Name="inputGrid" Width="50" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="Geosets:"/>
+            <ListBox Name="list_geosets" Height="120" Margin="5" SelectionChanged="FillTrianglesOfGeoset"/>
+            <TextBlock Text="Displayed texture:"/>
+            <ComboBox Name="ComboTexture" SelectionChanged="ComboTexture_SelectionChanged"/>
+            <Button Content="Set to Geoset's" Click="SetToGeoset_s"/>
+            <TextBlock Text="Triangles:"/>
+            <ListBox Name="list_triangles" Height="120" Margin="5" SelectionMode="Multiple" SelectionChanged="list_triangles_SelectionChanged">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Select all" Click="sall"/>
+                        <MenuItem Header="Select None" Click="snone"/>
+                        <MenuItem Header="Select Inverse" Click="sin"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+            <TextBlock Text="Commands:"/>
+            <ScrollViewer Height="200" Padding="5">
+                <StackPanel>
+                    <Button Click="project">Project</Button>
+                    <Button Click="resetto0">Reset to 0</Button>
+                    <Button Click="negateus">Mirror Us</Button>
+                    <Button Click="mirrorvs">Mirror Vs</Button>
+                    <Button Click="swapuvs">Swap Us and Vs</Button>
+                    <Button Click="swaptwo">Swap two</Button>
+                    <Button Click="flattenU">Flatten by U</Button>
+                    <Button Click="flattenV">Flatten by V</Button>
+                    <Button>Snap...</Button>
+                    <Button Click="clamp">Clamp</Button>
+                    <Button ToolTip="If the selected vertices are 4, stretch to fit in the texture">Fit in texture</Button>
+                </StackPanel>
+            </ScrollViewer>
+            
+            
+
+        </StackPanel>
+        <ScrollViewer Grid.Column="1" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid x:Name="GridContainer">
+                <Canvas x:Name="Canvas_UV"/>
+                <Canvas x:Name="Canvas_Vertices"/>
+                <Canvas x:Name="Canvas_Grid" Background="Transparent"/>
+                <Canvas x:Name="Canvas_Selection"  Background="Transparent"
+                        MouseUp="Canvas_Selection_MouseUp" 
+                        MouseDown="Canvas_Selection_MouseDown"
+                        MouseMove="Canvas_Selection_MouseMove"
+                        />
+            </Grid>
+        </ScrollViewer>
+
+
+    </Grid>
+</Window>

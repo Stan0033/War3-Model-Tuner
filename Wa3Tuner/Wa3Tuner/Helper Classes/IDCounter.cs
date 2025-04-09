@@ -8,11 +8,24 @@ namespace Wa3Tuner.Helper_Classes
 {
    public static class IDCounter
     {
-        private static int counter = 0;
-        public static int Next() { counter++; return counter; }
-        public static string Next_()
+        public static int Next
         {
-            counter++; return counter.ToString();
+            get
+            {
+                counter++; return counter;
+            }
+            
         }
+        public static string Next_
+        {
+            get
+            {
+                counter++; return counter.ToString(); ;
+            }
+
+        }
+        private static int counter = 0;
+       public static int Value  => counter; 
+        
     }
 }

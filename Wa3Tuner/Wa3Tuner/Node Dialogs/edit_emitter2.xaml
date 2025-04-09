@@ -56,7 +56,7 @@
                 <StackPanel Orientation="Horizontal">
                     <CheckBox Name="Check_ModelSpace" Unchecked="Checked_ModelSpace" Checked="Checked_ModelSpace" Content="Model Space" Margin="5"/>
                     <CheckBox Name="Check_XY" Checked="Checked_XY" Unchecked="Checked_XY" Content="XY Quad" Margin="5"/>
-                    <CheckBox Name="Check_Squirt" Unchecked="Checked_Squirt" Checked="Checked_Squirt" Content="Squirt" Margin="5"/>
+                    <CheckBox Name="Check_Squirt" ToolTip="Requires animating the emission rate" Unchecked="Checked_Squirt" Checked="Checked_Squirt" Content="Squirt" Margin="5"/>
                     <CheckBox Name="Check_Head" Checked="Checked_Head" Unchecked="Checked_Head" Content="Head" Margin="5"/>
                     <CheckBox Content="Tail" Name="Check_Tail" Checked="Checked_Tail" Unchecked="Checked_Tail" Margin="5"/>
                 </StackPanel>

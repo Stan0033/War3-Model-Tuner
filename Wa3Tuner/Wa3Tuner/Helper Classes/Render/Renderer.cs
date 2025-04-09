@@ -1,5 +1,5 @@
 ﻿using SharpGL;
- using System.Drawing.Imaging;
+using System.Drawing.Imaging;
 using System.Drawing;
 using Wa3Tuner.Helper_Classes;
 using System;
@@ -7,61 +7,76 @@ using MdxLib.Model;
 using MdxLib.Primitives;
 using System.Collections.Generic;
 using SharpGL.SceneGraph.Assets;
+using SharpGL.SceneGraph;
+using System.Windows;
+using System.Linq;
+using System.Numerics;
 namespace Wa3Tuner.Helper_Classes
 {
-    enum PointType { Square, Triangle,
-        Sphere
-    }
+  
     public static class Renderer
     {
-       /* public static w3Geoset CreateCubeFromExtent(CExtent extent)
+       
+        public static void RenderSelectedPath(OpenGL gl)
         {
-            w3Geoset geo = new w3Geoset();
-            // Get the min and max coordinates from the extent
-            float minX = extent.Min.X;
-            float minY = extent.Y;
-            float minZ = extent.Min.Z;
-            float maxX = extent.Max.X;
-            float maxY = extent.Max.Y;
-            float maxZ = extent.Max.Z;
-            // Define the vertices of the cube
-            CGeosetVertex v0 = new CGeosetVertex(minX, minY, minZ); // Bottom-left-back
-            w3Vertex v1 = new w3Vertex(maxX, minY, minZ); // Bottom-right-back
-            w3Vertex v2 = new w3Vertex(maxX, maxY, minZ); // Top-right-back
-            w3Vertex v3 = new w3Vertex(minX, maxY, minZ); // Top-left-back
-            w3Vertex v4 = new w3Vertex(minX, minY, maxZ); // Bottom-left-front
-            w3Vertex v5 = new w3Vertex(maxX, minY, maxZ); // Bottom-right-front
-            w3Vertex v6 = new w3Vertex(maxX, maxY, maxZ); // Top-right-front
-            w3Vertex v7 = new w3Vertex(minX, maxY, maxZ); // Top-left-front
-            // Add vertices to the geoset
-            geo.Vertices.Add(v0);
-            geo.Vertices.Add(v1);
-            geo.Vertices.Add(v2);
-            geo.Vertices.Add(v3);
-            geo.Vertices.Add(v4);
-            geo.Vertices.Add(v5);
-            geo.Vertices.Add(v6);
-            geo.Vertices.Add(v7);
-            // Define the triangles of the cube using variable names
-            geo.Triangles.Add(new w3Triangle(v0, v1, v2)); // Back face
-            geo.Triangles.Add(new w3Triangle(v0, v2, v3));
-            geo.Triangles.Add(new w3Triangle(v4, v5, v6)); // Front face
-            geo.Triangles.Add(new w3Triangle(v4, v6, v7));
-            geo.Triangles.Add(new w3Triangle(v0, v1, v5)); // Bottom face
-            geo.Triangles.Add(new w3Triangle(v0, v5, v4));
-            geo.Triangles.Add(new w3Triangle(v2, v3, v7)); // Top face
-            geo.Triangles.Add(new w3Triangle(v2, v7, v6));
-            geo.Triangles.Add(new w3Triangle(v1, v2, v6)); // Right face
-            geo.Triangles.Add(new w3Triangle(v1, v6, v5));
-            geo.Triangles.Add(new w3Triangle(v0, v3, v7)); // Left face
-            geo.Triangles.Add(new w3Triangle(v0, v7, v4));
-            // Finalize the geometry
-            geo.RecalculateEdges();
-            geo.ID = IDCounter.Next();
-            geo.Material_ID = 0;
-            return geo;
+            if (PathManager.Selected != null && PathManager.Selected.Count > 0) // At least 2 nodes needed to form a line
+            {
+                gl.Disable(OpenGL.GL_TEXTURE_2D); // Ensure no textures interfere
+
+                gl.PointSize(RenderSettings.PathNodeSize);
+                gl.Begin(OpenGL.GL_POINTS);
+
+                if (PathManager.Selected != null && PathManager.Selected.Count > 0)
+                {
+
+
+                    // Draw points
+                    foreach (var node in PathManager.Selected.List)
+                    {
+                        if (node.IsSelected)
+                            gl.Color(RenderSettings.Path_Node_Selected[0], RenderSettings.Path_Node_Selected[1], RenderSettings.Path_Node_Selected[2]);
+                        else
+                            gl.Color(RenderSettings.Path_Node[0], RenderSettings.Path_Node[1], RenderSettings.Path_Node[2]);
+
+                        gl.Vertex(node.Position.X, node.Position.Y, node.Position.Z);
+                    }
+                    gl.End();
+
+                    // Draw a separate line between each consecutive pair of nodes
+                    gl.Color(RenderSettings.Path_Line[0], RenderSettings.Path_Line[1], RenderSettings.Path_Line[2]);
+                    gl.LineWidth(2.0f);
+
+                    for (int i = 0; i < PathManager.Selected.Count - 1; i++) // Loop through every pair
+                    {
+                        CVector3 start = PathManager.Selected.List[i].Position;
+                        CVector3 end = PathManager.Selected.List[i + 1].Position;
+
+                        gl.Begin(OpenGL.GL_LINES); // Begin a new line for each pair
+                        gl.Vertex(start.X, start.Y, start.Z);
+                        gl.Vertex(end.X, end.Y, end.Z);
+                        gl.End(); // End the line
+                    }
+
+                    gl.Enable(OpenGL.GL_TEXTURE_2D); // Restore textures if needed
+
+                }
+            }
         }
-        */
+
+        public static void RenderTestLines(OpenGL gl)
+        {
+            gl.Begin(OpenGL.GL_LINES); // Start drawing lines
+
+            foreach (xLine line in RayCaster.Lines)
+            {
+                // Draw the line between `one` and `two`
+                gl.Vertex(line.one.X, line.one.Y, line.one.Z); // First point
+                gl.Vertex(line.two.X, line.two.Y, line.two.Z); // Second point
+            }
+
+            gl.End(); // End the drawing
+        }
+
         public static void RenderGrid(OpenGL gl, float gridSize, float lineSpacing)
         {
             if (gridSize == 0 || lineSpacing == 0) { return; }
@@ -135,7 +150,7 @@ namespace Wa3Tuner.Helper_Classes
         public static void RenderExtents(OpenGL gl, CModel model)
         {
             // Set the color to blue (R, G, B)
-            gl.Color(0.0f, 0.0f, 1.0f); // Blue color
+            gl.Color(RenderSettings.Color_Extent[0], RenderSettings.Color_Extent[1], RenderSettings.Color_Extent[1]);
             // Begin drawing lines
             gl.Begin(OpenGL.GL_LINES);
             foreach (cLine line in model.GeosetLines)
@@ -153,7 +168,9 @@ namespace Wa3Tuner.Helper_Classes
             if (model.CollisionShapeLines.Count > 0)
             {
                 // Set the color to blue (R, G, B)
-                gl.Color(0.0f, 0.0f, 1.0f); // Blue color
+                gl.Color(RenderSettings.Color_CollisionShape[0], 
+                    RenderSettings.Color_CollisionShape[1], RenderSettings.Color_CollisionShape[2]);
+
                 // Begin drawing lines
                 gl.Begin(OpenGL.GL_LINES);
                 foreach (cLine line in model.CollisionShapeLines)
@@ -167,31 +184,39 @@ namespace Wa3Tuner.Helper_Classes
                 gl.End();
             }
         }
-        public static void RenderEdges(OpenGL gl, CModel currentModel, List<CGeoset> ModifiedGeosets = null)
+        private static void RenderEdgesOf(OpenGL gl, CGeoset geo, bool Render)
         {
-            List<CGeoset> Geosets = ModifiedGeosets != null ? ModifiedGeosets : currentModel.Geosets.ObjectList;
-            foreach (CGeoset geo in Geosets)
+            if (!Render && !geo.isSelected) { return; }
+            gl.Begin(OpenGL.GL_LINES); // Start drawing lines once for all edges
+            foreach (var edge in geo.Edges)
+            {
+                if (edge.isSelected || geo.isSelected)
+                {
+                    gl.Color(RenderSettings.Color_Edge_Selected[0],
+                        RenderSettings.Color_Edge_Selected[1], 
+                        RenderSettings.Color_Edge_Selected[2]);
+                }
+                else
+                {
+                    gl.Color(RenderSettings.Color_Edge[0],
+                        RenderSettings.Color_Edge[1], RenderSettings.Color_Edge[2]);
+                }
+                // Get the vertices by their IDs
+                var v1 = edge.Vertex1;
+                var v2 = edge.Vertex2;
+                // Draw the edge
+                gl.Vertex(v1.Position.X, v1.Position.Y, v1.Position.Z);
+                gl.Vertex(v2.Position.X, v2.Position.Y, v2.Position.Z);
+            }
+            gl.End(); // End drawing lines after all edges have been drawn
+        }
+        public static void RenderEdges(OpenGL gl, CModel currentModel, bool DoRender)
+        {
+           foreach (CGeoset geo in currentModel.Geosets)
             {
                 if (!geo.isVisible) continue;
-                    gl.Begin(OpenGL.GL_LINES); // Start drawing lines once for all edges
-                    foreach (var edge in geo.Edges)
-                    {
-                        if (edge.isSelected)
-                        {
-                            gl.Color(RenderSettings.EdgeColorSelected[0], RenderSettings.EdgeColorSelected[1], RenderSettings.EdgeColorSelected[2]);
-                        }
-                        else
-                        {
-                            gl.Color(RenderSettings.EdgeColor[0], RenderSettings.EdgeColor[1], RenderSettings.EdgeColor[2]);
-                        }
-                        // Get the vertices by their IDs
-                        var v1 = edge.Vertex1;
-                          var v2 = edge.Vertex2;
-                        // Draw the edge
-                        gl.Vertex(v1.Position.X, v1.Position.Y, v1.Position.Z);
-                        gl.Vertex(v2.Position.X, v2.Position.Y, v2.Position.Z);
-                    }
-                    gl.End(); // End drawing lines after all edges have been drawn
+               
+                RenderEdgesOf(gl, geo, DoRender);
             }
         }
         public static void RenderAxis(OpenGL gl, int gridsize)
@@ -230,64 +255,162 @@ namespace Wa3Tuner.Helper_Classes
             bitmap.UnlockBits(data); // Unlock the bitmap
             return textureId[0]; // Return the generated texture ID
         }
-        public static void RenderTriangles(OpenGL gl, CModel model, bool RenderTextures, List<Texture> textures)
+        public static void RenderTriangles(OpenGL gl, CModel model, bool RenderTextures, List<Texture> textures, bool animated , bool RenderShading)
         {
             List<CGeoset> Geosets = model.Geosets.ObjectList;
 
             for (int i = 0; i < model.Geosets.Count; i++)
             {
                 CGeoset geo = model.Geosets[i];
-                if (!geo.isVisible) continue;
 
-                bool hasTexture = RenderTextures && textures[i] != null;
+                int last = geo.Material.Object.Layers.Count - 1;
+                bool Twosided = geo.Material.Object.Layers[last].TwoSided;
 
-                // FIRST PASS: Render the normal texture or color
-                if (hasTexture)
+                if (!geo.isVisible && !animated) { continue; }
+                if (animated && !geo.isVisibleAnimated) { continue; }
+
+                var geoAnim = model.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == geo);
+                Vector3 GeosetColor = new Vector3(1, 1, 1);
+
+                if (geoAnim != null && geoAnim.UseColor && geoAnim.Color.Static)
                 {
-                    gl.Enable(OpenGL.GL_TEXTURE_2D);
-                    textures[i].Bind(gl);
+                    var color = geoAnim.Color.GetValue();
+                    GeosetColor = new Vector3(color.Z, color.X, color.Z);
                 }
 
-                gl.Begin(OpenGL.GL_TRIANGLES);
-                foreach (var triangle in geo.Triangles)
+                for (int layerIndex = 0; layerIndex < geo.Material.Object.Layers.Count; layerIndex++)
                 {
-                    var v1 = triangle.Vertex1;
-                    var v2 = triangle.Vertex2;
-                    var v3 = triangle.Vertex3;
+                    var layer = geo.Material.Object.Layers[layerIndex];
 
-                    if (triangle.isSelected)
+                    gl.Enable(OpenGL.GL_BLEND);
+
+                    switch (layer.FilterMode)
                     {
-                        gl.Color(RenderSettings.Color_VertexSelected[0],
-                                 RenderSettings.Color_VertexSelected[1],
-                                 RenderSettings.Color_VertexSelected[2],
-                                 1.0f); // Full alpha for normal rendering
+                        case EMaterialLayerFilterMode.None:
+                        case EMaterialLayerFilterMode.Transparent:
+                            gl.Disable(OpenGL.GL_BLEND);
+                            break;
+
+                        case EMaterialLayerFilterMode.Additive:
+                        case EMaterialLayerFilterMode.AdditiveAlpha:
+                            gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE);
+                            break;
+
+                        case EMaterialLayerFilterMode.Modulate:
+                            gl.BlendFunc(OpenGL.GL_DST_COLOR, OpenGL.GL_ZERO);
+                            break;
+
+                        case EMaterialLayerFilterMode.Modulate2x:
+                            gl.BlendFunc(OpenGL.GL_DST_COLOR, OpenGL.GL_SRC_COLOR);
+                            break;
+
+                        case EMaterialLayerFilterMode.Blend:
+                            gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
+                            break;
                     }
+
+                    if (RenderTextures && layer.Texture != null)
+                    {
+                        gl.Enable(OpenGL.GL_TEXTURE_2D);
+                        gl.TexEnv(OpenGL.GL_TEXTURE_ENV, OpenGL.GL_TEXTURE_ENV_MODE, OpenGL.GL_MODULATE);
+                        textures[i].Bind(gl);
+                    }
+
+                    if (Twosided)
+                        gl.Disable(OpenGL.GL_CULL_FACE);
                     else
+                        gl.Enable(OpenGL.GL_CULL_FACE);
+
+                    gl.Begin(OpenGL.GL_TRIANGLES);
+
+                    foreach (var triangle in geo.Triangles)
                     {
-                        gl.Color(1.0f, 1.0f, 1.0f, 1.0f);
+                        var v1 = triangle.Vertex1;
+                        var v2 = triangle.Vertex2;
+                        var v3 = triangle.Vertex3;
+
+                        CVector3 pos1 = animated ? v1.Object.AnimatedPosition : v1.Object.Position;
+                        CVector3 pos2 = animated ? v2.Object.AnimatedPosition : v2.Object.Position;
+                        CVector3 pos3 = animated ? v3.Object.AnimatedPosition : v3.Object.Position;
+
+                        // Determine normals
+                        CVector3 normal1, normal2, normal3;
+                        if (RenderShading)
+                        {
+                            normal1 = v1.Object.Normal;
+                            normal2 = v2.Object.Normal;
+                            normal3 = v3.Object.Normal;
+                        }
+                        else
+                        {
+                            CVector3 edge1 = new CVector3(pos2.X - pos1.X, pos2.Y - pos1.Y, pos2.Z - pos1.Z);
+                            CVector3 edge2 = new CVector3(pos3.X - pos1.X, pos3.Y - pos1.Y, pos3.Z - pos1.Z);
+                            CVector3 normal = Cross(edge1, edge2);
+                            normal1 = normal2 = normal3 = normal;
+                        }
+
+                        // Color
+                        if (triangle.isSelected)
+                        {
+                            gl.Color(RenderSettings.Color_VertexSelected[0],
+                                     RenderSettings.Color_VertexSelected[1],
+                                     RenderSettings.Color_VertexSelected[2],
+                                     1.0f);
+                        }
+                        else
+                        {
+                            gl.Color(GeosetColor.X, GeosetColor.Y, GeosetColor.Z, 1.0f);
+                        }
+
+                        // Vertices + normals + textures
+                        if (RenderTextures)
+                        {
+                            gl.Normal(normal1.X, normal1.Y, normal1.Z);
+                            gl.TexCoord(v1.Object.TexturePosition.X, v1.Object.TexturePosition.Y);
+                            gl.Vertex(pos1.X, pos1.Y, pos1.Z);
+
+                            gl.Normal(normal2.X, normal2.Y, normal2.Z);
+                            gl.TexCoord(v2.Object.TexturePosition.X, v2.Object.TexturePosition.Y);
+                            gl.Vertex(pos2.X, pos2.Y, pos2.Z);
+
+                            gl.Normal(normal3.X, normal3.Y, normal3.Z);
+                            gl.TexCoord(v3.Object.TexturePosition.X, v3.Object.TexturePosition.Y);
+                            gl.Vertex(pos3.X, pos3.Y, pos3.Z);
+                        }
+                        else
+                        {
+                            gl.Normal(normal1.X, normal1.Y, normal1.Z);
+                            gl.Vertex(pos1.X, pos1.Y, pos1.Z);
+
+                            gl.Normal(normal2.X, normal2.Y, normal2.Z);
+                            gl.Vertex(pos2.X, pos2.Y, pos2.Z);
+
+                            gl.Normal(normal3.X, normal3.Y, normal3.Z);
+                            gl.Vertex(pos3.X, pos3.Y, pos3.Z);
+                        }
                     }
 
-                    if (hasTexture) gl.TexCoord(v1.Object.TexturePosition.X, v1.Object.TexturePosition.Y);
-                    gl.Vertex(v1.Object.Position.X, v1.Object.Position.Y, v1.Object.Position.Z);
+                    gl.End();
 
-                    if (hasTexture) gl.TexCoord(v2.Object.TexturePosition.X, v2.Object.TexturePosition.Y);
-                    gl.Vertex(v2.Object.Position.X, v2.Object.Position.Y, v2.Object.Position.Z);
-
-                    if (hasTexture) gl.TexCoord(v3.Object.TexturePosition.X, v3.Object.TexturePosition.Y);
-                    gl.Vertex(v3.Object.Position.X, v3.Object.Position.Y, v3.Object.Position.Z);
+                    if (RenderTextures)
+                        gl.Disable(OpenGL.GL_TEXTURE_2D);
                 }
-                gl.End();
 
-                if (hasTexture) gl.Disable(OpenGL.GL_TEXTURE_2D);
-
-                // SECOND PASS: Transparent overlay for selected geosets
-                if (geo.isSelected)
-                {
-                    RenderSelectionCube(gl, geo);
-                    
-                }
+                gl.Disable(OpenGL.GL_BLEND);
             }
         }
+
+        private static CVector3 Cross(CVector3 original, CVector3 other)
+        {
+            return new CVector3(
+                original.Y * other.Z - original.Z * other.Y,
+                original.Z * other.X - original.X * other.Z,
+                original.X * other.Y - original.Y * other.X
+            );
+        }
+
+
+
         private static void RenderSelectionCube(OpenGL gl, CGeoset geoset)
         {
             // Get the bounding box extents
@@ -314,9 +437,9 @@ namespace Wa3Tuner.Helper_Classes
     };
 
             // Set color for the lines
-            gl.Color(RenderSettings.SelectedGeoset[0],
-                     RenderSettings.SelectedGeoset[1],
-                     RenderSettings.SelectedGeoset[2],
+            gl.Color(RenderSettings.Color_SelectedGeoset[0],
+                     RenderSettings.Color_SelectedGeoset[1],
+                     RenderSettings.Color_SelectedGeoset[2],
                      1.0f); // Full opacity
 
             // Render the cube as lines
@@ -339,7 +462,7 @@ namespace Wa3Tuner.Helper_Classes
                     CVector3 pos = vertex.Position;
                     CVector3 normal = vertex.Normal;
                     // Set color to green
-                    gl.Color(RenderSettings.NormalsColor[0], RenderSettings.NormalsColor[1], RenderSettings.NormalsColor[2]); // Green
+                    gl.Color(RenderSettings.Color_Normals[0], RenderSettings.Color_Normals[1], RenderSettings.Color_Normals[2]); // Green
                     // Begin drawing a line
                     gl.Begin(OpenGL.GL_LINES);
                     // Start point of the line is the vertex position
@@ -354,6 +477,42 @@ namespace Wa3Tuner.Helper_Classes
                 }
             }
         }
+        public static void RenderGroundTexture(OpenGL gl, Texture t, int size)
+        {
+          //  MessageBox.Show("grd");
+            gl.Enable(OpenGL.GL_TEXTURE_2D);
+
+
+
+            gl.Color(1.0f, 1.0f, 1.0f);
+
+            t.Bind(gl);
+            gl.TexEnv(OpenGL.GL_TEXTURE_ENV, OpenGL.GL_TEXTURE_ENV_MODE, OpenGL.GL_REPLACE);
+            gl.Begin(OpenGL.GL_QUADS); // Draw the quad
+                                       // Normal for both sides
+            gl.Normal(0.0f, 0.0f, 1.0f);
+
+            // Bottom-left
+            gl.TexCoord(0.0f, 0.0f);
+            gl.Vertex(-size / 2.0f, -size / 2.0f, 0);
+
+            // Bottom-right
+            gl.TexCoord(1.0f, 0.0f);
+            gl.Vertex(size / 2.0f, -size / 2.0f, 0);
+
+            // Top-right
+            gl.TexCoord(1.0f, 1.0f);
+            gl.Vertex(size / 2.0f, size / 2.0f, 0);
+
+            // Top-left
+            gl.TexCoord(0.0f, 1.0f);
+            gl.Vertex(-size / 2.0f, size / 2.0f, 0);
+
+            gl.End();
+            gl.Disable(OpenGL.GL_TEXTURE_2D);
+        }
+
+
         public static void RenderRigging(OpenGL gl, CModel model)
         {
             foreach (CGeoset geo in model.Geosets)
@@ -372,7 +531,7 @@ namespace Wa3Tuner.Helper_Classes
         private static void DrawLineBetweenVertexAndBone(OpenGL gl, CVector3 from, CVector3 to)
         {
             // Set color to orange
-            gl.Color(RenderSettings.RiggingColor[0], RenderSettings.RiggingColor[1], RenderSettings.RiggingColor[2]); // RGB for orange
+            gl.Color(RenderSettings.Color_Skinning[0], RenderSettings.Color_Skinning[1], RenderSettings.Color_Skinning[2]); // RGB for orange
             // Begin drawing lines
             gl.Begin(OpenGL.GL_LINES);
             // Specify the start point of the line (vertex position)
@@ -384,7 +543,7 @@ namespace Wa3Tuner.Helper_Classes
         }
         private static void DrawLineBetweenNodes(OpenGL gl, CVector3 from, CVector3 to)
         {
-            gl.Color(RenderSettings.SkeletonColor[0], RenderSettings.SkeletonColor[0], RenderSettings.SkeletonColor[2]); // RGB for purple
+            gl.Color(RenderSettings.Color_Skeleton[0], RenderSettings.Color_Skeleton[0], RenderSettings.Color_Skeleton[2]); // RGB for purple
             // Begin drawing lines
             gl.Begin(OpenGL.GL_LINES);
             // Specify the start point of the line (vertex position)
@@ -402,67 +561,42 @@ namespace Wa3Tuner.Helper_Classes
                 {
                     CVector3 From = node.PivotPoint;
                     CVector3 To = node.Parent.Node.PivotPoint;
-                     DrawLineBetweenNodes(gl, From, To);
+                    DrawLineBetweenNodes(gl, From, To);
                 }
             }
         }
-        internal static void RenderNodes(OpenGL gl, CModel currentModel)
+        internal static void RenderNodes(OpenGL gl, CModel currentModel, bool animated = false)
         {
-            float rectWidth = 0.5f * RenderSettings.PointSize;  // Default width of the rectangle or triangle
-            float rectHeight = 0.025f * RenderSettings.PointSize; // Adjusted height of the triangle to avoid being too tall
-            // Camera position (eye)
-            float[] cameraPos = { CameraControl.eyeX, CameraControl.eyeY, CameraControl.eyeZ };
-            // Up vector (camera up direction)
-            float[] baseUpVector = { CameraControl.UpX, CameraControl.UpY, CameraControl.UpZ };
-            // Enable polygon offset to avoid Z-fighting
-            gl.Enable(OpenGL.GL_POLYGON_OFFSET_FILL);
-            gl.PolygonOffset(-1.0f, -1.0f);
-            // Fetch point size from settings
-            float pointSize = RenderSettings.PointSize;
+              float nodeSize = RenderSettings.NodeSize; // Point size in pixels
+
+            gl.Enable(OpenGL.GL_POINT_SMOOTH); // Enable smoother points (optional)
+            gl.PointSize(nodeSize);
+
+
+
+            gl.Begin(OpenGL.GL_POINTS);
+
             foreach (INode node in currentModel.Nodes)
             {
-                CVector3 pos = node.PivotPoint;
-                // Set color based on selection state
+                if (animated && node.IsVisibleAnimated == false) { continue; }
+                var position = node.PivotPoint;
+
+                // Fixed colors (Red = Selected, Blue = Normal)
                 if (node.IsSelected)
-                {
-                    gl.Color(RenderSettings.NodeColorSelected[0], RenderSettings.NodeColorSelected[1], RenderSettings.NodeColorSelected[2]); // Color for selected nodes
-                }
+                    gl.Color(RenderSettings.Color_NodeSelected[0], RenderSettings.Color_NodeSelected[1], RenderSettings.Color_NodeSelected[1]);
                 else
-                {
-                    gl.Color(RenderSettings.NodeColor[0], RenderSettings.NodeColor[1], RenderSettings.NodeColor[2]); // Color for unselected nodes
-                }
-                // Determine if we draw squares or triangles based on settings
-                if (RenderSettings.PointType == PointType.Square)
-                {
-                    // Get the four corners of the rectangle (adjusted for camera view)
-                    float[][] rectangleVertices = CalculateBillboardedSquare(pos, rectWidth, cameraPos, (float[])baseUpVector.Clone());
-                    // Draw the rectangle
-                    gl.Begin(OpenGL.GL_QUADS);
-                    gl.Vertex(rectangleVertices[0][0], rectangleVertices[0][1], rectangleVertices[0][2]); // Bottom-left
-                    gl.Vertex(rectangleVertices[1][0], rectangleVertices[1][1], rectangleVertices[1][2]); // Bottom-right
-                    gl.Vertex(rectangleVertices[2][0], rectangleVertices[2][1], rectangleVertices[2][2]); // Top-right
-                    gl.Vertex(rectangleVertices[3][0], rectangleVertices[3][1], rectangleVertices[3][2]); // Top-left
-                    gl.End();
-                }
-                else if (RenderSettings.PointType == PointType.Triangle)
-                {
-                    // Get the three vertices of the triangle (adjusted for camera view)
-                    float[][] triangleVertices = CalculateEquilateralTriangle(pos, rectWidth, cameraPos, (float[])baseUpVector.Clone());
-                    // Draw the triangle
-                    gl.Begin(OpenGL.GL_TRIANGLES);
-                    gl.Vertex(triangleVertices[0][0], triangleVertices[0][1], triangleVertices[0][2]); // Bottom-left
-                    gl.Vertex(triangleVertices[1][0], triangleVertices[1][1], triangleVertices[1][2]); // Bottom-right
-                    gl.Vertex(triangleVertices[2][0], triangleVertices[2][1], triangleVertices[2][2]); // Top
-                    gl.End();
-                }
+                    gl.Color(RenderSettings.Color_Node[0], RenderSettings.Color_Node[1], RenderSettings.Color_Node[1]);
+
+                gl.Vertex(position.X, position.Y, position.Z);
             }
-            // Disable polygon offset after rendering
-            gl.Disable(OpenGL.GL_POLYGON_OFFSET_FILL);
+            gl.End();
+
+            gl.Disable(OpenGL.GL_POINT_SMOOTH);
         }
 
-        internal static void RenderVertices(OpenGL gl, CModel model)
+        internal static void RenderVertices(OpenGL gl, CModel model, bool UseAnimatedPositions)
         {
-            const float vertexSize = 5.0f; // Point size in pixels
+             float vertexSize = RenderSettings.VertexSize; // Point size in pixels
 
             gl.Enable(OpenGL.GL_POINT_SMOOTH); // Enable smoother points (optional)
             gl.PointSize(vertexSize);
@@ -476,13 +610,33 @@ namespace Wa3Tuner.Helper_Classes
 
                 foreach (var vertex in geo.Vertices)
                 {
-                    var position = vertex.Position;
+                    var position = UseAnimatedPositions ? vertex.AnimatedPosition : vertex.Position;
 
-                    // Fixed colors (Red = Selected, Blue = Normal)
                     if (vertex.isSelected)
-                        gl.Color(1.0f, 0.0f, 0.0f); // Red
+                    {
+                        if (vertex.isRigged)
+                        {
+                            gl.Color(RenderSettings.Color_VertexRiggedSelected[0], RenderSettings.Color_VertexRiggedSelected[1], RenderSettings.Color_VertexRiggedSelected[2]); // Red
+
+                        }
+                        else
+                        {
+                            gl.Color(RenderSettings.Color_VertexSelected[0], RenderSettings.Color_VertexSelected[1], RenderSettings.Color_VertexSelected[2]); // Red
+
+                        }
+                    }
                     else
-                        gl.Color(0.0f, 0.0f, 1.0f); // Blue
+                    {
+                        if (vertex.isRigged)
+                        {
+                            gl.Color(RenderSettings.Color_VertexRigged[0], RenderSettings.Color_VertexRigged[1], RenderSettings.Color_VertexRigged[2]);
+
+                        }
+                        else
+                        {
+                            gl.Color(RenderSettings.Color_Vertex[0], RenderSettings.Color_Vertex[1], RenderSettings.Color_Vertex[2]);
+                        }
+                    }
 
                     gl.Vertex(position.X, position.Y, position.Z);
                 }
@@ -595,9 +749,10 @@ namespace Wa3Tuner.Helper_Classes
         {
             return;
         }
-        internal static void HandleLighting(OpenGL gl)
+        internal static void HandleLighting(OpenGL gl, bool enable)
         {
-            if (RenderSettings.EnableLighting)
+             
+            if (enable)
             {
                 // Enable lighting and set up light 0
                 gl.Enable(OpenGL.GL_LIGHTING);

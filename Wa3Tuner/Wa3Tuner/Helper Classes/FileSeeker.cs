@@ -1,14 +1,66 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Wa3Tuner.Helper_Classes
 {
     public static class FileSeeker
     {
+        public static string OpenPathFile()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Path Files (*.path)|*.path",
+                Title = "Open Path File",
+                DefaultExt = "path"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    return openFileDialog.FileName;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error loading file: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            return null;
+        }
+
+        // Save a .path file and return the filename if successful or an empty string if cancelled.
+        public static string SavePathFile()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Path Files (*.path)|*.path",
+                Title = "Save Path File",
+                DefaultExt = "path"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Here, you would save content to the file. This can be expanded to take specific content.
+                    string filename = saveFileDialog.FileName;
+                    // Example: save dummy content to the file.
+                    File.WriteAllText(filename, "Dummy content"); // Modify this to your actual content logic.
+                    return filename;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error saving file: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            return string.Empty;
+        }
         public static string OpenModelFileDialog()
         {
             // Create an OpenFileDialog
@@ -89,6 +141,30 @@ namespace Wa3Tuner.Helper_Classes
                 return string.Empty;
             }
         }
+        public static string OpenTGeomFileDialog()
+        {
+            // Create an OpenFileDialog instance
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                // Filter for ".tgeo" files
+                Filter = "TGeom Files (*.tgeom)|*.tgeom",
+                // Set initial directory (optional)
+                InitialDirectory = @"C:\"
+            };
+
+            // Show the dialog and check if the user selected a file
+            bool? result = openFileDialog.ShowDialog();
+            if (result == true)
+            {
+                // Return the selected file path
+                return openFileDialog.FileName;
+            }
+            else
+            {
+                // Return an empty string if no file was selected
+                return string.Empty;
+            }
+        }
         public  static string SaveTGeoFileDialog()
         {
             // Get the user's Documents folder as a default location
@@ -101,6 +177,35 @@ namespace Wa3Tuner.Helper_Classes
                 Filter = "TGeo Files (*.tgeo)|*.tgeo",
                 // Set the default file name (optional)
                 FileName = "newfile.tgeo",
+                // Set initial directory to the user's Documents folder
+                InitialDirectory = initialDirectory
+            };
+
+            // Show the dialog and check if the user selected a file
+            bool? result = saveFileDialog.ShowDialog();
+            if (result == true)
+            {
+                // Return the selected file path
+                return saveFileDialog.FileName;
+            }
+            else
+            {
+                // Return an empty string if no file was selected
+                return string.Empty;
+            }
+        }
+        public static string SaveTGeomFileDialog()
+        {
+            // Get the user's Documents folder as a default location
+            string initialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            // Create a SaveFileDialog instance for saving files
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                // Filter for ".tgeo" files
+                Filter = "TGeom Files (*.tgeom)|*.tgeom",
+                // Set the default file name (optional)
+                FileName = "newfile.tgeom",
                 // Set initial directory to the user's Documents folder
                 InitialDirectory = initialDirectory
             };
@@ -253,6 +358,41 @@ namespace Wa3Tuner.Helper_Classes
             bool? result = openFileDialog.ShowDialog();
 
             return result == true ? new List<string>(openFileDialog.FileNames) : new List<string>();
+        }
+        public static string SaveModelFile()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Model Files (*.mdl;*.mdx)|*.mdl;*.mdx|JSON Files (*.json)|*.json",
+                Title = "Save File",
+                OverwritePrompt = true,
+                AddExtension = true
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                return saveFileDialog.FileName;
+            }
+
+            return null;
+        }
+        public static string OpenModelFile()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Model Files (*.mdl;*.mdx)|*.mdl;*.mdx|JSON Files (*.json)|*.json",
+                Title = "Open File",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                Multiselect = false
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                return openFileDialog.FileName;
+            }
+
+            return null;
         }
     }
 }

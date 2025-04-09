@@ -4,7 +4,8 @@ using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
- 
+using Wa3Tuner.Helper_Classes;
+
 namespace Wa3Tuner
 {
     public static class Optimizer
@@ -962,7 +963,7 @@ namespace Wa3Tuner
                 if (geoset.Groups.Count == 0)
                 {
                     CBone dummy = new CBone(Model);
-                    dummy.Name = $"DummyBone_geoset_{geoset.ObjectId}_{IDCounter.Next()}";
+                    dummy.Name = $"DummyBone_geoset_{geoset.ObjectId}_{IDCounter.Next}";
                     CGeosetGroup group = new CGeosetGroup(Model);
                     CGeosetGroupNode node = new CGeosetGroupNode(Model);
                     node.Node.Attach(dummy);
@@ -993,9 +994,10 @@ namespace Wa3Tuner
                 }
             }
         }
-        private static void MinimizeMatrixGroups_()
+        public static void MinimizeMatrixGroups_(CModel model = null)
         {
-            foreach (CGeoset geo in Model.Geosets)
+            CModel WhichModel = model == null ? Model : model;
+            foreach (CGeoset geo in WhichModel.Geosets)
             {
                 repeat:
                 if (geo.Groups.Count <= 1) continue;
@@ -1743,8 +1745,30 @@ namespace Wa3Tuner
         {
             INode dummy = new CBone(Model);
             dummy.Name = "DummyBone_FaultyVertices";
-            int countFauls = 0;
+            int CountFaults = 0;
+            // zero groups or not using groups
             foreach (CGeoset geo in Model.Geosets)
+            {
+                foreach (var vertex in geo.Vertices)
+                {
+                    if (vertex.Group == null || vertex.Group.Object == null)
+                    {
+                        if (geo.Groups.Count ==0)
+                        {
+                            CGeosetGroup group = new CGeosetGroup(Model);
+                            CGeosetGroupNode gnode = new CGeosetGroupNode(Model);
+                            group.Nodes.Add(gnode);
+                            gnode.Node.Attach(dummy);
+                            CountFaults++;
+                        }
+                        else
+                        {
+                            vertex.Group.Attach(geo.Groups[0]);
+                        }
+                    }
+                }
+            }
+                foreach (CGeoset geo in Model.Geosets)
             {
                 foreach (var group in geo.Groups)
                 {
@@ -1755,7 +1779,7 @@ namespace Wa3Tuner
                             group.Nodes.Remove(item);
                             if (group.Nodes.Count == 0)
                             {
-                                countFauls++;
+                                CountFaults++;
                                 CGeosetGroupNode node = new CGeosetGroupNode(Model);
                                 node.Node.Attach(dummy);
                                 group.Nodes.Add(node);
@@ -1765,7 +1789,7 @@ namespace Wa3Tuner
                     }
                 }
             }
-            if (countFauls > 0) { Model.Nodes.Add(dummy); }
+            if (CountFaults > 0) { Model.Nodes.Add(dummy); }
         }
         private static void FixInvalidNodeRelationships()
         {
@@ -3768,8 +3792,43 @@ namespace Wa3Tuner
                 }
             }
         }
+        private static bool TrackIsInAnySequence(int track)
+        {
+            foreach (var s in Model.Sequences)
+            {
+                if (track >= s.IntervalStart && track <= s.IntervalEnd) return true;
+            }
+            return false;
+        }
         private static void DeleteUnusedKeyframes_()
         {
+            List<INode> remove = new List<INode> ();
+            foreach (var node in Model.Nodes)
+            {
+                if (node is CEvent evt)
+                {
+                    List<CEventTrack> tremove = new List<CEventTrack> ();
+                    foreach (var track in evt.Tracks.ObjectList)
+                    {
+                       
+                        if (TrackIsInAnySequence( track.Time) == false)
+                        {
+                            tremove.Add(track);
+                           
+                        }
+                    }
+                    foreach (var track in tremove)
+                    {
+                        evt.Tracks.Remove(track);
+                    }
+                    if (evt.Tracks.Count == 0) { remove.Add(node); }
+                }
+                
+            }
+            foreach (var node in remove)
+            {
+                Model.Nodes.Remove(node);
+            }
             foreach (CGeosetAnimation ga in Model.GeosetAnimations)
             {
                 RemoveUnusedKeyframes_Action(ga.Alpha,true, 1);
@@ -4083,15 +4142,29 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private static void RemoveEmptyGeosets()
+        public static void RemoveEmptyGeosets(CModel model = null)
         {
-            foreach (CGeoset geo in Model.Geosets.ToList())
+            if (model == null)
             {
-                if (geo.Triangles.Count == 0 || geo.Vertices.Count < 3)
+                foreach (CGeoset geo in Model.Geosets.ToList())
                 {
-                    Model.Geosets.Remove(geo);
+                    if (geo.Triangles.Count == 0 || geo.Vertices.Count < 3)
+                    {
+                        Model.Geosets.Remove(geo);
+                    }
                 }
             }
+            else
+            {
+                foreach (CGeoset geo in model.Geosets.ToList())
+                {
+                    if (geo.Triangles.Count == 0 || geo.Vertices.Count < 3)
+                    {
+                        Model.Geosets.Remove(geo);
+                    }
+                }
+            }
+           
         }
         private static void DeleteIsolatedTriangles_()
         {
@@ -4205,7 +4278,7 @@ namespace Wa3Tuner
             {
                 if (names.Contains(Model.Sequences[i].Name))
                 {
-                    Model.Sequences[i].Name = names[i] + " " + IDCounter.Next_();
+                    Model.Sequences[i].Name = names[i] + " " + IDCounter.Next_;
                 }
                 names.Add(Model.Sequences[i].Name);
             }
@@ -4417,15 +4490,7 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private static class IDCounter
-        {
-            private static int counter = 0;
-            public static int Next() { counter++; return counter; }
-            public static string Next_()
-            {
-                counter++; return counter.ToString();
-            }
-        }
+        
         private static void RenameAllComponents_()
         {
         }

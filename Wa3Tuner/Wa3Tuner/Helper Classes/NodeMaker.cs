@@ -10,11 +10,40 @@ namespace Wa3Tuner
    public   class NodeMaker
     {
         private static  CModel Dummy= new CModel();
-        public CParticleEmitter2 ItemPixie = new CParticleEmitter2(Dummy);
-        public CParticleEmitter2 Dust = new CParticleEmitter2(Dummy);
-        public CParticleEmitter2 Smoke = new CParticleEmitter2(Dummy);
+        public   CParticleEmitter2 ItemPixie = new CParticleEmitter2(Dummy);
+        public   CParticleEmitter2 Dust = new CParticleEmitter2(Dummy);
+        public   CParticleEmitter2 Smoke = new CParticleEmitter2(Dummy);
+        public   CParticleEmitter2 BlastFlare = new CParticleEmitter2(Dummy);
+        public   CParticleEmitter2 Fire = new CParticleEmitter2(Dummy);
         public NodeMaker()
-        {//---------------------------------------------------------------
+        {
+
+
+
+
+
+
+            Fire.Head = true;
+            Fire.EmissionRate.MakeStatic(88);
+            Fire.Speed.MakeStatic(44);
+            Fire.Width.MakeStatic(50);
+            Fire.Length.MakeStatic(50);
+            Fire.FilterMode = EParticleEmitter2FilterMode.Additive;
+            Fire.RequiredTexturePath = @"Textures\Flame4.blp";
+            Fire.Segment1.Alpha = 255;
+            Fire.Segment2.Alpha = 255;
+            Fire.Segment3.Alpha = 255;
+            Fire.Segment1.Scaling = 12;
+            Fire.Segment2.Scaling = 12;
+            Fire.Segment3.Scaling = 12;
+            Fire.Rows = 1;
+            Fire.Columns = 1;
+            Fire.Time = 1;
+            Fire.LifeSpan = 1;  
+
+
+
+            //---------------------------------------------------------------
             ItemPixie.FilterMode = EParticleEmitter2FilterMode.Additive;
             ItemPixie.Width.MakeStatic(42);
             ItemPixie.Length.MakeStatic(42);
@@ -84,6 +113,32 @@ namespace Wa3Tuner
             Dust.Segment2.Scaling = 27.8f;
             Dust.Segment3.Alpha = 0;
             Dust.Segment3.Scaling = 48;
+            //----------------------------------------------------------------
+            BlastFlare.RequiredTexturePath = @"ReplaceableTextures\Weather\Clouds8x8.blp";
+            BlastFlare.EmissionRate.MakeStatic(25);
+            BlastFlare.Speed.MakeStatic(120);
+            BlastFlare.Latitude.MakeStatic(21);
+            BlastFlare.Width.MakeStatic(100);
+            BlastFlare.Length.MakeStatic(100);
+            BlastFlare.FilterMode = EParticleEmitter2FilterMode.Additive;
+            BlastFlare.Unshaded = true;
+            BlastFlare.Head = true;
+            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(1,1,0);
+            BlastFlare.Segment1.Alpha = 255f;
+            BlastFlare.Segment1. Scaling = 25;
+
+            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(0.24705882352f, 0.5f,1);
+            BlastFlare.Segment1.Alpha = 143f;
+            BlastFlare.Segment1.Scaling = 75;
+
+            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(0, 0, 1);
+            BlastFlare.Segment1.Alpha = 0f;
+            BlastFlare.Segment1.Scaling = 125;
+            BlastFlare.Rows = 8;
+            BlastFlare.Columns = 8;
+            BlastFlare.LifeSpan = 0.9f;
+            BlastFlare.TailLength = 0.1f;
+            BlastFlare.Time = 0.5f;
         }
     }
 }

@@ -6,16 +6,23 @@
         xmlns:local="clr-namespace:Wa3Tuner"
         mc:Ignorable="d"
         KeyDown="Window_KeyDown"
-        ResizeMode="NoResize"
+        
         WindowStartupLocation="CenterScreen"
        Background="LightGray"
-        Title="Edit visibilities" Height="300" Width="400">
+        Title="Edit visibilities" Height="300" Width="450">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition  Height="40"/>
             <RowDefinition/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <ListBox Name="Box" Background="LightGray"/>
-        <Button Click="ok" Content="Finish" Grid.Row="1"/>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Select all" Width="100" Click="s1" />
+            <Button Content="Select None" Width="100" Click="s2" />
+            <Button Content="Select inverse" Width="100" Click="s3"/>
+        </StackPanel>
+       
+        <ListBox Name="Box" Background="LightGray"  Grid.Row="1"/>
+        <Button Click="ok" Content="Finish" Grid.Row="2"/>
     </Grid>
 </Window>

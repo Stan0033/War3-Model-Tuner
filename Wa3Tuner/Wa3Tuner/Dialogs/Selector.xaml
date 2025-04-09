@@ -8,7 +8,7 @@
         KeyDown="Window_KeyDown"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Title="Selector" Height="250" Width="200">
+        Title="Selector" Height="250" Width="400">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>

@@ -23,7 +23,7 @@
             <TextBlock Text="Search:" Margin="5" FontSize="16"/>
             <TextBox Name="Searcher" Width="250" FontSize="16" KeyDown="Search"/>
         </StackPanel>
-        <ListBox Name="box" Grid.Row="1" Grid.RowSpan="2" SelectionMode="Single" Background="LightGray"/>
+        <ListBox Name="box" Grid.Row="1" Grid.RowSpan="2" SelectionMode="Single" Background="DimGray" Foreground="WhiteSmoke"/>
         <TextBlock Text="Tracks:" Grid.Column="1" FontSize="16" HorizontalAlignment="Center"/>
         <StackPanel Grid.Column="1" Grid.Row="1">
             <ListBox Name="tracks" Height="250" Background="LightGray"/>
@@ -36,7 +36,7 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="5">
                 <TextBlock Text="Identifier:" Margin="5"/>
-                <TextBox Name="inputID" Width="30" Margin="5"/>
+                <TextBox Name="inputIdentfier" Width="30" Margin="5"/>
             </StackPanel>
         </StackPanel>
         <Button Click="ok" Content="Finish" Padding="5" Margin="5" Grid.Row="2" Grid.Column="1"/>

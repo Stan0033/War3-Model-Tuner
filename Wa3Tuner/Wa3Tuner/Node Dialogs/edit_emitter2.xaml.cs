@@ -210,7 +210,15 @@ namespace Wa3Tuner
         private void Checked_Squirt(object sender, RoutedEventArgs e)
         {
             if (!Initialized) { return; }
-            Emitter.Squirt = Check_Squirt.IsChecked == true;    
+            Emitter.Squirt = Check_Squirt.IsChecked == true;
+            if (Emitter.Squirt)
+            {
+                Emitter.EmissionRate.MakeAnimated();
+
+            }
+            ButtonEmissionRate.Content = Emitter.Visibility.Static ?
+               $"Emission Rate: {Emitter.EmissionRate.GetValue()}" :
+               $"Emission Rate: ({Emitter.EmissionRate.Count})";
         }
         private void Checked_Head(object sender, RoutedEventArgs e)
         {
@@ -351,13 +359,13 @@ namespace Wa3Tuner
         {
             if (!Initialized) { return; }
             SetColor(sender as Button);
-            SetSegment1(null,null);
+            SetSegment2(null,null);
         }
         private void SetColor3(object sender, RoutedEventArgs e)
         {
             if (!Initialized) { return; }
             SetColor(sender as Button);
-            SetSegment1(null,null);
+            SetSegment3(null,null);
         }
         private void SetHeadLife(object sender, TextChangedEventArgs e)
         {

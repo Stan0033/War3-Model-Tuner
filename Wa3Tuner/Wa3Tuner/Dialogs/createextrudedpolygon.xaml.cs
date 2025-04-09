@@ -398,7 +398,7 @@ namespace Wa3Tuner
         private void AttachVertices(CGeoset geoset)
         {
             CBone bone = new CBone(Model);
-            bone.Name = "GeneratedPolygonBone_" + IDCounter.Next_(); ;
+            bone.Name = "GeneratedPolygonBone_" + IDCounter.Next_; ;
             Model.Nodes.Add(bone);  
             CGeosetGroup group = new CGeosetGroup(Model);
             CGeosetGroupNode node = new CGeosetGroupNode(Model);

@@ -43,44 +43,89 @@
             <Button Name="ButtonColor" Content="" Width="20" Visibility="Collapsed" Margin="0,0,5,0" Click="setColor"/>
             <Button Name="ButtonNew" Content="New" Width="50" Margin="0,0,5,0" Click="newItem"/>
             <Button Name="ButtonEdit" Content="Edit" Width="50" Margin="0,0,5,0" Click="edit" />
+            <Button Name="ButtonEditTime" Content="Edit Time" Width="55" Margin="0,0,5,0" Click="editTime" />
             <Button Name="ButtonDel" Content="Delete" Width="50" Margin="0,0,5,0" Click="del"/>
             <Button Name="ButtonCopy" Content="Copy" Width="50" Margin="0,0,5,0" Click="Copy"/>
             <Button Name="ButtonPaste" Content="Paste" Width="50" Margin="0,0,5,0" Click="Paste"/>
             <Button Name="ButtonMore" Content="More..." Width="50" Margin="0,0,5,0" Click="showmore" >
                 <Button.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Copy to clipboard"    Click="CopyToClipboard" />
-                        <MenuItem Header="Copy everything to clipboard"    Click="CopyAllToClipboard" />
-                        <MenuItem Header="Loop..."    Click="loop" />
-                        <MenuItem Header="Remove sequences..."    Click="RemoveSequences" />
+                        <MenuItem Header="Clpboard">
+                            <MenuItem Header="Copy to clipboard"    Click="CopyToClipboard" />
+                            <MenuItem Header="Copy everything to clipboard"    Click="CopyAllToClipboard" />
+
+                        </MenuItem>
+                        <MenuItem Header="Clear">
+                            <MenuItem   Header="Clear all"  Click="clearall"  />
+                            <MenuItem Header="Remove sequences..."    Click="RemoveSequences" />
+                            <MenuItem     Header="Remove all of the selected sequence "  Click="removeallof"/>
+                            <MenuItem     Header="Remove all except of the selected sequence " Click="removeallofexcept"/>
+
+                        </MenuItem>
+                        
+                       <MenuItem Header="Loop..."    Click="loop" />
+                        <MenuItem Header="Move Time">
+                            <MenuItem Header="Move keyframe's time to start of its sequence" Click="movekfTimeStart"/>
+                            <MenuItem Header="Move keyframe's time to end of its sequence" Click="movekfTimeEnd"/>
+                            
+                        </MenuItem>
+                        <MenuItem Header="Swap Sequences..." Click="SwapSequences"/>
                         <MenuItem Header="Duplicate sequence to sequence/s"    Click="dups2ss" />
                         <MenuItem Header="Gradual Keyframes maker"    Click="gkm" />
-                        <MenuItem   Header="Clear all"  Click="clearall"  />
-                        <MenuItem     Header="Reverse instructions"   Click="reverseinstructions"/>
-                        <MenuItem      Header="Leave only starts"   Click="leaveonlystarts"/>
-                        <MenuItem     Header="Remove all of the selected sequence "  Click="removeallof"/>
-                        <MenuItem     Header="Remove all except of the selected sequence " Click="removeallofexcept"/>
-                        <MenuItem    Header="Reverse times "   Click="reversetimes"/>
-                        <MenuItem    Header="Leave only starts and ends"    Click="leaveonlystartsends"/>
-                        <MenuItem     Header="Create all starts and ends"    Click="createstartsends"/>
-                        <MenuItem     Header="Create all starts"   Click="createstarts"/>
-                        <MenuItem     Header="Negate"   Click="negatetrack"/>
-                        <MenuItem     Header="Negate all"   Click="negatetrackall"/>
-                        <MenuItem     Header="Set all to the input"   Click="setalltoinput"/>
-                        <MenuItem     Header="Add the input to all"   Click="addtoall"/>
-                        <MenuItem     Header="Subtract the input from all"   Click="subtractfromall"/>
-                        <MenuItem     Header="Multiply all with the input"   Click="multiplyall"/>
-                        <MenuItem     Header="Set all keyframes to..."   Click="sak"/>
-                        <MenuItem     Header="Set all keyframes of sequence to..."   Click="sak2"/>
-                        <MenuItem     Header="Start each sequence with default data"   Click="starte"/>
-                        <MenuItem     Header="End each sequence with default data"   Click="ende"/>
-                        <MenuItem     Header="Stretch sequence keyframes..."   Click="stretch1"/>
-                        <MenuItem     Header="Stretch all sequences' keyframes..."   Click="stretch2"/>
+                        <MenuItem Header="Leave only">
+                            <MenuItem      Header="Leave only starts"   Click="leaveonlystarts"/>
+                            <MenuItem    Header="Leave only starts and ends"    Click="leaveonlystartsends"/>
+
+                        </MenuItem>
+                        <MenuItem Header="Reverse">
+                            <MenuItem     Header="Reverse instructions"   Click="reverseinstructions"/>
+
+                            <MenuItem    Header="Reverse times "   Click="reversetimes"/>
+                        </MenuItem>
+                        <MenuItem Header="Create">
+                            <MenuItem     Header="Create all starts and ends"    Click="createstartsends"/>
+                            <MenuItem     Header="Create all starts"   Click="createstarts"/>
+                        </MenuItem>
+                        <MenuItem Header="Negate">
+                            <MenuItem     Header="Negate"   Click="negatetrack"/>
+                            <MenuItem     Header="Negate all"   Click="negatetrackall"/>
+                        </MenuItem>
+                        <MenuItem Header="Set">
+                            <MenuItem     Header="Set all to the input"   Click="setalltoinput"/>
+                            <MenuItem     Header="Add the input to all"   Click="addtoall"/>
+                            <MenuItem     Header="Subtract the input from all"   Click="subtractfromall"/>
+                            <MenuItem     Header="Multiply all with the input"   Click="multiplyall"/>
+                            <MenuItem     Header="Set all keyframes to..."   Click="sak"/>
+                            <MenuItem     Header="Set all keyframes of sequence to..."   Click="sak2"/>
+                        </MenuItem>
+                      
+                        <MenuItem Header="Default data">
+                            <MenuItem     Header="Start each sequence with default data"   Click="starte"/>
+                            <MenuItem     Header="End each sequence with default data"   Click="ende"/>
+
+                        </MenuItem>
+                        <MenuItem Header="Stretch">
+                            <MenuItem     Header="Stretch sequence keyframes..."   Click="stretch1"/>
+                            <MenuItem     Header="Stretch all sequences' keyframes..."   Click="stretch2"/>
+                        </MenuItem>
+                        
                         <MenuItem     Header="Copy/Move keyframes..."   >
                             <MenuItem     Header="Copy"   Click="copymovekfs"/>
                             <MenuItem     Header="Cut"   Click="cutmovekfs"/>
                             <MenuItem     Header="Paste"   Click="pasteseelctkfs"/>
                         </MenuItem>
+                        <MenuItem     Header="Optimization"   >
+                            <MenuItem     Header="remove repeating keyframes" Click="RemoveAllRepeatingKeyframes"/>
+                            <MenuItem     Header="remove repeating keyframes in sequence..." Click="RemoveRepeatingKeyframesInSequence"/>
+                            <MenuItem     Header="remove sandwitched repeating keyframes" Click="RemoveSandwitchedSameKeyframes"/>
+                            <MenuItem     Header="remove sandwitched repeating keyframes in sequence..." Click="RemoveSandwitchedSameKeyframes_Sequence"/>
+                            <MenuItem     Header="remove repeating times - first" Click="RemoveRepTimes_First"/>
+                            <MenuItem     Header="remove repeating times - last" Click="RemoveRepTimes_Last"/>
+                            <MenuItem     Header="remove repeating times - first - in sequence..." Click="RemoveRepTimes_First_inSequence"/>
+                            <MenuItem     Header="remove repeating times - last - in sequence..." Click="RemoveRepTimes_Last_inSequence"/>
+                        </MenuItem>
+                        <MenuItem Header="Refresh keyframes list" Click="Refr"/>
+
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>

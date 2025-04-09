@@ -9,11 +9,18 @@
         KeyDown="Window_KeyDown"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Title="select_Transformations" Height="150" Width="150">
-    <StackPanel Margin="10">
+        Title="Select Transformations" Height="150" Width="250">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         <CheckBox Name="Check_T" Content="Translation"/>
-        <CheckBox Name="Check_R" Content="Rotation"/>
-        <CheckBox Name="Check_S" Content="Scaling"/>
-        <Button Click="OK" Content="OK"/>
-    </StackPanel>
+        <CheckBox Name="Check_R" Content="Rotation" Grid.Row="1"/>
+        <CheckBox Name="Check_S" Content="Scaling" Grid.Row="2"/>
+        <Button Click="OK" Content="OK" Grid.Row="3"/>
+    </Grid>
+       
 </Window>

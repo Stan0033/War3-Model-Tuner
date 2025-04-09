@@ -1,1 +1,0 @@
-TinkerBuilding|Units\Creeps\HeroTinkerFactory\TinkerBuilding.blp

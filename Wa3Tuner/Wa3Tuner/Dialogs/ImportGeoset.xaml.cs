@@ -87,7 +87,7 @@ namespace Wa3Tuner.Dialogs
             if (Check_NewBone.IsChecked == true)
             {
                 CBone generated = new CBone(Model);
-                generated.Name = "ImportedGeoset_"+ IDCounter.Next_();
+                generated.Name = "ImportedGeoset_"+ IDCounter.Next_;
                 SelectedNode = generated;
                 Model.Nodes.Add(generated);
             }

@@ -65,7 +65,7 @@
                 • <Bold>What is a global sequence?</Bold> A global sequence is an animation that loops throughout the entire model, independent of other sequences. It is often used for constant movements, like rotating effects. It only has a property duration, which is in milliseconds.
             </TextBlock>
             <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
-                • <Bold>What is a geoset?</Bold> A geoset is a group of vertices and triangles that form a specific part of the model. It represents a portion of the model’s geometry. Triangles reference vertices from the list to form a renderable surface.
+                • <Bold>What is a geoset?</Bold> A geoset is a group of vertices, triangles, and matrix groups that form a specific part of the model. It represents a portion of the model’s geometry. Triangles reference vertices from the list to form a renderable surface. Each triangles is attached to one of the geoset's matrix groups. A matrix groups contains a list of nodes references. So that vertex is attached to these bones. A matrix group serves as mediator for rigging.
             </TextBlock>
             <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0,0,0,5">
                 • <Bold>What is a geoset animation?</Bold> A geoset animation controls how a specific geoset appears with the help of transparency control and color during each sequence.

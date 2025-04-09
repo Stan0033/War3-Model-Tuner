@@ -1,0 +1,69 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Bone_Influence_Editor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="LightGray"
+        Title="Bone Influence " Height="350" Width="300">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Bone Weights -->
+        <TextBlock Text="Bone Weights (-100% - 100%)" FontWeight="Bold" FontSize="16" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,0,0,10" ToolTip="Bone weight determines how much and in which direction is the deformation of its vertices restricted"/>
+
+        <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="WeightX" Grid.Row="1" Grid.Column="1" Width="60" Margin="5"/>
+
+        <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="WeightY" Grid.Row="2" Grid.Column="1" Width="60" Margin="5"/>
+
+        <TextBlock Text="Z:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="WeightZ" Grid.Row="3" Grid.Column="1" Width="60" Margin="5"/>
+
+        <!-- Constraints -->
+        <TextBlock Text="Constraints ('X' = any)" FontWeight="Bold" FontSize="16"
+                   Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,10,0,10"
+                    ToolTip="Constraints define how much nheriting transformation from its parent node is restricted"/>
+
+        <TextBlock Text="X:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="ConstraintX1" Text="X" Grid.Row="5" Grid.Column="1" Width="60" Margin="5"/>
+        
+        <TextBox Name="ConstraintX2" Text="X" Grid.Row="5" Grid.Column="2" Width="60" Margin="5"/>
+        <TextBlock Text="-{float} - {float}" Grid.Column="3" Grid.Row="5"/>
+        <TextBlock Text="0 - 360" Grid.Column="3" Grid.Row="6"/>
+        <TextBlock Text="0+%" Grid.Column="3" Grid.Row="7"/>
+        <TextBlock Text="Y:" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="ConstraintY1" Text="0" Grid.Row="6" Grid.Column="1" Width="60" Margin="5"/>
+        <TextBox Name="ConstraintY2" Text="360" Grid.Row="6" Grid.Column="2" Width="60" Margin="5"/>
+
+        <TextBlock Text="Z:" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox Name="ConstraintZ1" Text="0" Grid.Row="7" Grid.Column="1" Width="60" Margin="5"/>
+        <TextBox Name="ConstraintZ2" Text="X" Grid.Row="7" Grid.Column="2" Width="60" Margin="5"/>
+
+        <!-- Save Button -->
+        <Button Content="Save" Click="ok" Grid.Row="8" Grid.Column="4"   Width="100"  
+                HorizontalAlignment="Center"/>
+    </Grid>
+</Window>

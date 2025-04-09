@@ -43,6 +43,7 @@ namespace Wa3Tuner.Dialogs
 
         public Edit_Extent(CModel currentModel, bool all)
         {
+            InitializeComponent();
             this.currentModel = currentModel;
             this.all =  all;
         }
@@ -67,8 +68,12 @@ namespace Wa3Tuner.Dialogs
                 {
                     foreach (var s in currentModel.Sequences)
                     {
-                        s.Extent  .Min.X = minx; s.Extent.Min.Y = miny; s.Extent.Min.Z = minz;
-                        s.Extent.Max.X = maxx; s.Extent.Max.Y = maxy; s.Extent.Max.Z = maxz;
+                        s.Extent  .Min.X = minx; 
+                        s.Extent.Min.Y = miny;
+                        s.Extent.Min.Z = minz;
+                        s.Extent.Max.X = maxx;
+                        s.Extent.Max.Y = maxy;
+                        s.Extent.Max.Z = maxz;
                         s.Extent.Radius = bound;
                        
                     }

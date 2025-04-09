@@ -13,6 +13,12 @@
     <Compile Update="Dialogs\axis_picker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\bigTextContaienr.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Bone Influence Editor.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\Boolean_Window.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,6 +31,9 @@
     <Compile Update="Dialogs\copyTrackToNode.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Create Sphere.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\createextrudedpolygon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -34,10 +43,19 @@
     <Compile Update="Dialogs\DrawShape.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\GeosetGroupViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\Gradual Keyframe Maker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Dialogs\KeyframeSeuqnceDuplicator.xaml.cs">
+    <Compile Update="Dialogs\ImageViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Model Colors Changer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\SequenceToSequencesSelector.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Edit_Extent.xaml.cs">
@@ -64,6 +82,9 @@
     <Compile Update="Dialogs\Mass create global sequences.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\MergeHelperBoneOptons.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\modelstructure.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -82,6 +103,15 @@
     <Compile Update="Dialogs\PushGeosets.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\QuadFitter.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\RawKeyframeRearranger.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Render_Preferences.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\Shatter animation maker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -89,6 +119,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\TextColorizer_Window.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\TextViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\UVMapper.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\vis_v.xaml.cs">
@@ -119,6 +155,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\TextureBrowser.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Swap Sequences Selector.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

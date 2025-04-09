@@ -73,6 +73,7 @@
         <TextBox x:Name="RadiusTextBox" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" HorizontalAlignment="Left"/>
         <!-- Buttons -->
         <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="100" Width="80" Click="do100"/>
             <Button Content="Translate" Width="80" Click="Translate"/>
             <Button Content="Scale" Width="80" Click="Scale"/>
             <Button Content="OK" Width="80" Click="ok"/>

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection.Emit;
+using System.Security.Policy;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,9 +19,10 @@ using System.Xml.Linq;
 using Wa3Tuner.Dialogs;
 using Wa3Tuner.Helper_Classes;
 using static Wa3Tuner.MainWindow;
+using Quaternion = System.Numerics.Quaternion;
 namespace Wa3Tuner
 {
-  
+
 
     public static class Calculator
     {
@@ -49,9 +51,9 @@ namespace Wa3Tuner
         }
         public static void CenterVectorAtExtent(CVector3 v, CExtent e, ExtentPosition p)
         {
-            v = GetPositionAtExtent(e,p);
+            v = GetPositionAtExtent(e, p);
         }
-        
+
         public static CVector3 GetPositionAtExtent(CExtent extent, ExtentPosition position)
         {
             // Get min and max bounds
@@ -108,7 +110,7 @@ namespace Wa3Tuner
                 _ => new CVector3(0, 0, 0), // Fallback (should never happen)
             };
         }
-    public static CExtent GetExtentFromAttachedVertices(CModel model, INode node)
+        public static CExtent GetExtentFromAttachedVertices(CModel model, INode node)
         {
             // unfinished
             return new CExtent();
@@ -173,16 +175,17 @@ namespace Wa3Tuner
 
         private static CVector4 ClampQuaternionValue(CVector4 vector)
         {
-            if 
+            if
                 (vector.X < -1 || vector.X > 1 ||
                  vector.Y < -1 || vector.Y > 1 ||
                  vector.Z < -1 || vector.Z > 1 ||
                 vector.W < -1 || vector.W > 1
 
-                 ){
-                return new CVector4(0,0,0,1);
+                 )
+            {
+                return new CVector4(0, 0, 0, 1);
             }
-            return   vector;
+            return vector;
         }
 
         public static bool IsValidQuaternion(float w, float x, float y, float z)
@@ -250,7 +253,7 @@ namespace Wa3Tuner
         internal static float ClampVisibility(float value)
         {
             if (value < 0) { return 0; }
-        if (value > 1) { return 1; }
+            if (value > 1) { return 1; }
             return value;
         }
         internal static CAnimatorNode<float> ClampNormalized(CAnimatorNode<float> item)
@@ -299,12 +302,18 @@ namespace Wa3Tuner
         {
             return v < 0 ? 0 : v;
         }
+        public static float ClampUV(float f)
+        {
+            float x = f - (float)Math.Floor(f); // Get fractional part
+            return (Math.Floor(f) % 2 == 0) ? x : 1 - x;
+        }
+
         internal static CAnimatorNode<float> ClampFloat(CAnimatorNode<float> v)
         {
             return new CAnimatorNode<float>(v.Time, v.Value < 0 ? 9 : v.Value);
         }
-        
-        
+
+
         public static CExtent GetExtent(List<CVector3> vectors)
         {
             if (vectors == null || vectors.Count == 0)
@@ -409,10 +418,36 @@ namespace Wa3Tuner
                 vertex.Position = new CVector3(x, y, z - closestVertexZToGround);
             }
         }
+        internal static void PutOnGround(List<CGeosetVertex> Vertices)
+        {
+            // Find the lowest Z value among all vertices
+            float closestVertexZToGround = FindClosestZToGround(Vertices);
+            // Move all vertices down by the closest Z value to align to the ground
+            foreach (CGeosetVertex vertex in  Vertices)
+            {
+                float x = vertex.Position.X;
+                float y = vertex.Position.Y;
+                float z = vertex.Position.Z;
+                vertex.Position = new CVector3(x, y, z - closestVertexZToGround);
+            }
+        }
         private static float FindClosestZToGround(CGeoset geoset)
         {
             float closest = float.MaxValue;
             foreach (CGeosetVertex vertex in geoset.Vertices)
+            {
+                if (Math.Abs(vertex.Position.Z) < Math.Abs(closest) ||
+                   (Math.Abs(vertex.Position.Z) == Math.Abs(closest) && vertex.Position.Z > closest))
+                {
+                    closest = vertex.Position.Z;
+                }
+            }
+            return closest;
+        }
+        private static float FindClosestZToGround( List<CGeosetVertex> Vertices)
+        {
+            float closest = float.MaxValue;
+            foreach (CGeosetVertex vertex in  Vertices)
             {
                 if (Math.Abs(vertex.Position.Z) < Math.Abs(closest) ||
                    (Math.Abs(vertex.Position.Z) == Math.Abs(closest) && vertex.Position.Z > closest))
@@ -933,7 +968,7 @@ namespace Wa3Tuner
             CVector3 q = QuaternionToEuler(quaternion);
             return $"{q.X}, {q.Y}, {q.Z}";
         }
-            public static CVector3 QuaternionToEuler(CVector4 quaternion)
+        public static CVector3 QuaternionToEuler(CVector4 quaternion)
         {
             // Extract the components of the quaternion
             float x = quaternion.X;
@@ -1037,6 +1072,13 @@ namespace Wa3Tuner
             float b = v.X * 255;
             return $"{r}, {g}, {b}";
         }
+        internal static Vector3 BGRnToRGB_Vector(CVector3 v)
+        {
+            float r = v.Z * 255;
+            float g = v.Y * 255;
+            float b = v.X * 255;
+            return new Vector3(r, g, b);
+        }
         public static ImageSource ConvertBitmapToImageSource(Bitmap bitmap)
         {
             // Create a MemoryStream to hold the image data
@@ -1079,13 +1121,13 @@ namespace Wa3Tuner
                     (
                     originalFace.Vertex1.Object.TexturePosition,
                     originalFace.Vertex2.Object.TexturePosition,
-                    originalFace.Vertex3.Object.TexturePosition 
+                    originalFace.Vertex3.Object.TexturePosition
                     );
                 middleVertex.Normal = CalculateMiddleNormal(
                     originalFace.Vertex1.Object.Normal,
                     originalFace.Vertex2.Object.Normal,
                     originalFace.Vertex3.Object.Normal
-                    ); 
+                    );
                 // Add the new middle vertex to the geoset
                 geoset.Vertices.Add(middleVertex);
                 // Create the three new faces
@@ -1197,7 +1239,7 @@ namespace Wa3Tuner
                 CGeosetVertex bottomVertex = new CGeosetVertex(ModelOwner)
                 {
                     Position = new CVector3(x, -halfHeight, z),
-                    Normal = NormalizeVector (new CVector3(x, 0, z))
+                    Normal = NormalizeVector(new CVector3(x, 0, z))
                 };
                 bottomVertices.Add(bottomVertex);
                 geoset.Vertices.Add(bottomVertex);
@@ -1305,13 +1347,13 @@ namespace Wa3Tuner
         internal static CGeosetVertex CloneVertex(CGeosetVertex vertex, CModel owner, CGeoset geoset)
         {
             CGeosetVertex vertex2 = new CGeosetVertex(owner);
-            vertex2.Position = new CVector3(vertex.Position.X, vertex.Position.Y,vertex.Position.Z);
+            vertex2.Position = new CVector3(vertex.Position.X, vertex.Position.Y, vertex.Position.Z);
             vertex2.TexturePosition = new CVector2(vertex.TexturePosition.X, vertex.TexturePosition.Y);
             vertex2.Normal = new CVector3(vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z);
             CGeosetGroup group = new CGeosetGroup(owner);
             foreach (var node in vertex.Group.Object.Nodes)
             {
-                CGeosetGroupNode n = new CGeosetGroupNode(owner );
+                CGeosetGroupNode n = new CGeosetGroupNode(owner);
                 n.Node.Attach(node.Node.Node);
                 group.Nodes.Add(n);
             }
@@ -1338,14 +1380,14 @@ namespace Wa3Tuner
             }
             else
             {
-                if (owner.Nodes.Any(x=>x is CBone))
+                if (owner.Nodes.Any(x => x is CBone))
                 {
-                    first_node = owner.Nodes.First(x=>x is CBone);
+                    first_node = owner.Nodes.First(x => x is CBone);
                 }
                 else
-                { 
+                {
                     first_node = new CBone(owner);
-                    first_node.Name = $"GeneratedBone_{IDCounter.Next()}";
+                    first_node.Name = $"GeneratedBone_{IDCounter.Next}";
                     owner.Nodes.Add(first_node);
                 }
             }
@@ -1357,7 +1399,7 @@ namespace Wa3Tuner
                 gnode.Node.Attach(first_node);
                 group.Nodes.Add(gnode);
                 _new.Groups.Add(group);
-                  CGeosetTriangle fragment = new CGeosetTriangle(owner);
+                CGeosetTriangle fragment = new CGeosetTriangle(owner);
                 CGeosetVertex one = CloneVertex(face.Vertex1.Object, owner, geoset);
                 CGeosetVertex two = CloneVertex(face.Vertex2.Object, owner, geoset);
                 CGeosetVertex three = CloneVertex(face.Vertex3.Object, owner, geoset);
@@ -1373,7 +1415,7 @@ namespace Wa3Tuner
                 _new.Unselectable = geoset.Unselectable;
                 list.Add(_new);
             }
-                return list;
+            return list;
         }
         private static bool CoordinatesSame(CVector3 one, CVector3 two)
         {
@@ -1453,7 +1495,7 @@ namespace Wa3Tuner
             float leftMostY = float.MaxValue;
             foreach (var vertex in geoset.Vertices)
             {
-                if (vertex.Position.Y  < leftMostY)
+                if (vertex.Position.Y < leftMostY)
                 {
                     leftMostY = vertex.Position.Y;
                     leftMostVertex = vertex;
@@ -1475,7 +1517,7 @@ namespace Wa3Tuner
             }
             return rightMostVertex;
         }
-      static  CGeosetVertex getFrontMostVertex(CGeoset geoset)
+        static CGeosetVertex getFrontMostVertex(CGeoset geoset)
         {
             CGeosetVertex frontMostVertex = null;
             float frontMostX = float.MinValue;
@@ -1492,7 +1534,7 @@ namespace Wa3Tuner
         static CGeosetVertex getBackMostVertex(CGeoset geoset)
         {
             CGeosetVertex backMostVertex = null;
-            float backMostX =  float.MaxValue;
+            float backMostX = float.MaxValue;
             foreach (var vertex in geoset.Vertices)
             {
                 if (vertex.Position.X < backMostX)
@@ -1530,16 +1572,17 @@ namespace Wa3Tuner
             {
                 case Side.Left:
                     CGeosetVertex leftmost = getLeftMostVertex(geoset);
-                    foreach ( var vertex in geoset.Vertices)
+                    foreach (var vertex in geoset.Vertices)
                     {
-                        if ( CoordinateIsAfterCentroid(centroid, vertex.Position, side)){
+                        if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
+                        {
                             float X = vertex.Position.X;
                             float Y = leftmost.Position.Y;
                             float Z = vertex.Position.Z;
                             vertex.Position = new CVector3(X, Y, Z);
                         }
                     }
-                    break; 
+                    break;
                 case Side.Right:
                     CGeosetVertex rightmost = getRightMostVertex(geoset);
                     foreach (var vertex in geoset.Vertices)
@@ -1553,7 +1596,7 @@ namespace Wa3Tuner
                         }
                     }
                     break;
-                 case Side.Top:
+                case Side.Top:
                     CGeosetVertex topmost = getTopMostVertex(geoset);
                     foreach (var vertex in geoset.Vertices)
                     {
@@ -1566,7 +1609,7 @@ namespace Wa3Tuner
                         }
                     }
                     break;
-                 case Side.Bottom:
+                case Side.Bottom:
                     CGeosetVertex bottommost = getBottomMostVertex(geoset);
                     foreach (var vertex in geoset.Vertices)
                     {
@@ -1579,7 +1622,7 @@ namespace Wa3Tuner
                         }
                     }
                     break;
-                  case Side.Front:
+                case Side.Front:
                     CGeosetVertex frontmost = getFrontMostVertex(geoset);
                     foreach (var vertex in geoset.Vertices)
                     {
@@ -1592,7 +1635,7 @@ namespace Wa3Tuner
                         }
                     }
                     break;
-                   case Side.Back:
+                case Side.Back:
                     CGeosetVertex backmost = getBackMostVertex(geoset);
                     foreach (var vertex in geoset.Vertices)
                     {
@@ -1734,7 +1777,7 @@ namespace Wa3Tuner
                 CGeosetTriangle face = new CGeosetTriangle(Model);
                 face.Vertex1.Attach(vertices[0]);
                 face.Vertex2.Attach(vertices[i]);
-                face.Vertex3.Attach(vertices[i+1]);
+                face.Vertex3.Attach(vertices[i + 1]);
                 newFaces.Add(face);
             }
             return newFaces;
@@ -1763,9 +1806,9 @@ namespace Wa3Tuner
             float R = color.Z * 255f;
             float G = color.Y * 255f;
             float B = color.X * 255f;
-           // MessageBox.Show($"{R} {G} {B}");
+            // MessageBox.Show($"{R} {G} {B}");
             return BrushFromRGB(R, G, B);
-             
+
         }
         private static System.Windows.Media.Brush BrushFromRGB(float r, float g, float b)
         {
@@ -1801,14 +1844,14 @@ namespace Wa3Tuner
             float r = color.B / 255f;
             float g = color.G / 255f;
             float b = color.R / 255f;
-           return new CVector3(b, g, r);
+            return new CVector3(b, g, r);
         }
         internal static int _255ToPercentage(float alpha)
         {
             if (alpha < 0) { return 0; }
             if (alpha > 255) { return 100; }
             // Convert 255-based percentage to standard percentage
-             return _255To100(alpha);
+            return _255To100(alpha);
         }
         public static int _255To100(float value)
         {
@@ -1972,12 +2015,12 @@ namespace Wa3Tuner
             }
             return triangleGroups;
         }
-        internal static void CopyVertex(CGeosetVertex  original, CGeosetVertex copy)
+        internal static void CopyVertex(CGeosetVertex original, CGeosetVertex copy)
         {
             copy.Position = new CVector3(original.Position);
             copy.Normal = new CVector3(original.Normal);
             copy.TexturePosition = new CVector2(original.TexturePosition);
-            copy.Group.Attach(original.Group.Object);  
+            copy.Group.Attach(original.Group.Object);
         }
         internal static void CopyGroup(CGeosetGroup original, CGeosetGroup copy, CModel model)
         {
@@ -1998,7 +2041,7 @@ namespace Wa3Tuner
             foreach (CGeosetVertex vertex in geoset.Vertices.ToList())
             {
                 bool has = true;
-               foreach (CGeosetTriangle triangle in geoset.Triangles)
+                foreach (CGeosetTriangle triangle in geoset.Triangles)
                 {
                     if (triangle.Vertex1.Object == vertex || triangle.Vertex2.Object == vertex || triangle.Vertex3.Object == vertex)
                     {
@@ -2006,7 +2049,7 @@ namespace Wa3Tuner
                         break;
                     }
                 }
-               if (!has)
+                if (!has)
                 {
                     geoset.Vertices.Remove(vertex);
                 }
@@ -2052,18 +2095,18 @@ namespace Wa3Tuner
             CGeosetGroupNode node = new CGeosetGroupNode(model);
             node.Node.Attach(GetBone(model));
             group.Nodes.Add(node);
-           geoset.Groups.Add(group);
+            geoset.Groups.Add(group);
         }
         private static INode GetBone(CModel model)
         {
-            if (model.Nodes.Any(x=>x is CBone))
+            if (model.Nodes.Any(x => x is CBone))
             {
-                return model.Nodes.First(x=>x is CBone);
+                return model.Nodes.First(x => x is CBone);
             }
             else
             {
                 CBone bone = new CBone(model);
-                bone.Name ="GeneratedBone_" +IDCounter.Next_();
+                bone.Name = "GeneratedBone_" + IDCounter.Next_;
                 model.Nodes.Add(bone);
                 return bone;
             }
@@ -2071,7 +2114,7 @@ namespace Wa3Tuner
         internal static CGeoset ReAddTriangles(List<List<CGeosetTriangle>> list,
             CModel model, CGeoset geoset)
         {
-           CGeoset _modified = new CGeoset(model);
+            CGeoset _modified = new CGeoset(model);
             _modified.Material.Attach(geoset.Material.Object);
             GiveGroupToGeoset(_modified, model);
             foreach (var triangleList in list)
@@ -2442,7 +2485,25 @@ namespace Wa3Tuner
             float count = attached.Count;
             return new CVector3(sumX / count, sumY / count, sumZ / count);
         }
+        internal static CVector3 GetCentroidOfVectors(List<CVector3> vectors)
+        {
+            if (vectors == null || vectors.Count == 0) return new CVector3(); // Return a default vector if the list is empty
+            if (vectors.Count == 1)return vectors[0];
+             
 
+            float sumX = 0, sumY = 0, sumZ = 0;
+
+            foreach (var vector in vectors)
+            {
+                
+                sumX += vector.X;
+                sumY += vector.Y;
+                sumZ += vector.Z;
+            }
+
+            float count = vectors.Count;
+            return new CVector3(sumX / count, sumY / count, sumZ / count);
+        }
         internal static List<List<CGeosetVertex>> FindOverlappingVertexGroups(CGeoset geoset, float Threshold)
         {
             if (geoset.Vertices.Count <= 1)
@@ -2687,7 +2748,7 @@ namespace Wa3Tuner
             );
         }
 
-        internal static  Vector3 GetOutwardFacingDirection(CVector3 one, CVector3 two, CVector3 three)
+        internal static Vector3 GetOutwardFacingDirection(CVector3 one, CVector3 two, CVector3 three)
         {
             // Compute two edge vectors
             Vector3 u = new Vector3(two.X - one.X, two.Y - one.Y, two.Z - one.Z);
@@ -2715,5 +2776,1107 @@ namespace Wa3Tuner
             return normal;
         }
 
+        internal static void NegateInside(CVector2 vector, bool u, bool v)
+        {
+            if (u)
+            {
+                float minU = (float)Math.Floor(vector.X);
+                float maxU = (float)Math.Ceiling(vector.X);
+                vector.X = minU + maxU - vector.X;
+            }
+            if (v)
+            {
+                float minV = (float)Math.Floor(vector.Y);
+                float maxV = (float)Math.Ceiling(vector.Y);
+                vector.Y = minV + maxV - vector.Y;
+            }
+        }
+
+        internal static void SwapUV(CVector2 vector)
+        {
+            var x = vector.X;
+            var y = vector.Y;
+            vector.X = y;
+            vector.Y = x;
+        }
+
+        internal static void SwapTwo(CGeosetVertex v1, CGeosetVertex v2)
+        {
+            float u1 = v1.TexturePosition.X;
+            float v_1 = v1.TexturePosition.Y;
+
+
+            float u2 = v2.TexturePosition.X;
+            float v_2 = v2.TexturePosition.Y;
+            v1.TexturePosition = new CVector2(u2, v_2);
+            v2.TexturePosition = new CVector2(u1, v_1);
+        }
+
+
+
+        internal static float GetCanvasPositionFromU(float u, double imageWidth, double canvasWidth)
+        {
+            // Map UV range (-10 to 10) to canvas coordinates (0 to canvasWidth)
+            return (float)(((u + 10) / 20) * canvasWidth);
+        }
+
+        internal static float GetCanvasPositionFromV(float v, double imageHeight, double canvasHeight)
+        {
+            // Map UV range (-10 to 10) to canvas coordinates (0 to canvasHeight), flipping Y-axis
+            return (float)((1 - ((v + 10) / 20)) * canvasHeight);
+        }
+
+        internal static CGeoset CreateSphere(int sections, int slices, CModel owner)
+        {
+            if (slices < 3 || sections < 3 || slices > 50 || sections > 50)
+            {
+                throw new ArgumentException("The number of sides cannot be less than 3 and more than 50.");
+            }
+
+            CGeoset geoset = new CGeoset(owner);
+            List<CGeosetVertex> vertices = new List<CGeosetVertex>();
+            float radius = 1.0f;
+
+            for (int i = 0; i <= slices; i++)
+            {
+                float phi = (float)(Math.PI * i / slices);
+                for (int j = 0; j <= sections; j++)
+                {
+                    float theta = (float)(2 * Math.PI * j / sections);
+                    float x = radius * (float)(Math.Sin(phi) * Math.Cos(theta));
+                    float y = radius * (float)(Math.Cos(phi));
+                    float z = radius * (float)(Math.Sin(phi) * Math.Sin(theta));
+
+                    CGeosetVertex vertex = new CGeosetVertex(owner);
+                    vertex.Position = new CVector3(x, y, z);
+                    geoset.Vertices.Add(vertex);
+                    vertices.Add(vertex);
+                }
+            }
+
+            for (int i = 0; i < slices; i++)
+            {
+                for (int j = 0; j < sections; j++)
+                {
+                    int current = i * (sections + 1) + j;
+                    int next = current + sections + 1;
+
+                    CGeosetTriangle triangle1 = new CGeosetTriangle(owner);
+                    triangle1.Vertex1.Attach(vertices[current]);
+                    triangle1.Vertex2.Attach(vertices[next]);
+                    triangle1.Vertex3.Attach(vertices[current + 1]);
+                    geoset.Triangles.Add(triangle1);
+
+                    CGeosetTriangle triangle2 = new CGeosetTriangle(owner);
+                    triangle2.Vertex1.Attach(vertices[current + 1]);
+                    triangle2.Vertex2.Attach(vertices[next]);
+                    triangle2.Vertex3.Attach(vertices[next + 1]);
+                    geoset.Triangles.Add(triangle2);
+                }
+            }
+
+            return geoset;
+        }
+
+        internal static void TranslateGeosetsTo(List<CGeoset> list, Axes axes, float value)
+        {
+            // TO, not BY
+            if (list.Count == 0) return;
+
+            if (list.Count == 1)
+            {
+                CVector3 centroid = GetCentroidOfGeoset(list[0]);
+                CVector3 offset = new CVector3(
+                    axes == Axes.X ? value - centroid.X : 0,
+                    axes == Axes.Y ? value - centroid.Y : 0,
+                    axes == Axes.Z ? value - centroid.Z : 0
+                );
+
+                foreach (var vertex in list[0].Vertices)
+                {
+                    vertex.Position = new CVector3(
+                        vertex.Position.X + offset.X,
+                        vertex.Position.Y + offset.Y,
+                        vertex.Position.Z + offset.Z
+                    );
+                }
+            }
+            else
+            {
+                CVector3 centroid = GetCentroidOfGeosets(list);
+                CVector3 offset = new CVector3(
+                    axes == Axes.X ? value - centroid.X : 0,
+                    axes == Axes.Y ? value - centroid.Y : 0,
+                    axes == Axes.Z ? value - centroid.Z : 0
+                );
+
+                foreach (var geoset in list)
+                {
+                    foreach (var vertex in geoset.Vertices)
+                    {
+                        vertex.Position = new CVector3(
+                            vertex.Position.X + offset.X,
+                            vertex.Position.Y + offset.Y,
+                            vertex.Position.Z + offset.Z
+                        );
+                    }
+                }
+            }
+        }
+
+
+        public static CVector3 GetCentroidOfGeosets(List<CGeoset> list)
+        {
+            if (list == null || list.Count == 0)
+                return new CVector3(); // Return default if no geosets
+
+            CVector3 total = new CVector3();
+            int count = 0;
+
+            foreach (var geoset in list)
+            {
+                foreach (var vertex in geoset.Vertices)
+                {
+                    total = new CVector3(
+                        total.X + vertex.Position.X,
+                        total.Y + vertex.Position.Y,
+                        total.Z + vertex.Position.Z
+                    );
+                    count++;
+                }
+            }
+
+            return count > 0
+                ? new CVector3(total.X / count, total.Y / count, total.Z / count)
+                : new CVector3();
+        }
+
+        internal static void ScaleGeosets(List<CGeoset> list, Axes ax, float value)
+        {
+            if (value <= 0) return;
+          foreach (var geoset in list)
+            {
+                foreach (var v in geoset.Vertices)
+                {
+                    v.Position.X *= ax == Axes.X? (value/100) : 1;
+                    v.Position.Y *= ax == Axes.Y? (value/100) : 1;
+                    v.Position.Z *= ax == Axes.Z? (value/100) : 1;
+                }
+            } 
+        }
+
+        internal static void TranslateVectors(List<CVector3> vectors, Axes x, float value, bool add = false)
+        {
+            if (vectors.Count == 0) return;
+
+            if (vectors.Count == 1)
+            {
+                CVector3 v = vectors[0];
+                float newValue = add ? (x == Axes.X ? v.X + value : v.X) :
+                                     (x == Axes.X ? value : v.X);
+                vectors[0] = new CVector3(
+                    x == Axes.X ? newValue : v.X,
+                    x == Axes.Y ? (add ? v.Y + value : value) : v.Y,
+                    x == Axes.Z ? (add ? v.Z + value : value) : v.Z
+                );
+                return;
+            }
+
+            CVector3 centroid = GetCentroidOfVectors(vectors);
+            float delta = value - (x == Axes.X ? centroid.X :
+                                   x == Axes.Y ? centroid.Y :
+                                                 centroid.Z);
+
+            for (int i = 0; i < vectors.Count; i++)
+            {
+                CVector3 v = vectors[i];
+                float newX = v.X + (x == Axes.X ? delta : 0);
+                float newY = v.Y + (x == Axes.Y ? delta : 0);
+                float newZ = v.Z + (x == Axes.Z ? delta : 0);
+                if (add)
+                {
+                    vectors[i] = new CVector3(v.X + newX, v.Y + newY, v.Z + newZ);
+                }
+                else
+                {
+                    vectors[i] = new CVector3(newX, newY, newZ);
+                }
+            }
+        }
+
+        internal static void TranslateNodes(List<INode> nodes, Axes axis, float value)
+        {
+            if (nodes.Count == 0) return;
+
+            // Get centroid of pivot points
+            CVector3 centroid = GetCentroidOfVectors(nodes.Select(n => n.PivotPoint).ToList());
+
+            // Calculate shift amount for the chosen axis
+            float deltaX = axis == Axes.X ? value - centroid.X : 0;
+            float deltaY = axis == Axes.Y ? value - centroid.Y : 0;
+            float deltaZ = axis == Axes.Z ? value - centroid.Z : 0;
+
+            // Apply translation to all nodes
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var v = nodes[i].PivotPoint;
+                nodes[i].PivotPoint = new CVector3(v.X + deltaX, v.Y + deltaY, v.Z + deltaZ);
+            }
+        }
+
+        internal static void RotateNodes(List<INode> nodes, Axes axis, float value)
+        {
+            if (nodes.Count == 0) return;
+            if (value < -360 || value > 360) return;
+
+            CVector3 centroid = GetCentroidOfVectors(nodes.Select(n => n.PivotPoint).ToList());
+
+            float radians = value * (float)(Math.PI / 180.0); // Convert degrees to radians
+
+            foreach (var node in nodes)
+            {
+                CVector3 v = node.PivotPoint - centroid; // Translate to origin
+                CVector3 rotated;
+
+                switch (axis)
+                {
+                    case Axes.X:
+                        rotated = new CVector3(
+                            v.X,
+                            v.Y * (float)Math.Cos(radians) - v.Z * (float)Math.Sin(radians),
+                            v.Y * (float)Math.Sin(radians) + v.Z * (float)Math.Cos(radians)
+                        );
+                        break;
+                    case Axes.Y:
+                        rotated = new CVector3(
+                            v.X * (float)Math.Cos(radians) + v.Z * (float)Math.Sin(radians),
+                            v.Y,
+                            -v.X * (float)Math.Sin(radians) + v.Z * (float)Math.Cos(radians)
+                        );
+                        break;
+                    case Axes.Z:
+                        rotated = new CVector3(
+                            v.X * (float)Math.Cos(radians) - v.Y * (float)Math.Sin(radians),
+                            v.X * (float)Math.Sin(radians) + v.Y * (float)Math.Cos(radians),
+                            v.Z
+                        );
+                        break;
+                    default:
+                        return;
+                }
+
+                node.PivotPoint = rotated + centroid; // Translate back
+            }
+        }
+
+        internal static void ScaleNodes(List<INode> nodes, Axes axis, float value)
+        {
+            if (nodes.Count  < 2) return;
+            if (value <= 0) return;
+
+            float scaleFactor = value / 100.0f; // Normalize the scaling value
+
+            CVector3 centroid = GetCentroidOfVectors(nodes.Select(n => n.PivotPoint).ToList());
+
+            foreach (var node in nodes)
+            {
+                CVector3 v = node.PivotPoint - centroid; // Translate to origin
+
+                CVector3 scaled = new CVector3(
+                    v.X * (axis == Axes.X ? scaleFactor : 1),
+                    v.Y * (axis == Axes.Y ? scaleFactor : 1),
+                    v.Z * (axis == Axes.Z ? scaleFactor : 1)
+                );
+
+                node.PivotPoint = scaled + centroid; // Translate back
+            }
+        }
+
+        private static CExtent GetExtentOfVectorsCollection(List<CVector3> vectors)
+        {
+            if (vectors == null || vectors.Count == 0)
+                throw new ArgumentException("Vector collection cannot be null or empty.");
+
+            CExtent extent = new CExtent();
+            extent.Min = new CVector3(vectors[0]);
+            extent.Max = new CVector3(vectors[0]);
+
+            foreach (var vec in vectors)
+            {
+                extent.Min.X = Math.Min(extent.Min.X, vec.X);
+                extent.Min.Y = Math.Min(extent.Min.Y, vec.Y);
+                extent.Min.Z = Math.Min(extent.Min.Z, vec.Z);
+
+                extent.Max.X = Math.Max(extent.Max.X, vec.X);
+                extent.Max.Y = Math.Max(extent.Max.Y, vec.Y);
+                extent.Max.Z = Math.Max(extent.Max.Z, vec.Z);
+            }
+
+            return extent;
+        }
+
+        public static void MirrorNodePositions(List<INode> Nodes, Axes axis)
+        {
+            if (Nodes.Count < 2) return;
+            var extent = GetExtentOfVectorsCollection(Nodes.Select(X=>X.PivotPoint).ToList());
+
+            float midX = (extent.Min.X + extent.Max.X) / 2f;
+            float midY = (extent.Min.Y + extent.Max.Y) / 2f;
+            float midZ = (extent.Min.Z + extent.Max.Z) / 2f;
+
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                var vec = new CVector3(Nodes[i].PivotPoint);
+
+                switch (axis)
+                {
+                    case Axes.X:
+                        Nodes[i].PivotPoint = new CVector3(2 * midX - vec.X, vec.Y, vec.Z);
+                        break;
+                    case Axes.Y:
+                        Nodes[i].PivotPoint = new CVector3(vec.X, 2 * midY - vec.Y, vec.Z);
+                        break;
+                    case Axes.Z:
+                        Nodes[i].PivotPoint = new CVector3(vec.X, vec.Y, 2 * midZ - vec.Z);
+                        break;
+                }
+            }
+        }
+
+        internal static void DisperceVectors(List<CVector3> vectors)
+        {
+            var centroid = GetCentroidOfVectors(vectors);
+            Random random = new Random();
+
+            foreach (var vec in vectors)
+            {
+                // Compute direction from centroid
+                var direction = new CVector3(vec.X - centroid.X, vec.Y - centroid.Y, vec.Z - centroid.Z);
+
+                // Avoid zero-length direction
+                float length = (float)Math.Sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z);
+                if (length > 0.001f) // Ensure it's not too small
+                {
+                    direction.X /= length;
+                    direction.Y /= length;
+                    direction.Z /= length;
+                }
+                else
+                {
+                    // If too close to the centroid, assign a random direction
+                    direction = new CVector3(
+                        GetRandomFloat(-1, 1, 2),
+                        GetRandomFloat(-1, 1, 2),
+                        GetRandomFloat(-1, 1, 2)
+                    );
+                }
+
+                // Increase the displacement range
+                float offsetMagnitude = GetRandomFloat(5, 15, 2); // Increase the range significantly
+                vec.X += direction.X * offsetMagnitude;
+                vec.Y += direction.Y * offsetMagnitude;
+                vec.Z += direction.Z * offsetMagnitude;
+            }
+
+            // Ensure the updated positions are reflected in the rendering
+         
+        }
+
+        public static  float GetRandomFloat(float min, float max, int Precision)
+        {
+            Random random = new Random();
+            double scale = Math.Pow(10, Precision);
+            return (float)(Math.Round(random.NextDouble() * (max - min) + min, Precision));
+        }
+
+        internal static CVector4 ComputeQuaternionChange(CVector4 LastQuaternionChange, CVector4 NewValue)
+        {
+            return MultiplyQuaternions(NewValue, LastQuaternionChange);
+        }
+        private static CVector4 MultiplyQuaternions(CVector4 q1, CVector4 q2)
+        {
+            float w1 = q1.W, x1 = q1.X, y1 = q1.Y, z1 = q1.Z;
+            float w2 = q2.W, x2 = q2.X, y2 = q2.Y, z2 = q2.Z;
+
+            return new CVector4(
+                w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,  // X
+                w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,  // Y
+                w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,  // Z
+                w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2   // W
+            );
+        }
+
+
+        internal static CVector3 RotateVertex(CVector3 vertexPosition, INode AroundNode, CVector4 RotationValues)
+        {
+            // RotationValues is a quaternion
+            
+            CVector3 nodePosition = AroundNode.PivotPoint;
+
+            // Translate vertex to be relative to the node
+            CVector3 relativePosition = vertexPosition - nodePosition;
+
+            // Apply quaternion rotation
+            CVector3 rotatedPosition = RotateByQuaternion(relativePosition, RotationValues);
+
+            // Translate back
+            return rotatedPosition + nodePosition;
+        }
+        // Helper function to rotate a vector using a quaternion
+        private static CVector3 RotateByQuaternion(CVector3 v, CVector4 q)
+        {
+            // Convert quaternion to vector components
+            float x = q.X, y = q.Y, z = q.Z, w = q.W;
+
+            // Quaternion multiplication formula for rotating a vector
+            float num1 = 2 * (y * v.Z - z * v.Y);
+            float num2 = 2 * (z * v.X - x * v.Z);
+            float num3 = 2 * (x * v.Y - y * v.X);
+
+            return new CVector3(
+                v.X + w * num1 + (y * num3 - z * num2),
+                v.Y + w * num2 + (z * num1 - x * num3),
+                v.Z + w * num3 + (x * num2 - y * num1)
+            );
+        }
+
+        internal static CVector3 ScaleVertexRelativeToNode(CGeosetVertex WhichVertex, INode AroundNode, CVector3 ScalingValues)
+        {
+            // ScalingValues are normalized
+            CVector3 vertexPosition = WhichVertex.AnimatedPosition;
+            CVector3 nodePosition = AroundNode.PivotPoint;
+
+            // Translate vertex to be relative to the node
+            CVector3 relativePosition = vertexPosition - nodePosition;
+
+            // Apply scaling
+            CVector3 scaledPosition = new CVector3(
+                relativePosition.X * ScalingValues.X,
+                relativePosition.Y * ScalingValues.Y,
+                relativePosition.Z * ScalingValues.Z
+            );
+
+            // Translate back
+            return scaledPosition + nodePosition;
+        }
+
+        internal static void CenterVerticesAtVector(CVector3 pivotPoint, List<CGeosetVertex> vertices)
+        {
+            if (vertices == null || vertices.Count == 0)
+                return;
+
+            CVector3 centroid = GetCentroidOfVertices(vertices);
+
+            // Compute the translation needed to move the centroid to the pivot point
+            CVector3 translation = new CVector3(
+                pivotPoint.X - centroid.X,
+                pivotPoint.Y - centroid.Y,
+                pivotPoint.Z - centroid.Z
+            );
+
+            // Apply the translation to all vertices
+            foreach (var vertex in vertices)
+            {
+                vertex.Position = new CVector3(
+                    vertex.Position.X + translation.X,
+                    vertex.Position.Y + translation.Y,
+                    vertex.Position.Z + translation.Z
+                );
+            }
+        }
+
+        internal static void MirrorVertices(Axes ax, List<CGeosetVertex> vertices)
+        {
+         //unfinished
+            throw new NotImplementedException();
+        }
+
+        internal static void SwapTwoTriangles(CGeosetTriangle t1, CGeosetTriangle t2)
+        {
+            // Swap vertex positions between t1 and t2
+            CVector3 temp1 = t1.Vertex1.Object.Position;
+            CVector3 temp2 = t1.Vertex2.Object.Position;
+            CVector3 temp3 = t1.Vertex3.Object.Position;
+
+            t1.Vertex1.Object.Position = new CVector3(t2.Vertex1.Object.Position);
+            t1.Vertex2.Object.Position = new CVector3(t2.Vertex2.Object.Position);
+            t1.Vertex3.Object.Position = new CVector3(t2.Vertex3.Object.Position);
+
+            t2.Vertex1.Object.Position = new CVector3(temp1);
+            t2.Vertex2.Object.Position = new CVector3(temp2);
+            t2.Vertex3.Object.Position = new CVector3(temp3);
+        }
+
+        internal static void CenterGeosetsAtGeoset(List<CGeoset> geosets, CGeoset atGeoset)
+        {
+            if (atGeoset == null) return;
+            if (geosets == null) return;
+            if (geosets.Count == 0) return;
+            if (geosets.Count == 1)
+            {
+                if (geosets[0] == atGeoset) return;
+
+                var singleGeosetCentroid = GetCentroidOfGeoset(geosets[0]);
+                var targetCentroid = GetCentroidOfGeoset(atGeoset);
+
+                var offset = targetCentroid - singleGeosetCentroid;
+                MoveGeoset(geosets[0], offset);
+            }
+            else
+            {
+                var geosetsCentroid = GetCentroidOfGeosets(geosets);
+                var targetCentroid = GetCentroidOfGeoset(atGeoset);
+
+                var offset = targetCentroid - geosetsCentroid;
+
+                foreach (var geoset in geosets)
+                {
+                    MoveGeoset(geoset, offset);
+                }
+            }
+        }
+        private static void MoveGeoset(CGeoset geoset, CVector3 offset)
+        {
+            foreach (var vertex in geoset.Vertices)
+            {
+                vertex.Position = new CVector3(vertex.Position.X + offset.X, vertex.Position.Y + offset.Y, vertex.Position.Z + offset.Z);
+            }
+        }
+
+        internal static void RotateVectors(List<CVector3> vectors, Axes axis, float value)
+        {
+            if (value < -360 || value > 360) return;
+
+            CVector3 centroid = GetCentroidOfVectors(vectors);
+            float radians = value * (float)Math.PI / 180f;
+
+            foreach (var vector in vectors)
+            {
+                // Translate to origin (centroid-based rotation)
+                float x = vector.X - centroid.X;
+                float y = vector.Y - centroid.Y;
+                float z = vector.Z - centroid.Z;
+
+                // Apply rotation depending on the axis
+                if (axis == Axes.X)
+                {
+                    float newY = y * (float)Math.Cos(radians) - z * (float)Math.Sin(radians);
+                    float newZ = y * (float)Math.Sin(radians) + z * (float)Math.Cos(radians);
+                    vector.Y = newY + centroid.Y;
+                    vector.Z = newZ + centroid.Z;
+                }
+                else if (axis == Axes.Y)
+                {
+                    float newX = x * (float)Math.Cos(radians) + z * (float)Math.Sin(radians);
+                    float newZ = -x * (float)Math.Sin(radians) + z * (float)Math.Cos(radians);
+                    vector.X = newX + centroid.X;
+                    vector.Z = newZ + centroid.Z;
+                }
+                else if (axis == Axes.Z)
+                {
+                    float newX = x * (float)Math.Cos(radians) - y * (float)Math.Sin(radians);
+                    float newY = x * (float)Math.Sin(radians) + y * (float)Math.Cos(radians);
+                    vector.X = newX + centroid.X;
+                    vector.Y = newY + centroid.Y;
+                }
+            }
+        }
+
+        internal static CVector3 RotateVector(CVector3 vector, CVector3 around, CVector3 by)
+        {
+            // Step 1: Normalize the axis (around vector)
+            float length = (float)Math.Sqrt(around.X * around.X + around.Y * around.Y + around.Z * around.Z);
+            CVector3 axis = new CVector3(around.X / length, around.Y / length, around.Z / length);
+
+            // Step 2: Calculate the angle (assuming by vector represents the angle in radians)
+            float angle = by.X; // Assuming 'by.X' represents the angle in radians. If it's different, adjust accordingly.
+            float cosAngle = (float)Math.Cos(angle);
+            float sinAngle = (float)Math.Sin(angle);
+
+            // Step 3: Create the quaternion for the rotation
+            float qx = axis.X * sinAngle;
+            float qy = axis.Y * sinAngle;
+            float qz = axis.Z * sinAngle;
+            float qw = cosAngle;
+
+            // Step 4: Apply the quaternion rotation formula
+
+            // Quaternion * vector
+            float vx = vector.X;
+            float vy = vector.Y;
+            float vz = vector.Z;
+
+            // Quaternion conjugate (reverse the sign of the vector part)
+            float qConjugateX = -qx;
+            float qConjugateY = -qy;
+            float qConjugateZ = -qz;
+
+            // Quaternion multiplication: q * v * q^-1
+            float resX = qw * vx + qy * vz - qz * vy;
+            float resY = qw * vy + qz * vx - qx * vz;
+            float resZ = qw * vz + qx * vy - qy * vx;
+
+            // Now applying the conjugate (reverse the sign of the vector part)
+            resX = qw * resX + qy * resZ - qz * resY;
+            resY = qw * resY + qz * resX - qx * resZ;
+            resZ = qw * resZ + qx * resY - qy * resX;
+
+            return new CVector3(resX, resY, resZ);
+        }
+
+        internal static CVector3 GetCentroidofTriangle(CGeosetTriangle triangle)
+        {
+            return GetCentroidOfVertices(new List<CGeosetVertex>() { triangle.Vertex1.Object, triangle.Vertex2.Object, triangle.Vertex3.Object});
+        }
+
+        internal static CVector2 GetCentroidUVFromTriangle(CGeosetTriangle triangle)
+        {
+            CVector2 uv1 = triangle.Vertex1.Object.TexturePosition;
+            CVector2 uv2 = triangle.Vertex2.Object.TexturePosition;
+            CVector2 uv3 = triangle.Vertex3.Object.TexturePosition;
+
+            return new CVector2((uv1.X + uv2.X + uv3.X) / 3, (uv1.Y + uv2.Y + uv3.Y) / 3);
+        }
+
+        internal static CVector3 GetMiddleNormalOfTriangle(CGeosetTriangle triangle)
+        {
+            CVector3 normal1 = triangle.Vertex1.Object.Normal;
+            CVector3 normal2 = triangle.Vertex2.Object.Normal;
+            CVector3 normal3 = triangle.Vertex3.Object.Normal;
+
+            // Compute the average normal
+            CVector3 averageNormal = new CVector3(
+                (normal1.X + normal2.X + normal3.X) / 3,
+                (normal1.Y + normal2.Y + normal3.Y) / 3,
+                (normal1.Z + normal2.Z + normal3.Z) / 3
+            );
+
+            // Normalize manually
+            float length = (float)Math.Sqrt(averageNormal.X * averageNormal.X +
+                                            averageNormal.Y * averageNormal.Y +
+                                            averageNormal.Z * averageNormal.Z);
+
+            return length == 0 ? new CVector3(0, 0, 0) // Avoid division by zero
+                               : new CVector3(averageNormal.X / length,
+                                              averageNormal.Y / length,
+                                              averageNormal.Z / length);
+        }
+
+        internal static void InsetTriangle(CGeoset geoset, CGeosetTriangle triangle, CModel owner)
+        {
+            var vectors = ScaleDownTriangle(triangle,10);
+            CGeosetVertex v1 = new CGeosetVertex(owner);
+            CGeosetVertex v2 = new CGeosetVertex(owner);
+            CGeosetVertex v3 = new CGeosetVertex(owner);
+            CGeosetTriangle t = new CGeosetTriangle(owner);
+            CopyTriangleData(triangle.Vertex1.Object, v1);
+            CopyTriangleData(triangle.Vertex2.Object, v1);
+            CopyTriangleData(triangle.Vertex3.Object, v1);
+            v1.Position = new CVector3(vectors[0]);
+            v2.Position = new CVector3(vectors[1]);
+            v3.Position = new CVector3(vectors[2]);
+            t.Vertex1.Attach(v1);
+            t.Vertex1.Attach(v2);
+            t.Vertex1.Attach(v3);
+            geoset.Vertices.Add(v1);
+            geoset.Vertices.Add(v2);
+            geoset.Vertices.Add(v3);
+            geoset.Triangles.Add(t);
+         
+ 
+        }
+
+        private static void CopyTriangleData(CGeosetVertex @object, CGeosetVertex v1)
+        {
+            v1.Position = new CVector3(@object.Position);
+            v1.Normal = new CVector3(@object.Normal);
+            v1.TexturePosition = new CVector2(@object.TexturePosition);
+        }
+
+        internal static object InsetTriangleConnected(CGeoset geoset, CGeosetTriangle triangle)
+        {
+            throw new NotImplementedException();
+        }
+        internal static CVector3[] ScaleDownTriangle(CGeosetTriangle triangle, int percentage)
+        {
+            // Convert percentage to a scale factor (e.g., 50% -> 0.5)
+            float scaleFactor = percentage / 100f;
+
+            // Calculate the centroid of the triangle
+            CVector3 centroid = new CVector3(
+                (triangle.Vertex1.Object.Position.X + triangle.Vertex2.Object.Position.X + triangle.Vertex3.Object.Position.X) / 3,
+                (triangle.Vertex1.Object.Position.Y + triangle.Vertex2.Object.Position.Y + triangle.Vertex3.Object.Position.Y) / 3,
+                (triangle.Vertex1.Object.Position.Z + triangle.Vertex2.Object.Position.Z + triangle.Vertex3.Object.Position.Z) / 3
+            );
+
+            // Compute new positions
+            CVector3 newVertex1 = ScalePointTowards(centroid, triangle.Vertex1.Object.Position, scaleFactor);
+            CVector3 newVertex2 = ScalePointTowards(centroid, triangle.Vertex2.Object.Position, scaleFactor);
+            CVector3 newVertex3 = ScalePointTowards(centroid, triangle.Vertex3.Object.Position, scaleFactor);
+
+            return new CVector3[] { newVertex1, newVertex2, newVertex3 };
+        }
+
+        // Helper function to move a point towards the centroid
+        private static CVector3 ScalePointTowards(CVector3 centroid, CVector3 point, float scaleFactor)
+        {
+            return new CVector3(
+                centroid.X + (point.X - centroid.X) * scaleFactor,
+                centroid.Y + (point.Y - centroid.Y) * scaleFactor,
+                centroid.Z + (point.Z - centroid.Z) * scaleFactor
+            );
+        }
+
+        internal static CVector3 GetCentroidofTriangles(List<CGeosetTriangle> triangles)
+        {
+            if (triangles == null || triangles.Count == 0)
+                return new CVector3(0, 0, 0); // Return a default zero vector if no triangles
+
+            CVector3 sum = new CVector3(0, 0, 0);
+            int totalVertices = 0;
+
+            foreach (var triangle in triangles)
+            {
+                CVector3 pos1 = triangle.Vertex1.Object.Position;
+                CVector3 pos2 = triangle.Vertex2.Object.Position;
+                CVector3 pos3 = triangle.Vertex3.Object.Position;
+
+                sum += pos1 + pos2 + pos3;
+                totalVertices += 3;
+            }
+
+            float scale = 1.0f / totalVertices; // Convert division into multiplication
+            return new CVector3(sum.X * scale, sum.Y * scale, sum.Z * scale);
+        }
+
+        internal static CVector2 GetCentroidOfUV(List<CVector2> list)
+        {
+            if (list == null || list.Count == 0) { return new CVector2(); }
+            if (list.Count == 1) { return list[0]; }
+
+            float sumX = 0, sumY = 0;
+            foreach (var uv in list)
+            {
+                sumX += uv.X;
+                sumY += uv.Y;
+            }
+
+            return new CVector2(sumX / list.Count, sumY / list.Count);
+        }
+
+        internal static CVector2 RotateUVAroundCentroid(CVector2 centroid, CVector2 texturePosition, float angleDegrees)
+        {
+            // Convert degrees to radians
+            float angleRadians = angleDegrees * (float)(Math.PI / 180.0);
+
+            // Translate the point to the origin (centroid as the origin)
+            float translatedX = texturePosition.X - centroid.X;
+            float translatedY = texturePosition.Y - centroid.Y;
+
+            // Apply rotation
+            float cosA = (float)Math.Cos(angleRadians);
+            float sinA = (float)Math.Sin(angleRadians);
+
+            float rotatedX = translatedX * cosA - translatedY * sinA;
+            float rotatedY = translatedX * sinA + translatedY * cosA;
+
+            // Translate back to the original position
+            return new CVector2(rotatedX + centroid.X, rotatedY + centroid.Y);
+        }
+
+
+        internal static CVector2 ScaleUVAroundCentroid(CVector2 centroid, CVector2 texturePosition, float scaleFactor)
+        {
+            // Translate the point to the origin (centroid as the origin)
+            float translatedX = texturePosition.X - centroid.X;
+            float translatedY = texturePosition.Y - centroid.Y;
+
+            // Apply scaling
+            float scaledX = translatedX * scaleFactor;
+            float scaledY = translatedY * scaleFactor;
+
+            // Translate back to the original position
+            return new CVector2(scaledX + centroid.X, scaledY + centroid.Y);
+        }
+
+        internal static void Straighten(List<CGeoset> geosets, Axes straightenForAxis)
+        {
+            CVector3 centroid = GetCentroid(geosets);
+
+            // Estimate the orientation by PCA or just bounding box alignment
+            CVector3 direction = GetDominantDirection(geosets, straightenForAxis);
+
+            // Get rotation to align that direction with selected axis
+            CVector3 targetDirection = straightenForAxis switch
+            {
+                Axes.X => new CVector3(1, 0, 0),
+                Axes.Y => new CVector3(0, 1, 0),
+                Axes.Z => new CVector3(0, 0, 1),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Quaternion rotation = GetRotationBetween( direction, targetDirection);
+
+            // Apply rotation around centroid
+            foreach (var geoset in geosets)
+            {
+                foreach (var vertex in geoset.Vertices)
+                {
+                    CVector3 relative = vertex.Position - centroid;
+
+                    // Rotate the vector using the quaternion
+                    Vector3 rotated = RotateVectorByQuaternion(relative, rotation);
+
+                    // Update the vertex position
+                    vertex.Position = centroid + new CVector3(rotated.X, rotated.Y, rotated.Z);
+                }
+            }
+        }
+
+        // Helper function to apply quaternion rotation to a vector
+        private static Vector3 RotateVectorByQuaternion(CVector3 vector, Quaternion quaternion)
+        {
+            // Convert vector to a quaternion (with 0 as scalar part)
+            Quaternion vectorQuat = new Quaternion(vector.X, vector.Y, vector.Z, 0);
+
+            // Apply the rotation: q * v * q^-1
+            Quaternion result = Quaternion.Conjugate(quaternion) * vectorQuat * quaternion;
+
+            // The rotated vector is in the vector part of the result quaternion
+            return new Vector3(result.X, result.Y, result.Z);
+        }
+
+        private static CVector3 GetDominantDirection(List<CGeoset> geosets, Axes forAxis)
+        {
+            // Project all vertices onto the two axes not being straightened
+            List<CVector3> projected = new List<CVector3>();
+
+            foreach (var geoset in geosets)
+            {
+                foreach (var vertex in geoset.Vertices)
+                {
+                    CVector3 pos = vertex.Position;
+
+                    CVector3 flatPos = forAxis switch
+                    {
+                        Axes.X => new CVector3(0, pos.Y, pos.Z),
+                        Axes.Y => new CVector3(pos.X, 0, pos.Z),
+                        Axes.Z => new CVector3(pos.X, pos.Y, 0),
+                        _ => pos
+                    };
+
+                    projected.Add(flatPos);
+                }
+            }
+
+            // Compute direction from PCA-like spread (just take the difference between max and min)
+            CVector3 min = new CVector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            CVector3 max = new CVector3(float.MinValue, float.MinValue, float.MinValue);
+
+            foreach (var p in projected)
+            {
+                min = CVector3.Min(min, p);
+                max = CVector3.Max(max, p);
+            }
+
+            return (max - min).Normalize(); // Direction of spread
+        }
+        private static Quaternion GetRotationBetween(CVector3 from_, CVector3 to_)
+        {
+
+            // Normalize both vectors
+            Vector3 from = new Vector3(from_.X, from_.Y, from_.Z);
+
+            Vector3 to = new Vector3(to_.X, to_.Y, to_.Z);
+
+            // Calculate the dot product
+            float dot = Vector3.Dot(from, to);
+
+            // If the vectors are nearly identical, no rotation is needed
+            if (dot >= 1.0f) return Quaternion.Identity;
+
+            // If the vectors are opposite, rotate 180 degrees around an arbitrary perpendicular axis
+            if (dot <= -1.0f)
+            {
+                Vector3 axis = Vector3.Cross(from, new Vector3(1, 0, 0));
+                if (axis.Length() < 1e-6f) axis = Vector3.Cross(from, new Vector3(0, 1, 0));
+                return Quaternion.CreateFromAxisAngle(Vector3.Normalize(axis), MathF.PI);
+            }
+
+            // Otherwise, calculate the axis of rotation
+            Vector3 rotationAxis = Vector3.Cross(from, to);
+            float angle = MathF.Acos(dot);
+
+            // Return the quaternion representing the rotation
+            return Quaternion.CreateFromAxisAngle(Vector3.Normalize(rotationAxis), angle);
+        }
+
+        private static CVector3 Cross_(CVector3 from, CVector3 cVector3)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static CVector3 RGB_Vector_to_BGR(Vector3 vector3)
+        {
+            float r = vector3.X / 255;
+            float g = vector3.Y / 255;
+            float b = vector3.Z / 255;
+            return new CVector3(b, g, r);
+        }
+
+        internal static CAnimatorNode<CVector3> ReadLine3(string line)
+        {
+            try
+            {
+                // Remove all whitespace characters (spaces, tabs, etc.)
+                line = System.Text.RegularExpressions.Regex.Replace(line, @"\s+", "");
+
+                int colonIndex = line.IndexOf(':');
+                if (colonIndex == -1) return null;
+
+                string timeStr = line.Substring(0, colonIndex);
+                string vectorStr = line.Substring(colonIndex + 1);
+
+                if (!vectorStr.StartsWith("{") || !vectorStr.EndsWith("}"))
+                    return null;
+
+                vectorStr = vectorStr.Substring(1, vectorStr.Length - 2); // remove { and }
+
+                string[] parts = vectorStr.Split(',');
+                if (parts.Length != 3) return null;
+
+                int time = int.Parse(timeStr);
+                float x = float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture);
+                float y = float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+                float z = float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+
+                return new CAnimatorNode<CVector3>(time, new CVector3(x, y, z));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static CAnimatorNode<CVector4> ReadLine4(string line)
+        {
+            try
+            {
+                // Remove all whitespace characters (spaces, tabs, etc.)
+                line = System.Text.RegularExpressions.Regex.Replace(line, @"\s+", "");
+
+                int colonIndex = line.IndexOf(':');
+                if (colonIndex == -1) return null;
+
+                string timeStr = line.Substring(0, colonIndex);
+                string vectorStr = line.Substring(colonIndex + 1);
+
+                if (!vectorStr.StartsWith("{") || !vectorStr.EndsWith("}"))
+                    return null;
+
+                vectorStr = vectorStr.Substring(1, vectorStr.Length - 2); // remove { and }
+
+                string[] parts = vectorStr.Split(',');
+                if (parts.Length != 4) return null;
+
+                int time = int.Parse(timeStr);
+                float x = float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture);
+                float y = float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+                float z = float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+                float w = float.Parse(parts[3], System.Globalization.CultureInfo.InvariantCulture);
+
+                return new CAnimatorNode<CVector4>(time, new CVector4(x, y, z, w));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static INode GetClosestNode(CVector3 position, List<INode> nodes)
+        {
+            INode closestNode = null;
+            float closestDistanceSquared = float.MaxValue;
+
+            foreach (INode node in nodes)
+            {
+                CVector3 pivot = node.PivotPoint;
+                float dx = pivot.X - position.X;
+                float dy = pivot.Y - position.Y;
+                float dz = pivot.Z - position.Z;
+                float distanceSquared = dx * dx + dy * dy + dz * dz;
+
+                if (distanceSquared < closestDistanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    closestNode = node;
+                }
+            }
+
+            return closestNode;
+        }
+
+        internal static void ForceNormalsDirection(CGeosetTriangle triangle, bool inward)
+        {
+            // Get vertex positions
+            var pos1 = triangle.Vertex1.Object.Position;
+            var pos2 = triangle.Vertex2.Object.Position;
+            var pos3 = triangle.Vertex3.Object.Position;
+
+            // Step 1: Compute the triangle's face normal using cross product
+            CVector3 edge1 = new CVector3(pos2.X - pos1.X, pos2.Y - pos1.Y, pos2.Z - pos1.Z);
+            CVector3 edge2 = new CVector3(pos3.X - pos1.X, pos3.Y - pos1.Y, pos3.Z - pos1.Z);
+            CVector3 faceNormal = Cross(edge1, edge2);
+            faceNormal = Normalize(faceNormal);
+
+            // Step 2: Determine the triangle's center
+            CVector3 center = new CVector3(
+                (pos1.X + pos2.X + pos3.X) / 3.0f,
+                (pos1.Y + pos2.Y + pos3.Y) / 3.0f,
+                (pos1.Z + pos2.Z + pos3.Z) / 3.0f
+            );
+
+            // Step 3: Get vector from center to origin (0,0,0)
+            CVector3 toOrigin = new CVector3(-center.X, -center.Y, -center.Z);
+            toOrigin = Normalize(toOrigin);
+
+            // Step 4: Determine if the triangle currently faces inward or outward
+            float dot = Dot(faceNormal, toOrigin);
+            bool currentlyInward = dot > 0;
+
+            // Step 5: Flip face normal direction if needed
+            if (currentlyInward != inward)
+            {
+                faceNormal = new CVector3(-faceNormal.X, -faceNormal.Y, -faceNormal.Z);
+            }
+
+            // Step 6: Apply this direction to all three vertex normals
+            triangle.Vertex1.Object.Normal = faceNormal;
+            triangle.Vertex2.Object.Normal = faceNormal;
+            triangle.Vertex3.Object.Normal = faceNormal;
+        }
+        private static CVector3 Cross(CVector3 a, CVector3 b)
+        {
+            return new CVector3(
+                a.Y * b.Z - a.Z * b.Y,
+                a.Z * b.X - a.X * b.Z,
+                a.X * b.Y - a.Y * b.X
+            );
+        }
+
+        private static float Dot(CVector3 a, CVector3 b)
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+        private static CVector3 Normalize(CVector3 v)
+        {
+            float length = (float)Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+            if (length == 0) return new CVector3(0, 0, 0);
+            return new CVector3(v.X / length, v.Y / length, v.Z / length);
+        }
+
+
     }
+
 }

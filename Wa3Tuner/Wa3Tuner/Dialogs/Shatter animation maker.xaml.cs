@@ -59,11 +59,11 @@ namespace Wa3Tuner.Dialogs
              // complete the rigging process
             Helper = new CHelper(Model);
             Model.Nodes.Add(Helper);
-            Helper.Name = $"ShatteredGeoset{Geoset.ObjectId}_{IDCounter.Next_()}";
+            Helper.Name = $"ShatteredGeoset{Geoset.ObjectId}_{IDCounter.Next_}";
             foreach (var v in vertices_New)
             {
                 CBone bone = new CBone(Model);
-                bone.Name = $"ShatteredGeoset{Geoset.ObjectId}_Segment{IDCounter.Next_()}";
+                bone.Name = $"ShatteredGeoset{Geoset.ObjectId}_Segment{IDCounter.Next_}";
                 bone.Parent.Attach(Helper);
                 Model.Nodes.Add(bone);
                 CGeosetGroup group = new CGeosetGroup(Model);

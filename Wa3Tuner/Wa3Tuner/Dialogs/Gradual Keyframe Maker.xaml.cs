@@ -25,6 +25,7 @@ namespace Wa3Tuner.Dialogs
         TransformationType Type;
         List<CSequence> Sequences;
         List<Ttrack> Tracks;
+            private bool Pause = true;
         public Gradual_Keyframe_Maker(List<CSequence> s, List<Ttrack> tracks, TransformationType type)
         {
             InitializeComponent();
@@ -33,6 +34,7 @@ namespace Wa3Tuner.Dialogs
             Type = type;
             Title = $"Gradual Keyframe Maker - {type}";
             Fill();
+            Pause = false;
         }
         void Fill()
         {
@@ -152,12 +154,14 @@ namespace Wa3Tuner.Dialogs
 
         private void chek1(object sender, RoutedEventArgs e)
         {
+            if (Pause) return;
             d1.Visibility = Visibility.Visible;
             d2.Visibility = Visibility.Collapsed;
         }
 
         private void chek2(object sender, RoutedEventArgs e)
         {
+            if (Pause) return;
             d1.Visibility = Visibility.Collapsed;
             d2.Visibility = Visibility.Visible;
         }

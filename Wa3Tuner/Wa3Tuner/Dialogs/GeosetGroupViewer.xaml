@@ -1,0 +1,26 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.GeosetGroupViewer"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Title="GeosetGroupViewer" Height="250" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Group"/>
+        <TextBlock Text="Nodes" Grid.Column="1"/>
+        <ListBox Name="list1" Grid.Row="1" Background="LightGray" SelectionChanged="list1_SelectionChanged"/>
+        <ListBox Name="list2" Grid.Row="1" Grid.Column="1"  Background="LightGray"/>
+    </Grid>
+</Window>

@@ -29,26 +29,31 @@ namespace Wa3Tuner
         {
             if (name.Trim().Length == 0) { return false; }
             if (char.IsLetter(name[0]) == false) { return false; }
-            if (!duration)
-            {
-                if (from == to) { MessageBox.Show("From and to cannot be equal"); return false; }
-                if (from > to) { MessageBox.Show("From cannot be greater than to"); return false; }
-                if (to > 999999) { MessageBox.Show("'To' cannot be greater than 999,999"); return false; }
-            }
-            if (from < 0 || to < 0) { MessageBox.Show("No negative values"); return false; }
             foreach (CSequence sequence in model.Sequences)
             {
                 if (sequence.Name.ToLower() == name.ToLower())
                 {
                     MessageBox.Show("There is already a sequence with this name"); return false;
                 }
-               if (from >= sequence.IntervalStart && from <= sequence.IntervalEnd)
-                {
-                    MessageBox.Show("'From' cannot exist in another sequence"); return false;
-                }
-                
-                
             }
+                if (!duration)
+            {
+                if (from < 0 || to < 0) { MessageBox.Show("No negative values"); return false; }
+                if (from == to) { MessageBox.Show("From and to cannot be equal"); return false; }
+                if (from > to) { MessageBox.Show("From cannot be greater than to"); return false; }
+                if (to > 999999) { MessageBox.Show("'To' cannot be greater than 999,999"); return false; }
+                foreach (CSequence sequence in model.Sequences)
+                {
+                    if (from >= sequence.IntervalStart && from <= sequence.IntervalEnd)
+                    {
+                        MessageBox.Show("'From' cannot exist in another sequence"); return false;
+                    }
+                }
+                     
+            }
+            
+            
+         
             return true;
         }
         private void ok(object sender, RoutedEventArgs e)

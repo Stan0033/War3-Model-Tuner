@@ -229,9 +229,9 @@ namespace Wa3Tuner
             Clone.DontInheritRotation = node.DontInheritRotation;
             Clone.DontInheritScaling = node.DontInheritScaling;
             Clone.DontInheritTranslation = node.DontInheritTranslation;
-            foreach (var keyframe in Clone.Translation) Clone.Translation.Add(new CAnimatorNode<MdxLib.Primitives.CVector3>(keyframe.Time, new MdxLib.Primitives.CVector3(keyframe.Value)));
-            foreach (var keyframe in Clone.Rotation) Clone.Rotation.Add(new CAnimatorNode<MdxLib.Primitives.CVector4>(keyframe.Time, new MdxLib.Primitives.CVector4(keyframe.Value)));
-            foreach (var keyframe in Clone.Scaling) Clone.Scaling.Add(new CAnimatorNode<MdxLib.Primitives.CVector3>(keyframe.Time, new MdxLib.Primitives.CVector3(keyframe.Value)));
+            foreach (var keyframe in node.Translation) Clone.Translation.Add(new CAnimatorNode<MdxLib.Primitives.CVector3>(keyframe.Time, new MdxLib.Primitives.CVector3(keyframe.Value)));
+            foreach (var keyframe in node.Rotation) Clone.Rotation.Add(new CAnimatorNode<MdxLib.Primitives.CVector4>(keyframe.Time, new MdxLib.Primitives.CVector4(keyframe.Value)));
+            foreach (var keyframe in node.Scaling) Clone.Scaling.Add(new CAnimatorNode<MdxLib.Primitives.CVector3>(keyframe.Time, new MdxLib.Primitives.CVector3(keyframe.Value)));
             Clone.Name = node.Name; 
             return Clone;
             

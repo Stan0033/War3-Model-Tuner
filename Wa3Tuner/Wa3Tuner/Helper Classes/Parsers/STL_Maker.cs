@@ -185,7 +185,7 @@ namespace Wa3Tuner.Helper_Classes
                 {
                     currentlyBuilt.Material.Attach(owner.Materials[0]);
                     CBone bone = new CBone(owner);
-                    bone.Name = "GeneratedSTLImportedBone_" + IDCounter.Next_();
+                    bone.Name = "GeneratedSTLImportedBone_" + IDCounter.Next_;
                     owner.Nodes.Add(bone);
                     CGeosetGroup group = new CGeosetGroup(owner );
                     CGeosetGroupNode gnode = new CGeosetGroupNode(owner);
@@ -295,7 +295,7 @@ namespace Wa3Tuner.Helper_Classes
         private static CBone GenerateBone(CModel owner)
         {
             CBone bone = new CBone(owner);
-            bone.Name = $"GeneratedSTLBone_{IDCounter.Next_()}";
+            bone.Name = $"GeneratedSTLBone_{IDCounter.Next_}";
             owner.Nodes.Add(bone);
             return bone;
         }

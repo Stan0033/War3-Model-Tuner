@@ -32,7 +32,7 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
             model = m;
             GeneratedBone = new CBone(model);
-            GeneratedBone.Name = "ObjImportGeneratedBone_" + IDCounter.Next_();
+            GeneratedBone.Name = "ObjImportGeneratedBone_" + IDCounter.Next_;
             foreach (var geoset in model.Geosets)
             {
                 MainList.Items.Add(new ListBoxItem() { Content = geoset.ObjectId.ToString() });

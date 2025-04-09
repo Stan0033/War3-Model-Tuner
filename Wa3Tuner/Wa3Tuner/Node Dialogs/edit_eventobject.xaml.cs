@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using SharpGL.SceneGraph;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -23,6 +24,8 @@ namespace Wa3Tuner
         List<string> Ubers = new List<string>();
         List<string> Spawns = new List<string>();
         List<string> Footprints = new List<string>();
+        int SelectedIndex = 0;
+        System.Timers.Timer timer = new System.Timers.Timer();
         public edit_eventobject(CModel model, CEvent ev)
         {
             InitializeComponent();
@@ -30,25 +33,50 @@ namespace Wa3Tuner
             Event_ = ev;
             RefreshTracks();
             FillData();
-            FillRomName();
+            timer.Interval = 500;
+            timer.Elapsed += Timer_Elapsed;
+            timer.Enabled = true;
+            Fill_Identifier_and_Select_Data();
             FillSequences();
         }
-        private void FillRomName()
+
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            inputID.Text = Event_.Name[3].ToString();
+            Dispatcher.Invoke(() =>
+            {
+                box.SelectedIndex = SelectedIndex;
+               // MessageBox.Show(SelectedIndex.ToString());
+                box.ScrollIntoView(box.SelectedItem);// your UI code
+                timer.Stop();
+                timer.Enabled = false;
+            });
+          
+                
+        }
+
+        private void Fill_Identifier_and_Select_Data()
+        {
+            inputIdentfier.Text = Event_.Name[3].ToString();
             string data = Event_.Name.Substring(4,4);
+          //  MessageBox.Show(box.Items.Count.ToString());
             SelectItemFromData(data);
         }
         private void SelectItemFromData(string data)
         {
+            bool found = false;
+            int index = 0;
             for (int i = 0; i < box.Items.Count; i++)
             {
                 string item = (box.Items[i]as ListBoxItem).Content.ToString();
                if (item.ToLower().StartsWith(data.ToLower())){
-                    box.SelectedItem = box.Items[i];
-                    box.ScrollIntoView(box.Items[i]);
+                    SelectedIndex= i;
+                     found = true;
                     break; }
             }
+          ;
+          
+           
+            timer.Start();
         }
         private void FillData()
         {
@@ -105,7 +133,7 @@ namespace Wa3Tuner
             if (Event_.Name.Length == 8)
             {
                 char id = Event_.Name[3];
-                inputID.Text = id.ToString();
+                inputIdentfier.Text = id.ToString();
             }
         }
         private void FinalizeEvent()
@@ -146,11 +174,11 @@ namespace Wa3Tuner
         private void ok(object sender, RoutedEventArgs e)
         {
             if (tracks.Items.Count == 0) { MessageBox.Show("Event object without tracks is not allowed"); return; }
-            if (inputID.Text.Trim().Length != 1)
+            if (inputIdentfier.Text.Trim().Length != 1)
             {
                 MessageBox.Show("Incorrect identifier"); return;
             }
-            if (char.IsLetter(inputID.Text.Trim()[0]) == false)
+            if (char.IsLetter(inputIdentfier.Text.Trim()[0]) == false)
             {
                 MessageBox.Show("Incorrect identifier. Must be a letter"); return;
             }
@@ -159,7 +187,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Select data");
                 return;
             }
-            char identifeir = inputID.Text.Trim()[0];
+            char identifeir = inputIdentfier.Text.Trim()[0];
             string name = GetPrefix() + identifeir + GetData();
          Event_.Name = name;
             FinalizeEvent();

@@ -1,30 +1,51 @@
-﻿namespace Wa3Tuner.Helper_Classes
+﻿using System.Windows.Media;
+
+namespace Wa3Tuner.Helper_Classes
 {
     internal class RenderSettings
     {
+        //----------------------------------------------------------
+        //---- colors
+        //----------------------------------------------------------
+        // Paths
+        internal static float[] Path_Node = C2F.C(Colors.Black);
+        internal static float[] Path_Node_Selected = C2F.C(Colors.Green);
+
+        internal static float[] Path_Line = C2F.C(Colors.Red);
+        //----------------------------------------------------------
+        internal static float[] Color_SelectedGeoset = C2F.C(Colors.Green);
         // Edge colors
-        internal static float[] EdgeColorSelected = new float[] { 1f, 0f, 0f }; // Red
-        internal static float[] SelectedGeoset = new float[] { 54f/255f, 150f/255f,80f/255f }; // selected geoset
-        internal static float[] EdgeColor = new float[] { 0f, 1f, 0f }; // Green
-
-        // Rigging and normals colors
-        internal static float[] RiggingColor = new float[] { 0f, 0f, 1f }; // Blue
-        internal static float[] NormalsColor = new float[] { 1f, 1f, 0f }; // Yellow
-
+        internal static float[] Color_Edge = C2F.C(Colors.Red);
+        internal static float[] Color_Edge_Selected =   C2F.C(Colors.LawnGreen);
+       
+        internal static float[] Color_Extent = C2F.C(Colors.White);
+        internal static float[] Color_CollisionShape = C2F.C(Colors.Blue);
+        // Rigging
+        internal static float[] Color_Skinning = C2F.C(Colors.Orange);
         // Skeleton color
-        internal static float[] SkeletonColor = new float[] { 0f, 1f, 1f }; // Cyan
-
-        // Point settings
-        internal static float PointSize = 1.0f;
-        internal static PointType PointType = PointType.Square; // Assuming PointType is an enum
-
+        internal static float[] Color_Skeleton = C2F.C(Colors.Purple);
+        // noramls color
+        internal static float[] Color_Normals = C2F.C(Colors.Yellow);
+        // nodes
+        internal static float[] Color_NodeSelected = C2F.C(Colors.Green);
+        internal static float[] Color_Node = C2F.C(Colors.DarkRed);
         // Vertex colors
-        internal static float[] Color_VertexRigged = new float[] { 0.502f, 0.502f, 0.502f }; // Gray (128,128,128)
-        internal static float[] NodeColorSelected = new float[] { 1f, 0.647f, 0f }; // Orange (255,165,0)
-        internal static float[] NodeColor = new float[] { 1f, 1f, 1f }; // White
-        internal static float[] Color_Vertex = new float[] { 1f, 1f, 1f }; // White
-        internal static float[] Color_VertexSelected = new float[] { 1f, 0.412f, 0.706f }; // HotPink (255,105,180)
+        internal static float[] Color_Vertex = C2F.C(Colors.Blue);
+        internal static float[] Color_VertexSelected = C2F.C(Colors.Green);
+        internal static float[] Color_VertexRigged = C2F.C(Colors.Brown);
+        internal static float[] Color_VertexRiggedSelected = C2F.C(Colors.RosyBrown);
 
+        // selected triangle
+        internal static float[] Color_SelectedTriangle = C2F.C(Colors.LawnGreen);
+
+        // Background color
+        internal static float[] BackgroundColor = C2F.C(Colors.LightGray);
+
+        //----------------------------------------------------------
+        // Point settings
+        internal static float VertexSize = 5.0f;
+        internal static float NodeSize = 5.0f;
+        internal static float PathNodeSize = 5.0f;
         // Lighting settings
         internal static bool EnableLighting = true;
         internal static float[] GridColor = new float[] { 0.663f, 0.663f, 0.663f }; // DarkGray (169,169,169)
@@ -35,12 +56,8 @@
         internal static float LightPostion = 0.0f;
         internal static float Shininess = 32.0f; // Default for shiny surfaces
 
-        // Vertex rigged selected color
-        internal static float[] Color_VertexRiggedSelected = new float[] { 1f, 0.271f, 0f }; // RedOrange (255,69,0)
-
-        // Background color
-        internal static float[] BackgroundColor = new float[] { 0.827f, 0.827f, 0.827f }; // LightGray (211,211,211)
- 
+        
+       
 
 
         // Camera settings
@@ -52,5 +69,19 @@
         internal static bool BackfaceCullingEnabled = true;
         internal static bool BackfaceCullingClockwise = false; // Default is counter-clockwise
     }
+    public static class C2F
+    {
+        public static float[] C(System.Windows.Media.Color c)
+        {
+            return new float[]
+            {
+            c.R / 255f,
+            c.G / 255f,
+            c.B / 255f,
+            c.A / 255f
+            };
+        }
+    }
+
 
 }
