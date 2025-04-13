@@ -16,7 +16,28 @@ namespace Wa3Tuner.Helper_Classes
   
     public static class Renderer
     {
-       
+       public static void RendertestPoints(OpenGL gl)
+        {
+            float nodeSize = 10; // Point size in pixels
+
+            gl.Enable(OpenGL.GL_POINT_SMOOTH); // Enable smoother points (optional)
+            gl.PointSize(nodeSize);
+
+
+
+            gl.Begin(OpenGL.GL_POINTS);
+
+            foreach (xLine line in RayCaster.Lines)
+            {
+                gl.Color(1,1,1);
+
+                gl.Vertex(line.one.X, line.one.Y, line.one.Z);
+            }
+              
+            gl.End();
+
+            gl.Disable(OpenGL.GL_POINT_SMOOTH);
+        }
         public static void RenderSelectedPath(OpenGL gl)
         {
             if (PathManager.Selected != null && PathManager.Selected.Count > 0) // At least 2 nodes needed to form a line

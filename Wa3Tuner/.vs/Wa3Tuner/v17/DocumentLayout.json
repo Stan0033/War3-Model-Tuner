@@ -1,7 +1,28 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\helper classes\\mpqhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\helper classes\\mpqhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\helper classes\\mpqfinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\helper classes\\mpqfinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\helper classes\\render\\raycaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\helper classes\\render\\raycaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 1,
@@ -9,11 +30,75 @@
       "DocumentGroups": [
         {
           "DockedHeight": 435,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MPQFinder.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\MPQFinder.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\Helper Classes\\MPQFinder.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\MPQFinder.cs",
+              "RelativeToolTip": "Wa3Tuner\\Helper Classes\\MPQFinder.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAABYAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-13T12:26:56.166Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MPQHelper.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\MPQHelper.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\Helper Classes\\MPQHelper.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\MPQHelper.cs",
+              "RelativeToolTip": "Wa3Tuner\\Helper Classes\\MPQHelper.cs",
+              "ViewState": "AgIAAIUBAAAAAAAAAAAUwJcBAABZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-13T12:27:21.983Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAIAvAAAAAAAAAAAuwIwvAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-13T11:38:26.601Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-04-13T00:57:20.332Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RayCaster.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\Render\\RayCaster.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\Helper Classes\\Render\\RayCaster.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Helper Classes\\Render\\RayCaster.cs",
+              "RelativeToolTip": "Wa3Tuner\\Helper Classes\\Render\\RayCaster.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAAAEsAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-13T11:32:38.506Z",
+              "EditorCaption": ""
             }
           ]
         },

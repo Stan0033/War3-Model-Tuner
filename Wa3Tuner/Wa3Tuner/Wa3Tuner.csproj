@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>tune.ico</ApplicationIcon>
-    <FileVersion>1.2.5</FileVersion>
-    <AssemblyVersion>1.2.5</AssemblyVersion>
+    <FileVersion>1.2.7</FileVersion>
+    <AssemblyVersion>1.2.7</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="cross.jpg" />

@@ -68,6 +68,7 @@ namespace Wa3Tuner
         public static bool MergeIdenticalVertices = false;
         internal static bool ReducematrixGruops = false;
         internal static bool TimeMiddle = false;
+        internal static bool SplitGeosets = false;
 
         public static void Optimize(CModel model_)
         {
@@ -124,6 +125,7 @@ namespace Wa3Tuner
             if (MergeTAs) MergeTAs_();
             if (MinimizeMatrixGroups) MinimizeMatrixGroups_();
             if (FixNoMatrixGroups) FixNoMatrixGroups_();
+            if (SplitGeosets) SplitGeosets_();
             if (DelUnusedMatrixGroups) { DelUnusedMatrixGroups_(); }
             if (DeleteUnusedBones) { DeleteUnusedBones_(); }
             //HandleMissingKeyframes();
@@ -138,6 +140,65 @@ namespace Wa3Tuner
            
         }
 
+        private static void SplitGeosets_()
+        {
+            foreach (var geoset in Model.Geosets)
+            {
+                if (geoset.Groups.Count > 255)
+                {
+                    CGeoset newGeoset    = new CGeoset(Model);
+                    var half = GetSecondHalf(geoset);
+                    var trangles = geoset.Triangles.ObjectList.ToList();
+                    foreach (var triangle in trangles)
+                    {
+                        var v1 = triangle.Vertex1.Object;
+                        var v2 = triangle.Vertex2.Object;
+                        var v3 = triangle.Vertex3.Object;
+                        var g1 = v1.Group.Object;
+                        var g2 = v2.Group.Object;
+                        var g3 = v3.Group.Object;
+
+                        bool triangleInSecondHalf = half.Contains(g1) && half.Contains(g2) && half.Contains(g3);
+                        if (!triangleInSecondHalf) { continue; }
+                        if (!newGeoset.Vertices.Contains(v1)) newGeoset.Vertices.Add(v1);
+                        if (!newGeoset.Vertices.Contains(v2)) newGeoset.Vertices.Add(v2);
+                        if (!newGeoset.Vertices.Contains(v3)) newGeoset.Vertices.Add(v3);
+
+                        geoset.Vertices.Remove(v1);
+                        geoset.Vertices.Remove(v2);
+                        geoset.Vertices.Remove(v3);
+                        newGeoset.Triangles.Add(triangle);
+                        geoset.Triangles.Remove(triangle);
+                        if (!newGeoset.Groups.Contains(v1.Group.Object)) newGeoset.Groups.Add(v1.Group.Object);
+                        if (!newGeoset.Groups.Contains(v2.Group.Object)) newGeoset.Groups.Add(v2.Group.Object);
+                        if (!newGeoset.Groups.Contains(v3.Group.Object)) newGeoset.Groups.Add(v3.Group.Object);
+
+
+                        if (!geoset.Vertices.Any(v => v.Group.Object == g1))
+                            geoset.Groups.Remove(g1);
+                        if (!geoset.Vertices.Any(v => v.Group.Object == g2))
+                            geoset.Groups.Remove(g2);
+                        if (!geoset.Vertices.Any(v => v.Group.Object == g3))
+                            geoset.Groups.Remove(g3);
+
+
+                        Model.Geosets.Add(newGeoset);
+
+                    }
+                }
+                }
+            }  
+           
+        
+        private static List<CGeosetGroup> GetSecondHalf(CGeoset geoset)
+        {
+            List<CGeosetGroup> g = new List<CGeosetGroup>();
+            for (int i = (geoset.Groups.Count / 2) - 1; i < geoset.Groups.Count - 1; i++)
+            {
+                g.Add(geoset.Groups[i]);
+            }
+            return g;
+        }
         private static void TimeMiddle_()
         {
            foreach (var node in Model.Nodes)

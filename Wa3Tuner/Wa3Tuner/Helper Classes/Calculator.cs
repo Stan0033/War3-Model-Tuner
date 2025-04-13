@@ -318,8 +318,7 @@ namespace Wa3Tuner
         {
             if (vectors == null || vectors.Count == 0)
             {
-                throw new ArgumentException("The list of vectors cannot be null or empty.");
-            }
+                return new CExtent(); }
 
             // Initialize min and max bounds
             CVector3 min = new CVector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
@@ -3875,7 +3874,61 @@ namespace Wa3Tuner
             if (length == 0) return new CVector3(0, 0, 0);
             return new CVector3(v.X / length, v.Y / length, v.Z / length);
         }
+        public static Vector3 CVector2Vector(CVector3 v)
+        {
+            return new Vector3(v.X, v.Y, v.Z);
+        }
+        internal static bool RayInsideGeoset(xLine lne, CGeoset geose)
+        {
+            CExtent extent = Calculator.GetExtent(geose.Vertices.Select(x => x.Position).ToList());
+            Vector3 min = CVector2Vector(extent.Min);
+            Vector3 max = CVector2Vector(extent.Max);
 
+            Vector3 origin = lne.one;
+            Vector3 direction = Vector3.Normalize(lne.two - lne.one);
+
+            return RayIntersectsAABB(origin, direction, min, max);
+        }
+        private static bool RayIntersectsAABB(Vector3 origin, Vector3 direction, Vector3 min, Vector3 max)
+        {
+            float tmin = (min.X - origin.X) / direction.X;
+            float tmax = (max.X - origin.X) / direction.X;
+
+            if (tmin > tmax) (tmin, tmax) = (tmax, tmin);
+
+            float tymin = (min.Y - origin.Y) / direction.Y;
+            float tymax = (max.Y - origin.Y) / direction.Y;
+
+            if (tymin > tymax) (tymin, tymax) = (tymax, tymin);
+
+            if ((tmin > tymax) || (tymin > tmax))
+                return false;
+
+            if (tymin > tmin)
+                tmin = tymin;
+            if (tymax < tmax)
+                tmax = tymax;
+
+            float tzmin = (min.Z - origin.Z) / direction.Z;
+            float tzmax = (max.Z - origin.Z) / direction.Z;
+
+            if (tzmin > tzmax) (tzmin, tzmax) = (tzmax, tzmin);
+
+            if ((tmin > tzmax) || (tzmin > tmax))
+                return false;
+
+            return true;
+        }
+
+        internal static float FlipU(float u)
+        {
+            return 1.0f - u;
+        }
+
+        internal static float FlipV(float v)
+        {
+            return 1.0f - v;
+        }
 
     }
 

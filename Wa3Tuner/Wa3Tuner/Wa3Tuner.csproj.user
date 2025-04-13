@@ -52,6 +52,9 @@
     <Compile Update="Dialogs\ImageViewer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\MiniUV.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\Model Colors Changer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

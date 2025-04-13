@@ -19,13 +19,14 @@ namespace Wa3Tuner
     {
         public List<string> selected = new List<string>();
         public List<int> selectedIndexes = new List<int>();
-        public Multiselector_Window(List<string> items)
+        public Multiselector_Window(List<string> items, string title = "Multiselector")
         {
             InitializeComponent();
             foreach (var item in items)
             {
                 list.Items.Add( new ListBoxItem() { Content = item });
             }
+            Title = title;
         }
         private void sall(object sender, RoutedEventArgs e)
         {

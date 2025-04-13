@@ -61,7 +61,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.5;component/dialogs/multiselector.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.7;component/dialogs/multiselector.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\Multiselector.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

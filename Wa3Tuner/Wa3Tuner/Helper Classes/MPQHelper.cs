@@ -30,10 +30,10 @@ namespace W3_Texture_Finder
         internal static List<string> Listfile_Everything_war3Patch = new List<string>();
         internal static void FillAllArchives()
         {
-            Listfile_Everything_war3 =  LoadArchive(MPQPaths.War3);
-            Listfile_Everything_war3x =  LoadArchive(MPQPaths.War3X);
-            Listfile_Everything_war3xLocal =  LoadArchive(MPQPaths.War3xLocal);
-            Listfile_Everything_war3Patch =  LoadArchive(MPQPaths.War3Patch);
+            Listfile_Everything_war3 = LoadArchive(MPQPaths.War3);
+            Listfile_Everything_war3x = LoadArchive(MPQPaths.War3X);
+            Listfile_Everything_war3xLocal = LoadArchive(MPQPaths.War3xLocal);
+            Listfile_Everything_war3Patch = LoadArchive(MPQPaths.War3Patch);
         }
         internal static void Initialize()
         {
@@ -52,12 +52,13 @@ namespace W3_Texture_Finder
         internal static bool FileExists(string path)
         {
             string searched = path.ToLower().Trim();
-            if (Listfile_All.Any(x=>x.ToLower() == searched)) { return true; }
+            if (Listfile_All.Any(x => x.ToLower() == searched)) { return true; }
             return File.Exists(path);
         }
         internal static bool FileExists(string path, string Archive)
         {
-            if (Path.GetExtension(path.ToLower()) == ".mdx"){
+            if (Path.GetExtension(path.ToLower()) == ".mdx")
+            {
                 return Listfile_Models.Contains(path);
             }
             if (Archive == MPQPaths.War3) { return Listfile_blp_War3.Contains(path, StringComparer.OrdinalIgnoreCase); }
@@ -71,7 +72,7 @@ namespace W3_Texture_Finder
             string archive = string.Empty;
             if (FileExists(targetPath, MPQPaths.War3)) { archive = MPQPaths.War3; }
             else if (FileExists(targetPath, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
-           else  if (FileExists(targetPath, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
+            else if (FileExists(targetPath, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
             else if (FileExists(targetPath, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
             using (MpqArchive mpqArchive = MpqArchive.Open(archive))
             {
@@ -139,25 +140,25 @@ namespace W3_Texture_Finder
         internal static ImageSource GetImageSource(string path)
         {
 
-           
-            
-                
+
+
+
             string archive = string.Empty;
-                if (FileExists(path , MPQPaths.War3)) { archive = MPQPaths.War3; }
-                if (FileExists(path , MPQPaths.War3X)) { archive = MPQPaths.War3X; }
-                if (FileExists(path , MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
-                if (FileExists(path , MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
+            if (FileExists(path, MPQPaths.War3)) { archive = MPQPaths.War3; }
+            if (FileExists(path, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
+            if (FileExists(path, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
+            if (FileExists(path, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
             if (archive.Length == 0) // Could be in local folder
             {
-               string fullPath = Path.Combine(LocalModelFolder, path);
+                string fullPath = Path.Combine(LocalModelFolder, path);
                 if (File.Exists(fullPath))
                 {
-                        using (var fileStream = File.OpenRead(fullPath))
-                        {
-                            var blpFile = new BlpFile(fileStream);
-                            var bitmapSource = blpFile.GetBitmapSource();
-                            return bitmapSource;
-                        }
+                    using (var fileStream = File.OpenRead(fullPath))
+                    {
+                        var blpFile = new BlpFile(fileStream);
+                        var bitmapSource = blpFile.GetBitmapSource();
+                        return bitmapSource;
+                    }
                 }
                 else
                 {
@@ -268,7 +269,7 @@ namespace W3_Texture_Finder
                             bitmap.UnlockBits(data);
                             // Delete the temporary file
                             try { File.Delete(outputPath); }
-                           catch { return bitmap; }
+                            catch { return bitmap; }
                             // Return the Bitmap
                             return bitmap;
                         }
@@ -277,7 +278,7 @@ namespace W3_Texture_Finder
                 else
                 {
                     MessageBox.Show($"Could not find the texture at \"{FullPath}\"");
-                      return GetWhiteBitmap();
+                    return GetWhiteBitmap();
                 }
             }
             else
@@ -334,13 +335,36 @@ namespace W3_Texture_Finder
         }
         private static Bitmap GetWhiteBitmap()
         {
-            return  MPQHelper.getBitmapImage("Textures\\white.blp");
+            return MPQHelper.getBitmapImage("Textures\\white.blp");
+        }
+        private static void LoadPresetListFile(List<string> list_blp)
+        {
+
+            string outputPath = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+            foreach (string item in File.ReadAllLines(outputPath))
+            {
+                if (Path.GetExtension(item) == ".blp")
+                {
+                    list_blp.Add(item);
+                }
+                if (Path.GetExtension(item) == ".mdx")
+                {
+                    if (!Listfile_Models.Contains(item)) Listfile_Models.Add(item);
+                }
+            }
         }
         private static void LoadDataBrowserLists(string Archive, List<string> list_blp)
         {
             string searched = "(listfile)";
+
             using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
             {
+                if (mpqArchive.FileExists(searched) == false)
+                {
+                    MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
+                    LoadPresetListFile(list_blp);
+                    return;
+                }
                 using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
                 {
                     // Read from the stream
@@ -359,18 +383,31 @@ namespace W3_Texture_Finder
                         }
                         if (Path.GetExtension(item) == ".mdx")
                         {
-                            if (!Listfile_Models.Contains(item))  Listfile_Models.Add(item);
+                            if (!Listfile_Models.Contains(item)) Listfile_Models.Add(item);
                         }
+                      //  string v = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+                      //  File.AppendAllLines(v, new List<string> { item });
                     }
+                   
+
                 }
             }
         }
+
+
+
         private static List<string> LoadArchive(string Archive)
         {
             List<string> list = new List<string>();
             string searched = "(listfile)";
             using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
             {
+                if (mpqArchive.FileExists(searched) == false)
+                {
+                    MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
+                    string outputPath = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+                    return File.ReadAllLines(outputPath).ToList();
+                }
                 using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
                 {
                     // Read from the stream
@@ -387,7 +424,7 @@ namespace W3_Texture_Finder
                     }
 
                 }
-                
+
             }
             return list;
         }

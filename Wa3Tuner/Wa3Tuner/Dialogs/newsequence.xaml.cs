@@ -20,6 +20,7 @@ namespace Wa3Tuner
     public partial class newsequence : Window
     {
         CModel model;
+      public  CSequence CreatedSequence;
         public newsequence(CModel model_)
         {
             InitializeComponent();
@@ -96,6 +97,7 @@ namespace Wa3Tuner
                          
                         
                         model.Sequences.Add(_new);
+                        CreatedSequence = _new;
                         DialogResult = true;
                     }
                     else

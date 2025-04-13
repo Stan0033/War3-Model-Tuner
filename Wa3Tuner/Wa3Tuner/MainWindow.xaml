@@ -171,10 +171,16 @@
             </MenuItem>
             <MenuItem  Background="LightGray" Header="Import">
                 <MenuItem Click="ImportAllGeosetsOf" Header="Import all geosets of..." ></MenuItem>
+                <MenuItem Click="ImportSequence" Header="Import sequence from...." ToolTip="Import a sequence from another model with all mehes, visibilities, effects and animations relevant to that particular sequence" ></MenuItem>
                 <MenuItem Click="ImportAllNodesOf" Header="Import all nodes of.."></MenuItem>
                 <MenuItem Click="ImportTextures" Header="Import all textures of..."></MenuItem>
+                <MenuItem Click="ImportTexturesm" Header="Import all materials and textures of..."></MenuItem>
                 <MenuItem Click="ImportSequences" Header="Overwrite the list of sequences with another model's..."></MenuItem>
-                <MenuItem Click="importObj" Header="Batch import OBJ/s as geoset/s"></MenuItem>
+                <MenuItem Click="importObj" Header="Batch import OBJ/s as geoset/s"
+                        
+                          >
+                    
+                </MenuItem>
                 <MenuItem Click="importSTL" Header="Import STL as geoset/s"></MenuItem>
                 <MenuItem Click="import3DS" Visibility="Hidden" Header="Import 3DS as new model"></MenuItem>
             </MenuItem>
@@ -243,7 +249,7 @@
                     -->
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="" Name="DebugInfoCam"  Margin="5,0,0,0" Width="350" />
-                        <TextBlock Text="" Name="CurrentModeInfo"  Margin="5,0,0,0"   />
+                        <TextBlock Text="" Name="ModelInfoLabel"  Margin="5,0,0,0"   />
                     </StackPanel>
                  
                    
@@ -252,12 +258,14 @@
                                             Initialized="InitializeSharpGL"
                                             OpenGLDraw="DrawScene"  />
                     <Canvas Name="Canvas_Grid_Overlay"  Grid.Column="0"   Grid.Row="1"
-                            Background="Transparent"   />
+                            Background="Transparent" 
+                             />
 
 
                     <Canvas Name="Scene_Selection_Overlay"   Background="Transparent"   Grid.Row="1"
                            
                               MouseWheel="Scene_MouseWheelGL"  
+                            
   PreviewMouseMove="Scene_Selection_Overlay_MouseMove" 
   PreviewMouseDown="Scene_MouseDown" 
   PreviewMouseUp="Scene_MouseUp" 
@@ -265,14 +273,49 @@
  
                     <StackPanel Name="GeometryOptionsHolder" Grid.Column="0"
                                 Grid.Row="2"  Orientation="Horizontal"   >
- 
-                        <TextBox Width="60" Name="InputAnimatorX" ToolTip="X" KeyDown="Manual_SetX"/>
-                        <TextBox Width="60" Name="InputAnimatorY" ToolTip="Y" KeyDown="Manual_SetY"/>
-                        <TextBox Width="60" Name="InputAnimatorZ" ToolTip="Z" KeyDown="Manual_SetZ"/>
+
+                        <TextBox Width="60" Name="InputAnimatorX" ToolTip="X" KeyDown="Manual_SetX">
+                            <TextBox.ContextMenu >
+                                <ContextMenu Name="InputMenuX">
+                                    
+                                    <MenuItem Header="Copy" Click="copyField"  Command="Copy"/>
+                                    <MenuItem Header="Paste" Click="pasteField" Command="Paste"/>
+                                    <MenuItem Header="Negate" Click="negateField"/>
+                                    <MenuItem Header="Center" Click="CenterField"/>
+                                   
+                                </ContextMenu>
+                            </TextBox.ContextMenu>
+                        </TextBox>
+                        <TextBox Width="60" Name="InputAnimatorY" ToolTip="Y" KeyDown="Manual_SetY">
+                            <TextBox.ContextMenu >
+                                <ContextMenu Name="InputMenuY">
+
+                                    <MenuItem Header="Copy" Click="copyField"  Command="Copy"/>
+                                    <MenuItem Header="Paste" Click="pasteField" Command="Paste"/>
+                                    <MenuItem Header="Negate" Click="negateField"/>
+                                    <MenuItem Header="Center" Click="CenterField"/>
+                                     
+                                </ContextMenu>
+                            </TextBox.ContextMenu>
+                        </TextBox>
+                        <TextBox Width="60" Name="InputAnimatorZ" ToolTip="Z" KeyDown="Manual_SetZ">
+                            <TextBox.ContextMenu >
+                                <ContextMenu Name="InputMenuZ">
+
+                                    <MenuItem Header="Copy" Click="copyField"  Command="Copy"/>
+                                    <MenuItem Header="Paste" Click="pasteField" Command="Paste"/>
+                                    <MenuItem Header="Negate" Click="negateField"/>
+                                    <MenuItem Header="Center" Click="CenterField"/>
+                                    
+                                </ContextMenu>
+                            </TextBox.ContextMenu>
+                        </TextBox>
+                        <Button   Click="setAll" Width="20" Height="20" VerticalAlignment="Center" Content="A!"   />
                         <Button   Click="copy" Width="20" Height="20" VerticalAlignment="Center"    >
                             <Button.Background>
                                 <ImageBrush ImageSource="/Dialogs/copy.png"/>
                             </Button.Background>
+                            
                         </Button>
                         <Button Name="PasteButton"  Click="paste1" Width="20" Height="20" VerticalAlignment="Center"     >
                             <Button.Background>
@@ -339,6 +382,8 @@
                                     <MenuItem Header="Scale UV - U"  Click="ssetModecaleUVu" />
                                     <MenuItem Header="Scale UV - V"  Click="ssetModecaleUVv" />
                                     <MenuItem Header="Rotate Normals"  Click="seModeRotateNormals" />
+                                    <MenuItem Header="Rotate Each"  Click="seModeRotateEach" />
+                                    <MenuItem Header="Scale Each"  Click="seModeScaleEach" />
                                     
                                 </ContextMenu>
                             </Button.ContextMenu>
@@ -386,6 +431,7 @@
                                             <Button.ContextMenu>
                                                 <ContextMenu>
                                                     <MenuItem Header="Visibilities"   >
+                                                    <MenuItem Header="Report visibilities" Click="ReportGeosetViisibilities" />
                                                     <MenuItem Header="Edit visibilities" Click="EditGeosetViisibilities" />
                                                     <MenuItem Header="set all visibilities in a sequence  ..." Click="editVisallseq" />
                                                     <MenuItem Header="Copy visibilities of sequence to sequences..." Click="copyVis" />
@@ -488,6 +534,7 @@
                                                     <MenuItem Header="Attachment">
                                                         <MenuItem Header="Reattach selected geoset/s to another bone..." Click="reattachToBone" />
                                                         <MenuItem Header="Reattach all geosets to another bone..." Click="reattachallToBone" />
+                                                        <MenuItem Header="To which bones is attachd thi geoset?" Click="GeosetAttachmeentInfo" />
                                                     </MenuItem>
                                                     <MenuItem Header="Create">
                                                         <MenuItem Header="Create Hero team glow (and bone)" Click="CreateHeroGlow" />
@@ -509,6 +556,7 @@
                                                         <MenuItem Header="Fit" Click="fituvgeoet" ToolTip="If the geoset has 2 triangles, their textue coordintes will be fitted onto the texture"/>
                                                     </MenuItem>
                                                     <MenuItem Header="edit UV in UV Mapper" Click="edituv_g"  IsEnabled="False"/>
+                                                    <MenuItem Header="mini UV Mapper" Click="edituv_mini" />
                                                     <MenuItem Header="Animate">
                                                         <MenuItem Header="Shatter" Click="shatterGeoset" IsEnabled="False"/>
                                                     </MenuItem>
@@ -541,7 +589,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                                 <MenuItem Header="equalize the color animation data of all geoset animations" Click="equalizegas_color" />
                                                 <MenuItem Header="Make all geoset animations the same as this" Click="makegassameasga" />
                                                 <MenuItem Header="Reset all geoset animations' alphas to static 1" Click="resetallgas" />
-                                                <MenuItem Header="Create missing" Click="createmissinggas" />
+                                                <MenuItem Header="Create all missing" Click="createmissinggas" />
                                                 <MenuItem Header="Copy" Click="copyga" />
                                                 <MenuItem Header="Paste">
                                                     <MenuItem Click="pastega_a" Header="Alpha"></MenuItem>
@@ -555,12 +603,12 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                     <Button Cursor="Hand"  Width="30" ToolTip="Edit Alphas" Click="ga_editalphas" >A</Button>
                                     <Button Cursor="Hand"  Width="30" ToolTip="Edit Color"  Click="ga_editcolors" >C</Button>
                                 </StackPanel>
-                            </Grid>
+                            </Grid> 
 
                         </TabItem>
-                        <TabItem Header="T" ToolTip="Triangles" Background="LightGray" IsEnabled="False" >
+                        <TabItem Header="T" ToolTip="Triangles" Background="LightGray" IsEnabled="False"   >
                             <StackPanel Background="LightGray">
-
+                                <Button ToolTip="Select vertices of bone..." Click="SelectVAttB">Select vertices attached to bone/s...</Button>
                                 <Button Content="UV Quads...">
                                     <Button.ContextMenu>
                                         <ContextMenu>
@@ -592,12 +640,12 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                 <StackPanel Name="Options_Triangles">
                                     <Button Click="DEleteTriangles" >Delete</Button>
                                     <Button Click="CollapseTriangles" >Collapse</Button>
-                                    <Button Click="detachTriangleInsideGeoset">Detach inside geoset</Button>
-                                    <Button Click="DetachTraingleAsNewGeoset">Detach as new Geoset</Button>
-                                    <Button Click="DiplicateInsideGeoset">Duplicate inside geoset</Button>
-                                    <Button Click="DuplicateAsNewGeoset">Duplicate as new Geoset</Button>
-                                    <Button Click="SubdivideTriangle">Subdivide</Button>
-                                    <Button Click="SimplifyTriangleSelection">Simplify</Button>
+                                    <Button Click="detachTriangleInsideGeoset" PreviewMouseRightButtonDown="DetachTrianglesInsideGeoset2" ToolTip=" selected triangles will no longer share vertices with other triangle. Incresese vertex count ;Right-click to also move the copy up by Z+5">Detach inside geoset</Button>
+                                    <Button Click="DetachTraingleAsNewGeoset" PreviewMouseDown="DetachTraingleAsNewGeosetUp" ToolTip="Transfer the selected triangles to a new geoset">Detach as new Geoset</Button>
+                                    <Button Click="DiplicateInsideGeoset" PreviewMouseRightButtonDown="DupliateTriiangleInsideGeosetUp">Duplicate inside geoset</Button>
+                                    <Button Click="DuplicateAsNewGeoset" ToolTip="Copy the selected triangles as a new geose">Duplicate as new Geoset</Button>
+                                    <Button Click="SubdivideTriangle" ToolTip="Create 3 triangles insie each selected triangle">Subdivide</Button>
+                                    <Button Click="SimplifyTriangleSelection" ToolTip="Reduce selected flat connected surface to the minmum required trianges to form it">Simplify</Button>
                                     <Button ToolTip="Create a copy of a triangle inside a selected triangle, but smaller" Click="InsetTriangles">Inset</Button>
                                     <Button  Click="InsetTrianglesConnected">Inset (connected)</Button>
                                     <Button Click="Bridge2FlatSurfaces">Bridge</Button>
@@ -608,13 +656,14 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                             </StackPanel>
 
                         </TabItem>
-                        <TabItem Header="V" ToolTip="Vertices" Background="LightGray"   IsEnabled="False"  >
+                        <TabItem Header="V" ToolTip="Vertices" Background="LightGray"   IsEnabled="False"        >
                             <StackPanel Background="LightGray">
 
 
                                 <StackPanel Background="LightGray"  >
 
                                     <StackPanel Name="Options_Vertices" Margin="5">
+                                        <Button ToolTip="Select vertices of bone..." Click="SelectVAttB">Select vertices attached to bone/s...</Button>
                                         <Button ToolTip="Turn positiive to negtive or negative to positive of the position" Click="negateVertices">Negate...</Button>
                                         <Button ToolTip="Create a triangle from the 3 selected vertices, if they dont already form one" Click="createTriangleinVertices">Create triangle</Button>
 
@@ -665,6 +714,8 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" >
                                     <TextBlock Text="Geosets" Grid.ColumnSpan="2"  />
                                     <Button Name="ButtonSplitGroups" Click="SplitMatrixGroups" Width="80" Margin="5,0,5,0" Height="18">Split groups</Button>
+                                    <Button Content="..." Click="SelectVAttB" ToolTip="Select vertices of bone..." Width="20"/> 
+
                                 </StackPanel>
                                 <ListBox Name="Listbox_Geosets_Rigging"  SelectionMode="Single" Grid.Row="1" Grid.Column="1" Background="LightGray"  Margin="0,0,0,20" Grid.RowSpan="2" Grid.ColumnSpan="2">
 
@@ -1131,7 +1182,14 @@ Background="LightGray" Grid.ColumnSpan="2"  Grid.RowSpan="1"   >
                                 <MenuItem Header="Mass create sequences..." Click="masscreeatesequences" />
                                 <MenuItem Header="Copy animations" Click="copySeqTr"/>
                                 <MenuItem Header="paste animations" Click="PasteTransformationsOnSequence"/>
-                                <MenuItem Header="Clear">
+                                <MenuItem Header="Clear from this">
+
+                                    <MenuItem Header="Clear translations" Click="clearsequencetranslations_t" />
+                                    <MenuItem Header="Clear scalings" Click="clearsequencescalings_t" />
+                                    <MenuItem Header="Clear rotations" Click="clearsequencerotations_t" />
+                                    <MenuItem Header="Clear all animations" Click="ClearAllAnimationsOfSequence_t" />
+                                </MenuItem>
+                                <MenuItem Header="Clear from all">
 
                                     <MenuItem Header="Clear translations" Click="clearsequencetranslations" />
                                     <MenuItem Header="Clear scalings" Click="clearsequencescalings" />
@@ -1207,6 +1265,7 @@ to the second sequence, sync their times.
                                     <MenuItem Header="Smoke" Click="createsmoke" Background="LightGray"/>
                                     <MenuItem Header="Blast Flare" Click="createblastFlare" Background="LightGray"/>
                                     <MenuItem Header="Fire" Click="createFire" Background="LightGray"/>
+                                    <MenuItem Header="Human Skeleton" Click="createhs" Background="LightGray"/>
 
                                 </MenuItem>
                                 <MenuItem Header="Edit visibilities..."  Click="editNodeVisibilities"/>
@@ -1641,7 +1700,9 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                             <CheckBox Name="Check_ClampUVs">Clamp all uv coordinates</CheckBox>
                             <CheckBox Name="Check_ClampNormals">Clamp invalid normals</CheckBox>
                             <CheckBox Name="Check_Minimiematrixgroups" ToolTip="If two or more matrix groups contain the same nodes regardless of order, they will be merged">Minimize repeating matrix groups</CheckBox>
-                            <!-- <CheckBox Name="Check_ReducematrixGruops" ToolTip="if a matrix group has two or more of the same node, remove excess ">Deduplicate matrix group nodes</CheckBox>
+                            <CheckBox Margin="20,0,0,0" Name="Check_Splitgeosets" ToolTip="The game ignores more than 255 matrix groups which causes bad animation or lack of">Split geosets that cannot have their matrix groups reduced below 255</CheckBox>
+
+                             <!-- <CheckBox Name="Check_ReducematrixGruops" ToolTip="if a matrix group has two or more of the same node, remove excess ">Deduplicate matrix group nodes</CheckBox>
                  -->
                             <CheckBox Name="Check_CalculateExtents">Recalculate extents</CheckBox>
 
