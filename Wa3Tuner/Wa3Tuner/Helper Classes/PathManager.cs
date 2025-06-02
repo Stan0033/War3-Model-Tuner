@@ -41,8 +41,8 @@ namespace Wa3Tuner.Helper_Classes
 
 
         public static List<cPath> Paths = new List<cPath>();
-        internal static cPath Selected;
-        internal static PathNode SelectedNode;
+        internal static cPath? Selected;
+        
 
         public static void AnimateAbsolute(INode Node, int From, int To, cPath WhichPath)
         {
@@ -161,7 +161,8 @@ namespace Wa3Tuner.Helper_Classes
             {
 
 
-                string filename = FileSeeker.OpenPathFile();
+                string? filename = FileSeeker.OpenPathFile();
+                if (filename == null) return false;
                 List<string> lines = File.ReadAllLines(filename).ToList();
                 if (lines.Count == 0) return false;
                 cPath path = new cPath( System.IO.Path.GetFileNameWithoutExtension(filename));
@@ -187,7 +188,7 @@ namespace Wa3Tuner.Helper_Classes
                 return true;
             }
             catch { return false; }
-            return true;
+            
         }
 
         internal static void AnimateRelative(INode Node, int From, int To, cPath WhichPath)

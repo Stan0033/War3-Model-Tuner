@@ -124,6 +124,7 @@
                             <MenuItem     Header="remove repeating times - first - in sequence..." Click="RemoveRepTimes_First_inSequence"/>
                             <MenuItem     Header="remove repeating times - last - in sequence..." Click="RemoveRepTimes_Last_inSequence"/>
                         </MenuItem>
+                        <MenuItem Header="Delete all" Click="delall"/>
                         <MenuItem Header="Refresh keyframes list" Click="Refr"/>
 
                     </ContextMenu>

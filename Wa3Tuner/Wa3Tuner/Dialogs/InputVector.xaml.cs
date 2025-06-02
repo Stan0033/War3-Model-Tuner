@@ -25,7 +25,7 @@ namespace Wa3Tuner
     {
         AllowedValue allowedValue;
         public float X, Y, Z = 0;
-        private CVector3 pivotPoint;
+        
         public InputVector(AllowedValue allowed, string title = "Vector")
         {
             InitializeComponent();
@@ -44,15 +44,15 @@ namespace Wa3Tuner
             Title = title;
             allowedValue = allowed;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null,null);
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object? sender, RoutedEventArgs? e)
         {
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             bool parsed1 = float.TryParse(x.Text, out float val1);
             bool parsed2 = float.TryParse(y.Text, out float val2);

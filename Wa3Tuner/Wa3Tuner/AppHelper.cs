@@ -7,6 +7,7 @@ namespace W3_Texture_Finder
     internal static class AppHelper
     {
        public static string Local = AppDomain.CurrentDomain.BaseDirectory;
+        public static string IconFolder = System.IO.Path.Combine(Local, "Icons");
         internal static string TemporaryBLPLocation = Path.Combine(Local, "Temp.blp");
         internal static string TemporaryModelLocation = Path.Combine(Local, "Temp.mdx");
         internal static string Name = "War3 Model Tuner";

@@ -39,7 +39,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void import(object sender, RoutedEventArgs e)
+        private void import(object? sender, RoutedEventArgs? e)
         {
             List<string> files = GetFiles();
 
@@ -59,13 +59,15 @@ namespace Wa3Tuner.Dialogs
             }
             if (Option_4.IsChecked == true && MainList.SelectedItem != null)
             {
-                int id = int.Parse((MainList.SelectedItem as ListBoxItem).ToString());
+                string? s = Extractor.GetString(MainList.SelectedItem);
+                if (s == null) { throw new Exception("null string"); }
+                int id = int.Parse(s);
                 JoinedGeoset = model.Geosets.First(x=>x.ObjectId == id);
             }
             foreach (string file in files)
             {
                 // get the file as cModel
-                CModel obj = ConvertObj(file);
+                CModel? obj = ConvertObj(file);
 
                 if (obj == null) continue;
                 if (Option_1.IsChecked == true) // all to 1
@@ -200,7 +202,7 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private CModel ConvertObj(string file)
+        private CModel? ConvertObj(string file)
         {
             if (ObjValidator.Validate(file))
             {
@@ -226,10 +228,10 @@ namespace Wa3Tuner.Dialogs
             Multiselect = true
         };
 
-        return openFileDialog.ShowDialog() == true ? new List<string>(openFileDialog.FileNames) : new List<string>();
+        return openFileDialog.ShowDialog() == true ? new(openFileDialog.FileNames) : new();
     }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             

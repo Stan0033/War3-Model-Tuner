@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using W3_Texture_Finder;
+using Wa3Tuner.Helper_Classes;
 using Brushes = System.Windows.Media.Brushes;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
@@ -38,18 +39,19 @@ namespace Wa3Tuner.Dialogs
         UVLockType LockType = UVLockType.None;
         Vector2 CopiedUV = new Vector2();
         private int CurrentGridSize = 0;
-        CGeoset CurrentlySelectedGeoset;
-        CModel Model;
+        CGeoset? CurrentlySelectedGeoset;
+        CModel? Model;
         private string TeamColor = "ReplaceableTextures\\TeamColor\\TeamColor00.blp";
         private string TeamGlow = "ReplaceableTextures\\TeamGlow\\TeamGlow00.blp";
         private string White = "Textures\\white.blp";
         private bool Pause;
         double CurrentTextureHeight = 0;
         double CurrentTextureWidth = 0;
-
+       
         public UVMapper()
         {
             InitializeComponent();
+            
         }
         public void SetData(CModel model, int geoset)
         {
@@ -82,14 +84,14 @@ namespace Wa3Tuner.Dialogs
             RefreshUVMap() ;
             // unfinished
         }
-        private void list_triangles_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void list_triangles_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
             if (Pause) return;
             RefreshUVMap();
         }
         private void DrawTiledTextureForUVMApper(int whichGeoset, int whichTexture)
         {
-          
+          if (Model==null) return;
             CurrentlySelectedGeoset = Model.Geosets[whichGeoset];
             var material = CurrentlySelectedGeoset.Material.Object;
             int position = 0; // the default layer is 0
@@ -100,8 +102,9 @@ namespace Wa3Tuner.Dialogs
             if (position <0) { throw new Exception($"Invalid index {position} inside layers"); }
             if (material.Layers == null) { throw new Exception("Null layers container"); }
             var texture = material.Layers[position].Texture.Object;
-            ImageSource image;
             if (texture == null) { throw new Exception("Null texture"); }
+            ImageSource? image;
+           
             int repalceableID = texture.ReplaceableId;
             if (repalceableID == 0)
             {
@@ -129,6 +132,8 @@ namespace Wa3Tuner.Dialogs
             {
                 image = MPQHelper.GetImageSource(White);
             }
+           
+            if (image == null) { throw new Exception("Null image");  }
             CurrentTextureHeight = image.Height;
             CurrentTextureWidth = image.Width;
             DrawImageInCanvas(image, Canvas_UV);
@@ -170,7 +175,7 @@ namespace Wa3Tuner.Dialogs
             Canvas_Selection.Height = totalHeight;
         }
 
-        private void sall(object sender, RoutedEventArgs e)
+        private void sall(object? sender, RoutedEventArgs? e)
         {
             Pause = true;
             foreach (var item in list_triangles.Items)
@@ -182,7 +187,7 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private void snone(object sender, RoutedEventArgs e)
+        private void snone(object? sender, RoutedEventArgs? e)
         {
             Pause = true;
             list_triangles.SelectedItems.Clear();
@@ -190,7 +195,7 @@ namespace Wa3Tuner.Dialogs
             list_triangles_SelectionChanged(null, null);
         }
 
-        private void sin(object sender, RoutedEventArgs e)
+        private void sin(object? sender, RoutedEventArgs? e)
         {
             Pause = true;
             foreach (var item in list_triangles.Items)
@@ -209,7 +214,7 @@ namespace Wa3Tuner.Dialogs
             list_triangles_SelectionChanged(null, null);
         }
 
-        private void setmode_move(object sender, RoutedEventArgs e)
+        private void setmode_move(object? sender, RoutedEventArgs? e)
         {
             Mode = UVEditMode.Move;
             buttonMove.BorderBrush = Brushes.Green;
@@ -219,7 +224,7 @@ namespace Wa3Tuner.Dialogs
             buttonRotate.BorderBrush = Brushes.Gray;
         }
 
-        private void setmode_rotate(object sender, RoutedEventArgs e)
+        private void setmode_rotate(object? sender, RoutedEventArgs? e)
         {
             Mode = UVEditMode.Rotate;
             buttonMove.BorderBrush = Brushes.Gray;
@@ -230,7 +235,7 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private void setmode_scale(object sender, RoutedEventArgs e)
+        private void setmode_scale(object? sender, RoutedEventArgs? e)
         {
             Mode = UVEditMode.Scale;
             buttonMove.BorderBrush = Brushes.Gray;
@@ -241,18 +246,18 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             Hide();
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) Hide();
         }
 
-        private void inputGrid_TextChanged(object sender, TextChangedEventArgs e)
+        private void inputGrid_TextChanged(object? sender, TextChangedEventArgs e)
         {
             bool p = int.TryParse(inputGrid.Text, out int v);
             if (!p) return;
@@ -300,19 +305,19 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void lockunlockU(object sender, RoutedEventArgs e)
+        private void lockunlockU(object? sender, RoutedEventArgs? e)
         {
             if (LockType == UVLockType.None) { LockType = UVLockType.U; buttonLockU.BorderBrush = Brushes.Green; }
             else if (LockType == UVLockType.U) { LockType = UVLockType.None; buttonLockU.BorderBrush = Brushes.Gray; }
         }
 
-        private void lockunlockV(object sender, RoutedEventArgs e)
+        private void lockunlockV(object? sender, RoutedEventArgs? e)
         {
             if (LockType == UVLockType.None) { LockType = UVLockType.V; buttonLockV.BorderBrush = Brushes.Green; }
             else if (LockType == UVLockType.V){ LockType = UVLockType.None; buttonLockV.BorderBrush = Brushes.Gray;}
         }
 
-        private void copy(object sender, RoutedEventArgs e)
+        private void copy(object? sender, RoutedEventArgs? e)
         {
             bool i = float.TryParse(inputU.Text, out float u);
             bool a = float.TryParse(inputU.Text, out float v);
@@ -326,9 +331,10 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void FillTrianglesOfGeoset(object sender, SelectionChangedEventArgs e)
+        private void FillTrianglesOfGeoset(object? sender, SelectionChangedEventArgs e)
         {
             if (Pause) return;
+            if (Model == null) return;
             if (list_geosets.SelectedItem != null)
             {
                 int index = list_geosets.SelectedIndex;
@@ -373,14 +379,15 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void ComboTexture_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ComboTexture_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {if (Pause) return;
            // if (ComboTexture.SelectedIndex == -1) return;
             DrawTiledTextureForUVMApper(list_geosets.SelectedIndex, ComboTexture.SelectedIndex);
         }
 
-        private void resetto0(object sender, RoutedEventArgs e)
+        private void resetto0(object? sender, RoutedEventArgs? e)
         {
+            if (Model==null) return;
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
                 var g = Model.Geosets[list_geosets.SelectedIndex];
@@ -409,6 +416,7 @@ namespace Wa3Tuner.Dialogs
 
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
+                if (Model==null) return;
                 var geoset = Model.Geosets[list_geosets.SelectedIndex];
                 List<CGeosetTriangle> selected = new();
                 foreach (var item in list_triangles.SelectedItems)
@@ -490,10 +498,11 @@ namespace Wa3Tuner.Dialogs
         }
 
 
-        private void negateus(object sender, RoutedEventArgs e)
+        private void negateus(object? sender, RoutedEventArgs? e)
         {
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
+                if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
 
                 List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -515,8 +524,9 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void mirrorvs(object sender, RoutedEventArgs e)
+        private void mirrorvs(object? sender, RoutedEventArgs? e)
         {
+            if (Model == null) return;
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
                 var g = Model.Geosets[list_geosets.SelectedIndex];
@@ -540,9 +550,9 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void swapuvs(object sender, RoutedEventArgs e)
+        private void swapuvs(object? sender, RoutedEventArgs? e)
         {
-
+            if (Model == null) return;
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
                 var g = Model.Geosets[list_geosets.SelectedIndex];
@@ -567,7 +577,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void paste1(object sender, RoutedEventArgs e)
+        private void paste1(object? sender, RoutedEventArgs? e)
         {
             var vertices = GetSelectedVertcesUV();
             if (vertices.Count == 1)
@@ -586,10 +596,10 @@ namespace Wa3Tuner.Dialogs
         }
     
 
-        private void flattenU(object sender, RoutedEventArgs e)
+        private void flattenU(object? sender, RoutedEventArgs? e)
         {
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
-            {
+            {if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
 
                 List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -610,11 +620,12 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void flattenV(object sender, RoutedEventArgs e)
+        private void flattenV(object? sender, RoutedEventArgs? e)
         {
             
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count >0)
             {
+                if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
                 
                 List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -635,10 +646,11 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void clamp(object sender, RoutedEventArgs e)
+        private void clamp(object? sender, RoutedEventArgs? e)
         {
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
+                if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
 
                 List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -652,10 +664,11 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private void swaptwo(object sender, RoutedEventArgs e)
+        private void swaptwo(object? sender, RoutedEventArgs? e)
         {
             if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
             {
+                if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
 
                 List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -668,7 +681,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void project(object sender, RoutedEventArgs e)
+        private void project(object? sender, RoutedEventArgs? e)
         {
             // unfinished
         }
@@ -694,7 +707,7 @@ namespace Wa3Tuner.Dialogs
                 return 0;
             }
         }
-        private void inputU_KeyDown(object sender, KeyEventArgs e)
+        private void inputU_KeyDown(object? sender, KeyEventArgs e)
         {
             List<CGeosetVertex> list = GetSelectedVertcesUV();
             float val = GetU();
@@ -719,9 +732,10 @@ namespace Wa3Tuner.Dialogs
             RefreshUVMap();
         }
 
-
+       
         private List<CGeosetVertex> GetSelectedVertcesUV()
         {
+            if (Model == null) return new List<CGeosetVertex> { };
             var list = new   List<CGeosetVertex>();
             if (list_geosets.SelectedItem == null) return new List<CGeosetVertex>();
             if (list_triangles.SelectedItems.Count == 0) return new List<CGeosetVertex>();
@@ -735,7 +749,7 @@ namespace Wa3Tuner.Dialogs
             
         }
 
-        private void buttonLockU_KeyDown(object sender, KeyEventArgs e)
+        private void buttonLockU_KeyDown(object? sender, KeyEventArgs e)
         {
             // incorrect - based on centroid
             bool b = float.TryParse(inputV.Text, out float f);
@@ -745,6 +759,7 @@ namespace Wa3Tuner.Dialogs
                 {
                     if (list_geosets.SelectedItem != null && list_triangles.SelectedItems.Count > 0)
                     {
+                        if (Model == null) return;
                         var g = Model.Geosets[list_geosets.SelectedIndex];
 
                         List<CGeosetVertex> selected = new List<CGeosetVertex>();
@@ -763,23 +778,24 @@ namespace Wa3Tuner.Dialogs
             RefreshUVMap();
         }
 
-        private void Canvas_Selection_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Canvas_Selection_MouseUp(object? sender, MouseButtonEventArgs e)
         {
+            if (SelectionRect==null) return;
             // On mouse release, finalize the selection
             SelectVericesBasedOnSelection(SelectionRect);
             Canvas_Selection.Children.Remove(SelectionRect);  // Remove the selection rectangle from the canvas
         }
 
-        private Rectangle SelectionRect; // Use Rectangle here
+        private Rectangle? SelectionRect; // Use Rectangle here
 
         private Point startPoint;
 
-        private void Canvas_Selection_MouseDown(object sender, MouseButtonEventArgs e)
+        private void Canvas_Selection_MouseDown(object? sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && e.RightButton == MouseButtonState.Pressed == false)
             {
 
-                Transforming = false;
+               
                 // When mouse button is pressed, start drawing the selection rectangle
                 startPoint = e.GetPosition(Canvas_Selection);
                 SelectionRect = new Rectangle
@@ -796,12 +812,12 @@ namespace Wa3Tuner.Dialogs
             }
             else if (e.RightButton == MouseButtonState.Pressed && e.LeftButton == MouseButtonState.Pressed == false)
             {
-                Transforming = true;
+              
 
             }
                 
         }
-        bool Transforming = false;
+     
         private double LastX = 0;
         private double LastY = 0;
         private double DiffX = 0;
@@ -814,7 +830,7 @@ namespace Wa3Tuner.Dialogs
             if (f  > 10) return 10;
             return f;
         }
-        private void Canvas_Selection_MouseMove(object sender, MouseEventArgs e)
+        private void Canvas_Selection_MouseMove(object? sender, MouseEventArgs e)
         {
             var pos = e.GetPosition(Canvas_Selection);
             DiffX = pos.X  - LastX;
@@ -893,7 +909,7 @@ namespace Wa3Tuner.Dialogs
         private void SelectVericesBasedOnSelection(Rectangle selectionRect)
         {
             if (list_geosets.SelectedItem == null) return;
-
+            if (Model == null) return;
             var geoset = Model.Geosets[list_geosets.SelectedIndex];
 
             for (int i = 0; i < geoset.Vertices.Count; i++)
@@ -920,7 +936,7 @@ namespace Wa3Tuner.Dialogs
 
 
 
-        private void setmode_scaleX(object sender, RoutedEventArgs e)
+        private void setmode_scaleX(object? sender, RoutedEventArgs? e)
         {
             Mode = UVEditMode.ScaleX;
             buttonMove.BorderBrush = Brushes.Gray;
@@ -930,7 +946,7 @@ namespace Wa3Tuner.Dialogs
             buttonRotate.BorderBrush = Brushes.Gray;
         }
 
-        private void setmode_scaleY(object sender, RoutedEventArgs e)
+        private void setmode_scaleY(object? sender, RoutedEventArgs? e)
         {
             Mode = UVEditMode.ScaleY;
             buttonMove.BorderBrush = Brushes.Gray;  
@@ -940,12 +956,12 @@ namespace Wa3Tuner.Dialogs
             buttonRotate.BorderBrush = Brushes.Gray;
         }
 
-        private void TextBlock_KeyDown(object sender, KeyEventArgs e)
+        private void TextBlock_KeyDown(object? sender, KeyEventArgs e)
         {
 
         }
 
-        private void inputV_KeyDown(object sender, KeyEventArgs e)
+        private void inputV_KeyDown(object? sender, KeyEventArgs e)
         {
             List<CGeosetVertex> list = GetSelectedVertcesUV();
             float val = GetV();
@@ -970,10 +986,11 @@ namespace Wa3Tuner.Dialogs
             RefreshUVMap();
         }
 
-        private void SetToGeoset_s(object sender, RoutedEventArgs e)
+        private void SetToGeoset_s(object? sender, RoutedEventArgs? e)
         {
             if (list_geosets.SelectedItem != null)
             {
+                if (Model == null) return;
                 var g = Model.Geosets[list_geosets.SelectedIndex];
                 var mat = g.Material.Object;
                 var t = mat.Layers[0].Texture.Object;

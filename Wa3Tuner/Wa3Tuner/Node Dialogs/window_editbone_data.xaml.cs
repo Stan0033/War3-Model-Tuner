@@ -56,7 +56,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectedG(object sender, SelectionChangedEventArgs e)
+        private void SelectedG(object? sender, SelectionChangedEventArgs e)
         {
             if (List_g.SelectedItem != null)
             {
@@ -65,7 +65,7 @@ namespace Wa3Tuner
                 Bone.Geoset.Attach(Model.Geosets[index+1]);
             }
         }
-        private void SelectedGA(object sender, SelectionChangedEventArgs e)
+        private void SelectedGA(object? sender, SelectionChangedEventArgs e)
         {
             if (List_ga.SelectedItem != null)
             {
@@ -74,7 +74,7 @@ namespace Wa3Tuner
                 Bone.GeosetAnimation.Attach(Model.GeosetAnimations[index+1]);
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }

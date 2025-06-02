@@ -22,7 +22,7 @@ namespace Wa3Tuner
     {
         CModel Model;
         CParticleEmitter2 Emitter;
-        bool Initialized = false;
+        bool InitializedW = false;
         public edit_emitter2(CParticleEmitter2 emitter, CModel model)
         {
             InitializeComponent();
@@ -30,7 +30,7 @@ namespace Wa3Tuner
             Emitter = emitter;
             Model = model;
             Fill();
-            Initialized = true;
+            InitializedW = true;
         }
         void Fill()
         {
@@ -80,9 +80,9 @@ namespace Wa3Tuner
             ButtonGravity.Content = Emitter.Gravity.Static ?
           $"Gravity: {Emitter.Gravity.GetValue()}" :
           $"Gravity: ({Emitter.Gravity.Count})";
-            ButtonColor1.Background = Calculator.War3ColorToBrush( Emitter.Segment1.Color);
-             ButtonColor2.Background = Calculator.War3ColorToBrush( Emitter.Segment2.Color);
-            ButtonColor3.Background = Calculator.War3ColorToBrush( Emitter.Segment3.Color);
+            ButtonColor1.Background = Calculator.War3ColorToBrush2( Emitter.Segment1.Color);
+             ButtonColor2.Background = Calculator.War3ColorToBrush2( Emitter.Segment2.Color);
+            ButtonColor3.Background = Calculator.War3ColorToBrush2( Emitter.Segment3.Color);
             //----------------------------------------------------------------
             InputHeadStart.Text = Emitter.HeadLife.Start.ToString();
             InputHeadEnd.Text = Emitter.HeadLife.End.ToString();
@@ -114,102 +114,102 @@ namespace Wa3Tuner
             InputScaling2.Text = (Emitter.Segment2.Scaling ).ToString();
             InputScaling3.Text = (Emitter.Segment3.Scaling ).ToString();
         }
-        private object GetVisibility(float v)
+        private static object GetVisibility(float v)
         {
             if (v > 0) return "Visible";
             return "Invisible";
         }
-        private void EditVisibility(object sender, RoutedEventArgs e)
+        private void EditVisibility(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Visibility, true, TransformationType.Visibility)
                ;editor.ShowDialog();
             Fill();
         }
-        private void EditEmissionRate(object sender, RoutedEventArgs e)
+        private void EditEmissionRate(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.EmissionRate, true, TransformationType.Float)
              ; editor.ShowDialog();
             Fill();
         }
-        private void EditSpeed(object sender, RoutedEventArgs e)
+        private void EditSpeed(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Speed, 
                 true, TransformationType.Float)
           ; editor.ShowDialog();
             Fill();
         }
-        private void EditVariation(object sender, RoutedEventArgs e)
+        private void EditVariation(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Variation,
                 true, TransformationType.Float)
           ; editor.ShowDialog();
             Fill();
         }
-        private void EditLength(object sender, RoutedEventArgs e)
+        private void EditLength(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Length,
                true, TransformationType.Float)
          ; editor.ShowDialog();
             Fill();
         }
-        private void EditWidth(object sender, RoutedEventArgs e)
+        private void EditWidth(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Width,
                true, TransformationType.Float)
          ; editor.ShowDialog();
             Fill();
         }
-        private void EditLatitude(object sender, RoutedEventArgs e)
+        private void EditLatitude(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             transformation_editor editor = new transformation_editor(Model, Emitter.Latitude,
                true, TransformationType.Float)
          ; editor.ShowDialog();
             Fill();
         }
-        private void Checked_Unshaded(object sender, RoutedEventArgs e)
+        private void Checked_Unshaded(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Unshaded = Check_Unshaded.IsChecked == true;
         }
-        private void Checked_Unfogged(object sender, RoutedEventArgs e)
+        private void Checked_Unfogged(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Unfogged = Check_Unfogged.IsChecked == true;
         }
-        private void Checked_alphakey(object sender, RoutedEventArgs e)
+        private void Checked_alphakey(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.FilterMode = EParticleEmitter2FilterMode.AlphaKey;
         }
-        private void Checked_LineEmitter(object sender, RoutedEventArgs e)
+        private void Checked_LineEmitter(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.LineEmitter = Check_LineEmitter.IsChecked == true;
         }
-        private void SelectedFilterMode(object sender, SelectionChangedEventArgs e)
+        private void SelectedFilterMode(object? sender, SelectionChangedEventArgs e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.FilterMode = (EParticleEmitter2FilterMode)ComboFilterMode.SelectedIndex;
         }
-        private void Checked_Sort(object sender, RoutedEventArgs e)
+        private void Checked_Sort(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.SortPrimitivesFarZ = Check_Sort.IsChecked == true;
         }
-        private void Checked_ModelSpace(object sender, RoutedEventArgs e)
+        private void Checked_ModelSpace(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.ModelSpace = Check_ModelSpace.IsChecked == true;
         }
-        private void Checked_XY(object sender, RoutedEventArgs e)
+        private void Checked_XY(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.XYQuad = Check_XY.IsChecked == true;    
         }
-        private void Checked_Squirt(object sender, RoutedEventArgs e)
+        private void Checked_Squirt(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Squirt = Check_Squirt.IsChecked == true;
             if (Emitter.Squirt)
             {
@@ -220,7 +220,7 @@ namespace Wa3Tuner
                $"Emission Rate: {Emitter.EmissionRate.GetValue()}" :
                $"Emission Rate: ({Emitter.EmissionRate.Count})";
         }
-        private void Checked_Head(object sender, RoutedEventArgs e)
+        private void Checked_Head(object? sender, RoutedEventArgs? e)
         {
             Emitter.Head = Check_Head.IsChecked == true;
             InputHeadStart.IsEnabled = Check_Head.IsChecked == true;
@@ -230,7 +230,7 @@ namespace Wa3Tuner
             InputHeadEndDecay.IsEnabled = Check_Head.IsChecked == true;
             InputHeadRepeatDecay.IsEnabled = Check_Head.IsChecked == true;
         }
-        private void Checked_Tail(object sender, RoutedEventArgs e)
+        private void Checked_Tail(object? sender, RoutedEventArgs? e)
         {
             Emitter.Tail = Check_Tail.IsChecked == true;
             InputTailDecayStart.IsEnabled = Check_Tail.IsChecked == true;
@@ -241,15 +241,15 @@ namespace Wa3Tuner
             InputTailLifespanRepeat.IsEnabled = Check_Tail.IsChecked == true;
             InputTailLength.IsEnabled = Check_Tail.IsChecked == true;
         }
-        private void SelectedTexture(object sender, SelectionChangedEventArgs e)
+        private void SelectedTexture(object? sender, SelectionChangedEventArgs e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             if (ComboTexture.SelectedItem != null)
             {
                 Emitter.Texture.Attach(Model.Textures[ComboTexture.SelectedIndex]);
             }
         }
-        private int GetInt(TextBox t)
+        private static int GetInt(TextBox t)
         {
             string text = t.Text.Trim();
             if (text.Length > 0)
@@ -259,7 +259,7 @@ namespace Wa3Tuner
             }
             return 0;
         }
-        private float GetFloat(TextBox t)
+        private static float GetFloat(TextBox t)
         {
             string text = t.Text.Trim();
             if (text.Length > 0)
@@ -269,34 +269,34 @@ namespace Wa3Tuner
             }
             return 0;
         }
-        private void SetRows(object sender, TextChangedEventArgs e)
+        private void SetRows(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Rows = GetInt(InputRows);
         }
-        private void SetColumns(object sender, TextChangedEventArgs e)
+        private void SetColumns(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Columns = GetInt(InputColumns);
         }
-        private void SetLifespan(object sender, TextChangedEventArgs e)
+        private void SetLifespan(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.LifeSpan = GetFloat(InputLifespan);
         }
-        private void SetTailLength(object sender, TextChangedEventArgs e)
+        private void SetTailLength(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.TailLength = GetFloat(InputTailLength);
         }
-        private void SetPriorityPlane(object sender, TextChangedEventArgs e)
+        private void SetPriorityPlane(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.PriorityPlane = GetInt(InputPriorityPlane);
         }
-        private void SetTime(object sender, TextChangedEventArgs e)
+        private void SetTime(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.Time = GetFloat(InputTime);
         }
         internal static int PercentageToByte(int percentage)
@@ -306,103 +306,106 @@ namespace Wa3Tuner
             return (int)Math.Round(percentage * (255.0 / 100.0));
         }
 
-        private float GetPercentage255(TextBox inputAlpha1)
+        private static float GetPercentage255(TextBox inputAlpha1)
         {
            int value = GetInt(inputAlpha1);
             return PercentageToByte(value);
         }
-        private CVector3 GetColor(Button buttonColor1)
+        private static CVector3 GetColor(Button buttonColor1)
         {
            int[] values= Calculator.GetColor(buttonColor1);
-            return new CVector3(values[2]/ 255, values[1] / 255, values[0] / 255);
+            return new CVector3(values[0]/ 255f, values[1] / 255f, values[1] / 255f);
         }
-        private void SetSegment1(object sender, TextChangedEventArgs e)
+        private void SetSegment1(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             CVector3 color = GetColor(ButtonColor1);
             float alpha = GetPercentage255(InputAlpha1); // from percentage
             float scaling = GetFloat(InputScaling1)  ;
             Emitter.Segment1 = new CSegment(color, alpha, scaling);
+          //  MessageBox.Show($"{Emitter.Segment1.Color.X} {Emitter.Segment1.Color.Y} {Emitter.Segment1.Color.Z}");
+
         }
-        private void SetSegment2(object sender, TextChangedEventArgs e)
+        private void SetSegment2(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             CVector3 color = GetColor(ButtonColor2);
             float alpha = GetPercentage255(InputAlpha2);
             float scaling = GetFloat(InputScaling2) ;
             Emitter.Segment2 = new CSegment(color, alpha, scaling);
         }
-        private void SetSegment3(object sender, TextChangedEventArgs e)
+        private void SetSegment3(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             CVector3 color = GetColor(ButtonColor3);
             float alpha = GetPercentage255(InputAlpha3);
             float scaling = GetFloat(InputScaling3);
             Emitter.Segment3 = new CSegment(color, alpha, scaling);
         }
-        private void SetColor1(object sender, RoutedEventArgs e)
+        private void SetColor1(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             SetColor(sender as Button);
             SetSegment1(null,null);
         }
-        private void SetColor(Button? button)
+        private static void SetColor(Button? button)
         {
-
+            if (button == null) { return; }
             //pik color
             System.Windows.Media.Brush newColor = ColorPickerHandler.Pick(button.Background);
             // set to button
                 button.Background = newColor;
             
         }
-        private void SetColor2(object sender, RoutedEventArgs e)
+        private void SetColor2(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             SetColor(sender as Button);
             SetSegment2(null,null);
         }
-        private void SetColor3(object sender, RoutedEventArgs e)
+        private void SetColor3(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             SetColor(sender as Button);
             SetSegment3(null,null);
         }
-        private void SetHeadLife(object sender, TextChangedEventArgs e)
+        private void SetHeadLife(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.HeadLife =
                 new CInterval(
                 GetInt( InputHeadStart),
                 GetInt(InputHeadEnd),
                 GetInt(InputHeadRepeat));
          }
-        private void SetHedDecay(object sender, TextChangedEventArgs e)
+        private void SetHedDecay(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.HeadDecay = new CInterval(GetInt(InputHeadStartDecay), GetInt(InputHeadEndDecay), GetInt(InputHeadRepeatDecay));
         }
-        private void SetTailDecay(object sender, TextChangedEventArgs e)
+        private void SetTailDecay(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.TailDecay = new CInterval(GetInt(InputTailDecayStart), GetInt(InputTailDecayEnd), GetInt(InputTailDecayRepeat));
         }
-        private void SetTailLife(object sender, TextChangedEventArgs e)
+        private void SetTailLife(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
+            if (!InitializedW) { return; }
             Emitter.TailLife = new CInterval(GetInt(InputTailLifespanStart), GetInt(InputTailLifespanEnd), GetInt(InputTailLifespanRepeat));
         }
-        private void SetRepalceableID(object sender, TextChangedEventArgs e)
+        private void SetRepalceableID(object? sender, TextChangedEventArgs? e)
         {
-            if (!Initialized) { return; }
-            Emitter.ReplaceableId = GetInt(InputReplaceableID);
+            if (!InitializedW) { return; }
+            int rid = GetInt(InputReplaceableID);
+            Emitter.ReplaceableId = rid < 0 ? 0 : rid;
         }
-        private void EditGravity(object sender, RoutedEventArgs e)
+        private void EditGravity(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Gravity, true, TransformationType.Float)
              ; editor.ShowDialog();
             Fill();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

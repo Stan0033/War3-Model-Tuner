@@ -19,8 +19,8 @@ namespace Wa3Tuner
     /// </summary>
     public partial class newsequence : Window
     {
-        CModel model;
-      public  CSequence CreatedSequence;
+        CModel? model;
+      public  CSequence? CreatedSequence;
         public newsequence(CModel model_)
         {
             InitializeComponent();
@@ -28,6 +28,7 @@ namespace Wa3Tuner
         }
         private bool SequenceValid(string name, int from, int to, bool duration = false)
         {
+            if (   model == null ) {return false;}  
             if (name.Trim().Length == 0) { return false; }
             if (char.IsLetter(name[0]) == false) { return false; }
             foreach (CSequence sequence in model.Sequences)
@@ -57,7 +58,7 @@ namespace Wa3Tuner
          
             return true;
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             string name = Input_Name.Text;
             bool parsed1 = int.TryParse(Input_From.Text, out int from);
@@ -65,6 +66,7 @@ namespace Wa3Tuner
             
             if (SequenceValid(name, from, to, Radio1.IsChecked == false))
             {
+                if (model == null) return;
                 if (Radio1.IsChecked == true)
                 {
                     if (!parsed1 || !parsed2) { return; }
@@ -87,7 +89,7 @@ namespace Wa3Tuner
                     if (FirstFrom == -1) { return; }
                     if (FoundValidInerval)
                     {
-                        CSequence _new = new CSequence(model);
+                        CSequence _new = new  (model);
                         _new.Name = CapitalizeEachWord(name);
 
 
@@ -115,7 +117,7 @@ namespace Wa3Tuner
           
             const int minRange = 1;
             const int maxRange = 999999;
-
+            if (model == null) return 0;
             // Store taken intervals in a sorted list
             List<Tuple<int, int>> takenIntervals = model.Sequences
                 .Select(seq => Tuple.Create(seq.IntervalStart, seq.IntervalEnd))
@@ -157,20 +159,20 @@ namespace Wa3Tuner
             TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
             return textInfo.ToTitleCase(input.ToLower());
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);
         }
 
-        private void CheckRadio1(object sender, RoutedEventArgs e)
+        private void CheckRadio1(object? sender, RoutedEventArgs? e)
         {
             LabelFrom.Text = "From";
             LabelTo.Text = "To";
             Input_To.Visibility = Visibility.Visible;
         }
 
-        private void CheckRadio2(object sender, RoutedEventArgs e)
+        private void CheckRadio2(object? sender, RoutedEventArgs? e)
         {
             LabelFrom.Text = "Duration";
             LabelTo.Text = "";

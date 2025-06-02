@@ -40,13 +40,13 @@ namespace Wa3Tuner
             list2.SelectedIndex = 0;
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
             if (e.Key == Key.Enter) { ok(null, null); }
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (list1.SelectedItem != null && list2.SelectedItem != null)
             {

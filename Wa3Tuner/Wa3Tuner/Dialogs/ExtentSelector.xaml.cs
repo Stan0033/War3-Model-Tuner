@@ -21,10 +21,10 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class ExtentSelector : Window
     {
-        private INode Node;
+        private INode? Node;
         private CModel Model;
-        private CVector3 Vector;
-        private CExtent Extent;
+        private CVector3? Vector;
+        private CExtent? Extent;
         public ExtentSelector(CModel model, CVector3 vector)
         {
             InitializeComponent();
@@ -59,7 +59,7 @@ namespace Wa3Tuner.Dialogs
             Extent = Calculator.GetExtentFromAttachedVertices(Model, WhichNode);
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
 
             GetSelectedExtent();
@@ -67,6 +67,7 @@ namespace Wa3Tuner.Dialogs
             Extent_Orientation_Selector eos = new Extent_Orientation_Selector();
             if (eos.ShowDialog() == true)
             {
+                if (Vector == null) { return; }
                 Calculator.CenterVectorAtExtent(Vector, Extent, eos.Position);
             }
         }
@@ -90,7 +91,7 @@ namespace Wa3Tuner.Dialogs
            if (m4.IsChecked == true) { Extent = Model.Sequences[list.SelectedIndex].Extent; }
         }
 
-        private void list_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void list_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (m3.IsChecked == true)
             {
@@ -106,7 +107,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

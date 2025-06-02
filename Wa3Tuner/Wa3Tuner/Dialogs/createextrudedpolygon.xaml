@@ -9,24 +9,25 @@
         KeyUp="Window_KeyUp"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Title="Create Extruded Polygon" Height="450" Width="800">
+        Title="Create Extruded Polygon" Height="500" Width="800">
     <Grid>
         <!-- Define the columns for the grid -->
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="600" />
+            <ColumnDefinition Width="542" />
+            <ColumnDefinition Width="58"/>
             <!-- Canvas takes 3 parts of the space -->
             <ColumnDefinition Width="200" />
             <!-- Panel takes 1 part of the space -->
         </Grid.ColumnDefinitions>
         <!-- Canvas on the left side -->
-        <Canvas Name="ImageHolder"    Grid.Column="0" Grid.Row="0"    Background="Transparent"        >
+        <Canvas Name="ImageHolder"    Grid.Column="0" Grid.Row="0"    Background="Transparent" Grid.ColumnSpan="2"        >
             <Image Name="ImageComparison"  Height="450" Width="600" />
         </Canvas>
-        <Canvas Name="MainCanvas"   Grid.Column="0" Grid.Row="0" Background="Transparent"  />
+        <Canvas Name="MainCanvas"   Grid.Column="0" Grid.Row="0" Background="Transparent" Grid.ColumnSpan="2"  />
         <Canvas Name="SelectionLayer"    Grid.Column="0" Grid.Row="0"  Background="Transparent"
-                MouseDown="SelectionLayer_MouseDown" MouseMove="SelectionLayer_MouseMove" MouseUp="SelectionLayer_MouseUp"/>
+                MouseDown="SelectionLayer_MouseDown" MouseMove="SelectionLayer_MouseMove" MouseUp="SelectionLayer_MouseUp" Grid.ColumnSpan="2"/>
         <!-- Panel on the right side -->
-        <StackPanel Grid.Column="1" Orientation="Vertical" Margin="10" Background="LightGray">
+        <StackPanel Grid.Column="2" Orientation="Vertical" Margin="10,10,10,10" Background="LightGray">
             <TextBlock Name="ModeDisplay" Text="Work Mode: None" Margin="5"/>
             <TextBlock Name="FirstTextBlock" Text="Number of vertices:" Margin="5"/>
             <TextBox Name="InputTextBox" Width="100" Margin="5"   TextChanged="InputTextBox_TextChanged"/>
@@ -39,16 +40,16 @@
                 <TextBlock Text="Extrusion:" Margin="5"/>
                 <TextBox Name="ExtrusionInput" Width="100" Margin="5" Text="2"/>
             </StackPanel>
-            
+
             <Button  Content="Import" Click="import" Width="100" Margin="2" />
             <Button  Content="Export" Click="export" Width="100" Margin="2"/>
             <Button  Content="Load image..." Click="loadimage" Width="100" Margin="0,30,0,0" />
-           
+
             <StackPanel  Margin="10,50,0,0" >
                 <CheckBox Name="CheckRotate"  Margin="5" >Rotate Toward Camera</CheckBox>
                 <Button  Content="Finish" Width="100" Click="finish"/>
             </StackPanel>
-            
+
         </StackPanel>
     </Grid>
 </Window>

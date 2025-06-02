@@ -17,17 +17,22 @@ namespace W3_Texture_Finder
 {
     internal static class MPQHelper
     {
-        internal static string LocalModelFolder = "";
-        internal static List<string> Listfile_blp_War3 = new List<string>();
-        internal static List<string> Listfile_blp_War3x = new List<string>();
-        internal static List<string> Listfile_blp_War3Patch = new List<string>();
-        internal static List<string> Listfile_blp_War3xLocal = new List<string>();
-        internal static List<string> Listfile_Models = new List<string>();
-        internal static List<string> Listfile_All = new List<string>();
-        internal static List<string> Listfile_Everything_war3 = new List<string>();
-        internal static List<string> Listfile_Everything_war3x = new List<string>();
-        internal static List<string> Listfile_Everything_war3xLocal = new List<string>();
-        internal static List<string> Listfile_Everything_war3Patch = new List<string>();
+        internal static string? LocalModelFolder = "";
+        internal static List<string> Listfile_blp_War3 = new();
+        internal static List<string> Listfile_blp_War3x = new();
+        internal static List<string> Listfile_blp_War3Patch = new();
+        internal static List<string> Listfile_blp_War3xLocal = new();
+        internal static List<string> Listfile_Models = new();
+        internal static List<string> Listfile_All = new();
+        internal static List<string> Listfile_Everything_war3 = new();
+        internal static List<string> Listfile_Everything_war3x = new();
+        internal static List<string> Listfile_Everything_war3xLocal = new();
+        internal static List<string> Listfile_Everything_war3Patch = new();
+        internal static string Path_War3xLocal;
+        internal static string Path_War3;
+        internal static string Path_War3x;
+        internal static string Path_War3Patch;
+
         internal static void FillAllArchives()
         {
             Listfile_Everything_war3 = LoadArchive(MPQPaths.War3);
@@ -37,6 +42,7 @@ namespace W3_Texture_Finder
         }
         internal static void Initialize()
         {
+            if (MPQPaths.local == null) { throw new Exception("null local path"); }
             string War3PatchPath = Path.Combine(MPQPaths.local, "Paths\\War3Patch.txt");
             if (File.Exists(War3PatchPath) == false) { MessageBox.Show($"{War3PatchPath} not found"); Environment.Exit(0); }
             Listfile_blp_War3Patch = File.ReadAllLines(War3PatchPath).Where(line => line.EndsWith(".blp")).ToList();
@@ -67,37 +73,45 @@ namespace W3_Texture_Finder
             if (Archive == MPQPaths.War3xLocal) { return Listfile_blp_War3xLocal.Contains(path, StringComparer.OrdinalIgnoreCase); }
             return false;
         }
-        internal static void Export(string targetPath, string savePath)
+        internal static void Export(string targetPath, string savePath, string archive = "", bool check = false)
         {
-            string archive = string.Empty;
-            if (FileExists(targetPath, MPQPaths.War3)) { archive = MPQPaths.War3; }
-            else if (FileExists(targetPath, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
-            else if (FileExists(targetPath, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
-            else if (FileExists(targetPath, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
-            using (MpqArchive mpqArchive = MpqArchive.Open(archive))
+
+            if (check)
             {
-                if (mpqArchive != null)
+                if (FileExists(targetPath, MPQPaths.War3)) { archive = MPQPaths.War3; }
+                else if (FileExists(targetPath, MPQPaths.War3X)) { archive = MPQPaths.War3X; }
+                else if (FileExists(targetPath, MPQPaths.War3xLocal)) { archive = MPQPaths.War3xLocal; }
+                else if (FileExists(targetPath, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
+                else
                 {
-                    // Specify the file path within the MPQ archive
-                    // Check if the file exists in the archive
-                    if (mpqArchive.FileExists(targetPath))
+                    MessageBox.Show($"{targetPath} was not found in any if the four MPQs"); return;
+                }
+            }
+
+                using (MpqArchive mpqArchive = MpqArchive.Open(archive))
+                {
+                    if (mpqArchive != null)
                     {
-                        using (MpqStream mpqStream = mpqArchive.OpenFile(targetPath))
+                        // Specify the file path within the MPQ archive
+                        // Check if the file exists in the archive
+                        if (mpqArchive.FileExists(targetPath))
                         {
-                            // Create a FileStream and write the contents of the MPQ stream directly to it
-                            using (FileStream fileStream = new FileStream(savePath, FileMode.Create))
+                            using (MpqStream mpqStream = mpqArchive.OpenFile(targetPath))
                             {
-                                byte[] buffer = new byte[4096]; // 4KB buffer size
-                                int bytesRead;
-                                while ((bytesRead = mpqStream.Read(buffer, 0, buffer.Length)) > 0)
+                                // Create a FileStream and write the contents of the MPQ stream directly to it
+                                using (FileStream fileStream = new FileStream(savePath, FileMode.Create))
                                 {
-                                    fileStream.Write(buffer, 0, bytesRead);
+                                    byte[] buffer = new byte[4096]; // 4KB buffer size
+                                    int bytesRead;
+                                    while ((bytesRead = mpqStream.Read(buffer, 0, buffer.Length)) > 0)
+                                    {
+                                        fileStream.Write(buffer, 0, bytesRead);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
         }
         internal static void ExportPNG(ImageSource imageSource, string outputPath)
         {
@@ -114,8 +128,9 @@ namespace W3_Texture_Finder
                 encoder.Save(fileStream);
             }
         }
-        internal static ImageSource GetImageSourceExternal(string fullPath)
+        internal static ImageSource? GetImageSourceExternal(string? fullPath)
         {
+            if (fullPath == null)return null;
             if (File.Exists(fullPath))
             {
                 using (FileStream mpqStream = File.OpenRead(fullPath))
@@ -129,7 +144,6 @@ namespace W3_Texture_Finder
                         return bitmapSource;
                     }
                 }
-                return null;
             }
             else
             {
@@ -137,7 +151,7 @@ namespace W3_Texture_Finder
                 return null;
             }
         }
-        internal static ImageSource GetImageSource(string path)
+        internal static ImageSource? GetImageSource(string path)
         {
 
 
@@ -150,6 +164,7 @@ namespace W3_Texture_Finder
             if (FileExists(path, MPQPaths.War3Patch)) { archive = MPQPaths.War3Patch; }
             if (archive.Length == 0) // Could be in local folder
             {
+                if (LocalModelFolder == null) { throw new Exception("null LocalModelFolder"); }
                 string fullPath = Path.Combine(LocalModelFolder, path);
                 if (File.Exists(fullPath))
                 {
@@ -168,48 +183,57 @@ namespace W3_Texture_Finder
             }
             else
             {
-                using (MpqArchive mpqArchive = MpqArchive.Open(archive))
+                try
                 {
-                    // Check if the archive is valid
-                    if (mpqArchive != null)
+                    using (MpqArchive mpqArchive = MpqArchive.Open(archive))
                     {
-                        // Check if the file exists in the archive
-                        if (mpqArchive.FileExists(path))
+                        // Check if the archive is valid
+                        if (mpqArchive != null)
                         {
-                            // Open the file stream
-                            using (MpqStream mpqStream = mpqArchive.OpenFile(path))
+                            // Check if the file exists in the archive
+                            if (mpqArchive.FileExists(path))
                             {
-                                // Read from the stream
-                                byte[] buffer = new byte[mpqStream.Length];
-                                mpqStream.Read(buffer, 0, buffer.Length);
-                                //-----------------------
-                                // Save the file
-                                //-----------------------
-                                string outputPath = AppHelper.TemporaryBLPLocation;
-                                File.WriteAllBytes(outputPath, buffer);
-                                using (var fileStream = File.OpenRead(outputPath))
+                                // Open the file stream
+                                using (MpqStream mpqStream = mpqArchive.OpenFile(path))
                                 {
-                                    var blpFile = new BlpFile(fileStream);
-                                    var bitmapSource = blpFile.GetBitmapSource();
-                                    // Delete the temporary file
-                                    //   File.Delete(outputPath);
-                                    // Return the ImageSource
-                                    return bitmapSource;
+                                    // Read from the stream
+                                    byte[] buffer = new byte[mpqStream.Length];
+                                    mpqStream.Read(buffer, 0, buffer.Length);
+                                    //-----------------------
+                                    // Save the file
+                                    //-----------------------
+                                    string outputPath = AppHelper.TemporaryBLPLocation;
+                                    File.WriteAllBytes(outputPath, buffer);
+                                    using (var fileStream = File.OpenRead(outputPath))
+                                    {
+                                        var blpFile = new BlpFile(fileStream);
+                                        var bitmapSource = blpFile.GetBitmapSource();
+                                        // Delete the temporary file
+                                        //   File.Delete(outputPath);
+                                        // Return the ImageSource
+                                        return bitmapSource;
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                return null; // or throw an exception indicating file not found
                             }
                         }
                         else
                         {
-                            return null; // or throw an exception indicating file not found
+                            return null; // or throw an exception indicating invalid archive
                         }
                     }
-                    else
-                    {
-                        return null; // or throw an exception indicating invalid archive
-                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, $"An excepion occured while trying to open {archive}");
+                    return null;
                 }
             }
-            return null;
+            
         }
         static ImageSource ReplaceTransparentPixelsWithBlack(BitmapSource bitmapSource)
         {
@@ -248,6 +272,7 @@ namespace W3_Texture_Finder
             {
                 if (File.Exists(FullPath))
                 {
+                    
                     using (FileStream mpqStream = File.OpenRead(FullPath))
                     {
                         // Read from the stream
@@ -341,6 +366,7 @@ namespace W3_Texture_Finder
         {
 
             string outputPath = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+            
             foreach (string item in File.ReadAllLines(outputPath))
             {
                 if (Path.GetExtension(item) == ".blp")
@@ -357,40 +383,50 @@ namespace W3_Texture_Finder
         {
             string searched = "(listfile)";
 
-            using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
+            try
             {
-                if (mpqArchive.FileExists(searched) == false)
+                using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
                 {
-                    MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
-                    LoadPresetListFile(list_blp);
-                    return;
-                }
-                using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
-                {
-                    // Read from the stream
-                    byte[] buffer = new byte[mpqStream.Length];
-                    mpqStream.Read(buffer, 0, buffer.Length);
-                    //-----------------------
-                    // save the file
-                    //-----------------------
-                    string outputPath = MPQPaths.temp;
-                    File.WriteAllBytes(outputPath, buffer);
-                    foreach (string item in File.ReadAllLines(outputPath))
+                    if (mpqArchive.FileExists(searched) == false)
                     {
-                        if (Path.GetExtension(item) == ".blp")
-                        {
-                            list_blp.Add(item);
-                        }
-                        if (Path.GetExtension(item) == ".mdx")
-                        {
-                            if (!Listfile_Models.Contains(item)) Listfile_Models.Add(item);
-                        }
-                      //  string v = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
-                      //  File.AppendAllLines(v, new List<string> { item });
+                        MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
+                        LoadPresetListFile(list_blp);
+                        return;
                     }
-                   
+                    using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
+                    {
+                        // Read from the stream
+                        byte[] buffer = new byte[mpqStream.Length];
+                        mpqStream.Read(buffer, 0, buffer.Length);
+                        //-----------------------
+                        // save the file
+                        //-----------------------
+                        string outputPath = MPQPaths.temp;
+                        File.WriteAllBytes(outputPath, buffer);
+                        foreach (string item in File.ReadAllLines(outputPath))
+                        {
+                            if (Path.GetExtension(item) == ".blp")
+                            {
+                                list_blp.Add(item);
+                            }
+                            if (Path.GetExtension(item) == ".mdx")
+                            {
+                                if (!Listfile_Models.Contains(item)) Listfile_Models.Add(item);
+                            }
+                            //  string v = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+                            //  File.AppendAllLines(v, new { item });
+                        }
 
+
+                    }
                 }
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, $"An excepion occured while trying to open {Archive}");
+                
             }
         }
 
@@ -398,37 +434,47 @@ namespace W3_Texture_Finder
 
         private static List<string> LoadArchive(string Archive)
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             string searched = "(listfile)";
-            using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
+
+            try
             {
-                if (mpqArchive.FileExists(searched) == false)
+                using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
                 {
-                    MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
-                    string outputPath = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
-                    return File.ReadAllLines(outputPath).ToList();
-                }
-                using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
-                {
-                    // Read from the stream
-                    byte[] buffer = new byte[mpqStream.Length];
-                    mpqStream.Read(buffer, 0, buffer.Length);
-                    //-----------------------
-                    // save the file
-                    //-----------------------
-                    string outputPath = MPQPaths.temp;
-                    File.WriteAllBytes(outputPath, buffer);
-                    foreach (string item in File.ReadAllLines(outputPath))
+                    if (mpqArchive.FileExists(searched) == false)
                     {
-                        list.Add(item);
+                        MessageBox.Show($"Could not find {searched} inside {Archive}. Switching to preset.");
+                        string outputPath = Path.Combine(AppHelper.Local, $"Paths\\(listfile)");
+                        return File.ReadAllLines(outputPath).ToList();
+                    }
+                    using (MpqStream mpqStream = mpqArchive.OpenFile(searched))
+                    {
+                        // Read from the stream
+                        byte[] buffer = new byte[mpqStream.Length];
+                        mpqStream.Read(buffer, 0, buffer.Length);
+                        //-----------------------
+                        // save the file
+                        //-----------------------
+                        string outputPath = MPQPaths.temp;
+                        File.WriteAllBytes(outputPath, buffer);
+                        foreach (string item in File.ReadAllLines(outputPath))
+                        {
+                            list.Add(item);
+                        }
+
                     }
 
                 }
 
             }
-            return list;
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, $"An excepion occured while trying to open {Archive}");
+
+            }
+           return list;
         }
-        internal static BitmapImage getBitmapImage_image(string path)
+        internal static BitmapImage? getBitmapImage_image(string path)
         {
             string archive = string.Empty;
             if (FileExists(path, MPQPaths.War3)) { archive = MPQPaths.War3; }
@@ -439,36 +485,45 @@ namespace W3_Texture_Finder
             {
                 if (File.Exists(path))
                 {
-                    using (FileStream mpqStream = File.OpenRead(path))
+                    try
                     {
-                        byte[] buffer = new byte[mpqStream.Length];
-                        mpqStream.Read(buffer, 0, buffer.Length);
-                        // Save the file temporarily
-                        string outputPath = AppHelper.TemporaryBLPLocation;
-                        File.WriteAllBytes(outputPath, buffer);
-                        using (var fileStream = File.OpenRead(outputPath))
+                        using (FileStream mpqStream = File.OpenRead(path))
                         {
-                            var blpFile = new BlpFile(fileStream);
-                            var bitmapSource = blpFile.GetBitmapSource();
-                            // Convert BitmapSource to BitmapImage (directly return the BitmapImage)
-                            var bitmapImage = new BitmapImage();
-                            using (MemoryStream memoryStream = new MemoryStream())
+                            byte[] buffer = new byte[mpqStream.Length];
+                            mpqStream.Read(buffer, 0, buffer.Length);
+                            // Save the file temporarily
+                            string outputPath = AppHelper.TemporaryBLPLocation;
+                            File.WriteAllBytes(outputPath, buffer);
+                            using (var fileStream = File.OpenRead(outputPath))
                             {
-                                PngBitmapEncoder encoder = new PngBitmapEncoder();
-                                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
-                                encoder.Save(memoryStream);
-                                memoryStream.Seek(0, SeekOrigin.Begin);
-                                bitmapImage.BeginInit();
-                                bitmapImage.StreamSource = memoryStream;
-                                bitmapImage.EndInit();
+                                var blpFile = new BlpFile(fileStream);
+                                var bitmapSource = blpFile.GetBitmapSource();
+                                // Convert BitmapSource to BitmapImage (directly return the BitmapImage)
+                                var bitmapImage = new BitmapImage();
+                                using (MemoryStream memoryStream = new MemoryStream())
+                                {
+                                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+                                    encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                                    encoder.Save(memoryStream);
+                                    memoryStream.Seek(0, SeekOrigin.Begin);
+                                    bitmapImage.BeginInit();
+                                    bitmapImage.StreamSource = memoryStream;
+                                    bitmapImage.EndInit();
+                                }
+                                // Delete the temporary file
+                                File.Delete(outputPath);
+                                // Return the BitmapImage
+                                return bitmapImage;
                             }
-                            // Delete the temporary file
-                            File.Delete(outputPath);
-                            // Return the BitmapImage
-                            return bitmapImage;
                         }
+
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, $"An excepion occured while trying to open {path}");
+                        return null;
+                    }
+               }
                 else
                 {
                     MessageBox.Show($"Could not find the texture at \"{path}\"");
@@ -525,7 +580,7 @@ namespace W3_Texture_Finder
                 }
             }
         }
-        private static BitmapImage GetWhiteBitmapImage()
+        private static BitmapImage? GetWhiteBitmapImage()
         {
             return getBitmapImage_image("Textures\\white.blp");
         }

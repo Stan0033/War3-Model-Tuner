@@ -27,7 +27,7 @@ namespace Wa3Tuner.Dialogs
             
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             bool s = int.TryParse(txtSections.Text, out int slices);
             bool c = int.TryParse(txtSections.Text, out int section);
@@ -42,7 +42,7 @@ namespace Wa3Tuner.Dialogs
             else { MessageBox.Show("Expected integers");return; }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) { ok(null, null); }
             if (e.Key == Key.Escape) { DialogResult = false; }

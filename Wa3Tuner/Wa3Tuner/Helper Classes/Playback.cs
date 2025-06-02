@@ -1,10 +1,7 @@
 ﻿using MdxLib.Model;
-using System;
+ 
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+ 
 namespace Wa3Tuner.Helper_Classes
 {
     public enum PlayBackType
@@ -18,7 +15,7 @@ namespace Wa3Tuner.Helper_Classes
         {
             set { ModelSequences = value.Sequences.ObjectList; }
         }
-        private static CSequence sequence_;
+        private static CSequence  sequence_;
         public static CSequence CurrentSequence
         {
             get {  return sequence_; }

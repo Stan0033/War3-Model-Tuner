@@ -50,7 +50,7 @@ namespace Wa3Tuner.Dialogs
             InputSkinning.Background = GetColor(RenderSettings.Color_Skinning);
         }
 
-        private Brush GetColor(float[] values)
+        private static Brush GetColor(float[] values)
         {
             if (values == null || values.Length < 3)
                 return Brushes.Transparent;
@@ -64,98 +64,113 @@ namespace Wa3Tuner.Dialogs
         }
 
 
-        private void SetPathNodeColor(object sender, RoutedEventArgs e)
+        private void SetPathNodeColor(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button ? b = sender as Button;
+            if (b == null) {return; }
             SetColor(b, ref RenderSettings.Path_Node);
         }
 
-        private void SetPathNodeColorS(object sender, RoutedEventArgs e)
+        private void SetPathNodeColorS(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Path_Node_Selected);
         }
 
-        private void SetVertexColor(object sender, RoutedEventArgs e)
+        private void SetVertexColor(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Vertex);
         }
 
-        private void SetVertexColorS(object sender, RoutedEventArgs e)
+        private void SetVertexColorS(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_VertexSelected);
         }
 
-        private void SetVertexColorRS(object sender, RoutedEventArgs e)
+        private void SetVertexColorRS(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_VertexRiggedSelected);
         }
 
-        private void setCols(object sender, RoutedEventArgs e)
+        private void setCols(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_CollisionShape);
         }
 
-        private void setNormals(object sender, RoutedEventArgs e)
+        private void setNormals(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button ? b = sender as Button;
+            if (b == null) {return; }
             SetColor(b, ref RenderSettings.Color_Normals);
         }
 
-        private void setbg(object sender, RoutedEventArgs e)
+        private void setbg(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.BackgroundColor);
         }
 
-        private void setExtents(object sender, RoutedEventArgs e)
+        private void setExtents(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Extent);
         }
 
-        private void setskin(object sender, RoutedEventArgs e)
+        private void setskin(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Skinning);
         }
 
-        private void setsk(object sender, RoutedEventArgs e)
+        private void setsk(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Skeleton);
         }
 
-        private void SetEdge(object sender, RoutedEventArgs e)
+        private void SetEdge(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Edge);
         }
 
-        private void SetEdgeS(object sender, RoutedEventArgs e)
+        private void SetEdgeS(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Edge_Selected);
         }
 
-        private void setgrid(object sender, RoutedEventArgs e)
+        private void setgrid(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.GridColor);
         }
 
-        private void setnode(object sender, RoutedEventArgs e)
+        private void setnode(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
+            if (b == null) { return; }
             SetColor(b, ref RenderSettings.Color_Node);
            
         }
 
-        private void ParseAndSet(TextBox t, ref float field)
+        private static void ParseAndSet(TextBox t, ref float field)
         {
             bool p = float.TryParse(t.Text, out float value);
             if (p)
@@ -176,43 +191,52 @@ namespace Wa3Tuner.Dialogs
             
         }
 
-        private void setPathLine(object sender, RoutedEventArgs e)
+        private void setPathLine(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
             SetColor(b, ref RenderSettings.Path_Line);
         }
 
-        private void SetVertexColorR(object sender, RoutedEventArgs e)
+        private void SetVertexColorR(object? sender, RoutedEventArgs? e)
         {
-            Button b = sender as Button;
+            Button? b = sender as Button;
             SetColor(b, ref RenderSettings.Color_VertexRigged);
         }
-        private void SetColor(Button? button, ref float[] field)
+        private static void SetColor(Button? button, ref float[] field)
         {
-
-            //pik color
+            // Pick color from the button's background
+            if (button == null) { return; }
             System.Windows.Media.Brush newColor = ColorPickerHandler.Pick(button.Background);
-            // set to button
+
+            // Set the button's background to the new color
             button.Background = newColor;
 
+            // Convert brush to color (assuming this returns a struct with R, G, B as bytes)
+            var color = Calculator.BrushToColor(newColor);
+
+            // Store the normalized RGB values in the float[] array (0.0 to 1.0 range)
+            field[0] = color.R / 255f;
+            field[1] = color.G / 255f;
+            field[2] = color.B / 255f;
         }
 
-        private void SetVertexSize(object sender, TextChangedEventArgs e)
+
+        private void SetVertexSize(object? sender, TextChangedEventArgs e)
         {
             ParseAndSet(InputVertexSize, ref RenderSettings.VertexSize);
         }
 
-        private void SetNodeSize(object sender, TextChangedEventArgs e)
+        private void SetNodeSize(object? sender, TextChangedEventArgs e)
         {
             ParseAndSet(InputNodeSize, ref RenderSettings.NodeSize);
         }
 
-        private void SetPathNodeSize(object sender, TextChangedEventArgs e)
+        private void SetPathNodeSize(object? sender, TextChangedEventArgs e)
         {
             ParseAndSet(InputPNodeSize, ref RenderSettings.PathNodeSize);
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) {DialogResult = true; return; }
         }

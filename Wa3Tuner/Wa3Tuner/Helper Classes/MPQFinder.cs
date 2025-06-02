@@ -9,11 +9,17 @@ namespace W3_Texture_Finder
 {
     public static class MPQPaths
     {
-        public static string War3;
-        public static string War3X;
-        public static string War3Patch;
-        public static string War3xLocal;
-        public static string local = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+        public static string War3 = "";
+        public static string War3X = "";
+        public static string War3Patch = "";
+        public static string War3xLocal = "";
+        public static string? local = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+
+            ?? throw new Exception("local path not found");
+
+
+
+
         public static string paths = Path.Combine(local, "Paths\\Paths.txt");
         public static string temp = Path.Combine(local, "Paths\\temp.txt");
     }
@@ -46,10 +52,7 @@ namespace W3_Texture_Finder
         {
             File.WriteAllText(MPQPaths.paths, $"{MPQPaths.War3}\n{MPQPaths.War3X}\n{MPQPaths.War3Patch}\n{MPQPaths.War3xLocal}");
         }
-        private static bool Found_War3 = false;
-        private static bool Found_War3x = false;
-        private static bool Found_War3xLocal = false;
-        private static bool Found_War3Patch = false;
+      
         private static void FindLost()
         {
             if (Findwar3() == false) { Environment.Exit(0); }
@@ -75,7 +78,7 @@ namespace W3_Texture_Finder
             {
                 return false;
             }
-            return false;
+           
         }
         public static bool Findwar3x()
         {
@@ -93,7 +96,7 @@ namespace W3_Texture_Finder
             {
                 return false;
             }
-            return false;
+          
         }
         public static bool Findwar3xlocal()
         {
@@ -111,7 +114,7 @@ namespace W3_Texture_Finder
             {
                 return false;
             }
-            return false;
+            
         }
         public static bool Findwar3Patch()
         {
@@ -129,7 +132,7 @@ namespace W3_Texture_Finder
             {
                 return false;
             }
-            return false;
+            
         }
     }
 }

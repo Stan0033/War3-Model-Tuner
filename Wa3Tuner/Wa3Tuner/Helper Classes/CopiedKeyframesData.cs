@@ -11,7 +11,7 @@ namespace Wa3Tuner.Helper_Classes
     {
         public static TransformationType CopiedNodeKeyframeType = TransformationType.None;
         public static bool Cut = false;
-        public static INode CopiedNode;
-        public static CSequence Sequence;
+        public static INode? CopiedNode;
+        public static CSequence? Sequence;
     }
 }

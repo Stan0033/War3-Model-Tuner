@@ -18,25 +18,29 @@ namespace Wa3Tuner
     /// </summary>
     public partial class window_EditAttachment : Window
     {
-        CModel Model;
-        CAttachment Attachment;
+        CModel? Model;
+        CAttachment? Attachment;
         public window_EditAttachment(MdxLib.Model.INode node, CModel model)
         {
             InitializeComponent();
             Attachment = node as CAttachment;
             Model = model;
+            if (Attachment == null) { Close(); }
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void Ok(object? sender, RoutedEventArgs? e)
         {
+            if (Attachment == null) { Close();return; }
             Attachment.Path = Path.Text.Trim();
             DialogResult = true;
         }
-        private void EditVis(object sender, RoutedEventArgs e)
+        private void EditVis(object? sender, RoutedEventArgs? e)
         {
+            if (Model == null) { return; }
+            if (Attachment == null) { return; }
             transformation_editor tr = new transformation_editor(Model, Attachment.Visibility, false, TransformationType.Visibility);
             tr.ShowDialog();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }

@@ -27,7 +27,7 @@ namespace Wa3Tuner.Dialogs
             model = m;
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             string[] lines = Input.Text.Split('\n').ToArray();
             List<int> values = new List<int>();
@@ -72,7 +72,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

@@ -33,20 +33,21 @@ namespace Wa3Tuner
 
     public partial class transformation_editor : Window
     {
-        CModel Model;
-        public bool Initialized = false;
+        CModel Model = new CModel();
+        public bool InitializedW = false;
         private TransformationType Type;
-        public CAnimator<int> Dummy_int;
-        public CAnimator<float> Dummy_float;
-        public CAnimator<CVector3> Dummy_Vector3;
-        public CAnimator<CVector4> Dummy_Vector4;
+        public CAnimator<int>? Dummy_int;
+        public CAnimator<float>? Dummy_float;
+        public CAnimator<CVector3>? Dummy_Vector3;
+        public CAnimator<CVector4> ?Dummy_Vector4;
         private List<Ttrack> Tracks = new List<Ttrack>();
         public transformation_editor(CModel model, CAnimator<float> animator, bool canBeStatic,
             TransformationType type)
         {
+            if (animator == null) { Close(); return; }
             InitializeComponent();
-            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-            Initialized = true;
+            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); All.IsEnabled = false; }
+            InitializedW = true;
             Dummy_float = animator;
             Type = type;
             Model = model;
@@ -75,25 +76,57 @@ namespace Wa3Tuner
         }
         private void FillStaticValue()
         {
-            if (Type == TransformationType.Alpha) { StaticInput.Text = (Dummy_float.GetValue() * 100).ToString(); }
-            if (Type == TransformationType.Color) { StaticInput.Text = Calculator.BGRnToRGB(Dummy_Vector3.GetValue()); }
-            if (Type == TransformationType.Translation) { StaticInput.Text = GetStatic(Dummy_Vector3.GetValue()); }
-            if (Type == TransformationType.Scaling) { { StaticInput.Text = GetStaticP(Dummy_Vector3.GetValue()); } }
-            if (Type == TransformationType.Rotation) { StaticInput.Text = Calculator.QuaternionToEuler_(Dummy_Vector4.GetValue()); }
-            if (Type == TransformationType.Visibility) { Check_StaticVisible.IsChecked = GetVisibileBool(Dummy_float.GetValue()); }
-            if (Type == TransformationType.Int) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
-            if (Type == TransformationType.Float) { StaticInput.Text = Dummy_float.GetValue().ToString(); }
+            if (Type == TransformationType.Alpha && Dummy_float != null)
+            {
+                StaticInput.Text = (Dummy_float.GetValue() * 100).ToString();
+            }
+
+            if (Type == TransformationType.Color && Dummy_Vector3 != null)
+            {
+                StaticInput.Text = Calculator.BGRnToRGB(Dummy_Vector3.GetValue());
+            }
+
+            if (Type == TransformationType.Translation && Dummy_Vector3 != null)
+            {
+                StaticInput.Text = GetStatic(Dummy_Vector3.GetValue());
+            }
+
+            if (Type == TransformationType.Scaling && Dummy_Vector3 != null)
+            {
+                StaticInput.Text = GetStaticP(Dummy_Vector3.GetValue());
+            }
+
+            if (Type == TransformationType.Rotation && Dummy_Vector4 != null)
+            {
+                StaticInput.Text = Calculator.QuaternionToEuler_(Dummy_Vector4.GetValue());
+            }
+
+            if (Type == TransformationType.Visibility && Dummy_float != null)
+            {
+                Check_StaticVisible.IsChecked = GetVisibileBool(Dummy_float.GetValue());
+            }
+
+            if (Type == TransformationType.Int && Dummy_float != null)
+            {
+                StaticInput.Text = Dummy_float.GetValue().ToString();
+            }
+
+            if (Type == TransformationType.Float && Dummy_float != null)
+            {
+                StaticInput.Text = Dummy_float.GetValue().ToString();
+            }
         }
-        private bool GetVisibileBool(float value)
+
+        private static bool GetVisibileBool(float value)
         {
             if (value >= 1) { return true; }
             return false;
         }
-        private string GetStaticP(CVector3 cVector3)
+        private static string GetStaticP(CVector3 cVector3)
         {
             return $"{cVector3.X * 100}, {cVector3.Y * 100}, {cVector3.Z * 100}";
         }
-        private string GetStatic(CVector3 cVector3)
+        private static string GetStatic(CVector3 cVector3)
         {
             return $"{cVector3.X}, {cVector3.Y}, {cVector3.Z}";
         }
@@ -122,9 +155,10 @@ namespace Wa3Tuner
         }
         public transformation_editor(CModel model, CAnimator<int> animator, bool canBeStatic)
         {
+            if (animator == null) { Close(); return; }
             InitializeComponent();
-            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-            Initialized = true;
+            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); All.IsEnabled = false; }
+            InitializedW = true;
             Type = TransformationType.Int;
             if (canBeStatic == false) { RadioStatic.IsEnabled = false; RadioDynamic.IsChecked = true; }
             if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
@@ -140,12 +174,13 @@ namespace Wa3Tuner
             FillSequences(); Title = $"Transformation Editor - Int";
             FillGlobalSEquence(animator.GlobalSequence.Object);
         }
-        public transformation_editor(CModel model, CAnimator<CVector3> animator, bool canBeStatic,
+        public transformation_editor(CModel  model, CAnimator<CVector3>  animator, bool  canBeStatic,
             TransformationType type)
         {
+            if (animator == null) { Close(); return; }
             InitializeComponent();
-            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-            Initialized = true;
+            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); All.IsEnabled = false; }
+            InitializedW = true;
             Type = type;
             Dummy_Vector3 = animator;
             Model = model;
@@ -184,18 +219,7 @@ namespace Wa3Tuner
             FillSequences(); Title = $"Transformation Editor - {type}";
             FillGlobalSEquence(animator.GlobalSequence.Object);
         } //GetStaticQuaternion(animator.GetValue());
-        private string GetStaticValue(CVector3 val, TransformationType type)
-        {
-            if (type == TransformationType.Scaling)
-            {
-                return $"{val.X * 100}, {val.Y * 100}, {val.Z * 100}";
-            }
-            if (type == TransformationType.Color)
-            {
-                return Calculator.BGRnToRGB(val);
-            }
-            return $"{val.X}, {val.Y}, {val.Z}";
-        }
+       
         public transformation_editor()
         {
             InitializeComponent();
@@ -203,9 +227,10 @@ namespace Wa3Tuner
         }
         public transformation_editor(CModel model, CAnimator<CVector4> animator, bool canBeStatic)
         {
+            if (animator == null) { Close(); return; }
             InitializeComponent();
-            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); All.IsEnabled = false; }
-            Initialized = true;
+            if (model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); All.IsEnabled = false; }
+            InitializedW = true;
             Type = TransformationType.Rotation;
             Dummy_Vector4 = animator;
             if (animator.Static) { RadioStatic.IsChecked = true; } else { RadioDynamic.IsChecked = true; }
@@ -302,9 +327,9 @@ namespace Wa3Tuner
                 track.ToColor();
             }
         }
-        private void SetStatic(object sender, RoutedEventArgs e)
+        private void SetStatic(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) return;
+            if (!InitializedW) return;
             StaticInput.IsEnabled = true;
             StaticInputColor.IsEnabled = true;
             MainList.IsEnabled = false;
@@ -314,7 +339,7 @@ namespace Wa3Tuner
             Check_StaticVisible.IsEnabled = true; ;
             FillStaticValue();
         }
-        private void explain(object sender, RoutedEventArgs e)
+        private void explain(object? sender, RoutedEventArgs? e)
         {
             var messageBuilder = new StringBuilder();
             messageBuilder.AppendLine("For rotations, this app uses euler(x, y, z) instead of quaternion (x, y, z, w).");
@@ -325,12 +350,12 @@ namespace Wa3Tuner
             messageBuilder.AppendLine("Int and float transformations remain the same.");
             MessageBox.Show(messageBuilder.ToString());
         }
-        private void SeletedSequence(object sender, SelectionChangedEventArgs e)
+        private void SeletedSequence(object? sender, SelectionChangedEventArgs e)
         {
             int index = SequenceSelector.SelectedIndex;
             TrackInput.Text = Model.Sequences[index].IntervalStart.ToString();
         }
-        private void del(object sender, RoutedEventArgs e)
+        private void del(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -340,10 +365,7 @@ namespace Wa3Tuner
 
             }
         }
-        private int GetSelectedIndex()
-        {
-            return 0;
-        }
+        
         private bool TimeExists(int time)
         {
             foreach (CSequence sequence in Model.Sequences)
@@ -383,6 +405,7 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Translation)
             {
+                if (parts.Length != 3) { return false; }
                 bool parsed1 = float.TryParse(parts[0], out float x);
                 bool parsed2 = float.TryParse(parts[1], out float y);
                 bool parsed3 = float.TryParse(parts[2], out float z);
@@ -448,7 +471,7 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private void newItem(object sender, RoutedEventArgs e)
+        private void newItem(object? sender, RoutedEventArgs? e)
         {
             string time = TrackInput.Text.Trim();
             string input = ValueInput.Text.Trim();
@@ -459,7 +482,7 @@ namespace Wa3Tuner
             {
                 MessageBox.Show("There is already a track with this time"); return;
             }
-            Ttrack track = new Ttrack();
+            Ttrack track = new  ();
             if (Type == TransformationType.Visibility)
             {
                 int visible = Check_InputVisible.IsChecked == true ? 1 : 0;
@@ -494,7 +517,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void edit(object sender, RoutedEventArgs e)
+        private void edit(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -524,7 +547,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private float[] ExtractValues(string item)
+        private static float[] ExtractValues(string item)
         {
             List<float> vals = new List<float>();
             string[] i = item.Split(',').Select(x => x.Trim()).ToArray();
@@ -534,7 +557,7 @@ namespace Wa3Tuner
             }
             return vals.ToArray();
         }
-        private void SelectedTrack(object sender, SelectionChangedEventArgs e)
+        private void SelectedTrack(object? sender, SelectionChangedEventArgs e)
         {
             int index = MainList.SelectedIndex;
             if (index == -1) { return; }
@@ -556,7 +579,7 @@ namespace Wa3Tuner
                 ValueInput.Text = Tracks[index].GetValue(Type);
             }
         }
-        private void setColor(object sender, RoutedEventArgs e)
+        private void setColor(object? sender, RoutedEventArgs? e)
         {
 
             System.Windows.Media.Brush newColor = ColorPickerHandler.Pick(StaticInputColor.Background);
@@ -567,7 +590,7 @@ namespace Wa3Tuner
             CVector3 c = Calculator.ColorToWar3Color(color);
 
         }
-        private CVector3 GetStaticV3(bool scaling = false)
+        private CVector3?  GetStaticV3(bool scaling = false)
         {
             string input = StaticInput.Text.Trim();
             if (input.Length == 0) { return null; }
@@ -585,15 +608,18 @@ namespace Wa3Tuner
             if (!parse1 || !parse2 || !parse3) { return null; }
             return new CVector3(x, y, z);
         }
-        private void update_click(object sender, RoutedEventArgs e)
+        private void update_click(object? sender, RoutedEventArgs? e)
         {
+            
             Tracks = Tracks.OrderBy(X => X.Time).ToList();
             if (Type == TransformationType.Translation)
             {
+                if (Dummy_Vector3 == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+              
                 Dummy_Vector3.Clear();
                 if (RadioStatic.IsChecked == true)
                 {
-                    CVector3 vector = GetStaticV3();
+                    CVector3? vector = GetStaticV3(); if (vector == null) return;
                     if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
                     Dummy_Vector3.MakeStatic(vector);
                     DialogResult = true;
@@ -612,13 +638,14 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Alpha)
             {
-
+                if (Dummy_float == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer.");return; }
 
                 if (RadioStatic.IsChecked == true)
                 {
                     bool parsed = float.TryParse(StaticInput.Text, out float value);
                     if (parsed)
                     {
+                        if (Dummy_float == null) return;
                         Dummy_float.MakeStatic(value / 100);
                         DialogResult = true;
                         return;
@@ -631,6 +658,7 @@ namespace Wa3Tuner
                 }
                 else
                 {
+                    if (Dummy_float == null) return;
                     Dummy_float.Clear();
                     Dummy_float.MakeAnimated();
                     foreach (var track in Tracks)
@@ -642,9 +670,11 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Scaling)
             {
+                if (Dummy_Vector3 == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+
                 if (RadioStatic.IsChecked == true)
                 {
-                    CVector3 vector = GetStaticV3(true);
+                    CVector3 ? vector = GetStaticV3(true); if (vector == null) return;
                     if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
                     Dummy_Vector3.MakeStatic(vector);
                     DialogResult = true;
@@ -664,9 +694,12 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Rotation)
             {
+                if (Dummy_Vector4 == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+
                 if (RadioStatic.IsChecked == true)
                 {
-                    CVector4 vector = GetStaticV4();
+                    if (Dummy_Vector4 == null) return;
+                    CVector4? vector = GetStaticV4();
                     if (vector == null) { MessageBox.Show("Invalid static value input"); return; }
                     Dummy_Vector4.MakeStatic(vector);
                     DialogResult = true;
@@ -674,6 +707,7 @@ namespace Wa3Tuner
                 }
                 else
                 {
+                    if (Dummy_Vector4 == null) return;
                     Dummy_Vector4.MakeAnimated();
                     Dummy_Vector4.Clear();
                     foreach (var track in Tracks)
@@ -686,11 +720,14 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Int)
             {
+                if (Dummy_int == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+
                 if (RadioStatic.IsChecked == true)
                 {
                     bool parsed = int.TryParse(StaticInput.Text, out int value);
                     if (parsed)
                     {
+                        if (Dummy_int == null) return;
                         Dummy_int.MakeStatic(value);
                         DialogResult = true;
                         return;
@@ -703,6 +740,7 @@ namespace Wa3Tuner
                 }
                 else
                 {
+                    if (Dummy_int == null) return;
                     Dummy_int.MakeAnimated();
                     Dummy_int.Clear();
                     foreach (var track in Tracks)
@@ -715,12 +753,14 @@ namespace Wa3Tuner
 
             else if (Type == TransformationType.Float)
             {
-                MessageBox.Show("called");
+                if (Dummy_float == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+
                 if (RadioStatic.IsChecked == true)
                 {
                     bool parsed = float.TryParse(StaticInput.Text, out float value);
                     if (parsed)
                     {
+                        if (Dummy_float == null) return;
                         Dummy_float.MakeStatic(value);
                         DialogResult = true;
                         return;
@@ -733,7 +773,7 @@ namespace Wa3Tuner
                 }
                 else
                 {
-
+                    if (Dummy_float == null) return;
                     Dummy_float.MakeAnimated();
                     Dummy_float.Clear();
                     foreach (var track in Tracks)
@@ -745,6 +785,8 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Color)
             {
+                if (Dummy_Vector3 == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
+
                 Dummy_Vector3.Clear();
                 if (RadioStatic.IsChecked == true)
                 {
@@ -769,15 +811,18 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Visibility)
             {
+                if (Dummy_float == null) { MessageBox.Show("Null transformation container", "Error. Report to the developer."); return; }
 
                 if (RadioStatic.IsChecked == true)
                 {
+                    if (Dummy_float == null) return;
                     float visible = GetStaticVisibility();
                     Dummy_float.MakeStatic(visible);
                     DialogResult = true;
                 }
                 else
                 {
+                    if (Dummy_float == null) return;
                     Dummy_float.MakeAnimated();
                     Dummy_float.Clear();
                     foreach (var track in Tracks)
@@ -786,6 +831,10 @@ namespace Wa3Tuner
                     }
                     DialogResult = true;
                 }
+            }
+            if (DialogResult != true)
+            {
+                MessageBox.Show("All checks failed. Unknown condition.");
             }
         }
         private float GetStaticVisibility()
@@ -803,7 +852,7 @@ namespace Wa3Tuner
             return Calculator.ColorToWar3Color(color);
 
         }
-        private CVector4 GetStaticV4()
+        private CVector4? GetStaticV4()
         {
             string input = StaticInput.Text.Trim();
             if (input.Length == 0) { return null; }
@@ -816,17 +865,17 @@ namespace Wa3Tuner
             float[] quaternion = Calculator.EulerToQuaternion(x, y, z);
             return new CVector4(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
         }
-        private void clearall(object sender, RoutedEventArgs e)
+        private void clearall(object? sender, RoutedEventArgs? e)
         {
             Tracks.Clear();
             RefreshTracks();
         }
-        private void reverseinstructions(object sender, RoutedEventArgs e)
+        private void reverseinstructions(object? sender, RoutedEventArgs? e)
         {
             ReverseData(Tracks);
             RefreshTracks();
         }
-        private void leaveonlystarts(object sender, RoutedEventArgs e)
+        private void leaveonlystarts(object? sender, RoutedEventArgs? e)
         {
             foreach (var track in Tracks.ToList())
             {
@@ -866,7 +915,7 @@ namespace Wa3Tuner
                 tracks[i].GetData(temp);
             }
         }
-        private void removeallof(object sender, RoutedEventArgs e)
+        private void removeallof(object? sender, RoutedEventArgs? e)
         {
             if (SequenceSelector.SelectedIndex != -1 && SequenceSelector.Items.Count > 0)
             {
@@ -881,7 +930,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void removeallofexcept(object sender, RoutedEventArgs e)
+        private void removeallofexcept(object? sender, RoutedEventArgs? e)
         {
             int index = SequenceSelector.SelectedIndex;
             foreach (var track in Tracks.ToList())
@@ -893,7 +942,7 @@ namespace Wa3Tuner
             }
             RefreshTracks();
         }
-        private void reversetimes(object sender, RoutedEventArgs e)
+        private void reversetimes(object? sender, RoutedEventArgs? e)
         {
             ReverseTimes(Tracks);
             RefreshTracks();
@@ -911,7 +960,7 @@ namespace Wa3Tuner
                 tracks[n - 1 - i].Time = tempTime;
             }
         }
-        private void leaveonlystartsends(object sender, RoutedEventArgs e)
+        private void leaveonlystartsends(object? sender, RoutedEventArgs? e)
         {
             foreach (var track in Tracks.ToList())
             {
@@ -922,9 +971,9 @@ namespace Wa3Tuner
             }
             RefreshTracks();
         }
-        private void SetDynamix(object sender, RoutedEventArgs e)
+        private void SetDynamix(object? sender, RoutedEventArgs? e)
         {
-            if (!Initialized) return;
+            if (!InitializedW) return;
             StaticInput.IsEnabled = false;
             StaticInputColor.IsEnabled = false;
             MainList.IsEnabled = true;
@@ -938,21 +987,25 @@ namespace Wa3Tuner
                 case TransformationType.Translation:
                 case TransformationType.Vector4:
                 case TransformationType.Color:
+                    if (Dummy_Vector3 == null) { break; }
                     Dummy_Vector3.MakeAnimated();
                     break;
                 case TransformationType.Rotation:
+                    if (Dummy_Vector4 == null) { break; }
                     Dummy_Vector4.MakeAnimated();
                     break;
                 case TransformationType.Alpha:
                 case TransformationType.Float:
+                    if (Dummy_float == null) { break; }
                     Dummy_float.MakeAnimated();
                     break;
                 case TransformationType.Int:
+                    if (Dummy_int == null) { break; }
                     Dummy_int.MakeAnimated();
                     break;
             }
         }
-        private void createstartsends(object sender, RoutedEventArgs e)
+        private void createstartsends(object? sender, RoutedEventArgs? e)
         {
             Tracks.Clear();
             foreach (CSequence sequence in Model.Sequences)
@@ -995,7 +1048,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void createstarts(object sender, RoutedEventArgs e)
+        private void createstarts(object? sender, RoutedEventArgs? e)
         {
             Tracks.Clear();
             foreach (CSequence sequence in Model.Sequences)
@@ -1031,7 +1084,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void SelectedGS(object sender, SelectionChangedEventArgs e)
+        private void SelectedGS(object? sender, SelectionChangedEventArgs e)
         {
             if (Combo_GlobalSequence.SelectedItem != null)
             {
@@ -1039,17 +1092,21 @@ namespace Wa3Tuner
                 int indexIn = index - 1;
                 if (Type == TransformationType.Alpha || Type == TransformationType.Float || Type == TransformationType.Visibility)
                 {
+                    if (Dummy_float == null) return;
                     if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
+                       
                         Dummy_float.GlobalSequence.Detach();
                     }
                     else
                     {
+                       
                         Dummy_float.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
                     }
                 }
                 else if (Type == TransformationType.Int)
                 {
+                    if (Dummy_int == null) return;
                     if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
                         Dummy_int.GlobalSequence.Detach();
@@ -1061,6 +1118,7 @@ namespace Wa3Tuner
                 }
                 else if (Type == TransformationType.Rotation)
                 {
+                    if (Dummy_Vector4 == null) return;
                     if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
                         Dummy_Vector4.GlobalSequence.Detach();
@@ -1074,16 +1132,18 @@ namespace Wa3Tuner
                 {
                     if (Combo_GlobalSequence.SelectedIndex == 0)
                     {
+                        if (Dummy_Vector3 == null) return;
                         Dummy_Vector3.GlobalSequence.Detach();
                     }
                     else
                     {
+                        if (Dummy_Vector3 == null) return;
                         Dummy_Vector3.GlobalSequence.Attach(Model.GlobalSequences[indexIn]);
                     }
                 }
             }
         }
-        private void Flip(object sender, MouseButtonEventArgs e)
+        private void Flip(object? sender, MouseButtonEventArgs e)
         {
             if (MainList.SelectedItem != null && Type == TransformationType.Visibility)
             {
@@ -1093,7 +1153,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void loop(object sender, RoutedEventArgs e)
+        private void loop(object? sender, RoutedEventArgs? e)
         {
             loopdialog ld = new loopdialog(Model, Tracks, Type);
             ld.ShowDialog();
@@ -1105,13 +1165,13 @@ namespace Wa3Tuner
             value 2
              */
         }
-        private void showmore(object sender, RoutedEventArgs e)
+        private void showmore(object? sender, RoutedEventArgs? e)
         {
             ButtonMore.ContextMenu.IsOpen = true;
         }
-        private void SetInterpolation(object sender, SelectionChangedEventArgs e)
+        private void SetInterpolation(object? sender, SelectionChangedEventArgs e)
         {
-            if (Initialized)
+            if (InitializedW)
             {
                 if (
                     Type == TransformationType.Color ||
@@ -1119,23 +1179,27 @@ namespace Wa3Tuner
                     Type == TransformationType.Translation
                     )
                 {
+                    if (Dummy_Vector3 == null) return;
                     Dummy_Vector3.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
                 }
                 else if (Type == TransformationType.Int)
                 {
+                    if (Dummy_int == null) return;
                     Dummy_int.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
                 }
                 else if (Type == TransformationType.Rotation)
                 {
+                    if (Dummy_Vector4 == null) return;
                     Dummy_Vector4.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
                 }
                 else
                 {
+                    if (Dummy_float == null) return;
                     Dummy_float.Type = (EInterpolationType)Combo_InterpType.SelectedIndex;
                 }
             }
         }
-        private void negatetrack(object sender, RoutedEventArgs e)
+        private void negatetrack(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -1144,7 +1208,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void negatetrackall(object sender, RoutedEventArgs e)
+        private void negatetrackall(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -1153,7 +1217,7 @@ namespace Wa3Tuner
                 RefreshTracks();
             }
         }
-        private void setalltoinput(object sender, RoutedEventArgs e)
+        private void setalltoinput(object? sender, RoutedEventArgs? e)
         {
             string time = Model.Sequences[0].IntervalStart.ToString();
             string input = ValueInput.Text.Trim();
@@ -1192,7 +1256,7 @@ namespace Wa3Tuner
         {
             return Check_InputVisible.IsChecked == true ? 1 : 0;
         }
-        private void addtoall(object sender, RoutedEventArgs e)
+        private void addtoall(object? sender, RoutedEventArgs? e)
         {
             string time = Model.Sequences[0].IntervalStart.ToString();
             string input = ValueInput.Text.Trim();
@@ -1211,7 +1275,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Incorrect input or format"); return;
             }
         }
-        private void subtractfromall(object sender, RoutedEventArgs e)
+        private void subtractfromall(object? sender, RoutedEventArgs? e)
         {
             string time = Model.Sequences[0].IntervalStart.ToString();
             string input = ValueInput.Text.Trim();
@@ -1230,7 +1294,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Incorrect input or format"); return;
             }
         }
-        private void multiplyall(object sender, RoutedEventArgs e)
+        private void multiplyall(object? sender, RoutedEventArgs? e)
         {
             string time = Model.Sequences[0].IntervalStart.ToString();
             string input = ValueInput.Text.Trim();
@@ -1249,7 +1313,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Incorrect input or format"); return;
             }
         }
-        private void divideall(object sender, RoutedEventArgs e)
+        private void divideall(object? sender, RoutedEventArgs? e)
         {
             string time = Model.Sequences[0].IntervalStart.ToString();
             string input = ValueInput.Text.Trim();
@@ -1275,29 +1339,30 @@ namespace Wa3Tuner
                 MessageBox.Show("Incorrect input or format"); return;
             }
         }
-        private void setColorStatic(object sender, RoutedEventArgs e)
+        private void setColorStatic(object? sender, RoutedEventArgs? e)
         {
                 StaticInputColor.Background = ColorPickerHandler.Pick(StaticInputColor.Background);
          }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Delete) del(null, null);
             if (e.Key == Key.Enter) newItem(null, null);
         }
-        private void setSpecial_(object sender, RoutedEventArgs e)
+        private void setSpecial_(object? sender, RoutedEventArgs? e)
         {
             editvisibilities_window ew = new editvisibilities_window(Model, Tracks);
             ew.ShowDialog();
             RefreshTracks();
         }
-        private void Checked_StaticVisibility(object sender, RoutedEventArgs e)
+        private void Checked_StaticVisibility(object? sender, RoutedEventArgs? e)
         {
             bool visible = Check_StaticVisible.IsChecked == true;
+            if (Dummy_float == null) return;
             Dummy_float.MakeStatic(visible ? 1 : 0);
         }
-        private Ttrack copiedTrack;
-        private void Copy(object sender, RoutedEventArgs e)
+        private Ttrack? copiedTrack;
+        private void Copy(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -1329,7 +1394,7 @@ namespace Wa3Tuner
             MessageBox.Show("Invalid input for time. Must be a positive integer that exists in the sequences.");
             return false;
         }
-        private void Paste(object sender, RoutedEventArgs e)
+        private void Paste(object? sender, RoutedEventArgs? e)
         {
             if (copiedTrack != null)
             {
@@ -1343,7 +1408,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void CopyToClipboard(object sender, RoutedEventArgs e)
+        private void CopyToClipboard(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -1353,7 +1418,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void CopyAllToClipboard(object sender, RoutedEventArgs e)
+        private void CopyAllToClipboard(object? sender, RoutedEventArgs? e)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var track in Tracks)
@@ -1363,7 +1428,7 @@ namespace Wa3Tuner
             Clipboard.SetText(sb.ToString());
         }
 
-        private void sak(object sender, RoutedEventArgs e)
+        private void sak(object? sender, RoutedEventArgs? e)
         {
             if (Type == TransformationType.Translation
 
@@ -1449,7 +1514,7 @@ namespace Wa3Tuner
             }
             else if (Type == TransformationType.Visibility)
             {
-                Input i = new Input("0");
+                Input i = new  ("0");
                 if (i.ShowDialog() == true)
                 {
                     if (i.Result.Trim().ToLower() == "false")
@@ -1532,11 +1597,11 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void sak2(object sender, RoutedEventArgs e)
+        private void sak2(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences"); return;
+                MessageBox.Show("There are no sequences", "Nothing to work with"); return;
             }
             List<string> ss = Model.Sequences.Select(x => x.Name).ToList();
             Selector s = new Selector(ss);
@@ -1609,7 +1674,7 @@ namespace Wa3Tuner
                 }
                 else if (Type == TransformationType.Color)
                 {
-                    InputVector i = new InputVector(AllowedValue.Positive);
+                    InputVector i = new  (AllowedValue.Positive);
 
                     if (i.ShowDialog() == true)
                     {
@@ -1720,7 +1785,7 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void starte(object sender, RoutedEventArgs e)
+        private void starte(object? sender, RoutedEventArgs? e)
         {
             foreach (var sequence in Model.Sequences)
             {
@@ -1834,7 +1899,7 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void ende(object sender, RoutedEventArgs e)
+        private void ende(object? sender, RoutedEventArgs? e)
         {
             foreach (var sequence in Model.Sequences)
             {
@@ -1948,12 +2013,12 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void stretch2(object sender, RoutedEventArgs e)
+        private void stretch2(object? sender, RoutedEventArgs? e)
         {
             // Stretch the times of all keyframes/tracks to fit inside the selected sequence
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
             foreach (CSequence sq in Model.Sequences)
@@ -1981,12 +2046,12 @@ namespace Wa3Tuner
             }
         }
 
-        private void stretch1(object sender, RoutedEventArgs e)
+        private void stretch1(object? sender, RoutedEventArgs? e)
         {
             // Stretch the times of all keyframes/tracks to fit inside the selected sequence
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
 
@@ -2017,8 +2082,8 @@ namespace Wa3Tuner
             }
         }
 
-        TransformationType CopiedNodeKeyframeType;
-        private void copymovekfs(object sender, RoutedEventArgs e)
+        
+        private void copymovekfs(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count == 0) return;
             transformation_selector ts = new transformation_selector();
@@ -2045,7 +2110,7 @@ namespace Wa3Tuner
             return Model.Sequences[0];
         }
 
-        private void cutmovekfs(object sender, RoutedEventArgs e)
+        private void cutmovekfs(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count == 0) return;
             transformation_selector ts = new transformation_selector();
@@ -2060,9 +2125,9 @@ namespace Wa3Tuner
             }
         }
 
-        private void pasteseelctkfs(object sender, RoutedEventArgs e)
+        private void pasteseelctkfs(object? sender, RoutedEventArgs? e)
         {
-            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
             if (Model.Sequences.Count == 1) { MessageBox.Show("There is only one sequence"); return; }
             if (CopiedKeyframesData.Sequence == null) return;
             var seq2 = SelectSequence();
@@ -2083,7 +2148,7 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void CopyList(List<Ttrack> isolatedTracks, List<Ttrack> FullTrackList, CSequence ToWhichSequence)
+        private static void CopyList(List<Ttrack> isolatedTracks, List<Ttrack> FullTrackList, CSequence ToWhichSequence)
         {
             int offset = ToWhichSequence.IntervalStart; // Use 'from', not 'to'
 
@@ -2096,9 +2161,9 @@ namespace Wa3Tuner
 
         }
 
-        private void RemoveSequences(object sender, RoutedEventArgs e)
+        private void RemoveSequences(object? sender, RoutedEventArgs? e)
         {
-            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); }
+            if (Model.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); }
 
             List<string> names = Model.Sequences.Select(x => x.Name).ToList();
             Multiselector_Window s = new Multiselector_Window(names);
@@ -2114,7 +2179,7 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void dups2ss(object sender, RoutedEventArgs e)
+        private void dups2ss(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count <= 1)
             {
@@ -2124,7 +2189,7 @@ namespace Wa3Tuner
             if (d.ShowDialog() == true) { RefreshTracks(); }
         }
 
-        private void gkm(object sender, RoutedEventArgs e)
+        private void gkm(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count == 0) { return; }
             if (Type == TransformationType.Visibility)
@@ -2138,7 +2203,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void editTime(object sender, RoutedEventArgs e)
+        private void editTime(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem != null)
             {
@@ -2173,7 +2238,7 @@ namespace Wa3Tuner
 
 
 
-        private void movekfTimeStart(object sender, RoutedEventArgs e)
+        private void movekfTimeStart(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem == null || Tracks.Count == 0) return;
 
@@ -2194,13 +2259,13 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        CSequence GetSequenceOfTime(int time)
+        CSequence? GetSequenceOfTime(int time)
         {
             return Model.Sequences.FirstOrDefault(x => time >= x.IntervalStart && time <= x.IntervalEnd);
         }
 
 
-        private void movekfTimeEnd(object sender, RoutedEventArgs e)
+        private void movekfTimeEnd(object? sender, RoutedEventArgs? e)
         {
             if (MainList.SelectedItem == null || Tracks.Count == 0) return;
 
@@ -2221,7 +2286,7 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void SwapSequences(object sender, RoutedEventArgs e)
+        private void SwapSequences(object? sender, RoutedEventArgs? e)
         {
             Swap_Sequences_Selector ss = new Swap_Sequences_Selector(Model.Sequences.ObjectList);
             if (ss.ShowDialog() == true)
@@ -2307,11 +2372,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void RemoveAllRepeatingKeyframes(object sender, RoutedEventArgs e)
+        private void RemoveAllRepeatingKeyframes(object? sender, RoutedEventArgs? e)
         {
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
 
@@ -2327,7 +2392,7 @@ namespace Wa3Tuner
 
 
 
-        private void RemoveRepTimes_First(object sender, RoutedEventArgs e)
+        private void RemoveRepTimes_First(object? sender, RoutedEventArgs? e)
         {
             foreach (var sequence in Model.Sequences)
             {
@@ -2336,14 +2401,14 @@ namespace Wa3Tuner
         }
 
 
-        private void RemoveRepTimes_Last(object sender, RoutedEventArgs e)
+        private void RemoveRepTimes_Last(object? sender, RoutedEventArgs? e)
         {
          foreach (var sequence in Model.Sequences) { RemoveRepeatingTimes_Last(sequence); }   
         }
 
 
 
-        private void RemoveRepTimes_First_inSequence(object sender, RoutedEventArgs e)
+        private void RemoveRepTimes_First_inSequence(object? sender, RoutedEventArgs? e)
         {
             if (Tracks.Count == 0)
             {
@@ -2353,7 +2418,7 @@ namespace Wa3Tuner
 
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
 
@@ -2421,12 +2486,12 @@ namespace Wa3Tuner
                 Tracks.Remove(keyframe);
         }
 
-        private void RemoveRepTimes_Last_inSequence(object sender, RoutedEventArgs e)
+        private void RemoveRepTimes_Last_inSequence(object? sender, RoutedEventArgs? e)
         {
              
             if (Model.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
 
@@ -2464,7 +2529,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void RemoveRepeatingKeyframesInSequence(object sender, RoutedEventArgs e)
+        private void RemoveRepeatingKeyframesInSequence(object? sender, RoutedEventArgs? e)
         {
             Selector s = new Selector(Model.Sequences.Select(x => x.Name).ToList());
             if (s.ShowDialog() == true)
@@ -2504,7 +2569,7 @@ namespace Wa3Tuner
             // Optional: sort Tracks by time again if necessary
             Tracks = Tracks.OrderBy(x => x.Time).ToList();
         }
-        private void RemoveSandwitchedSameKeyframes(object sender, RoutedEventArgs e)
+        private void RemoveSandwitchedSameKeyframes(object? sender, RoutedEventArgs? e)
         {
            
              foreach (var sequence in Model.Sequences)
@@ -2516,7 +2581,7 @@ namespace Wa3Tuner
 
            
         }
-        private void RemoveSandwitchedSameKeyframes_Sequence(object sender, RoutedEventArgs e)
+        private void RemoveSandwitchedSameKeyframes_Sequence(object? sender, RoutedEventArgs? e)
         {
             Selector s = new Selector(Model.Sequences.Select(x => x.Name).ToList());
             if (s.ShowDialog() == true)
@@ -2527,8 +2592,14 @@ namespace Wa3Tuner
             RefreshTracks();
         }
 
-        private void Refr(object sender, RoutedEventArgs e)
+        private void Refr(object? sender, RoutedEventArgs? e)
         {
+            RefreshTracks();
+        }
+
+        private void delall(object sender, RoutedEventArgs e)
+        {
+            Tracks.Clear();
             RefreshTracks();
         }
     }
@@ -2537,7 +2608,7 @@ namespace Wa3Tuner
     {
         public int Time = 0;
         public float X, Y, Z, W = 0;
-        private Ttrack copiedTrack;
+       
         public void GetData(Ttrack track)
         {
             X = track.X; Y = track.Y;

@@ -14,7 +14,8 @@ namespace Wa3Tuner
         {
             foreach (string file in files)
             {
-                CModel temp = ModelSaverLoader.Load(file);
+                CModel? temp = ModelSaverLoader.Load(file);
+                if   (temp == null){ continue; }
                 string extension = Path.GetExtension(file).ToLower(); 
                 if (extension == ".mdl")
                 {
@@ -51,6 +52,8 @@ namespace Wa3Tuner
                 foreach (string file in files)
                 {
                     var image = MPQHelper.GetImageSource(file);
+                    if (image == null) { continue; }
+
                     string nPath = Path.ChangeExtension(file, ".png");
 
                     MPQHelper.ExportPNG(image, nPath);

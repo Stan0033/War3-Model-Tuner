@@ -7,17 +7,16 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Reflection.Emit;
-using System.Security.Policy;
-using System.Text;
-using System.Windows;
+ 
+ 
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Xml.Linq;
+ 
 using Wa3Tuner.Dialogs;
 using Wa3Tuner.Helper_Classes;
+using Whim_GEometry_Editor.Misc;
 using static Wa3Tuner.MainWindow;
 using Quaternion = System.Numerics.Quaternion;
 namespace Wa3Tuner
@@ -53,7 +52,90 @@ namespace Wa3Tuner
         {
             v = GetPositionAtExtent(e, p);
         }
+        public static Vector3 FindClosestVector(Vector3 vec, List<Vector3> vectors)
+        {
+            if (vectors == null || vectors.Count == 0)
+                throw new ArgumentException("Vector list is empty.");
 
+            Vector3 closest = vectors[0];
+            float minDistanceSquared = Vector3.DistanceSquared(vec, closest);
+
+            foreach (var v in vectors)
+            {
+                float distanceSquared = Vector3.DistanceSquared(vec, v);
+                if (distanceSquared < minDistanceSquared)
+                {
+                    minDistanceSquared = distanceSquared;
+                    closest = v;
+                }
+            }
+
+            return closest;
+        }
+        public static int FindClosestVectorIndex(Vector3 vec, List<Vector3> vectors)
+        {
+            if (vectors == null || vectors.Count == 0)
+                throw new ArgumentException("Vector list is empty.");
+
+            Vector3 closest = vectors[0];
+            float minDistanceSquared = Vector3.DistanceSquared(vec, closest);
+
+            foreach (var v in vectors)
+            {
+                float distanceSquared = Vector3.DistanceSquared(vec, v);
+                if (distanceSquared < minDistanceSquared)
+                {
+                    minDistanceSquared = distanceSquared;
+                    closest = v;
+                }
+            }
+
+            return vectors.IndexOf(closest);
+        }
+        public static Vector3 FindClosestVector(Vector3 vec, List<CVector3> cvectors)
+        {
+            List<Vector3> vectors = new List<Vector3>();
+            foreach (var v in cvectors) { vectors.Add(new Vector3(v.X, v.Y, v.Z)); }
+            if (vectors == null || vectors.Count == 0)
+                throw new ArgumentException("Vector list is empty.");
+
+            Vector3 closest = vectors[0];
+            float minDistanceSquared = Vector3.DistanceSquared(vec, closest);
+
+            foreach (var v in vectors)
+            {
+                float distanceSquared = Vector3.DistanceSquared(vec, v);
+                if (distanceSquared < minDistanceSquared)
+                {
+                    minDistanceSquared = distanceSquared;
+                    closest = v;
+                }
+            }
+
+            return closest;
+        }
+        public static int FindClosestVectorIndex(Vector3 vec, List<CVector3> cvectors)
+        {
+            List<Vector3> vectors = new List<Vector3>();
+            foreach (var v in cvectors) { vectors.Add(new Vector3(v.X, v.Y, v.Z)); }
+            if (vectors == null || vectors.Count == 0)
+                throw new ArgumentException("Vector list is empty.");
+
+            Vector3 closest = vectors[0];
+            float minDistanceSquared = Vector3.DistanceSquared(vec, closest);
+
+            foreach (var v in vectors)
+            {
+                float distanceSquared = Vector3.DistanceSquared(vec, v);
+                if (distanceSquared < minDistanceSquared)
+                {
+                    minDistanceSquared = distanceSquared;
+                    closest = v;
+                }
+            }
+
+            return vectors.IndexOf(closest);
+        }
         public static CVector3 GetPositionAtExtent(CExtent extent, ExtentPosition position)
         {
             // Get min and max bounds
@@ -318,7 +400,8 @@ namespace Wa3Tuner
         {
             if (vectors == null || vectors.Count == 0)
             {
-                return new CExtent(); }
+                return new CExtent();
+            }
 
             // Initialize min and max bounds
             CVector3 min = new CVector3(vectors[0].X, vectors[0].Y, vectors[0].Z);
@@ -362,8 +445,8 @@ namespace Wa3Tuner
                 return new CExtent();
             }
             // Temporary min and max holders initialized with the first extent's bounds
-            Vector3 min = new Vector3(extents[0].Min.X, extents[0].Min.Y, extents[0].Min.Z);
-            Vector3 max = new Vector3(extents[0].Max.X, extents[0].Max.Y, extents[0].Max.Z);
+            Vector3 min = new  (extents[0].Min.X, extents[0].Min.Y, extents[0].Min.Z);
+            Vector3 max = new  (extents[0].Max.X, extents[0].Max.Y, extents[0].Max.Z);
             // Iterate through the extents to find the overall min and max values
             foreach (CExtent extent in extents)
             {
@@ -407,7 +490,7 @@ namespace Wa3Tuner
         internal static void PutOnGround(CGeoset geoset)
         {
             // Find the lowest Z value among all vertices
-            float closestVertexZToGround = FindClosestZToGround(geoset);
+            float closestVertexZToGround = FindLowestZ(geoset.Vertices.ObjectList);
             // Move all vertices down by the closest Z value to align to the ground
             foreach (CGeosetVertex vertex in geoset.Vertices)
             {
@@ -420,9 +503,9 @@ namespace Wa3Tuner
         internal static void PutOnGround(List<CGeosetVertex> Vertices)
         {
             // Find the lowest Z value among all vertices
-            float closestVertexZToGround = FindClosestZToGround(Vertices);
+            float closestVertexZToGround = FindLowestZ(Vertices);
             // Move all vertices down by the closest Z value to align to the ground
-            foreach (CGeosetVertex vertex in  Vertices)
+            foreach (CGeosetVertex vertex in Vertices)
             {
                 float x = vertex.Position.X;
                 float y = vertex.Position.Y;
@@ -430,32 +513,14 @@ namespace Wa3Tuner
                 vertex.Position = new CVector3(x, y, z - closestVertexZToGround);
             }
         }
-        private static float FindClosestZToGround(CGeoset geoset)
+
+         
+        private static float FindLowestZ(List<CGeosetVertex> Vertices)
         {
-            float closest = float.MaxValue;
-            foreach (CGeosetVertex vertex in geoset.Vertices)
-            {
-                if (Math.Abs(vertex.Position.Z) < Math.Abs(closest) ||
-                   (Math.Abs(vertex.Position.Z) == Math.Abs(closest) && vertex.Position.Z > closest))
-                {
-                    closest = vertex.Position.Z;
-                }
-            }
-            return closest;
+            return Vertices.Min(v => v.Position.Z);
         }
-        private static float FindClosestZToGround( List<CGeosetVertex> Vertices)
-        {
-            float closest = float.MaxValue;
-            foreach (CGeosetVertex vertex in  Vertices)
-            {
-                if (Math.Abs(vertex.Position.Z) < Math.Abs(closest) ||
-                   (Math.Abs(vertex.Position.Z) == Math.Abs(closest) && vertex.Position.Z > closest))
-                {
-                    closest = vertex.Position.Z;
-                }
-            }
-            return closest;
-        }
+
+
         internal static void PutOnGroundTogether(List<CGeoset> all)
         {
             if (all == null || all.Count == 0)
@@ -556,18 +621,19 @@ namespace Wa3Tuner
         {
             if (geosets == null || geosets.Count == 0)
                 return;
-            // Get the centroid of the first geoset
-            CVector3 firstCentroid = GetCentroidOfGeoset(geosets[0]);
+
+            // Get original centroids
+            List<CVector3> centroids = geosets.Select(GetCentroidOfGeoset).ToList();
+            CVector3 firstCentroid = centroids[0];
+
             for (int i = 1; i < geosets.Count; i++)
             {
-                CGeoset current = geosets[i];
-                CVector3 currentCentroid = GetCentroidOfGeoset(current);
-                // Calculate the difference in position along each axis
-                float dx = onX ? (firstCentroid.X - currentCentroid.X) : 0;
-                float dy = onY ? (firstCentroid.Y - currentCentroid.Y) : 0;
-                float dz = onZ ? (firstCentroid.Z - currentCentroid.Z) : 0;
-                // Adjust each vertex in the current geoset
-                foreach (CGeosetVertex vertex in current.Vertices)
+                CVector3 centroid = centroids[i];
+                float dx = onX ? (firstCentroid.X - centroid.X) : 0;
+                float dy = onY ? (firstCentroid.Y - centroid.Y) : 0;
+                float dz = onZ ? (firstCentroid.Z - centroid.Z) : 0;
+
+                foreach (CGeosetVertex vertex in geosets[i].Vertices)
                 {
                     vertex.Position = new CVector3(
                         vertex.Position.X + dx,
@@ -577,6 +643,7 @@ namespace Wa3Tuner
                 }
             }
         }
+
         internal static void PullTogether(List<CGeoset> geosets, bool onX, bool onY, bool onZ)
         {
             if (geosets.Count != 2 || (new[] { onX, onY, onZ }.Count(flag => flag) != 1))
@@ -598,8 +665,7 @@ namespace Wa3Tuner
                 );
             }
         }
-        private static CSequence DuplicatingFromSequence;
-        private static CSequence DuplicatingToSequence;
+       
         internal static void DuplicateSequence(CSequence sequence, CSequence ToSequence, CModel Model)
         {
             DuplicatingFromSequence = sequence;
@@ -1371,7 +1437,7 @@ namespace Wa3Tuner
         internal static List<CGeoset> Fragment(CGeoset geoset, CModel owner)
         {
             List<CGeoset> list = new List<CGeoset>();
-            INode first_node = null;
+            INode? first_node = null;
             if (geoset.Groups.Count > 0)
             {
                 var group = geoset.Vertices[0].Group.Object;
@@ -1460,9 +1526,9 @@ namespace Wa3Tuner
         {
             return (v * 100).ToString(); ;
         }
-        static CGeosetVertex getTopMostVertex(CGeoset geoset)
+        static CGeosetVertex? getTopMostVertex(CGeoset geoset)
         {
-            CGeosetVertex topMostVertex = null;
+            CGeosetVertex? topMostVertex = null;
             float topMostZ = float.MinValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1474,9 +1540,9 @@ namespace Wa3Tuner
             }
             return topMostVertex;
         }
-        static CGeosetVertex getBottomMostVertex(CGeoset geoset)
+        static CGeosetVertex? getBottomMostVertex(CGeoset geoset)
         {
-            CGeosetVertex bottomMostVertex = null;
+            CGeosetVertex? bottomMostVertex = null;
             float bottomMostZ = float.MaxValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1488,9 +1554,9 @@ namespace Wa3Tuner
             }
             return bottomMostVertex;
         }
-        static CGeosetVertex getLeftMostVertex(CGeoset geoset)
+        static CGeosetVertex? getLeftMostVertex(CGeoset geoset)
         {
-            CGeosetVertex leftMostVertex = null;
+            CGeosetVertex? leftMostVertex = null;
             float leftMostY = float.MaxValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1502,9 +1568,9 @@ namespace Wa3Tuner
             }
             return leftMostVertex;
         }
-        static CGeosetVertex getRightMostVertex(CGeoset geoset)
+        static CGeosetVertex? getRightMostVertex(CGeoset geoset)
         {
-            CGeosetVertex rightMostVertex = null;
+            CGeosetVertex? rightMostVertex = null;
             float rightmostY = float.MinValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1516,9 +1582,9 @@ namespace Wa3Tuner
             }
             return rightMostVertex;
         }
-        static CGeosetVertex getFrontMostVertex(CGeoset geoset)
+        static CGeosetVertex? getFrontMostVertex(CGeoset geoset)
         {
-            CGeosetVertex frontMostVertex = null;
+            CGeosetVertex? frontMostVertex = null;
             float frontMostX = float.MinValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1530,9 +1596,9 @@ namespace Wa3Tuner
             }
             return frontMostVertex;
         }
-        static CGeosetVertex getBackMostVertex(CGeoset geoset)
+        static CGeosetVertex? getBackMostVertex(CGeoset geoset)
         {
-            CGeosetVertex backMostVertex = null;
+            CGeosetVertex? backMostVertex = null;
             float backMostX = float.MaxValue;
             foreach (var vertex in geoset.Vertices)
             {
@@ -1570,7 +1636,8 @@ namespace Wa3Tuner
             switch (side)
             {
                 case Side.Left:
-                    CGeosetVertex leftmost = getLeftMostVertex(geoset);
+                    CGeosetVertex? leftmost = getLeftMostVertex(geoset);
+                    if (leftmost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1583,7 +1650,8 @@ namespace Wa3Tuner
                     }
                     break;
                 case Side.Right:
-                    CGeosetVertex rightmost = getRightMostVertex(geoset);
+                    CGeosetVertex? rightmost = getRightMostVertex(geoset);
+                    if (rightmost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1596,7 +1664,8 @@ namespace Wa3Tuner
                     }
                     break;
                 case Side.Top:
-                    CGeosetVertex topmost = getTopMostVertex(geoset);
+                    CGeosetVertex? topmost = getTopMostVertex(geoset);
+                    if (topmost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1609,7 +1678,8 @@ namespace Wa3Tuner
                     }
                     break;
                 case Side.Bottom:
-                    CGeosetVertex bottommost = getBottomMostVertex(geoset);
+                    CGeosetVertex? bottommost = getBottomMostVertex(geoset);
+                    if (bottommost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1622,7 +1692,8 @@ namespace Wa3Tuner
                     }
                     break;
                 case Side.Front:
-                    CGeosetVertex frontmost = getFrontMostVertex(geoset);
+                    CGeosetVertex? frontmost = getFrontMostVertex(geoset);
+                    if (frontmost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1635,7 +1706,8 @@ namespace Wa3Tuner
                     }
                     break;
                 case Side.Back:
-                    CGeosetVertex backmost = getBackMostVertex(geoset);
+                    CGeosetVertex? backmost = getBackMostVertex(geoset);
+                    if (backmost == null) return;
                     foreach (var vertex in geoset.Vertices)
                     {
                         if (CoordinateIsAfterCentroid(centroid, vertex.Position, side))
@@ -1802,11 +1874,15 @@ namespace Wa3Tuner
         }
         internal static System.Windows.Media.Brush War3ColorToBrush(CVector3 color)
         {
-            float R = color.Z * 255f;
-            float G = color.Y * 255f;
-            float B = color.X * 255f;
-            // MessageBox.Show($"{R} {G} {B}");
-            return BrushFromRGB(R, G, B);
+            float r = color.Z;
+            float g = color.Y;
+            float b = color.X;
+            // Clamp values between 0 and 1, then scale to byte (0-255)
+            byte red = (byte)(Math.Clamp(r, 0f, 1f) * 255);
+            byte green = (byte)(Math.Clamp(g, 0f, 1f) * 255);
+            byte blue = (byte)(Math.Clamp(b, 0f, 1f) * 255);
+
+            return new SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
 
         }
         private static System.Windows.Media.Brush BrushFromRGB(float r, float g, float b)
@@ -1817,9 +1893,9 @@ namespace Wa3Tuner
             b = Math.Max(0, Math.Min(1, b));
 
             // Convert the values to the 0-255 range
-            byte red = (byte)(r * 255);
-            byte green = (byte)(g * 255);
-            byte blue = (byte)(b * 255);
+            byte red = (byte)(r * 255f);
+            byte green = (byte)(g * 255f);
+            byte blue = (byte)(b * 255f);
 
             // Create and return the SolidColorBrush
             var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
@@ -1943,24 +2019,57 @@ namespace Wa3Tuner
         }
         internal static void TransferGeosetData(CGeoset first, CGeoset second, CModel owner)
         {
-            // Create a mapping of original vertices to their clones
+            // Transfer vertices
+            var verticesToMove = second.Vertices.ToList();
             Dictionary<CGeosetVertex, CGeosetVertex> reference = new Dictionary<CGeosetVertex, CGeosetVertex>();
-            foreach (CGeosetVertex vertex in second.Vertices)
+            foreach (var vertex in verticesToMove)
             {
-                CGeosetVertex copy = CloneVertex_Merge(vertex, owner, first);
+                //  second.Vertices.Remove(vertex);
+                CGeosetVertex copy = new CGeosetVertex(owner);
+                CopyVertex(vertex, copy);
+                var group = vertex.Group;
+                var groupCopy = CopyVertexGroup(group.Object, owner);
+                first.Groups.Add(groupCopy);
+                copy.Group.Attach(groupCopy);
                 reference.Add(vertex, copy);
                 first.Vertices.Add(copy);
             }
-            // Transfer faces from the second geoset to the first
-            foreach (CGeosetTriangle face in second.Triangles)
+
+            // Transfer triangles
+            var trianglesToMove = second.Triangles.ToList();
+            foreach (var face in trianglesToMove)
             {
-                CGeosetTriangle copy = new CGeosetTriangle(owner);
-                copy.Vertex1.Attach(reference[face.Vertex1.Object]);
-                copy.Vertex2.Attach(reference[face.Vertex2.Object]);
-                copy.Vertex3.Attach(reference[face.Vertex3.Object]);
-                first.Triangles.Add(copy);
+              //  second.Triangles.Remove(face);
+                first.Triangles.Add(new CGeosetTriangle(
+                    owner,
+                   reference[ face.Vertex1.Object],
+                     reference[face.Vertex2.Object],
+                     reference[face.Vertex3.Object]
+                    ));
+            }
+
+            // Transfer groups
+            var groupsToMove = second.Groups.ToList();
+            foreach (var group in groupsToMove)
+            {
+                second.Groups.Remove(group);
+                first.Groups.Add(group);
             }
         }
+
+        private static CGeosetGroup CopyVertexGroup( CGeosetGroup  group, CModel owner)
+        {
+            //unfinished
+            CGeosetGroup _new = new CGeosetGroup(owner);
+            foreach (var node in group.Nodes)
+            {
+                CGeosetGroupNode gnode = new CGeosetGroupNode(owner);
+                gnode.Node.Attach(node.Node.Node);
+                _new.Nodes.Add(gnode);
+            }
+            return _new;
+        }
+
         internal static List<List<CGeosetTriangle>> CollectTriangleGroups(CGeoset geoset)
         {
             // A face is a triangle made of 3 vertices
@@ -2076,7 +2185,7 @@ namespace Wa3Tuner
             Dictionary<CGeosetVertex, CGeosetVertex> reference,
             CModel model)
         {
-            if (reference.TryGetValue(originalVertex, out CGeosetVertex existingVertex))
+            if (reference.TryGetValue(originalVertex, out CGeosetVertex? existingVertex))
             {
                 return existingVertex;
             }
@@ -2487,14 +2596,14 @@ namespace Wa3Tuner
         internal static CVector3 GetCentroidOfVectors(List<CVector3> vectors)
         {
             if (vectors == null || vectors.Count == 0) return new CVector3(); // Return a default vector if the list is empty
-            if (vectors.Count == 1)return vectors[0];
-             
+            if (vectors.Count == 1) return vectors[0];
+
 
             float sumX = 0, sumY = 0, sumZ = 0;
 
             foreach (var vector in vectors)
             {
-                
+
                 sumX += vector.X;
                 sumY += vector.Y;
                 sumZ += vector.Z;
@@ -2953,15 +3062,15 @@ namespace Wa3Tuner
         internal static void ScaleGeosets(List<CGeoset> list, Axes ax, float value)
         {
             if (value <= 0) return;
-          foreach (var geoset in list)
+            foreach (var geoset in list)
             {
                 foreach (var v in geoset.Vertices)
                 {
-                    v.Position.X *= ax == Axes.X? (value/100) : 1;
-                    v.Position.Y *= ax == Axes.Y? (value/100) : 1;
-                    v.Position.Z *= ax == Axes.Z? (value/100) : 1;
+                    v.Position.X *= ax == Axes.X ? (value / 100) : 1;
+                    v.Position.Y *= ax == Axes.Y ? (value / 100) : 1;
+                    v.Position.Z *= ax == Axes.Z ? (value / 100) : 1;
                 }
-            } 
+            }
         }
 
         internal static void TranslateVectors(List<CVector3> vectors, Axes x, float value, bool add = false)
@@ -3070,7 +3179,7 @@ namespace Wa3Tuner
 
         internal static void ScaleNodes(List<INode> nodes, Axes axis, float value)
         {
-            if (nodes.Count  < 2) return;
+            if (nodes.Count < 2) return;
             if (value <= 0) return;
 
             float scaleFactor = value / 100.0f; // Normalize the scaling value
@@ -3117,7 +3226,7 @@ namespace Wa3Tuner
         public static void MirrorNodePositions(List<INode> Nodes, Axes axis)
         {
             if (Nodes.Count < 2) return;
-            var extent = GetExtentOfVectorsCollection(Nodes.Select(X=>X.PivotPoint).ToList());
+            var extent = GetExtentOfVectorsCollection(Nodes.Select(X => X.PivotPoint).ToList());
 
             float midX = (extent.Min.X + extent.Max.X) / 2f;
             float midY = (extent.Min.Y + extent.Max.Y) / 2f;
@@ -3178,10 +3287,10 @@ namespace Wa3Tuner
             }
 
             // Ensure the updated positions are reflected in the rendering
-         
+
         }
 
-        public static  float GetRandomFloat(float min, float max, int Precision)
+        public static float GetRandomFloat(float min, float max, int Precision)
         {
             Random random = new Random();
             double scale = Math.Pow(10, Precision);
@@ -3209,7 +3318,7 @@ namespace Wa3Tuner
         internal static CVector3 RotateVertex(CVector3 vertexPosition, INode AroundNode, CVector4 RotationValues)
         {
             // RotationValues is a quaternion
-            
+
             CVector3 nodePosition = AroundNode.PivotPoint;
 
             // Translate vertex to be relative to the node
@@ -3286,7 +3395,7 @@ namespace Wa3Tuner
 
         internal static void MirrorVertices(Axes ax, List<CGeosetVertex> vertices)
         {
-         //unfinished
+            //unfinished
             throw new NotImplementedException();
         }
 
@@ -3425,9 +3534,13 @@ namespace Wa3Tuner
 
         internal static CVector3 GetCentroidofTriangle(CGeosetTriangle triangle)
         {
-            return GetCentroidOfVertices(new List<CGeosetVertex>() { triangle.Vertex1.Object, triangle.Vertex2.Object, triangle.Vertex3.Object});
+            return GetCentroidOfVertices(new List<CGeosetVertex>() { triangle.Vertex1.Object, triangle.Vertex2.Object, triangle.Vertex3.Object });
         }
-
+        internal static  Vector3 GetCentroidofTriangleC(CGeosetTriangle triangle)
+        {
+            CVector3 c =  GetCentroidOfVertices(new List<CGeosetVertex>() { triangle.Vertex1.Object, triangle.Vertex2.Object, triangle.Vertex3.Object });
+        return new Vector3(c.X, c.Y, c.Z);  
+        }
         internal static CVector2 GetCentroidUVFromTriangle(CGeosetTriangle triangle)
         {
             CVector2 uv1 = triangle.Vertex1.Object.TexturePosition;
@@ -3463,7 +3576,7 @@ namespace Wa3Tuner
 
         internal static void InsetTriangle(CGeoset geoset, CGeosetTriangle triangle, CModel owner)
         {
-            var vectors = ScaleDownTriangle(triangle,10);
+            var vectors = ScaleDownTriangle(triangle, 10);
             CGeosetVertex v1 = new CGeosetVertex(owner);
             CGeosetVertex v2 = new CGeosetVertex(owner);
             CGeosetVertex v3 = new CGeosetVertex(owner);
@@ -3481,8 +3594,8 @@ namespace Wa3Tuner
             geoset.Vertices.Add(v2);
             geoset.Vertices.Add(v3);
             geoset.Triangles.Add(t);
-         
- 
+
+
         }
 
         private static void CopyTriangleData(CGeosetVertex @object, CGeosetVertex v1)
@@ -3614,7 +3727,7 @@ namespace Wa3Tuner
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            Quaternion rotation = GetRotationBetween( direction, targetDirection);
+            Quaternion rotation = GetRotationBetween(direction, targetDirection);
 
             // Apply rotation around centroid
             foreach (var geoset in geosets)
@@ -3723,8 +3836,9 @@ namespace Wa3Tuner
             return new CVector3(b, g, r);
         }
 
-        internal static CAnimatorNode<CVector3> ReadLine3(string line)
+        internal static CAnimatorNode<CVector3>? ReadLine3(string? line)
         {
+            if (line == null) return null;
             try
             {
                 // Remove all whitespace characters (spaces, tabs, etc.)
@@ -3757,8 +3871,9 @@ namespace Wa3Tuner
             }
         }
 
-        internal static CAnimatorNode<CVector4> ReadLine4(string line)
+        internal static CAnimatorNode<CVector4>? ReadLine4(string? line)
         {
+            if (line == null) return null;
             try
             {
                 // Remove all whitespace characters (spaces, tabs, etc.)
@@ -3792,9 +3907,9 @@ namespace Wa3Tuner
             }
         }
 
-        internal static INode GetClosestNode(CVector3 position, List<INode> nodes)
+        internal static INode? GetClosestNode(CVector3 position, List<INode> nodes)
         {
-            INode closestNode = null;
+            INode? closestNode = null;
             float closestDistanceSquared = float.MaxValue;
 
             foreach (INode node in nodes)
@@ -3878,14 +3993,14 @@ namespace Wa3Tuner
         {
             return new Vector3(v.X, v.Y, v.Z);
         }
-        internal static bool RayInsideGeoset(xLine lne, CGeoset geose)
+        internal static bool RayInsideGeoset(Ray lne, CGeoset geose)
         {
             CExtent extent = Calculator.GetExtent(geose.Vertices.Select(x => x.Position).ToList());
             Vector3 min = CVector2Vector(extent.Min);
             Vector3 max = CVector2Vector(extent.Max);
 
-            Vector3 origin = lne.one;
-            Vector3 direction = Vector3.Normalize(lne.two - lne.one);
+            Vector3 origin = lne.From;
+            Vector3 direction = Vector3.Normalize(lne.To - lne.From);
 
             return RayIntersectsAABB(origin, direction, min, max);
         }
@@ -3930,6 +4045,667 @@ namespace Wa3Tuner
             return 1.0f - v;
         }
 
-    }
+        internal static CExtent GetExtent(CGeoset cGeoset)
+        {
+            return GetExtent(cGeoset.Vertices.Select(x => x.Position).ToList()); ;
+        }
 
+        internal static bool ExtentsOverlap(CExtent ex, List<Vector3> extent)
+        {
+            Extent a = new Extent(ex); // Converted extent
+
+            // Create Extent b from the 8 points
+            Extent b = new Extent
+            {
+                minX = extent.Min(v => v.X),
+                maxX = extent.Max(v => v.X),
+                minY = extent.Min(v => v.Y),
+                maxY = extent.Max(v => v.Y),
+                minZ = extent.Min(v => v.Z),
+                maxZ = extent.Max(v => v.Z)
+            };
+
+            // Check for overlap on all three axes
+            bool xOverlap = a.minX <= b.maxX && a.maxX >= b.minX;
+            bool yOverlap = a.minY <= b.maxY && a.maxY >= b.minY;
+            bool zOverlap = a.minZ <= b.maxZ && a.maxZ >= b.minZ;
+
+            return xOverlap && yOverlap && zOverlap;
+        }
+
+
+        internal static void translateVertices(Axes x, List<CGeosetVertex> vertices, float value)
+        {
+            if (vertices.Count == 1)
+            {
+                if (x == Axes.X) vertices[0].Position.X = value;
+                if (x == Axes.Y) vertices[0].Position.Y = value;
+                if (x == Axes.Z) vertices[0].Position.Z = value;
+            }
+            else if (vertices.Count > 1)
+            {
+                var centroid = GetCentroidOfVertices(vertices);
+                float offset = 0.0f;
+
+                // Calculate the offset once
+                if (x == Axes.X) offset = value - centroid.X;
+                if (x == Axes.Y) offset = value - centroid.Y;
+                if (x == Axes.Z) offset = value - centroid.Z;
+
+                foreach (CGeosetVertex v in vertices)
+                {
+                    if (x == Axes.X) v.Position.X += offset;
+                    if (x == Axes.Y) v.Position.Y += offset;
+                    if (x == Axes.Z) v.Position.Z += offset;
+                }
+            }
+        }
+
+        internal static void ScaleVertices(Axes ax, List<CGeosetVertex> vertices, float value)
+        {
+            float normalized = value / 100f;
+
+            if (vertices.Count > 1)
+            {
+                var centroid = GetCentroidOfVertices(vertices);
+
+                foreach (var v in vertices)
+                {
+                    if (ax == Axes.X)
+                        v.Position.X = centroid.X + (v.Position.X - centroid.X) * normalized;
+
+                    if (ax == Axes.Y)
+                        v.Position.Y = centroid.Y + (v.Position.Y - centroid.Y) * normalized;
+
+                    if (ax == Axes.Z)
+                        v.Position.Z = centroid.Z + (v.Position.Z - centroid.Z) * normalized;
+                }
+                return;
+            }
+
+        }
+        internal static void RotateVertices(Axes axis, List<CGeosetVertex> vertices, float angleDegrees)
+        {
+            if (vertices.Count <= 1)
+                return;
+
+            float angleRadians = angleDegrees * (float)(Math.PI / 180.0);
+            var centroid = GetCentroidOfVertices(vertices);
+
+            foreach (var v in vertices)
+            {
+                float x = v.Position.X - centroid.X;
+                float y = v.Position.Y - centroid.Y;
+                float z = v.Position.Z - centroid.Z;
+
+                float sin = (float)Math.Sin(angleRadians);
+                float cos = (float)Math.Cos(angleRadians);
+
+                float newX = x, newY = y, newZ = z;
+
+                switch (axis)
+                {
+                    case Axes.X:
+                        newY = y * cos - z * sin;
+                        newZ = y * sin + z * cos;
+                        break;
+
+                    case Axes.Y:
+                        newX = x * cos + z * sin;
+                        newZ = -x * sin + z * cos;
+                        break;
+
+                    case Axes.Z:
+                        newX = x * cos - y * sin;
+                        newY = x * sin + y * cos;
+                        break;
+                }
+
+                v.Position.X = centroid.X + newX;
+                v.Position.Y = centroid.Y + newY;
+                v.Position.Z = centroid.Z + newZ;
+            }
+        }
+
+        internal static CVector3 RGB2NRRGB(int r, int g, int b)
+        {
+            float r2 = (float)b / 255f;
+            float g2 = (float)g / 255f;
+            float b2 = (float)r / 255f;
+            return new CVector3(r2, g2, b2);
+
+        }
+
+        internal static System.Windows.Media.Brush War3ColorToBrush2(CVector3 color)
+        {
+            float r = color.X;
+            float g = color.Y;
+            float b = color.Z;
+            // Clamp values between 0 and 1, then scale to byte (0-255)
+            byte red = (byte)(Math.Clamp(r, 0f, 1f) * 255);
+            byte green = (byte)(Math.Clamp(g, 0f, 1f) * 255);
+            byte blue = (byte)(Math.Clamp(b, 0f, 1f) * 255);
+
+            return new SolidColorBrush(System.Windows.Media.Color.FromRgb(red, green, blue));
+        }
+
+        internal static void AverageUV(List<CGeosetVertex> vertices)
+        {
+            if (vertices.Count < 2) return;
+
+        }
+
+        internal static void centerNodes(List<INode> nodes, Axes axes)
+        {
+            if (nodes == null || nodes.Count == 0)
+                return;
+
+            // Compute the average pivot point
+            float sumX = 0, sumY = 0, sumZ = 0;
+            foreach (var node in nodes)
+            {
+                sumX += node.PivotPoint.X;
+                sumY += node.PivotPoint.Y;
+                sumZ += node.PivotPoint.Z;
+            }
+
+            float avgX = sumX / nodes.Count;
+            float avgY = sumY / nodes.Count;
+            float avgZ = sumZ / nodes.Count;
+
+            // Offset each node's pivot point to center them
+            foreach (var node in nodes)
+            {
+                var pivot = node.PivotPoint;
+                if ((axes & Axes.X) != 0)
+                    pivot.X -= avgX;
+                if ((axes & Axes.Y) != 0)
+                    pivot.Y -= avgY;
+                if ((axes & Axes.Z) != 0)
+                    pivot.Z -= avgZ;
+                node.PivotPoint = pivot;
+            }
+        }
+
+        internal static void CenterVertices(List<CGeosetVertex> vertices, Axes axes)
+        {
+            if (vertices == null || vertices.Count == 0)
+                return;
+
+            // Compute the average pivot point
+            float sumX = 0, sumY = 0, sumZ = 0;
+            foreach (var node in vertices)
+            {
+                sumX += node.Position.X;
+                sumY += node.Position.Y;
+                sumZ += node.Position.Z;
+            }
+
+            float avgX = sumX / vertices.Count;
+            float avgY = sumY / vertices.Count;
+            float avgZ = sumZ / vertices.Count;
+
+            // Offset each node's pivot point to center them
+            foreach (var node in vertices)
+            {
+                var pivot = node.Position;
+                if ((axes & Axes.X) != 0)
+                    pivot.X -= avgX;
+                if ((axes & Axes.Y) != 0)
+                    pivot.Y -= avgY;
+                if ((axes & Axes.Z) != 0)
+                    pivot.Z -= avgZ;
+                node.Position = pivot;
+            }
+        }
+
+        internal static void CenterGeosetsTogether(List<CGeoset> geosets, bool onX, bool onY, bool onZ)
+        {
+            if (geosets.Count == 0)
+            {
+                return;
+            }
+
+            CVector3 centroid;
+
+            if (geosets.Count == 1)
+            {
+                centroid = Calculator.GetCentroidOfGeoset(geosets[0]);
+            }
+            else
+            {
+                centroid = Calculator.GetCentroidOfGeosets(geosets);
+            }
+
+            foreach (CGeoset g in geosets)
+            {
+                if (g.Vertices.Count == 0) continue;
+                foreach (var vertex in g.Vertices)
+                {
+                    var pos = vertex.Position;
+
+                    float newX = onX ? pos.X - centroid.X : pos.X;
+                    float newY = onY ? pos.Y - centroid.Y : pos.Y;
+                    float newZ = onZ ? pos.Z - centroid.Z : pos.Z;
+
+                    vertex.Position = new CVector3(newX, newY, newZ);
+                }
+            }
+        }
+        public static void SnapVector(CVector3 vector, SnapType snapType, float gridSize, float lineSpacing)
+        {
+
+            // Ensure grid size and line spacing are not zero
+            if (gridSize == 0 || lineSpacing == 0) { return; }
+
+            // Calculate half grid size for symmetric snapping
+            float halfGridSize = gridSize / 2f;
+
+            // Get the nearest multiple of lineSpacing along the X and Y axes
+            float snappedX = SnapCoordinate(vector.X, halfGridSize, lineSpacing);
+            float snappedY = SnapCoordinate(vector.Y, halfGridSize, lineSpacing);
+
+            // Depending on the SnapType, adjust the Z-coordinate or apply other shifts
+            float snappedZ = vector.Z; // Z is left unchanged by default
+
+            // Apply the snapping based on the SnapType
+            switch (snapType)
+            {
+                case SnapType.Nearest:
+                    vector.X = snappedX;
+                    vector.Y = snappedY;
+                    break;
+
+                case SnapType.TopFrontLeft:
+                    vector.X = -halfGridSize;
+                    vector.Y = halfGridSize;
+                    vector.Z = gridSize; // Place it at the "top" of the grid
+                    break;
+
+                case SnapType.TopFrontRight:
+                    vector.X = halfGridSize;
+                    vector.Y = halfGridSize;
+                    vector.Z = gridSize;
+                    break;
+
+                case SnapType.TopBackLeft:
+                    vector.X = -halfGridSize;
+                    vector.Y = -halfGridSize;
+                    vector.Z = gridSize;
+                    break;
+
+                case SnapType.TopBackRight:
+                    vector.X = halfGridSize;
+                    vector.Y = -halfGridSize;
+                    vector.Z = gridSize;
+                    break;
+
+                case SnapType.BottomFrontLeft:
+                    vector.X = -halfGridSize;
+                    vector.Y = halfGridSize;
+                    vector.Z = 0; // Place it at the "bottom" of the grid
+                    break;
+
+                case SnapType.BottomFrontRight:
+                    vector.X = halfGridSize;
+                    vector.Y = halfGridSize;
+                    vector.Z = 0;
+                    break;
+
+                case SnapType.BottomBackLeft:
+                    vector.X = -halfGridSize;
+                    vector.Y = -halfGridSize;
+                    vector.Z = 0;
+                    break;
+
+                case SnapType.BottomBackRight:
+                    vector.X = halfGridSize;
+                    vector.Y = -halfGridSize;
+                    vector.Z = 0;
+                    break;
+            }
+        }
+
+        // Helper function to snap a coordinate to the nearest line spacing
+        private static float SnapCoordinate(float coordinate, float halfGridSize, float lineSpacing)
+        {
+            // If the coordinate is outside of the grid, snap to the closest grid line within range
+            float snappedCoord = (float)Math.Round(coordinate / lineSpacing) * lineSpacing;
+
+            // Clamp the snapped value to ensure it stays within the grid boundaries
+            snappedCoord = Math.Min(Math.Max(snappedCoord, -halfGridSize), halfGridSize);
+
+            return snappedCoord;
+        }
+        public static void SnapVerticesAsGroup(List<CGeosetVertex> vertices, SnapType snapType, float gridSize, float lineSpacing)
+        {
+            // Ensure the list has vertices
+            if (vertices == null || vertices.Count == 0) { return; }
+
+            // Get the centroid of the vertices
+            CVector3 centroid = GetCentroidOfVertices(vertices);
+
+            // Snap the centroid based on the SnapType
+            SnapVector(centroid, snapType, gridSize, lineSpacing);
+
+            // Calculate the offset (translation) needed to move the centroid to the snapped position
+            CVector3 offset = centroid - GetCentroidOfVertices(vertices);
+
+            // Apply the same offset to each vertex in the group (to move the group as a whole)
+            foreach (var vertex in vertices)
+            {
+                vertex.Position += offset;
+            }
+        }
+        public static void SnapNodesAsGroup(List<INode> vertices, SnapType snapType, float gridSize, float lineSpacing)
+        {
+            // Ensure the list has vertices
+            if (vertices == null || vertices.Count == 0) { return; }
+
+            // Get the centroid of the vertices
+            CVector3 centroid = GetCentroidOfVectors(vertices.Select(x => x.PivotPoint).ToList());
+
+            // Snap the centroid based on the SnapType
+            SnapVector(centroid, snapType, gridSize, lineSpacing);
+
+            // Calculate the offset (translation) needed to move the centroid to the snapped position
+            CVector3 offset = centroid - GetCentroidOfVectors(vertices.Select(x => x.PivotPoint).ToList());
+
+            // Apply the same offset to each vertex in the group (to move the group as a whole)
+            foreach (var vertex in vertices)
+            {
+                vertex.PivotPoint += offset;
+            }
+        }
+
+        internal static void centerNodesTogether(List<INode> nodes, bool onX, bool onY, bool onZ)
+        {
+            if (nodes == null || nodes.Count == 0)
+                return;
+
+            // Calculate the average position of all nodes
+            float avgX = 0, avgY = 0, avgZ = 0;
+
+            foreach (var node in nodes)
+            {
+                avgX += node.PivotPoint.X;
+                avgY += node.PivotPoint.Y;
+                avgZ += node.PivotPoint.Z;
+            }
+
+            avgX /= nodes.Count;
+            avgY /= nodes.Count;
+            avgZ /= nodes.Count;
+
+            // Move each node to the new position, based on selected axes
+            foreach (var node in nodes)
+            {
+                if (onX)
+                    node.PivotPoint.X = avgX;
+                if (onY)
+                    node.PivotPoint.Y = avgY;
+                if (onZ)
+                    node.PivotPoint.Z = avgZ;
+            }
+        }
+        internal static void CenterVerticesTogether(List<CGeosetVertex> vertices, bool onX, bool onY, bool onZ)
+        {
+            if (vertices == null || vertices.Count == 0)
+                return;
+
+            // Calculate the average position of all vertices
+            float avgX = 0, avgY = 0, avgZ = 0;
+
+            foreach (var vertex in vertices)
+            {
+                avgX += vertex.Position.X;
+                avgY += vertex.Position.Y;
+                avgZ += vertex.Position.Z;
+            }
+
+            avgX /= vertices.Count;
+            avgY /= vertices.Count;
+            avgZ /= vertices.Count;
+
+            // Move each vertex to the new position, based on selected axes
+            foreach (var vertex in vertices)
+            {
+                if (onX)
+                    vertex.Position.X = avgX;
+                if (onY)
+                    vertex.Position.Y = avgY;
+                if (onZ)
+                    vertex.Position.Z = avgZ;
+            }
+        }
+        internal static List<List<CGeosetTriangle>> CollectTriangleIislands(List<CGeosetTriangle> triangles)
+        {
+            var triangleToNeighbors = new Dictionary<CGeosetTriangle, List<CGeosetTriangle>>();
+            var vertexToTriangles = new Dictionary<CGeosetVertex, List<CGeosetTriangle>>();
+
+            // Map each vertex to the triangles it is part of
+            foreach (var triangle in triangles)
+            {
+                CGeosetVertex[] verts = {
+            triangle.Vertex1.Object,
+            triangle.Vertex2.Object,
+            triangle.Vertex3.Object
+        };
+
+                foreach (var v in verts)
+                {
+                    if (!vertexToTriangles.TryGetValue(v, out var list))
+                        vertexToTriangles[v] = list = new List<CGeosetTriangle>();
+                    list.Add(triangle);
+                }
+            }
+
+            // Build triangle adjacency map
+            foreach (var triangle in triangles)
+            {
+                var neighbors = new HashSet<CGeosetTriangle>();
+
+                CGeosetVertex[] verts = {
+            triangle.Vertex1.Object,
+            triangle.Vertex2.Object,
+            triangle.Vertex3.Object
+        };
+
+                foreach (var v in verts)
+                {
+                    foreach (var neighbor in vertexToTriangles[v])
+                    {
+                        if (neighbor != triangle)
+                            neighbors.Add(neighbor);
+                    }
+                }
+
+                triangleToNeighbors[triangle] = neighbors.ToList();
+            }
+
+            // DFS to find connected components (islands)
+            var islands = new List<List<CGeosetTriangle>>();
+            var visited = new HashSet<CGeosetTriangle>();
+
+            foreach (var triangle in triangles)
+            {
+                if (visited.Contains(triangle))
+                    continue;
+
+                var island = new List<CGeosetTriangle>();
+                var stack = new Stack<CGeosetTriangle>();
+                stack.Push(triangle);
+
+                while (stack.Count > 0)
+                {
+                    var current = stack.Pop();
+                    if (!visited.Add(current))
+                        continue;
+
+                    island.Add(current);
+
+                    foreach (var neighbor in triangleToNeighbors[current])
+                    {
+                        if (!visited.Contains(neighbor))
+                            stack.Push(neighbor);
+                    }
+                }
+
+                islands.Add(island);
+            }
+
+            return islands;
+        }
+
+        internal static void ProjectTriangleIslands(List<CGeosetTriangle> triangles)
+        {
+            List<List<CGeosetTriangle>> islands = CollectTriangleIislands(triangles);
+            foreach (var island in islands)
+            {
+                // Gather unique vertices
+                var vertices = new HashSet<CGeosetVertex>();
+                foreach (var tri in island)
+                {
+                    vertices.Add(tri.Vertex1.Object);
+                    vertices.Add(tri.Vertex2.Object);
+                    vertices.Add(tri.Vertex3.Object);
+                }
+
+                var vertexList = vertices.ToList();
+                bool isFlat = false;
+
+                if (vertexList.Count >= 3)
+                {
+                    var p0 = vertexList[0].Position;
+                    var p1 = vertexList[1].Position;
+                    var p2 = vertexList[2].Position;
+
+                    var normal = CVector3.Cross(p1 - p0, p2 - p0);
+
+                    isFlat = true;
+                    for (int i = 3; i < vertexList.Count; i++)
+                    {
+                        var point = vertexList[i].Position;
+                        var toPoint = point - p0;
+                        float distToPlane = CVector3.Dot(toPoint, normal);
+
+                        if (Math.Abs(distToPlane) > 0.001f)
+                        {
+                            isFlat = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Projection directions
+                CVector3 axisU, axisV;
+
+                if (isFlat)
+                {
+                    // Same as before: use the flat plane's direction
+                    var p0 = vertexList[0].Position;
+                    var p1 = vertexList[1].Position;
+                    var p2 = vertexList[2].Position;
+                    var normal = CVector3.Cross(p1 - p0, p2 - p0).Normalize();
+
+                    axisU = CVector3.Cross(normal, new CVector3(0, 0, 1));
+                    if (axisU.Length() < 0.001f)
+                        axisU = CVector3.Cross(normal, new CVector3(0, 1, 0));
+
+                    axisU = axisU.Normalize();
+                    axisV = CVector3.Cross(normal, axisU).Normalize();
+                }
+                else
+                {
+                    // Project from top (XY plane)
+                    axisU = new CVector3(1, 0, 0);
+                    axisV = new CVector3(0, 1, 0);
+                }
+
+                // Project and normalize
+                float minU = float.MaxValue, maxU = float.MinValue;
+                float minV = float.MaxValue, maxV = float.MinValue;
+
+                var uvMap = new Dictionary<CGeosetVertex, CVector2>();
+                foreach (var v in vertices)
+                {
+                    var pos = v.Position;
+                    float u = CVector3.Dot(pos, axisU);
+                    float vval = CVector3.Dot(pos, axisV);
+
+                    uvMap[v] = new CVector2(u, vval);
+
+                    if (u < minU) minU = u;
+                    if (u > maxU) maxU = u;
+                    if (vval < minV) minV = vval;
+                    if (vval > maxV) maxV = vval;
+                }
+
+                float rangeU = maxU - minU;
+                float rangeV = maxV - minV;
+
+                if (rangeU == 0) rangeU = 1;
+                if (rangeV == 0) rangeV = 1;
+
+                foreach (var pair in uvMap)
+                {
+                    float normU = (pair.Value.X - minU) / rangeU;
+                    float normV = (pair.Value.Y - minV) / rangeV;
+                    pair.Key.TexturePosition = new CVector2(normU, normV);
+                }
+            }
+        }
+
+        internal static void ScaleVerticesBy(Axes axisMode, List<CGeosetVertex> vertices, float value, bool positive)
+        {
+            foreach (var vertex in vertices)
+            {
+                float scale = positive ? (1 + value) : (1 - value);
+
+                switch (axisMode)
+                {
+                    case Axes.X:
+                        vertex.Position.X *= scale;
+                        break;
+                    case Axes.Y:
+                        vertex.Position.Y *= scale;
+                        break;
+                    case Axes.Z:
+                        vertex.Position.Z *= scale;
+                        break;
+                      
+                }
+            }
+        }
+
+        internal static void PutOnGround_Half(List<CGeosetVertex> vertices)
+        {
+            if (vertices == null || vertices.Count == 0)
+                return;
+
+            float minZ = float.MaxValue;
+            float maxZ = float.MinValue;
+
+            // Find min and max Z values
+            foreach (var vertex in vertices)
+            {
+                float z = vertex.Position.Z;
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+
+            float height = maxZ - minZ;
+            float targetCenterZ = height / 2f;
+            float currentCenterZ = (maxZ + minZ) / 2f;
+            float offset = currentCenterZ - targetCenterZ;
+
+            // Move all vertices by the offset
+            foreach (var vertex in vertices)
+            {
+                var pos = vertex.Position;
+                vertex.Position = new CVector3(pos.X, pos.Y, pos.Z - offset);
+            }
+        }
+
+    }
 }

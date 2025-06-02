@@ -17,12 +17,12 @@ namespace Wa3Tuner
     /// </summary>
     public partial class Mass_Create_Textures : Window
     {
-        public List<string> Paths = new List<string>();
+        public List<string> Paths = new();
         public Mass_Create_Textures()
         {
             InitializeComponent();
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             Paths = box.Text.Split('\n').ToList();
             for (int i = 0; i < Paths.Count; i++)
@@ -31,7 +31,7 @@ namespace Wa3Tuner
             }
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

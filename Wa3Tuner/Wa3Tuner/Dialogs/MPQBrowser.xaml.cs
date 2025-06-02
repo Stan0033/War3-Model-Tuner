@@ -23,12 +23,13 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class MPQBrowser : Window
     {
+        Dictionary<string, BitmapSource> Icons = new Dictionary<string, BitmapSource>();
         public MPQBrowser()
         {
             InitializeComponent();
             InitializeIcons();
         }
-        List<string> CurrentArchive = new List<string>();
+        List<string> CurrentArchive = new();
         private void InitializeIcons()
         {
             Icons = new Dictionary<string, BitmapSource>();
@@ -94,7 +95,7 @@ namespace Wa3Tuner.Dialogs
            
         }
 
-        Dictionary<string, BitmapSource> Icons;
+        
 
         TreeViewItem CreateFileItem(string FullFilename)
         {
@@ -148,12 +149,13 @@ namespace Wa3Tuner.Dialogs
             foreach (string file in files)
             {
                 TreeViewItem fileItem = CreateFileItem(file);
-                string directory = Path.GetDirectoryName(file);
+                string? directory = Path.GetDirectoryName(file);
 
                 if (FileIsInFolder(file))
                 {
                     // Ensure all parent folders exist before adding the file
-                    TreeViewItem parentFolder = GetOrCreateFolder(directory, tree, folderLookup);
+                    if (directory == null) { throw new Exception("null directory"); }
+                    TreeViewItem? parentFolder = GetOrCreateFolder(directory, tree, folderLookup);
                     if (parentFolder != null)
                     {
                         parentFolder.Items.Add(fileItem);
@@ -174,7 +176,7 @@ namespace Wa3Tuner.Dialogs
         }
 
 
-        private TreeViewItem GetOrCreateFolder(string path, TreeView tree, Dictionary<string, TreeViewItem> folderLookup)
+        private TreeViewItem? GetOrCreateFolder(string path, TreeView tree, Dictionary<string, TreeViewItem> folderLookup)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -186,8 +188,9 @@ namespace Wa3Tuner.Dialogs
                 return folderLookup[path]; // Folder already exists
             }
 
-            string parentPath = Path.GetDirectoryName(path);
-            TreeViewItem parentFolder = GetOrCreateFolder(parentPath, tree, folderLookup); // Recursively ensure parent exists
+            string? parentPath = Path.GetDirectoryName(path);
+            if (parentPath == null) { throw new Exception("null parentPath"); }
+            TreeViewItem? parentFolder = GetOrCreateFolder(parentPath, tree, folderLookup); // Recursively ensure parent exists
 
             TreeViewItem folderItem = CreateFolderItem(Path.GetFileName(path));
             folderLookup[path] = folderItem;
@@ -204,46 +207,51 @@ namespace Wa3Tuner.Dialogs
             return folderItem;
         }
 
-
+        private string CurrentPatch = string.Empty;
         bool FileIsInFolder(string fullFilePath)
         {
             return fullFilePath.Contains("\\");
         }
 
        
-        private void openwar3(object sender, RoutedEventArgs e)
+        private void openwar3(object? sender, RoutedEventArgs? e)
         {
+            CurrentPatch = MPQPaths.War3;
+
             RefreshTree(MPQHelper.Listfile_Everything_war3, Tree);
         }
 
-        private void openwar3xlocal(object sender, RoutedEventArgs e)
+        private void openwar3xlocal(object? sender, RoutedEventArgs? e)
         {
-            RefreshTree(MPQHelper.Listfile_Everything_war3xLocal, Tree);
+            CurrentPatch = MPQPaths.War3xLocal;
+            RefreshTree(MPQHelper.Listfile_blp_War3xLocal, Tree);
         }
-
-        private void openpatch(object sender, RoutedEventArgs e)
+       
+        private void openpatch(object? sender, RoutedEventArgs? e)
         {
+            CurrentPatch = MPQPaths.War3Patch;
             RefreshTree(MPQHelper.Listfile_Everything_war3Patch, Tree);
         }
 
-        private void openwar3x(object sender, RoutedEventArgs e)
+        private void openwar3x(object? sender, RoutedEventArgs? e)
         {
+            CurrentPatch = MPQPaths.War3X;
             RefreshTree(MPQHelper.Listfile_Everything_war3x, Tree);
         }
 
-        private void refresh(object sender, RoutedEventArgs e)
+        private void refresh(object? sender, RoutedEventArgs? e)
         {
             RefreshTree(CurrentArchive, Tree);
         }
         string GetItemName()
         {
-            TreeViewItem item =(TreeViewItem) Tree.SelectedItem;
-            StackPanel holder = item.Header as StackPanel;
+            TreeViewItem? item =(TreeViewItem) Tree.SelectedItem; if (item == null) { return string.Empty; }
+            StackPanel? holder = item.Header as StackPanel; if (holder == null) { return string.Empty; }
             if (holder.Children.Count != 3) return "";
-            TextBlock t = holder.Children [2] as TextBlock;
+            TextBlock? t = holder.Children [2] as TextBlock; if (t == null) { return string.Empty; }
             return t.Text;
         }
-        private void copy(object sender, RoutedEventArgs e)
+        private void copy(object? sender, RoutedEventArgs? e)
         {
             if (Tree.SelectedItem != null)
             {
@@ -251,14 +259,14 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void export(object sender, RoutedEventArgs e)
+        private void export(object? sender, RoutedEventArgs? e)
         {
             string name = GetItemName();
-            string path = ShowSaveFileDialog(name);
+            string? path = ShowSaveFileDialog(name);
             if (path == null) return;
-            MPQHelper.Export(name, path);
+            MPQHelper.Export(name, path, CurrentPatch);
         }
-        public static string ShowSaveFileDialog(string fileName, string initialDirectory = "")
+        public static string? ShowSaveFileDialog(string fileName, string initialDirectory = "")
         {
             string extension = Path.GetExtension(fileName);
             string extensionWithoutDot = extension.TrimStart('.'); // Remove leading dot
@@ -292,7 +300,7 @@ namespace Wa3Tuner.Dialogs
 
         
 
-        private void Window_MouseDown(object sender, KeyEventArgs e)
+        private void Window_MouseDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             

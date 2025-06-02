@@ -29,9 +29,10 @@ namespace Wa3Tuner.Dialogs
 
         private void Fill(CGeoset g)
         {
+            Title = Title + $" - {g.Groups.Count} groups";
            for (int i =0; i< g.Groups.Count; i++)
             {
-                List<string> nodes = new List<string>();
+                List<string> nodes = new();
                 foreach (var gnode in g.Groups[i].Nodes)
                 {
                     nodes.Add(gnode.Node.Node.Name);
@@ -43,7 +44,7 @@ namespace Wa3Tuner.Dialogs
             list1.SelectedIndex = 0;
         }
 
-        private void list1_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void list1_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             int index = list1.SelectedIndex;
             list2.Items.Clear();

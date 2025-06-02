@@ -52,32 +52,32 @@ namespace Wa3Tuner
                     Calculator.BrushFromWar3Vector3(Emitter.Color.GetValue());
             }
         }
-        private void editcolor(object sender, RoutedEventArgs e)
+        private void editcolor(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.Color, true, TransformationType.Color);
             tr.ShowDialog(); Fill();
         }
-        private void editalpha(object sender, RoutedEventArgs e)
+        private void editalpha(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.Alpha, true, TransformationType.Alpha);
             tr.ShowDialog(); Fill();
         }
-        private void editha(object sender, RoutedEventArgs e)
+        private void editha(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.HeightAbove, true, TransformationType.Float);
             tr.ShowDialog(); Fill();
         }
-        private void edithb(object sender, RoutedEventArgs e)
+        private void edithb(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.HeightBelow, true, TransformationType.Float);
             tr.ShowDialog(); Fill();
         }
-        private void editts(object sender, RoutedEventArgs e)
+        private void editts(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.TextureSlot, true );
             tr.ShowDialog(); Fill();
         }
-        private void editrows(object sender, TextChangedEventArgs e)
+        private void editrows(object? sender, TextChangedEventArgs e)
         {
             string i = InputRows.Text;
             bool parsed = int.TryParse(i, out int rows);
@@ -88,7 +88,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void editcolumns(object sender, TextChangedEventArgs e)
+        private void editcolumns(object? sender, TextChangedEventArgs e)
         {
             string i = InputColumns.Text;
             bool parsed = int.TryParse(i, out int columns);
@@ -100,7 +100,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void editemissionrate(object sender, TextChangedEventArgs e)
+        private void editemissionrate(object? sender, TextChangedEventArgs e)
         {
             string i = InputEmissionRate.Text;
             bool parsed = int.TryParse(i, out int er);
@@ -111,7 +111,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void editlifespan(object sender, TextChangedEventArgs e)
+        private void editlifespan(object? sender, TextChangedEventArgs e)
         {
             string i = InputLifespan.Text;
             bool parsed = int.TryParse(i, out int ls);
@@ -122,7 +122,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void editgravity(object sender, TextChangedEventArgs e)
+        private void editgravity(object? sender, TextChangedEventArgs e)
         {
             string i = InputGravity.Text;
             bool parsed = int.TryParse(i, out int gravity);
@@ -133,20 +133,20 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ComboTexture_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ComboTexture_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (ComboTexture.SelectedItem != null)
             {
                 Emitter.Material.Attach(Model.Materials[ComboTexture.SelectedIndex]);
             }
         }
-        private void editvis(object sender, RoutedEventArgs e)
+        private void editvis(object? sender, RoutedEventArgs? e)
         {
             transformation_editor tr = new transformation_editor(Model, Emitter.Visibility, true, TransformationType.Visibility);
             tr.ShowDialog();
             Fill();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

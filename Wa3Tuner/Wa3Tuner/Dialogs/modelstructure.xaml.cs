@@ -24,7 +24,7 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
         }
 
-        private void make(object sender, RoutedEventArgs e)
+        private void make(object? sender, RoutedEventArgs? e)
         {
             TreeViewItem model = new TreeViewItem() { Header = "Model"};
             TreeViewItem model_name = new TreeViewItem() { Header = "Name"};

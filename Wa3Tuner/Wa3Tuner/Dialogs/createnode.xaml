@@ -9,7 +9,7 @@
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
-        Title="Create Node" Height="300" Width="400">
+        Title="Create Node" Height="350" Width="400">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -19,24 +19,24 @@
             <RowDefinition Height="30"/>
             <RowDefinition/>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
         <TextBlock Text="Name" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         <TextBox Name="box" Grid.Row="0" Grid.Column="1"/>
-        <Button Click="ok" Grid.Row="3" Grid.ColumnSpan="2" Margin="10">OK</Button>
+        <Button Click="ok" Grid.Row="3" Grid.ColumnSpan="2" Margin="10" Padding="5">OK</Button>
         <TextBlock Text="Type" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         <CheckBox Name="Check_parent" Content="Place under selected node" Grid.Row="2"/>
         <ListBox Name="List_Type"  Grid.Row="1" Grid.Column="1" SelectedIndex="0" SelectionMode="Single">
             <ListBox.Items>
-                <ListBoxItem>Bone</ListBoxItem>
-                <ListBoxItem>Helper</ListBoxItem>
-                <ListBoxItem>Collision Shape</ListBoxItem>
-                <ListBoxItem>Light</ListBoxItem>
+                <ListBoxItem ToolTip="Vertices hould only be attached to bones! Bonnes deform vertices when anmated, creating animation in sequences">Bone</ListBoxItem>
+                <ListBoxItem ToolTip="Use to hold other nodes. Does no contain additional properties">Helper</ListBoxItem>
+                <ListBoxItem ToolTip="Used for determining in-game how selection insteracts with the model">Collision Shape</ListBoxItem>
+                <ListBoxItem ToolTip="Illuminates surroundings">Light</ListBoxItem>
                 <ListBoxItem>Emitter1</ListBoxItem>
-                <ListBoxItem>Emitter2</ListBoxItem>
-                <ListBoxItem>Ribbon</ListBoxItem>
-                <ListBoxItem>Attachment</ListBoxItem>
-                <ListBoxItem>Event Object</ListBoxItem>
+                <ListBoxItem ToolTip="The most used spcial effect. Ex.: Pixies, dust, etc">Emitter2</ListBoxItem>
+                <ListBoxItem ToolTip="Special effect most visible when the node is moved or the characted is moved">Ribbon</ListBoxItem>
+                <ListBoxItem ToolTip="Used for attaching other models to this model in-game">Attachment</ListBoxItem>
+                <ListBoxItem ToolTip="Produces sound or sprites or special effects in certain sequences in-game">Event Object</ListBoxItem>
             </ListBox.Items>
         </ListBox>
     </Grid>

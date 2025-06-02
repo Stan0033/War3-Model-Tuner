@@ -25,21 +25,23 @@ namespace Wa3Tuner.Dialogs
         {
             InitializeComponent();
             CurrentGeoset = geoset;
+            if (geoset.Extents.Count == 0) { return; }
             for (int i = 0; i < geoset.Extents.Count; i++)
             {
+                if (i>= sequences.Count) { break; }
                 var item = new ListBoxItem();
                 item.Content = sequences[i].Name;
                 ListExtents.Items.Add(item);
             }
         }
 
-        private void ListExtents_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void ListExtents_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             Edit_Extent ee = new Edit_Extent(CurrentGeoset.Extents[ListExtents.SelectedIndex].Extent);
             ee.ShowDialog();
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) Close();
         }

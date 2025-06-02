@@ -53,7 +53,7 @@ namespace Wa3Tuner
                 PositiveExtentZTextBox.Text = cols.Vertex2.Z.ToString();
             }
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (BoxRadioButton.IsChecked == true)
             {
@@ -98,7 +98,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SetBox(object sender, RoutedEventArgs e)
+        private void SetBox(object? sender, RoutedEventArgs? e)
         {
             NegativeExtentXTextBox.IsEnabled = true;
             NegativeExtentYTextBox.IsEnabled = true;
@@ -108,7 +108,7 @@ namespace Wa3Tuner
             PositiveExtentXTextBox.IsEnabled = true;
             RadiusTextBox.IsEnabled =   false;
         }
-        private void SetSphere(object sender, RoutedEventArgs e)
+        private void SetSphere(object? sender, RoutedEventArgs? e)
         {
             NegativeExtentXTextBox.IsEnabled = false;
             NegativeExtentYTextBox.IsEnabled = false;
@@ -132,12 +132,12 @@ namespace Wa3Tuner
             // Return true if all values are valid floats
             return true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }
 
-        private void Translate(object sender, RoutedEventArgs e)
+        private void Translate(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Both);
             if (iv.ShowDialog() == true)
@@ -156,7 +156,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void Scale(object sender, RoutedEventArgs e)
+        private void Scale(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Positive, "Percentage");
             if (iv.ShowDialog() == true)
@@ -175,7 +175,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void do100(object sender, RoutedEventArgs e)
+        private void do100(object? sender, RoutedEventArgs? e)
         {
             BoxRadioButton.IsChecked = true;
             NegativeExtentXTextBox.Text = "-100";

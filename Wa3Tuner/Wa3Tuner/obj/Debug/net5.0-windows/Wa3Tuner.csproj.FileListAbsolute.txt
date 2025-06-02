@@ -172,6 +172,7 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Generate Keyframe in Range.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\GeosetExtents.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\GeosetGroupViewer.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\geoVisibilitiesKeyword.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Gradual Keyframe Maker.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\howmodel.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ImageViewer.g.cs
@@ -184,11 +185,15 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Mass_Create_Sequences.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Mass_Create_Textures.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MergeHelperBoneOptons.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MiniUV.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Model Colors Changer.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ModelBrowser.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\modelstructure.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\model_starter.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MPQBrowser.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Multiselector.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\newsequence.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Nodes_Renamer.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\NoKeyframesActions.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ObjImporter.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\PivoPointOffsetWkndow.g.cs
@@ -197,14 +202,19 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\putonground.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\QuadFitter.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\RawKeyframeRearranger.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Render_Preferences.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\resizeSequence_window.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SCALETOFIT.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Selector.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\select_Transformations.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SequenceToSequencesSelector.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Shatter animation maker.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Snap Selector 2d.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SnapSettingsWindow.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SpreadVerticesIWindow.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextColorizer_Window.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextureBrowser.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextViewer.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Transformations_viewer.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\transformation_editor.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\translation_selector.g.cs
@@ -220,6 +230,7 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\window_EditAttachment.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\window_editbone_data.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\window_edit_cols.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Swap Sequences Selector.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\App.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner_Content.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner_MarkupCompile.cache
@@ -248,6 +259,7 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Generate Keyframe in Range.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\GeosetExtents.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\GeosetGroupViewer.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\geoVisibilitiesKeyword.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Gradual Keyframe Maker.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\howmodel.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ImageViewer.baml
@@ -260,11 +272,15 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Mass_Create_Sequences.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Mass_Create_Textures.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MergeHelperBoneOptons.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MiniUV.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Model Colors Changer.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ModelBrowser.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\modelstructure.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\model_starter.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MPQBrowser.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Multiselector.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\newsequence.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Nodes_Renamer.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\NoKeyframesActions.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\ObjImporter.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\PivoPointOffsetWkndow.baml
@@ -273,14 +289,19 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\putonground.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\QuadFitter.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\RawKeyframeRearranger.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Render_Preferences.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\resizeSequence_window.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SCALETOFIT.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Selector.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\select_Transformations.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SequenceToSequencesSelector.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Shatter animation maker.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Snap Selector 2d.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SnapSettingsWindow.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SpreadVerticesIWindow.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextColorizer_Window.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextureBrowser.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextViewer.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Transformations_viewer.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\transformation_editor.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\translation_selector.baml
@@ -294,6 +315,7 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\import_nodes_choice.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\window_EditAttachment.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Node Dialogs\window_editbone_data.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Swap Sequences Selector.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.g.resources
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.AssemblyInfoInputs.cache
@@ -306,15 +328,9 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.pdb
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.genruntimeconfig.cache
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\ref\Wa3Tuner.dll
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Render_Preferences.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Render_Preferences.baml
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Swap Sequences Selector.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Swap Sequences Selector.baml
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextViewer.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\TextViewer.baml
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SequenceToSequencesSelector.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\SequenceToSequencesSelector.baml
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Model Colors Changer.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Model Colors Changer.baml
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MiniUV.g.cs
-C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MiniUV.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Geoset_Selection.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Geoset_Selection.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\geoset_data_editor.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\geoset_data_editor.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\debug_console_w.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\debug_console_w.baml

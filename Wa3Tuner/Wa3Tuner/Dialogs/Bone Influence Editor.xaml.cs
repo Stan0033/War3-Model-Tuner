@@ -20,19 +20,28 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class Bone_Influence_Editor : Window
     {
-        private INode Node;
-        public Bone_Influence_Editor(INode n)
+        private INode? Node;
+        public Bone_Influence_Editor(INode? n)
         {
-            InitializeComponent();
-            Node = n;
+            if (Node == null)
+            {
+                Close();
+            }
+            else
+            {
+
+
+                InitializeComponent();
+                Node = n;
+            }
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             //unfinished
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {

@@ -22,7 +22,7 @@ namespace Wa3Tuner
         {
             InitializeComponent();
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (two.IsChecked == true) { selected = 2; }
             if (three.IsChecked == true) { selected = 3; }
@@ -30,7 +30,7 @@ namespace Wa3Tuner
             if (five.IsChecked == true) { selected = 5; }
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }

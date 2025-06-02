@@ -20,6 +20,6 @@
         <!-- ListBox -->
         <ListBox Name="Data" Grid.Row="1" Margin="10" SelectionMode="Single"/>
         <!-- Button -->
-        <Button Grid.Row="2" Click="ok" Content="Load Model" Margin="10" Height="30" />
+        <Button Grid.Row="2" Click="Ok" Content="Load Model" Margin="10" Height="30" />
     </Grid>
 </Window>

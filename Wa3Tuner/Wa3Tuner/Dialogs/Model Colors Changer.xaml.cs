@@ -22,11 +22,12 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class Model_Colors_Changer : Window
     {
-        CModel model;
-        private List<Vector3> Colors;
+        CModel? model;
+        private List<Vector3> Colors = new List<Vector3>();
         public Model_Colors_Changer(CModel m)
         {
             InitializeComponent();
+            if (m == null) { Close(); return; }
             model = m;
             Fill();
             FillColors();
@@ -69,13 +70,14 @@ namespace Wa3Tuner.Dialogs
             Combo.SelectedIndex = 0;    
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) { ok(null,null); }
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
+            if (model == null) { MessageBox.Show("Null model"); return; }
             int index = Combo.SelectedIndex;
             bool alpha = c1.IsChecked == true;
             bool alphaAnimated = c2.IsChecked == true;

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -17,7 +18,7 @@ namespace Wa3Tuner
     /// </summary>
     public partial class Multiselector_Window : Window
     {
-        public List<string> selected = new List<string>();
+        public List<string> selected = new();
         public List<int> selectedIndexes = new List<int>();
         public Multiselector_Window(List<string> items, string title = "Multiselector")
         {
@@ -28,15 +29,15 @@ namespace Wa3Tuner
             }
             Title = title;
         }
-        private void sall(object sender, RoutedEventArgs e)
+        private void sall(object? sender, RoutedEventArgs? e)
         {
             list.SelectAll();
         }
-        private void sone(object sender, RoutedEventArgs e)
+        private void sone(object? sender, RoutedEventArgs? e)
         {
             list.SelectedItems.Clear();
         }
-        private void reverse(object sender, RoutedEventArgs e)
+        private void reverse(object? sender, RoutedEventArgs? e)
         {
             List<object>selected = new List<object>();    
             foreach (object item in list.SelectedItems) { selected.Add(item); }
@@ -46,20 +47,21 @@ namespace Wa3Tuner
                  if (list.SelectedItems.Contains(item) == false) {  list.SelectedItems.Add(item); }
             }
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
-            if (list.SelectedItems.Count >= 2)
+            if (list.SelectedItems.Count >= 1)
             {
                 foreach (object item in list.SelectedItems)
                 {
-                    string s = (item as ListBoxItem).Content.ToString();
+                    string? s = Extractor.GetString(item);
+                    if (s == null) continue;
                     selected.Add(s);
                     selectedIndexes.Add(list.Items.IndexOf(item));
                 }
                 DialogResult = true;
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

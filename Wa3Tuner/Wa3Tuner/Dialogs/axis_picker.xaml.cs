@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 
 namespace Wa3Tuner.Dialogs
 {
@@ -28,13 +29,13 @@ namespace Wa3Tuner.Dialogs
             Title = title;
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
             if (e.Key == Key.Enter) ok(null, null);
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (Check_x.IsChecked == true) { axis = Axes.X; }
             if (Check_y.IsChecked == true) { axis = Axes.Y; }

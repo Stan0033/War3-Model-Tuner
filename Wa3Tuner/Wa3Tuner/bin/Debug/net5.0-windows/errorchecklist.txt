@@ -1,0 +1,32 @@
+Do keyframes have consistent order?
+Do sequences have consistent order?
+Do sequences overlap?
+Are there unused components?
+Are there adjacent repeating keyframes' data or times?
+Are there unused keyframes?
+Or any components' values in their allowed range?
+Are there duplicating geosets?
+Are there duplicating geoset animations?
+Is the number of extents equal to the number of sequences?
+Is the number of geoset animations equal to th enumber of geosets?
+Are there geosets with more than 255 matrix groups?
+Are there sequences with invalid interval? (zero,negative)
+Are there invisible geosets (by geoset animation) or nodes (by visibility) ?
+Are any nodes using 0 scaling instead of visibility?
+Are some geosets having matrix groups containin non-bone nodes?
+Is interpolation for visibilities none?
+Are there bones to which tehre are no attached vertices?
+Are there event objects without tracks?
+Are there geoset animations not using geosets?
+Are there missing starting/ending tracks in animated components?
+Are there isolated vertices?
+Are there isolated triangles?
+Are there overlapping vertices?
+Are there overlapping triangles?
+Are there repeating matrix groups?
+Are there animated components with no keyframes?
+Are thre invalid node relationships? (non-existing, self-refrerencing, mutual referencing)
+
+
+
+

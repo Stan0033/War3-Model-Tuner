@@ -36,50 +36,50 @@ namespace Wa3Tuner
             ButtonLongtitude.Content = Emitter.Longitude.Static ? $"Longitude: {Emitter.Longitude.GetValue()}" : $"Longitude: ({Emitter.Longitude.Count})";
             ButtonLatitude.Content = Emitter.Latitude.Static ? $"Latitude: {Emitter.Latitude.GetValue()}" : $"Latitude: ({Emitter.Latitude.Count})";
         }
-        private void editemission(object sender, RoutedEventArgs e)
+        private void editemission(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.EmissionRate, true, TransformationType.Float);
             editor.ShowDialog();
         }
-        private void editlifespan(object sender, RoutedEventArgs e)
+        private void editlifespan(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.LifeSpan, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editinitial(object sender, RoutedEventArgs e)
+        private void editinitial(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.InitialVelocity, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editgravity(object sender, RoutedEventArgs e)
+        private void editgravity(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Gravity, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editlongti(object sender, RoutedEventArgs e)
+        private void editlongti(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Longitude, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editlat(object sender, RoutedEventArgs e)
+        private void editlat(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Emitter.Latitude, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editvis(object sender, RoutedEventArgs e)
+        private void editvis(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model,  Emitter.Visibility, true, TransformationType.Visibility);
             editor.ShowDialog(); Fill();
         }
-        private void ChckedUseMDL(object sender, RoutedEventArgs e)
+        private void ChckedUseMDL(object? sender, RoutedEventArgs? e)
         {
             Emitter.EmitterUsesMdl = Check_usemd.IsChecked == true;
         }
-        private void CheckedUsesTGA(object sender, RoutedEventArgs e)
+        private void CheckedUsesTGA(object? sender, RoutedEventArgs? e)
         {
             Emitter.EmitterUsesTga = Check_usetga.IsChecked == true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

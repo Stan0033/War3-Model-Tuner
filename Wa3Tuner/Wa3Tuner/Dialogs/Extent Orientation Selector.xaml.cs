@@ -26,7 +26,7 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (RadioTop.IsChecked == true) { Position = ExtentPosition.Top; }
             else if (RadioBottom.IsChecked == true) { Position = ExtentPosition.Bottom; }

@@ -77,7 +77,7 @@ namespace Wa3Tuner.Dialogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.7;component/dialogs/axis_picker.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.8;component/dialogs/axis_picker.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\axis_picker.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

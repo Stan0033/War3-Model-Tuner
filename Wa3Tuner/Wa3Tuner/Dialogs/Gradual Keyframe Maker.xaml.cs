@@ -44,12 +44,12 @@ namespace Wa3Tuner.Dialogs
             }
             list.SelectedIndex = 0;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             var SelectedSequence = Sequences[list.SelectedIndex];
             int Fullrange = SelectedSequence.IntervalEnd - SelectedSequence.IntervalStart;
@@ -152,28 +152,28 @@ namespace Wa3Tuner.Dialogs
         }
 
 
-        private void chek1(object sender, RoutedEventArgs e)
+        private void chek1(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             d1.Visibility = Visibility.Visible;
             d2.Visibility = Visibility.Collapsed;
         }
 
-        private void chek2(object sender, RoutedEventArgs e)
+        private void chek2(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             d1.Visibility = Visibility.Collapsed;
             d2.Visibility = Visibility.Visible;
         }
 
-        private void list_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void list_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             var s = Sequences[list.SelectedIndex];
             inputFrom.Text = s.IntervalStart.ToString();
             inputFrom.Text = s.IntervalEnd.ToString();
         }
 
-        private void Window_KeyDown_1(object sender, KeyEventArgs e)
+        private void Window_KeyDown_1(object? sender, KeyEventArgs e)
         {
 
         }

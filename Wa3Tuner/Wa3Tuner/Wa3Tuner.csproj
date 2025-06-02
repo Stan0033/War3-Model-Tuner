@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>tune.ico</ApplicationIcon>
-    <FileVersion>1.2.7</FileVersion>
-    <AssemblyVersion>1.2.7</AssemblyVersion>
+    <FileVersion>1.2.8</FileVersion>
+    <AssemblyVersion>1.2.8</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="cross.jpg" />
@@ -48,10 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cross.jpg" />
-    <Resource Include="Dialogs\copy.png" />
+    <Resource Include="Dialogs\copy.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Dialogs\Lock.png" />
     <Resource Include="Dialogs\move.png" />
-    <Resource Include="Dialogs\paste.png" />
+    <Resource Include="Dialogs\paste.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Dialogs\rotate.png" />
     <Resource Include="Dialogs\scale.png" />
     <Resource Include="Dialogs\ScaleX.png" />

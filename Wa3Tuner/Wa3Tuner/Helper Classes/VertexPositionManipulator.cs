@@ -8,42 +8,7 @@ using System.Threading.Tasks;
 
 namespace Wa3Tuner.Helper_Classes
 {
-    public enum SnapType
-    {
-        Nearest,  // Closest snap point
-
-        // Cube Corners
-        TopLeftBack,
-        TopRightBack,
-        TopLeftFront,
-        TopRightFront,
-
-        BottomLeftBack,
-        BottomRightBack,
-        BottomLeftFront,
-        BottomRightFront,
-
-        // Edge Midpoints
-        TopMidBack,    // Between TopLeftBack and TopRightBack
-        TopMidFront,   // Between TopLeftFront and TopRightFront
-        TopLeftMid,    // Between TopLeftBack and TopLeftFront
-        TopRightMid,   // Between TopRightBack and TopRightFront
-
-        BottomMidBack,  // Between BottomLeftBack and BottomRightBack
-        BottomMidFront, // Between BottomLeftFront and BottomRightFront
-        BottomLeftMid,  // Between BottomLeftBack and BottomLeftFront
-        BottomRightMid, // Between BottomRightBack and BottomRightFront
-
-        LeftMidBack,   // Between TopLeftBack and BottomLeftBack
-        LeftMidFront,  // Between TopLeftFront and BottomLeftFront
-        RightMidBack,  // Between TopRightBack and BottomRightBack
-        RightMidFront, // Between TopRightFront and BottomRightFront
-
-        MidLeft,  // Between BottomLeftBack and TopLeftBack
-        MidRight, // Between BottomRightBack and TopRightBack
-        MidBack,  // Between BottomLeftBack and BottomRightBack
-        MidFront  // Between BottomLeftFront and BottomRightFront
-    }
+  
 
     public static class VertexPositionManipulator
     {

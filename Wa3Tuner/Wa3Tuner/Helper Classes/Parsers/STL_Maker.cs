@@ -104,7 +104,7 @@ namespace Wa3Tuner.Helper_Classes
 
             using (StreamReader sr = new StreamReader(FileName))
             {
-                string line;
+                string? line;
                 while ((line = sr.ReadLine()?.Trim().ToLower()) != null)
                 {
                     if (line.StartsWith("solid"))

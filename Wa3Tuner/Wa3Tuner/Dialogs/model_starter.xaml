@@ -1,0 +1,104 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.model_starter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown"
+        Background="LightGray"
+        Title="New model" Height="700" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition  Height="30"/>
+            <RowDefinition Height="180"/>
+            <RowDefinition  Height="30"/>
+            <RowDefinition Height="150" />
+            <RowDefinition  Height="30"/>
+            <RowDefinition Height="150"/>
+            <RowDefinition  Height="35"/>
+            <RowDefinition  Height="30"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Name"  Margin="5"/>
+
+            <TextBox Name="InputName" Width="150"  Margin="5"/>
+        </StackPanel>
+        <TextBlock Text="Type of model"  Margin="5" Grid.Row="1"/>
+        <ListBox Name="ListType" Grid.Row="2" SelectionChanged="ListBox_SelectionChanged">
+            <ListBox.Items>
+
+                <ListBoxItem Content="Unit (Organic)"/>
+                <ListBoxItem Content="Unit (Mechanical)"/>
+                <ListBoxItem Content="Hero (Organic)"/>
+                <ListBoxItem Content="Hero (Mechanical)"/>
+                <ListBoxItem Content="Building" ToolTip="Can be actively built by workers, used to train units, research upgrades, be upgradeable, be used as requirement for training units. The attachment points 'Sprite' serve for when the building is damaged and burning. The attachment point 'RallyPoint' is for setting where the newly created units go "/>
+                <ListBoxItem Content="Effect" ToolTip="Usually a short-lived special effect as a result of an ability"/>
+                <ListBoxItem Content="Buff" ToolTip="Buffs are effects that appear and stay attached on units as a result of a cast ability. They can also have tag Medium or Large if the unit requires that in the world editor"/>
+                <ListBoxItem Content="Item" ToolTip="The model used by an item in-game. Items need only birth, stand, death and portrait sequence. They are usually pick-able and used by heroes."/>
+                <ListBoxItem Content="Attachment" ToolTip="Attachments like weapons or effects on units and heroes, like for ehad, overhead, chest, feet etc"/>
+                <ListBoxItem Content="Projectile" ToolTip="The projectile is special effect between units-point or unit-unit that travel to the target. Birth,Stand and Death sequences are launch, travel, and impact. The height, scaling and speed of the projectile in-game is controlled by the unit's property fields in the world editor."/>
+                <ListBoxItem Content="Prop (Decoration)" ToolTip="Doodads cannot be targeted in-game. They can be still or animated."/>
+                <ListBoxItem Content="Prop (Destructible)" ToolTip="Destructibles in-game are interactive. They can be trees, gates, creates, platforms, or other deocations that can be harvested, destroyed, or resurrected. They can drop items."/>
+                <ListBoxItem Content="Portrait" ToolTip="Used to have a portrait for a unit/hero separate from the main mode. "/>
+            </ListBox.Items>
+            
+        </ListBox>
+        <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="3">
+            <TextBlock Text="Include sequences:"  Width="200"/>
+            <Button Click="sff" Content="LIst of suffixes" Width="100"/>
+        </StackPanel>
+      
+        <ListBox Name="ListSequences" Grid.Row="4"  >
+           
+        </ListBox>
+
+        <TextBlock Text="Include attachments:"  Margin="5" Grid.Row="5"/>
+        <ListBox Name="ListAttachments" Grid.Row="6">
+            <ListBox.Items>
+                <CheckBox IsEnabled="False" IsChecked="True" Content="Origin Ref"/>
+                <CheckBox   Content="Overhead Ref"/>
+                <CheckBox   Content="Head Ref"/>
+                <CheckBox   Content="Hand Left Ref"/>
+                <CheckBox   Content="Hand Right Ref"/>
+                <CheckBox   Content="Chest Ref"/>
+                <CheckBox   Content="Foot Left Ref"/>
+                <CheckBox   Content="Foot Right Ref"/>
+                <CheckBox   Content="Mount Ref"/>
+                <CheckBox   Content="Sprite RallyPoint Ref"/>
+                <CheckBox   Content="Sprite First Ref"/>
+                <CheckBox   Content="Sprite Second Ref"/>
+                <CheckBox   Content="Sprite Third Ref"/>
+                <CheckBox   Content="Sprite Fourth Ref"/>
+                <CheckBox   Content="Weapon Ref"/>
+                
+            </ListBox.Items>
+        </ListBox>
+
+        <StackPanel   Grid.Row="7">
+            
+            <StackPanel Orientation="Horizontal">
+                <CheckBox Name="CheckAlternate" Content="Has Alternate sequences (morphing)"/>
+                <CheckBox Name="CheckMedLar" Content="Has Medium/Large (Buff/Attachment)"/>
+                <CheckBox Name="CheckSwim" Content="Has swim sequences (swimmers)"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+
+                <CheckBox   Name="CheckUpgrades"  Content="Has upgrades" Width="100"/>
+                <ComboBox Name="ComboUpgradeNumber" Width="100" Height="20" VerticalAlignment="Top"/>
+                <TextBlock  Text="Variations of sequences" Width="150"/>
+                <ComboBox Name="ComboVar" Width="100" Height="20" VerticalAlignment="Top"/>
+                <TextBlock  Text="Sequence Length" Width="100"/>
+                <TextBox Name="InputSequenceLen" Width="80" Height="20" VerticalAlignment="Top" Text="1000"/>
+            </StackPanel>
+        </StackPanel>
+        
+        <Button Grid.Row="8" Click="ok" Content="Start new model" HorizontalAlignment="Right" Width="200"/>
+    </Grid>
+</Window>

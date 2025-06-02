@@ -1,0 +1,49 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.geoset_data_editor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        Background="LightGray"
+        WindowStartupLocation="CenterScreen"
+        Title="Geoset data Editor" Height="360" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition  />
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Vertices - x, y, z"  />
+        <TextBlock Text="Position" Height="20" Grid.Column="1" HorizontalAlignment="Center"/>
+        <TextBlock Text="Normal"  Height="20"  Grid.Column="2" HorizontalAlignment="Center"/>
+        <TextBlock Text="Texture position" Height="20"   Grid.Column="3" HorizontalAlignment="Center"/>
+        <ListBox Name="ListVertices"   SelectionChanged="ListVertices_SelectionChanged" Grid.Row="1" Grid.RowSpan="3"/>
+        <TextBlock Text="Triangles" Grid.Row="4" />
+        <TextBlock Text="vertex 1, vertex 2, vertex 3" Grid.Row="4"  Grid.ColumnSpan="3" Grid.Column="1" HorizontalAlignment="Center"/>
+        <ListBox Name="ListTriangles" SelectionChanged="ListTriangles_SelectionChanged" Grid.Row="5" Grid.RowSpan="3"/>
+        <ComboBox Name="Selector_Vertex1" Height="25" SelectionChanged="Selector_Vertex1_SelectionChanged" Grid.Column="1" Grid.Row="5"  Margin="10" Grid.ColumnSpan="3"/>
+        <ComboBox Name="Selector_Vertex2" Height="25" SelectionChanged="Selector_Vertex2_SelectionChanged"  Grid.Column="1" Grid.Row="6"  Margin="10" Grid.ColumnSpan="3"/>
+        <ComboBox Name="Selector_Vertex3" Height="25" SelectionChanged="Selector_Vertex3_SelectionChanged" Grid.Column="1" Grid.Row="7"  Margin="10" Grid.ColumnSpan="3"/>
+        <TextBox Name="InputX"  Height="20"  TextChanged="InputX_TextChanged" Grid.Column="1" Grid.Row="1" Margin="10"/>
+        <TextBox Name="InputY"  Height="20"  TextChanged="InputY_TextChanged" Grid.Column="1" Grid.Row="2" Margin="10"/>
+        <TextBox Name="InputZ" Height="20"  TextChanged="InputZ_TextChanged" Grid.Column="1" Grid.Row="3" Margin="10"/>
+        <TextBox Name="InputXn"  Height="20" TextChanged="InputXn_TextChanged" Grid.Column="2" Grid.Row="1" Margin="10"/>
+        <TextBox Name="InputYn"  Height="20" TextChanged="InputYn_TextChanged" Grid.Column="2" Grid.Row="2" Margin="10"/>
+        <TextBox Name="InputZn" Height="20"  TextChanged="InputZn_TextChanged" Grid.Column="2" Grid.Row="3" Margin="10"/>
+        <TextBox Name="InputXt" Height="20"  TextChanged="InputXt_TextChanged" Grid.Column="3" Grid.Row="1" Margin="10"/>
+        <TextBox Name="InputYt"  Height="20" TextChanged="InputYt_TextChanged" Grid.Column="3" Grid.Row="2" Margin="10"/>
+       
+    </Grid>
+</Window>

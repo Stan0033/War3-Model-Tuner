@@ -11,20 +11,21 @@
         Closing="Window_Closing"
         ResizeMode="NoResize"
         
-        Title="Mini UV mapper" Height="532" Width="532">
+        Title="Mini UV mapper" Height="552" Width="532">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="137*"/>
-            <ColumnDefinition Width="395*"/>
-        </Grid.ColumnDefinitions>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
             <RowDefinition/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
-        <Menu Grid.ColumnSpan="2">
-            <MenuItem Header="All" ToolTip="A" Click="a" Width="25"/>
-            <MenuItem Header="None" ToolTip="N" Click="n"  Width="40"/>
-            <MenuItem Header="Invert" ToolTip="I" Click="i"  Width="40"/>
+        <Menu >
+            <MenuItem Header="Select">
+                <MenuItem Header="All" ToolTip="A" Click="a"  />
+                <MenuItem Header="None" ToolTip="N" Click="n"  />
+                <MenuItem Header="Invert" ToolTip="I" Click="i"  />
+            </MenuItem>
+
             <MenuItem Header="Project"  Width="50">
                 <MenuItem Header="from Top" ToolTip="T" Click="projT"/>
                 <MenuItem Header="from Bottom" ToolTip="B" Click="projB"/>
@@ -32,29 +33,68 @@
                 <MenuItem Header="from Back" ToolTip="C" Click="projC"/>
                 <MenuItem Header="from Left" ToolTip="L" Click="pojL"/>
                 <MenuItem Header="from Right" ToolTip="R" Click="pojr"/>
+                <MenuItem Header="Triangle Islands" ToolTip="R" Click="pojtris"/>
 
             </MenuItem>
+            <MenuItem Header="Positioning">
+                <MenuItem Header="Fit" ToolTip="Z" Click="ft" />
+                <MenuItem Header="Swap Two" ToolTip="W" Click="sw"/>
+                <MenuItem Header="FlipU" ToolTip="H" Click="fl1"   />
+                <MenuItem Header="FlipV" ToolTip="V" Click="fl2"  />
+                <MenuItem Header="Clamp all texture coordinates"  Click="clamp"  ToolTip="all texture coordinates that are not between 0 and 1 are moved inside that range."/>
+            </MenuItem>
+            <MenuItem Header="Align">
+                <MenuItem Header="AlignU" ToolTip="G" Click="au" InputGestureText="G" />
+                <MenuItem Header="AlignV" ToolTip="Y" Click="av"  InputGestureText="Y"/>
+            </MenuItem>
 
-            <MenuItem Header="Fit" ToolTip="Z" Click="ft" Width="25"/>
-            <MenuItem Header="Swap Two" ToolTip="W" Click="sw"/>
 
-            <MenuItem Header="AlignU" ToolTip="G" Click="au" Width="45"/>
-            <MenuItem Header="AlignV" ToolTip="Y" Click="av"  Width="45"/>
-            <MenuItem Header="FlipU" ToolTip="H" Click="fl1"   Width="35"/>
-            <MenuItem Header="FlipV" ToolTip="V" Click="fl2"   Width="35"/>
-            <MenuItem Header="Shape" ToolTip="O" Click="sh"/>
-            <MenuItem Header="C" ToolTip="Copy" Click="copyUV" Width="20"/>
-            <MenuItem Header="P" ToolTip="Paste" Click="pasteUV" Width="20"/>
+            <MenuItem Header="Shape" ToolTip="The selected vertices are shaped as a circle" Click="sh" InputGestureText="O"/>
+            <MenuItem Header="Collapse">
+                <MenuItem Header="Collapse"  Click="collapse" Width="55"/>
+                <MenuItem Header="Weld al within threshold..."  Click="WeldSimilarVertexPositions" Width="55"/>
+            </MenuItem>
+           
+           
+            <MenuItem Name="ButtonCopy" Header="Cp" ToolTip="Copy UV Position (Ctrl+C)" Click="copyUV" Width="25">
+               </MenuItem>
+            <MenuItem   Name="ButtonCopyM" Header="Cm" ToolTip="Copy UV Position from mouse position (M)" Click="copuUV_Mouse" Width="30">
+               
+            </MenuItem>
+            <MenuItem Name="ButtonPaste" Header="Ps" ToolTip="Paste (ctrl+V)" Click="pasteUV" Width="20">
+                
+            </MenuItem>
+            <MenuItem  Name="ButtonPasteM"  Header="Pse" ToolTip="Paste each (ctrl+E)" Click="pasteUVEach" Width="29">
+               
+            </MenuItem>
+            <MenuItem Header="AV" ToolTip="Average similar selected Coordinates" Click="AverageSimilarUVCoordinates" Width="25"/>
+            <MenuItem Header="Snap">
+                <MenuItem Header="Snap to mouse" ToolTip="Snap selection to mouse position (S)" Click="SnapSelectionToMousePosition"  />
+                <MenuItem Header="Snap each to mouse" ToolTip="Snap each selection to mouse position (Q)" Click="SnapSelectionToMousePositionC"  />
+                <MenuItem Header="Snap each" ToolTip="Snap each" Click="SnapSelection"  />
+                <MenuItem Header="Snap together" ToolTip="Snap together" Click="SnapSelectionG"   />
+                <MenuItem Header="Snap selection to current pre-selection extents"  InputGestureText="Left Alt" Background="{x:Null}"   />
+            </MenuItem>
+
 
 
         </Menu>
-        <Image Name="image" Height="512" Width="512" Grid.Row="1" Grid.ColumnSpan="2" Margin="10,0,10,-16"/>
-        <Canvas Name="DrawCanvas" Height="512" Width="512"  Grid.Row="1"  Background="Transparent" Grid.ColumnSpan="2" Margin="10,0,10,-16"/>
+        <Image Name="image" Height="512" Width="512" Grid.Row="1" />
+        <Canvas Name="DrawCanvas" Height="512" Width="512"  Grid.Row="1"  Background="Transparent" />
+        <Canvas Name="GridCanvas" Height="512"  Grid.Row="1" Width="512"  Background="Transparent"/>
         <Canvas Name="SelectonContainer" Height="512"  Grid.Row="1" Width="512"  Background="Transparent"
             MouseDown="SelectonContainer_MouseDown"
             MouseUp="SelectonContainer_MouseUp"
             MouseMove="SelectonContainer_MouseMove"
-                MouseWheel="SelectonContainer_MouseWheel" Grid.ColumnSpan="2" Margin="10,0,10,-16"/>
+                MouseWheel="SelectonContainer_MouseWheel"  />
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Background="LightGray">
+            <TextBlock Name="Label_U" Width="100"/>
+            <TextBlock Name="Label_V" Width="100"/>
+            <TextBox Width="100" Name="InputU" KeyDown="InputU_KeyDown"/>
+            <TextBox Width="100" Name="InputV" KeyDown="InputV_KeyDown"/>
+            <TextBlock  Width="25" Text="Grid"/>
+            <TextBox Width="60" Name="inputGrid"  TextChanged="inputGrid_TextChanged"/>
+        </StackPanel>
     </Grid>
 
 </Window>

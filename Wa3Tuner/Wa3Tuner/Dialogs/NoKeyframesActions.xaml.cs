@@ -30,7 +30,7 @@ namespace Wa3Tuner.Dialogs
             All , OVerwriteDuplicate, LeaveOnlyDuplicates, SkipDuplicates
         }
         CModel Model;
-        INode Target;
+        INode? Target;
         Stretch StretchMethod = Stretch.Dont;
         Overwrite OvMethod = Overwrite.All;
         public NoKeyframesActions(CModel model, INode node)
@@ -47,10 +47,11 @@ namespace Wa3Tuner.Dialogs
         }
         public bool Translation, Rotation, Scaling = false;
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
 
             Collect();
+            if (Target == null){return;}  
             if (!Translation && !Rotation && !Scaling)
             {
                 MessageBox.Show("Selection at least one transformation");return;
@@ -93,7 +94,7 @@ namespace Wa3Tuner.Dialogs
             Scaling = check_3.IsChecked == true;
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

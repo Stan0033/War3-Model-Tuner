@@ -26,7 +26,7 @@ namespace obj2mdl_batch_converter
             using (StreamReader reader = new StreamReader(filePath))
             {
                 int lineNumber = 0;
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineNumber++;

@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 
 namespace Wa3Tuner.Dialogs
 {
@@ -20,16 +21,16 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class PivoPointOffsetWkndow : Window
     {
-        public CVector3 Point;
-        public float Angle;
-        public float Distance;
-        public Axes   axes;
+        public CVector3 Point = new CVector3();
+        public float Angle = 0;
+        public float Distance = 0;
+        public Axes   axes = Axes.None;
         public PivoPointOffsetWkndow()
         {
             InitializeComponent();
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             bool one = float.TryParse(XInput.Text, out float x);
             bool two = float.TryParse(YInput.Text, out float y);

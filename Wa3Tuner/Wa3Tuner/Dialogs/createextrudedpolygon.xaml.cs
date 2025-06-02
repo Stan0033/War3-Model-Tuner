@@ -30,17 +30,17 @@ namespace Wa3Tuner
             Object = ellipse;
         }
     }
-    public class DrawnLine
+    public class DrawnLine_2D
     {
-        public Line Line;
-        public DrawnVertex Vertex1;
-        public DrawnVertex Vertex2;
+        public Line? Line;
+        public DrawnVertex? Vertex1;
+        public DrawnVertex? Vertex2;
     }
    
     public partial class CreatePolygonWindow : Window
     {
         private int SelectedVerticesCount = 3;
-        private List<DrawnLine> Lines = new List<DrawnLine>();
+        private List<DrawnLine_2D> Lines = new List<DrawnLine_2D>();
         private List<DrawnVertex> Vertices = new List<DrawnVertex>();
         CModel Model;
         public CreatePolygonWindow(CModel model)
@@ -51,14 +51,18 @@ namespace Wa3Tuner
            // MessageBox.Show($"{ImageComparison.Height} x {ImageComparison.Width}");
             Model = model;
         }
-        public static CGeoset CreateShape(bool extrude, int Z_Extrusion, List<DrawnLine> Lines, CModel ParentModel)
+        public static CGeoset CreateShape(bool extrude, int Z_Extrusion, List<DrawnLine_2D> Lines, CModel ParentModel)
         {
-            CGeoset generated = new CGeoset(ParentModel);
+            CGeoset generated = new  (ParentModel);
             Dictionary<DrawnVertex, CGeosetVertex> vertexMap = new Dictionary<DrawnVertex, CGeosetVertex>();
 
             // Create base vertices
             foreach (var line in Lines)
             {
+                if (line==null) continue;
+                if (line.Vertex1==null) continue;
+                if (line.Vertex2==null) continue;
+                
                 if (!vertexMap.ContainsKey(line.Vertex1))
                 {
                     var v1 = new CGeosetVertex(ParentModel)
@@ -92,7 +96,7 @@ namespace Wa3Tuner
 
             if (extrude)
             {
-                Dictionary<DrawnVertex, CGeosetVertex> topVertexMap = new Dictionary<DrawnVertex, CGeosetVertex>();
+                Dictionary<DrawnVertex, CGeosetVertex> topVertexMap = new  ();
 
                 // Create extruded vertices
                 foreach (var pair in vertexMap)
@@ -108,18 +112,21 @@ namespace Wa3Tuner
                 // Create side faces
                 foreach (var line in Lines)
                 {
+                    if (line==null) continue;
+                    if (line.Vertex1==null) continue;
+                    if (line.Vertex2==null) continue;
                     var v1 = vertexMap[line.Vertex1];
                     var v2 = vertexMap[line.Vertex2];
                     var v3 = topVertexMap[line.Vertex2];
                     var v4 = topVertexMap[line.Vertex1];
 
-                    CGeosetTriangle sideTri1 = new CGeosetTriangle(ParentModel);
+                    CGeosetTriangle sideTri1 = new  (ParentModel);
                     sideTri1.Vertex1.Attach(v1);
                     sideTri1.Vertex2.Attach(v2);
                     sideTri1.Vertex3.Attach(v3);
                     generated.Triangles.Add(sideTri1);
 
-                    CGeosetTriangle sideTri2 = new CGeosetTriangle(ParentModel);
+                    CGeosetTriangle sideTri2 = new  (ParentModel);
                     sideTri2.Vertex1.Attach(v1);
                     sideTri2.Vertex2.Attach(v3);
                     sideTri2.Vertex3.Attach(v4);
@@ -142,7 +149,7 @@ namespace Wa3Tuner
         }
 
 
-        private void InputTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void InputTextBox_TextChanged(object? sender, TextChangedEventArgs e)
         {
             if (int.TryParse(InputTextBox.Text, out int val))
             {
@@ -206,14 +213,14 @@ namespace Wa3Tuner
                 };
                 MainCanvas.Children.Add(line);
                 // Create and store the DrawnLine
-                DrawnLine drawnLine = new DrawnLine { Line = line, Vertex1 = v1, Vertex2 = v2 };
+                DrawnLine_2D drawnLine = new DrawnLine_2D { Line = line, Vertex1 = v1, Vertex2 = v2 };
                 Lines.Add(drawnLine);
             }
         }
         private Point selectionStartPoint; // The point where the selection starts (MouseDown)
-        private Rectangle selectionRectangle; // The rectangle used for selection
-        private Rectangle Selection; // The current selection rectangle
-        private Point LastSelectionPoint;
+        private Rectangle selectionRectangle = new (); // The rectangle used for selection
+        private Rectangle Selection = new Rectangle();  // The current selection rectangle
+       
         private enum MouseMode
         {
             Select, Move, None
@@ -224,7 +231,7 @@ namespace Wa3Tuner
             get => CanvasMode_;
             set { CanvasMode_ = value; ModeDisplay.Text ="Work mode: "+ CanvasMode_.ToString(); }
         }
-        private void SelectionLayer_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void SelectionLayer_MouseDown(object? sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Capture the starting point of the selection
             selectionStartPoint = e.GetPosition(SelectionLayer);
@@ -252,7 +259,7 @@ namespace Wa3Tuner
                 CanvasMode = MouseMode.Move;
             }
         }
-        private void SelectionLayer_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        private void SelectionLayer_MouseMove(object? sender, System.Windows.Input.MouseEventArgs e)
         {
             Point currentPoint = e.GetPosition(SelectionLayer);
             // Update the width and height based on the mouse position
@@ -294,7 +301,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectionLayer_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void SelectionLayer_MouseUp(object? sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (CanvasMode == MouseMode.Select)
             {
@@ -332,7 +339,10 @@ namespace Wa3Tuner
             // Redraw the lines
             foreach (var line in Lines)
             {
-                Line newLine = new Line
+                if (line==null) continue;
+                if (line.Vertex1==null) continue;
+                if (line.Vertex2==null) continue;
+                Line newLine = new()
                 {
                     X1 = line.Vertex1.Position.X,
                     Y1 = line.Vertex1.Position.Y,
@@ -359,11 +369,11 @@ namespace Wa3Tuner
                 MainCanvas.Children.Add(newEllipse);
             }
         }
-        private void loadimage(object sender, RoutedEventArgs e)
+        private void loadimage(object? sender, RoutedEventArgs? e)
         {
             LoadImageIntoControl(ImageComparison);
         }
-        private void finish(object sender, RoutedEventArgs e)
+        private void finish(object? sender, RoutedEventArgs? e)
         {
             bool extrude = false;
             bool extrusion = int.TryParse(ExtrusionInput.Text, out int extrusionSize);
@@ -400,8 +410,8 @@ namespace Wa3Tuner
             CBone bone = new CBone(Model);
             bone.Name = "GeneratedPolygonBone_" + IDCounter.Next_; ;
             Model.Nodes.Add(bone);  
-            CGeosetGroup group = new CGeosetGroup(Model);
-            CGeosetGroupNode node = new CGeosetGroupNode(Model);
+            CGeosetGroup group = new  (Model);
+            CGeosetGroupNode node = new  (Model);
             node.Node.Attach(bone);
             group.Nodes.Add(node);
             geoset.Groups.Add(group);
@@ -446,21 +456,21 @@ namespace Wa3Tuner
         }
 
         private bool ControlHeld = false;
-        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_KeyDown(object? sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.LeftCtrl) { ControlHeld = true; }
             if (e.Key == Key.Enter) finish(null, null);
         }
-        private void Window_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_KeyUp(object? sender, System.Windows.Input.KeyEventArgs e)
         {
             ControlHeld = false;
         }
-        private void EnableExtruded(object sender, RoutedEventArgs e)
+        private void EnableExtruded(object? sender, RoutedEventArgs? e)
         {
             ExtrusionInput.IsEnabled = CheckExtruded.IsChecked == true;
         }
 
-        private void import(object sender, RoutedEventArgs e)
+        private void import(object? sender, RoutedEventArgs? e)
         {
             string loadPath = GetOpenPath();
             if (loadPath.Length > 0)
@@ -490,7 +500,7 @@ namespace Wa3Tuner
                 
             }
         }
-        private string GetOpenPath()
+        private static string GetOpenPath()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -506,7 +516,7 @@ namespace Wa3Tuner
 
             return "";
         }
-        private void export(object sender, RoutedEventArgs e)
+        private void export(object? sender, RoutedEventArgs? e)
         {
             if (int.TryParse(InputTextBox.Text, out int val))
             {
@@ -532,7 +542,7 @@ namespace Wa3Tuner
             }
         }
 
-        private string GetSavePath()
+        private static string GetSavePath()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {

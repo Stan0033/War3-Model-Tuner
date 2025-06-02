@@ -1,16 +1,9 @@
-﻿using MdxLib.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿ 
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+ 
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+ 
 namespace Wa3Tuner
 {
     /// <summary>
@@ -20,8 +13,8 @@ namespace Wa3Tuner
     {
         public Color SelectedColor = Colors.White;
         public Brush SelectedBrush = Brushes.White;
-        CModel Model;
-        CGeoset Geoset;
+       
+       
         bool initialized = false;
         public color_selector(Brush brush)
         {
@@ -32,7 +25,7 @@ namespace Wa3Tuner
             GreenSlider.Value = color.G;
             BlueSlider.Value = color.B;
         }
-        private void OnColorChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void OnColorChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!initialized) { return; }
             UpdateColorCanvas();
@@ -50,12 +43,12 @@ namespace Wa3Tuner
             DisplayG.Text = green.ToString();
             DisplayB.Text = blue.ToString();
         }
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private void OkButton_Click(object? sender, RoutedEventArgs? e)
         {
             DialogResult = true;
             Close();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

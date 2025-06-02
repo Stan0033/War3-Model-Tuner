@@ -15,6 +15,6 @@
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <ListBox Name="box" Grid.Row="0" SelectionMode="Single"/>
-        <Button Click="ok" Content="OK" Grid.Row="1"  />
+        <Button Click="Ok" Content="OK" Grid.Row="1"  />
     </Grid>
 </Window>

@@ -22,7 +22,7 @@ namespace Wa3Tuner.Dialogs
     public partial class vis_v : Window
     {
         CModel CurrentModel;
-        CSequence Sequence;
+        CSequence? Sequence;
         public vis_v(CModel model)
         {
             InitializeComponent();
@@ -34,7 +34,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void set(object sender, RoutedEventArgs e)
+        private void set(object? sender, RoutedEventArgs? e)
         {
             if (Sequence != null)
             {
@@ -107,7 +107,7 @@ namespace Wa3Tuner.Dialogs
           
         }
 
-        private void selected(object sender, SelectionChangedEventArgs e)
+        private void selected(object? sender, SelectionChangedEventArgs e)
         {
             if (slist.SelectedItem != null)
             {
@@ -116,7 +116,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void setc(object sender, RoutedEventArgs e)
+        private void setc(object? sender, RoutedEventArgs? e)
         {
             inputCustom.IsEnabled = ccustom.IsChecked == true;
         }

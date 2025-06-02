@@ -33,7 +33,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void CopyTexts(object sender, RoutedEventArgs e)
+        private void CopyTexts(object? sender, RoutedEventArgs? e)
         {
             string final = GenerateFinalTextForWarcraft3();
             Clipboard.SetText(final);
@@ -85,7 +85,7 @@ namespace Wa3Tuner.Dialogs
             Chunks = mergedChunks;
         }
 
-        private void SetTextInRichTextBox2(object sender, TextChangedEventArgs e)
+        private void SetTextInRichTextBox2(object? sender, TextChangedEventArgs e)
         {
             RefreshRichTextBox();
         }
@@ -134,13 +134,13 @@ namespace Wa3Tuner.Dialogs
             MainTextBox.Document.Blocks.Add(paragraph);
         }
 
-        private void SetColor1(object sender, RoutedEventArgs e)
+        private void SetColor1(object? sender, RoutedEventArgs? e)
         {
             if (GetSelectedTextLength() == 0) return;
             ApplySelectedColor(ButtonColor1Select.Background);
         }
 
-        private void SetColor2(object sender, RoutedEventArgs e)
+        private void SetColor2(object? sender, RoutedEventArgs? e)
         {
             if (GetSelectedTextLength() == 0) return;
             ApplySelectedColor(ButtonColor2Select.Background);
@@ -180,25 +180,25 @@ namespace Wa3Tuner.Dialogs
             return range.Text.Length;
         }
 
-        private void SelectColor1(object sender, RoutedEventArgs e)
+        private void SelectColor1(object? sender, RoutedEventArgs? e)
         {
             Brush newColor = ColorPickerHandler.Pick(ButtonColor1Select.Background);
             ButtonColor1Select.Background = newColor;
         }
 
-        private void SelectColor2(object sender, RoutedEventArgs e)
+        private void SelectColor2(object? sender, RoutedEventArgs? e)
         {
             Brush newColor = ColorPickerHandler.Pick(ButtonColor2Select.Background);
             ButtonColor2Select.Background = newColor;
         }
 
-        private void ClearAllColors(object sender, RoutedEventArgs e)
+        private void ClearAllColors(object? sender, RoutedEventArgs? e)
         {
             Chunks.Clear();
             RefreshRichTextBox();
         }
 
-        private void ClearSelection(object sender, RoutedEventArgs e)
+        private void ClearSelection(object? sender, RoutedEventArgs? e)
         {
             if (MainTextBox.Selection.IsEmpty) return;
 
@@ -239,12 +239,12 @@ namespace Wa3Tuner.Dialogs
             return sb.ToString();
         }
 
-        private void ClearSeletion(object sender, RoutedEventArgs e)
+        private void ClearSeletion(object? sender, RoutedEventArgs? e)
         {
 
         }
 
-        private void SetGradient(object sender, RoutedEventArgs e)
+        private void SetGradient(object? sender, RoutedEventArgs? e)
         {
             if (GetSelectedTextLength() == 0) return;
             ClearChunksBetween(MainTextBox.Selection.Start, MainTextBox.Selection.End);
@@ -262,7 +262,7 @@ namespace Wa3Tuner.Dialogs
             Chunks.RemoveAll(x => x.FromPosition >= from && x.ToPosition <= to);
         }
 
-        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_KeyDown(object? sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             

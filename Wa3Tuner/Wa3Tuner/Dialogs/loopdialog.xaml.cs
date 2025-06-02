@@ -111,7 +111,7 @@ namespace Wa3Tuner
             // Optionally, you can add a final track if needed
             // Tracks.Add(new Ttrack(time, currentValue)); 
         }
-        float[] ParseThreeInts(string input)
+      static  float[]? ParseThreeInts(string input)
         {
             // Split the string by commas
             string[] parts = input.Split(',') ;
@@ -119,7 +119,8 @@ namespace Wa3Tuner
             // Check if there are exactly 3 parts
             if (parts.Length != 3)
             {
-                return null; // Invalid format (not exactly 3 integers)
+                return new float[0];
+                // Invalid format (not exactly 3 integers)
             }
             float[] result = new float[3];
             // Try to parse each part as an integer and check the range
@@ -133,7 +134,7 @@ namespace Wa3Tuner
             // Return the array if all values are valid
             return result;
         }
-        float[] ExtractValues(string input)
+        static float[]?  ExtractValues(string input)
         {
             string[] parts = input.Split(",").Select(x=>x.Trim()).ToArray() ;
             if (parts.Length != 3) { return null; }
@@ -146,16 +147,16 @@ namespace Wa3Tuner
                 return new float[]{one, two, three};
             }
             else { return null; }
-            return null;
+            
         }
-        bool Values360(float[] values)
+        static bool Values360(float[] values)
         {
             return
                 values[0] >= -360 && values[0] <= 360 &&
                 values[1] >= -360 && values[1] <= 360 &&
                 values[2] >= -360 && values[2] <= 360;
         }
-        private void OK(object sender, RoutedEventArgs e)
+        private void OK(object?  sender, RoutedEventArgs?  e)
         {
             if (InputSequence.SelectedIndex == -1) { MessageBox.Show("select a sequence");  return; }
             int index = InputSequence.SelectedIndex;
@@ -167,14 +168,14 @@ namespace Wa3Tuner
             {
                 case TransformationType.Translation:
                 case TransformationType.Scaling:
-                    float[] one = ExtractValues(value1);
-                    float[] two = ExtractValues(value2);
+                    float[]? one = ExtractValues(value1);
+                    float[]? two = ExtractValues(value2);
                     if (one == null || two == null) { MessageBox.Show("expected 3 values sparated by comma"); return; }
                      loop(index, times, one, two);
                     break;
                     case TransformationType.Rotation:
-                    float[] rone = ExtractValues(value1);
-                    float[] rtwo = ExtractValues(value2);
+                    float[]? rone = ExtractValues(value1);
+                    float[]? rtwo = ExtractValues(value2);
                     if (rone == null || rtwo == null) { MessageBox.Show("expected 3 values sparated by comma between -360 and 360"); return; }
                     if (!Values360(rone) || !Values360(rtwo)) { MessageBox.Show("expected 3 values sparated by comma between -360 and 360"); return; }
                     loop(index, times, rone, rtwo);
@@ -187,8 +188,8 @@ namespace Wa3Tuner
                     loop(index, times, v1, v2);
                     break;
                 case TransformationType.Color:
-                     float[] first = ParseThreeInts(value1);
-                    float[] second = ParseThreeInts(value2);
+                     float[]?first = ParseThreeInts(value1);
+                    float[]? second = ParseThreeInts(value2);
                     if (first == null && second == null) { MessageBox.Show("Expected an rgb string in teh format r,g,b"); return; }
                     loop(index, times, first, second);
                     break;
@@ -210,7 +211,7 @@ namespace Wa3Tuner
             }
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) OK(null, null);

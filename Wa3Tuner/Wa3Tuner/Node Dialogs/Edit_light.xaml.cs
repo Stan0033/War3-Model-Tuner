@@ -48,41 +48,41 @@ namespace Wa3Tuner
                 btnAmbientColor.Background = amcolor;
             }
         }
-        private void SelectedType(object sender, SelectionChangedEventArgs e)
+        private void SelectedType(object? sender, SelectionChangedEventArgs e)
         {
             Light.Type = (MdxLib.Model.ELightType) ListType.SelectedIndex;
         }
-        private void editcolor(object sender, RoutedEventArgs e)
+        private void editcolor(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.Color, true, TransformationType.Color);
             editor.ShowDialog(); Fill();
         }
-        private void editamcolor(object sender, RoutedEventArgs e)
+        private void editamcolor(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.AmbientColor, true, TransformationType.Color);
             editor.ShowDialog(); Fill();
         }
-        private void editintensity(object sender, RoutedEventArgs e)
+        private void editintensity(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.Intensity, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editamintensity(object sender, RoutedEventArgs e)
+        private void editamintensity(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.AmbientIntensity, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editattstart(object sender, RoutedEventArgs e)
+        private void editattstart(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.AttenuationStart, true, TransformationType.Float);
             editor.ShowDialog(); Fill();
         }
-        private void editattend(object sender, RoutedEventArgs e)
+        private void editattend(object? sender, RoutedEventArgs? e)
         {
             transformation_editor editor = new transformation_editor(Model, Light.AttenuationEnd, true, TransformationType.Float);
             editor.ShowDialog();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

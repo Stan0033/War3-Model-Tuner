@@ -23,13 +23,15 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class ShatterAnimationMaker : Window
     {
-        MdxLib.Model.CGeoset Geoset;
-        CModel Model;
-        CHelper Helper;
+        MdxLib.Model.CGeoset? Geoset;
+        CModel? Model;
+        CHelper? Helper;
         private float From, To = 0;
         public ShatterAnimationMaker(MdxLib.Model.CGeoset geoset, 
             MdxLib.Model.CModel model)
         {
+            if (geoset == null) { Close(); return; }
+            if (model == null) { Close(); return; }
             InitializeComponent();
             Geoset = geoset;
             Model = model;
@@ -38,7 +40,8 @@ namespace Wa3Tuner.Dialogs
         }
        private void SegmentGeoset()
         {
-
+            if (Geoset == null) { MessageBox.Show("Null geoset");return; }
+            if (Model == null) { MessageBox.Show("Null model");return; }
             List<CGeosetVertex> vertices_New = new List<CGeosetVertex>();
             // segment triangles
             foreach (var traingle in Geoset.Triangles)
@@ -58,6 +61,7 @@ namespace Wa3Tuner.Dialogs
             foreach (var v in vertices_New) Geoset.Vertices.Add(v);
              // complete the rigging process
             Helper = new CHelper(Model);
+
             Model.Nodes.Add(Helper);
             Helper.Name = $"ShatteredGeoset{Geoset.ObjectId}_{IDCounter.Next_}";
             foreach (var v in vertices_New)
@@ -87,7 +91,7 @@ namespace Wa3Tuner.Dialogs
             return v;
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             List<CSequence> sequences = GetSelectedSequences();
             if (sequences.Count == 0) { MessageBox.Show("Select at least one sequence"); }
@@ -135,6 +139,7 @@ namespace Wa3Tuner.Dialogs
         private List<CSequence> GetSelectedSequences()
         {
             List<CSequence> list = new List<CSequence>();
+            if (Model == null) { return list; }
             foreach (var item in SequenceList.SelectedItems)
             {   
                 list.Add(Model.Sequences[SequenceList.Items.IndexOf(item)]);
@@ -142,7 +147,7 @@ namespace Wa3Tuner.Dialogs
                 return list;
         }
 
-        private void cancel(object sender, RoutedEventArgs e)
+        private void cancel(object? sender, RoutedEventArgs? e)
         {
             DialogResult = false;
         }

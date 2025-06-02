@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using SharpGL.SceneGraph;
+using Wa3Tuner.Helper_Classes;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -18,12 +19,12 @@ namespace Wa3Tuner
         private CModel Model;
         private CEvent Event_;
         private bool Create = false;
-        private List<string> Data = new List<string>();
-        List<string> Sounds = new List<string>();
-        List<string> Splats = new List<string>();
-        List<string> Ubers = new List<string>();
-        List<string> Spawns = new List<string>();
-        List<string> Footprints = new List<string>();
+        private List<string> Data = new();
+        List<string> Sounds = new();
+        List<string> Splats = new();
+        List<string> Ubers = new();
+        List<string> Spawns = new();
+        List<string> Footprints = new();
         int SelectedIndex = 0;
         System.Timers.Timer timer = new System.Timers.Timer();
         public edit_eventobject(CModel model, CEvent ev)
@@ -40,7 +41,7 @@ namespace Wa3Tuner
             FillSequences();
         }
 
-        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             Dispatcher.Invoke(() =>
             {
@@ -63,14 +64,13 @@ namespace Wa3Tuner
         }
         private void SelectItemFromData(string data)
         {
-            bool found = false;
-            int index = 0;
-            for (int i = 0; i < box.Items.Count; i++)
+            int count = box.Items.Count;
+            for (int i = 0; i < count; i++)
             {
-                string item = (box.Items[i]as ListBoxItem).Content.ToString();
+                string? item = Extractor.GetString(box.Items[i]);
+                if (item == null) continue;
                if (item.ToLower().StartsWith(data.ToLower())){
                     SelectedIndex= i;
-                     found = true;
                     break; }
             }
           ;
@@ -157,13 +157,14 @@ namespace Wa3Tuner
         }
         private string GetData()
         {
-            string item =( box.SelectedItem as ListBoxItem).Content.ToString(); 
-            string start = item.Split(' ')[0];
+            string? item = Extractor.GetString(box.SelectedItem); if (item == null) { return string.Empty; }
+            string? start = item.Split(' ')[0];
             return start;
         }
         private string GetPrefix()
         {
-            string item = (box.SelectedItem as ListBoxItem).Content.ToString();
+            string? item =Extractor.GetString(box.SelectedItem);
+            if (item == null) { return string.Empty; }
             if (Sounds.Contains(item)){ return "SND"; }
             if (Splats.Contains(item)) {return "SPL"; }
             if (Ubers.Contains(item)){ return "UBR"; }
@@ -171,7 +172,7 @@ namespace Wa3Tuner
             if (Footprints.Contains(item)){ return "FPT"; }
             return "";
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (tracks.Items.Count == 0) { MessageBox.Show("Event object without tracks is not allowed"); return; }
             if (inputIdentfier.Text.Trim().Length != 1)
@@ -197,7 +198,7 @@ namespace Wa3Tuner
             }
             DialogResult = true;
         }
-        private void SetSequence(object sender, SelectionChangedEventArgs e)
+        private void SetSequence(object? sender, SelectionChangedEventArgs e)
         {
             if (SEquenceSelector.SelectedItem != null && SEquenceSelector.SelectedIndex != -1)
             {
@@ -205,12 +206,12 @@ namespace Wa3Tuner
                 input.Text = Model.Sequences[index].IntervalStart.ToString();
             }
         }
-        private void removeall(object sender, RoutedEventArgs e)
+        private void removeall(object? sender, RoutedEventArgs? e)
         {
             Tracks.Clear();
             RefreshTracks();    
         }
-        private void remove(object sender, RoutedEventArgs e)
+        private void remove(object? sender, RoutedEventArgs? e)
         {
             if (tracks.SelectedItem != null)
             {
@@ -223,7 +224,7 @@ namespace Wa3Tuner
         {
             return Model.Sequences.Any(x=> track >= x.IntervalStart && track <= x.IntervalEnd);
         }
-        private void add(object sender, RoutedEventArgs e)
+        private void add(object? sender, RoutedEventArgs? e)
         {
             string input_ = input.Text.Trim();
             bool parse = int.TryParse(input_, out int value);
@@ -245,7 +246,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Invalid input, expected integer"); return;
             }
         }
-        private void Search(object sender, KeyEventArgs e)
+        private void Search(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -264,7 +265,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

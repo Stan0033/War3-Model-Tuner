@@ -23,21 +23,21 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class ImageViewer : Window
     {
-        ImageSource img;
+       
         public ImageViewer(string whichBitmap)
         {
             InitializeComponent();
 
             LoadPictureIntoImageControl(whichBitmap, mainImage);
         }
-        public ImageViewer(Image image)
+        public ImageViewer(Image? image)
         {
             InitializeComponent();
 
-            mainImage.Source = image.Source;
+            mainImage.Source = image==null? null: image.Source;
         }
 
-        private void LoadPictureIntoImageControl(string imagePath, Image imageControl)
+        private static void LoadPictureIntoImageControl(string imagePath, Image imageControl)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
                 throw new ArgumentException("Image path cannot be null or empty.", nameof(imagePath));

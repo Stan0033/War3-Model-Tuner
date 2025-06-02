@@ -18,7 +18,7 @@ namespace Wa3Tuner.Dialogs
             box.Text = File.ReadAllText(file);
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

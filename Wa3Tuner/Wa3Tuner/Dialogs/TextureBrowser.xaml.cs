@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using W3_Texture_Finder;
+using Wa3Tuner.Helper_Classes;
 using War3Net.IO.Mpq;
 namespace Wa3Tuner
 {
@@ -23,9 +24,9 @@ namespace Wa3Tuner
     /// </summary>
     public partial class TextureBrowser : Window
     {
-        CModel Model;
+        CModel? CurrentModel;
         MainWindow Main_Window;
-        List<string> Textures = new List<string>();
+        List<string> Textures = new();
         Dictionary<string, string> Favourites = new Dictionary<string, string>();
         public TextureBrowser(MainWindow window, List<string> all)
         {
@@ -45,14 +46,14 @@ namespace Wa3Tuner
         }
         public void SetModel(CModel model)
         {
-            Model = model;
+            CurrentModel = model;
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             Hide();
         }
-        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        private void SearchBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -71,14 +72,17 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void DispalyImage(object sender, SelectionChangedEventArgs e)
+        private void DispalyImage(object? sender, SelectionChangedEventArgs e)
         {
             if (Tabs.SelectedIndex == 0)
             {
                 if (FindItemListBox.SelectedItem != null)
                 {
-                    string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
-                    ImageHolder.Source = MPQHelper.GetImageSource(name);
+                    string? name = Extractor.GetString(FindItemListBox.SelectedItem);
+                    if (name != null)
+                    {
+                        ImageHolder.Source = MPQHelper.GetImageSource(name);
+                    }
                 }
             }
             else
@@ -92,13 +96,14 @@ namespace Wa3Tuner
             }
             
         }
-        private void addTexture(object sender, RoutedEventArgs e)
+        private void addTexture(object? sender, RoutedEventArgs? e)
         {
             if (Tabs.SelectedIndex == 0)
             {
                 if (FindItemListBox.SelectedItem != null)
                 {
-                    string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    string? name = Extractor.GetString(FindItemListBox.SelectedItem);
+                    if (name == null) return;
                     if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == name))
                     {
                         MessageBox.Show("This texture is already used by the model"); return;
@@ -107,12 +112,14 @@ namespace Wa3Tuner
                     texture.FileName = name;
                     Main_Window.CurrentModel.Textures.Add(texture);
                     Main_Window.RefreshTexturesList();
+                    Main_Window.RefreshLayersTextureList();
                     Main_Window.SelectedLayer(null, null);
                 }
             }
             else
             {
-                string name = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                string? name = Extractor.GetString(FavItemListBox.SelectedItem);
+                if (name == null) { MessageBox.Show("null string");return; }
                 if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == Favourites[name]))
                 {
                     MessageBox.Show("This texture is already used by the model"); return;
@@ -125,14 +132,15 @@ namespace Wa3Tuner
 
             }
             }
-            private void AddTextureMat(object sender, RoutedEventArgs e)
+            private void AddTextureMat(object? sender, RoutedEventArgs? e)
         {
             if (Tabs.SelectedIndex == 0)
             {
                 if (FindItemListBox.SelectedItem != null)
                 {
 
-                    string name = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    string? name =Extractor.GetString(FindItemListBox.SelectedItem);
+                    if (name == null) { return; }
                     if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == name))
                     {
                         MessageBox.Show("This texture is already used by the model"); return;
@@ -147,6 +155,7 @@ namespace Wa3Tuner
                     Main_Window.CurrentModel.Materials.Add(material);
                     Main_Window.RefreshMaterialsList();
                     Main_Window.RefreshTexturesList();
+                    Main_Window.RefreshLayersTextureList();
                     Main_Window.SelectedLayer(null, null);
                 }
             }
@@ -155,8 +164,10 @@ namespace Wa3Tuner
 
                 if (FavItemListBox.SelectedItem != null)
                 {
-
-                    string name = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                    ListBoxItem? i = FavItemListBox.SelectedItem as ListBoxItem;
+                    if (i == null) { return; }
+                    string? name = i.Content.ToString();
+                    if (name == null) { return; }
                     if (Main_Window.CurrentModel.Textures.Any(x => x.FileName == Favourites[name]))
                     {
                         MessageBox.Show("This texture is already used by the model"); return;
@@ -171,18 +182,19 @@ namespace Wa3Tuner
                     Main_Window.CurrentModel.Materials.Add(material);
                     Main_Window.RefreshMaterialsList();
                     Main_Window.RefreshTexturesList();
+                    Main_Window.RefreshLayersTextureList();
                     Main_Window.SelectedLayer(null, null);
                 }
             }
 
             
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }
 
-        private void FindSearchBox_KeyDown(object sender, KeyEventArgs e)
+        private void FindSearchBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
             string searched = FindSearchBox.Text.Trim().ToLower(); ;
@@ -200,7 +212,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void FavSearchBox_KeyDown(object sender, KeyEventArgs e)
+        private void FavSearchBox_KeyDown(object? sender, KeyEventArgs e)
         {
             string input = FavSearchBox.Text.Trim().ToLower();
           
@@ -230,7 +242,10 @@ namespace Wa3Tuner
         }
         string GetSelectedFavouritePath()
         {
-            string s = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+            ListBoxItem? i = FavItemListBox.SelectedItem as ListBoxItem;
+            if (i == null) { return ""; }
+            string? s = i.Content.ToString();
+            if (s == null) { return ""; }
             return Favourites[s];
         }
         void SaveFavourites()
@@ -257,12 +272,12 @@ namespace Wa3Tuner
             RefreshFavouritesList();
         }
 
-        private void AddFavourite(object sender, RoutedEventArgs e)
+        private void AddFavourite(object? sender, RoutedEventArgs? e)
         {
            if (FindItemListBox.SelectedItem != null)
             {
-                string selected = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
-
+                string? selected = Extractor.GetString(FindItemListBox.SelectedItem);
+                if (selected==null) return;
 
                 if (Favourites.Any(x=>x.Value == selected) == false)
                 {
@@ -290,38 +305,43 @@ namespace Wa3Tuner
             }
         }
 
-        private void DelFavourite(object sender, RoutedEventArgs e)
+        private void DelFavourite(object? sender, RoutedEventArgs? e)
         {
             if (FavItemListBox.SelectedItem != null)
             {
-                string selected = (FavItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                ListBoxItem? i = FavItemListBox.SelectedItem as ListBoxItem;
+                if (i == null) { MessageBox.Show("Null selected item"); return; }
+
+                string? selected = i.Content.ToString();
+                if (selected == null) { MessageBox.Show("Null selected item"); return; }
                 Favourites.Remove(selected);
                 FavItemListBox.Items.Remove(FavItemListBox.SelectedItem);
                 SaveFavourites();
             }
         }
 
-        private void TabsChange(object sender, SelectionChangedEventArgs e)
+        private void TabsChange(object? sender, SelectionChangedEventArgs e)
         {
             ButtonAddFavourites.Visibility = Tabs.SelectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
             DelFavouriteButton.Visibility = Tabs.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void copy(object sender, RoutedEventArgs e)
+        private void copy(object? sender, RoutedEventArgs? e)
         {
             if (FindItemListBox.SelectedItem != null)
             {
-                string item = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+                string? item = Extractor.GetString(FindItemListBox.SelectedItem);
+                if (item == null) return;
                 Clipboard.SetText(item);
             }
         }
 
-        private void export(object sender, RoutedEventArgs e)
+        private void export(object? sender, RoutedEventArgs? e)
         {
-            string item = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+            string? item = Extractor.GetString(FindItemListBox.SelectedItem); if (item == null) return;
             string at = GetSaveLocation();
             if (at.Length == 0) return;
-            MPQHelper.Export(item,at);
+            MPQHelper.Export(item,at, "", true);
         }
 
        
@@ -349,12 +369,15 @@ private string GetSaveLocation()
             return saveFileDialog.ShowDialog() == true ? saveFileDialog.FileName : "";
         }
 
-        private void exportPNG(object sender, RoutedEventArgs e)
+        private void exportPNG(object? sender, RoutedEventArgs? e)
         {
-            string item = (FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
+            string? item = Extractor.GetString(FindItemListBox.SelectedItem);
+            if (item == null) { MessageBox.Show("Null string");return; }
+            //(FindItemListBox.SelectedItem as ListBoxItem).Content.ToString();
             string at = GetSaveLocationPng();
             if (at.Length == 0) return;
             var file = MPQHelper.GetImageSource(item);
+            if (file == null){ MessageBox.Show("Null image source"); return; }
             MPQHelper.ExportPNG(file, at);
         }
     }

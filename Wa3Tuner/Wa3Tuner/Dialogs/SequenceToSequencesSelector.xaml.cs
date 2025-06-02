@@ -22,9 +22,9 @@ namespace Wa3Tuner.Dialogs
     /// </summary>
     public partial class SequenceToSequencesSelector : Window
     {
-        List<CSequence> Sequences;
-        List<CGeosetAnimation> GeosetAnimations;
-        List<Ttrack> Tracks;
+        List<CSequence> Sequences = new List<CSequence> ();
+        List<CGeosetAnimation> GeosetAnimations = new();
+        List<Ttrack> Tracks = new List<Ttrack>();
         public SequenceToSequencesSelector(List<CSequence> s, List<Ttrack> tracks)
         {
             InitializeComponent();
@@ -50,7 +50,7 @@ namespace Wa3Tuner.Dialogs
             list1.SelectedIndex = 0;
         }
 
-        private void CopySequenceKeyframesToSequences(object sender, RoutedEventArgs e)
+        private void CopySequenceKeyframesToSequences(object? sender, RoutedEventArgs? e)
         {
 
             List<int> indexes = GetSelectedSequences();

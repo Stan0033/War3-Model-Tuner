@@ -12,7 +12,7 @@ namespace Wa3Tuner.Helper_Classes
     { 
         public static void Save(CModel model, string p = "")
         {
-            return;
+         // NOT TESTED
             if (p.Length ==0)
             {
                
@@ -28,7 +28,7 @@ namespace Wa3Tuner.Helper_Classes
             }
               
         }
-        public static CModel Load(string s = "")
+        public static CModel? Load(string s = "")
         {
             if (s.Length == 0)
             {

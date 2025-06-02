@@ -2,41 +2,38 @@
 using MdxLib.Model;
 using MdxLib.Primitives;
 using SharpGL;
-using SharpGL.SceneGraph;
+ 
 using SharpGL.SceneGraph.Assets;
-using SharpGL.SceneGraph.Lighting;
+ 
 using SharpGL.WPF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Globalization;
-using System.Globalization;
+ 
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading;
+ 
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
+ 
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
+ 
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using System.Xml.Linq;
+ 
 using W3_Texture_Finder;
 using Wa3Tuner.Dialogs;
 using Wa3Tuner.Helper_Classes;
 using Wa3Tuner.Helper_Classes.Parsers;
-using Whim_GEometry_Editor.Misc;
+ 
 using static Wa3Tuner.Helper_Classes.PathManager;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -45,172 +42,96 @@ using ColorConverter = System.Windows.Media.ColorConverter;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
-using System.Windows.Controls;
+ 
+using Ray = Wa3Tuner.Helper_Classes.Ray;
+ 
+ 
+using System.Globalization;
+using System.Xml.Linq;
+using Path = System.IO.Path;
+using System.ComponentModel.DataAnnotations;
 using System.Windows.Controls.Primitives;
-using System.DirectoryServices.ActiveDirectory;
-using System.Security.Policy;
-using System.Reflection.Emit;
+using System.Collections;
+using SharpGL.SceneGraph.Primitives;
+using Whim_GEometry_Editor.Misc;
 namespace Wa3Tuner
 {
-    enum PasteType
-    {
-        None, Normal, Negated
-    }
-    enum PlayOrder
-    {
-        Play, Paused
-    }
-    enum PlayMode
-    {
-        Default, Loop, DontLoop, Cycle
-    }
-    enum CameraView
-    {
-        Top, Bottom, Left, Right, Front, Back
-    }
-    enum AnimatorMode
-    {
-        Translate, Rotate, Scale
-    }
-    public enum ModifyMode
-    {
-        None,
-        Translate,
-        Rotate,
-        Scale,
-        DragUV_U,
-        DragUV_V,
-        Inset,
-        Extrude, // move 
-        ExtrudeEach, // move 
-        Raise,
-        RotateNormals,
-        Extend, // move 
-        Widen,
-        Sculpt,
-        ExpandNarrow,//edge
-        Bevel,
-        DistanceX,
-        DistanceY,
-        DistanceZ,
-        AlgnX,
-        AlgnY,
-        AlgnZ,
-
-        Curve, //edge
-        ScaleUV,
-        ScaleUVu,
-        ScaleUVv,
-        RotateEach,
-        ScaleEach,
-    }
-    enum SceneInteractionState
-    {
-        None,
-        DrawRectangle,
-        RotatingView,
-        Modify,
-        DragView
-    }
-    enum EditMode
-    {
-        Geosets, Triangles, Edges, Vertices, Normals, Nodes,
-        Animator,
-        UV,
-        Rigging,
-
-    }
-    enum AnimatorAxis
-    {
-        X, Y, Z,
-        U
-    }
-    enum GeometryEditMode { Geosets, Rigging, Animator, UVMapper }
-    enum CopiedKeyframe { Translation, Rotation, SCaling, all }
-    enum UVLockType
-    {
-        None, U, V
-    }
-    public enum Axes
-    {
-        X, Y, Z,
-        U
-    }
-    enum WorkMode
-    {
-        Select, Vertices, Edges, Faces
-    }
-    enum RiggingAction { Add, Remove, ClearAdd }
+  
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private bool RenderGroundPlane = false;
-        private bool RenderTextures = true;
-        private bool RenderShading = true;
-        private bool RenderCollisionShapes = false;
-        private bool RenderSkinning = false;
-        private bool RenderTriangles = true;
-        private bool RenderGeosetExtents = false;
-        private bool RenderGeosetExtentSphere = false;
-        private bool RenderNodes = false;
-        private bool RenderGeometry = false;
-        private bool OptimizeOnSave = false;
-        private bool RenderGroundGrid = false;
-        private bool RenderGridX = false;
-        private bool RenderGridY = false;
-        private bool RenderSkeleton = false;
+        //--------------------------------------------------------------------------------
+        //---VALUES
+        //--------------------------------------------------------------------------------
+
         private bool CanDrag = false;
-        private bool RenderNormals = false;
-        private bool RenderAxis = true;
-        private int ViewportGridSizeOverlay = 0;
-        private int ViewportGridSize = 0;
-        private bool RenderEnabled = true;
-        private bool RenderEdges = false;
-        private bool RenderVertices = false;
-        private bool RenderFPS = true;
-        private bool RenderLighing = true;
         private bool MaximizeOnStart = false;
         private float ZoomIncrement = 1;
+        private bool OptimizeOnSave = false;
         private bool Saved = false;
         private bool ColorizeTransformations = false;
-        Viewport3D Scene_Viewport3D;
-        MiniUV MiniUVMapper;
-        public string CurrentSaveLocaiton = string.Empty;
-        public string CurrentSaveFolder = string.Empty;
+        private string DefaultAuthor = "";
+        MiniUV? MiniUVMapper;
+        public string   CurrentSaveLocation = string.Empty;
+        public string  CurrentSaveFolder = string.Empty;
         public CModel CurrentModel = new CModel();
         private string AppPath = AppDomain.CurrentDomain.BaseDirectory;
-        private string IconsPath;
-        List<string> TeamColorPaths;
-        List<string> TeamGlows;
+        private string IconsPath = "";
+        List<string> TeamColorPaths = new  ();
+        List<string> TeamGlows = new ();
         private ModifyMode modifyMode_current = ModifyMode.Translate;
-        private float eulerX = 10; //forward-backward
-        private float eulerY = 0; // left-right
-        private float eulerZ = 10; // bottom-top
+        private CGeosetAnimation? CopiedAnimation;
         private double LastClickPositionX = 0;
         private double LastClickPositionY = 0;
-        private PlayMode playMode = PlayMode.Default;
-        private PlayOrder PlayCommand = PlayOrder.Paused;
-        UVMapper mapper = new UVMapper();
+        private CSequence? CurrentlySelectedSequenceInAnimator;
+        private debug_console_w Debug_Console = new debug_console_w();
+        //UVMapper mapper = new UVMapper();
         private Axes axisMode = Axes.X;
-        Dictionary<MenuItem, int> TeamReference;
+        Dictionary<MenuItem, int> TeamReference = new();
         int CurrentTeamColor = 0;
-        public TextureBrowser TextureFinder;
-        System.Timers.Timer PlayTimer;
-        NodeMaker NodeCollection = new NodeMaker();
-        private ImageSource[] Textures_Loaded;
+        public TextureBrowser? TextureFinder;
+        System.Timers.Timer? PlayTimer;
+        
+        private INode? CopiedNode;
         Dictionary<string, string> IconPaths = new Dictionary<string, string>();
-        List<string> Recents = new List<string>();
-        Texture GroundTexture;
-        public MainWindow()
+        List<string> Recents = new();
+        Texture ? GroundTexture;
+          mSelectionMode SelectionMode = mSelectionMode.Clear;
+        private INode? SelectedNodeInAnimator;
+        private CVector3? CopiedPathNodePosition;
+        
+        private bool ViewingPaths = false;
+        private INode? Animator_CopiedNode;
+        public static CSequence? DuplicatingFromSequence;
+        public static CSequence? DuplicatingToSequence;
+        private CVector3? CopiedTrianglePosition1;
+        private CVector3? CopiedTrianglePosition2;
+        private CVector3? CopiedTrianglePosition3;
+        private CSequence? CopiedAnimatorSequence;
+        private TransformationType CopiedAnimatorSequenceType;
+        private CSequence? CopiedSequence;
+        private CGeoset? CopiedRigGeoset;
+        private PlayMode playMode = PlayMode.Default;
+        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------
+        public MainWindow(debug_console_w debug_Console, string file = "" )
         {
             Pause = true;
             InitializeComponent();
+            Initialize();
+            if (file.Length > 0) LoadModel(file);
             Pause = false;
+            Debug_Console = debug_Console;
         }
+        private bool CalledInitialize = false;
         public void Initialize()
         {
+            if (CalledInitialize) return;
+            CalledInitialize = true;
+         
             IconsPath = System.IO.Path.Combine(AppPath, "Icons"); ;
             InitIcons();
             LoadRecents();
@@ -219,7 +140,7 @@ namespace Wa3Tuner
             MPQHelper.Initialize();
             TextureFinder = new TextureBrowser(this, MPQHelper.Listfile_All);
             InitializeTeamColorPaths();
-            //  NodeCollection = new NodeMaker();
+               NodeCollection = new NodeMaker();
             InitializePlayTimer();
             FillRenderItemsCollection();
         }
@@ -230,9 +151,9 @@ namespace Wa3Tuner
             PlayTimer.Enabled = false;
             PlayTimer.Elapsed += PlayTimer_Cycle;
         }
-        private CSequence CurrentlySelectedSequenceInPlayer;
-        int CurrentPlaybackTrack = 0;
-        private void PlayTimer_Cycle(object sender, ElapsedEventArgs e)
+        
+       
+        private void PlayTimer_Cycle(object? sender, ElapsedEventArgs e)
         {
             Dispatcher.Invoke(() =>
             {
@@ -269,8 +190,8 @@ namespace Wa3Tuner
             new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D2B48C")), // Peanut (Tan)
             new SolidColorBrush(Colors.Black)
         };
-            TeamColorPaths = new List<string>();
-            TeamGlows = new List<string>();
+            TeamColorPaths = new();
+            TeamGlows = new();
             TeamReference = new Dictionary<MenuItem, int>();
             bool hasReforged = MPQHelper.FileExists(($"ReplaceableTextures\\TeamColor\\TeamColor20.blp"));
             int max = hasReforged ? 24 : 12;
@@ -287,73 +208,16 @@ namespace Wa3Tuner
             TeamColorPaths.Add("Textures\\Black32.blp");
             TeamGlows.Add("Textures\\Black32.blp");
         }
-        private void ClickedTeamColor(object sender, EventArgs e)
+        private void ClickedTeamColor(object? sender, EventArgs e)
         {
-            MenuItem item = sender as MenuItem;
+            MenuItem? item = sender as MenuItem;
+            if (item == null) return;
             CurrentTeamColor = TeamReference[item];
             CollectTexturesOpenGL();
         }
-        public MainWindow(string file) // for opening by double click
-        {
-            InitializeComponent();
-            Initialize();
-            LoadModel(file);
-        }
-        private void RenderNodesInViewport(Viewport3D viewport)
-        {
-            foreach (var node in CurrentModel.Nodes)
-            {
-                float x = node.PivotPoint.X;
-                float y = node.PivotPoint.Y;
-                float z = node.PivotPoint.Z;
-                // Default color is gray
-                byte r = 192, g = 192, b = 192;
-                if (node is CAttachment) { r = 255; g = 255; b = 255; } // White
-                if (node is CBone) { r = 0; g = 0; b = 0; } // Black
-                if (node is CLight) { b = 0; } // Yellow
-                if (node is CCollisionShape) { r = 0; g = 0; } // Blue
-                if (node is CRibbonEmitter) { g = 0; b = 0; } // Red
-                if (node is CParticleEmitter) { r = 0; b = 0; } // Green
-                if (node is CParticleEmitter2) { r = 128; g = 0; b = 128; } // Purple
-                if (node is CEvent) { r = 173; g = 216; b = 230; } // Light Blue
-                if (node is CHelper) { r = 209; g = 139; b = 123; } // Light Brown
-                // Create a cube geometry
-                MeshGeometry3D cube = new MeshGeometry3D();
-                double size = 5.0;
-                Point3D p0 = new Point3D(x - size, y - size, z - size);
-                Point3D p1 = new Point3D(x + size, y - size, z - size);
-                Point3D p2 = new Point3D(x + size, y + size, z - size);
-                Point3D p3 = new Point3D(x - size, y + size, z - size);
-                Point3D p4 = new Point3D(x - size, y - size, z + size);
-                Point3D p5 = new Point3D(x + size, y - size, z + size);
-                Point3D p6 = new Point3D(x + size, y + size, z + size);
-                Point3D p7 = new Point3D(x - size, y + size, z + size);
-                cube.Positions.Add(p0); cube.Positions.Add(p1); cube.Positions.Add(p2);
-                cube.Positions.Add(p3); cube.Positions.Add(p4); cube.Positions.Add(p5);
-                cube.Positions.Add(p6); cube.Positions.Add(p7);
-                // Define triangles for each face
-                int[] indices = {
-            0, 1, 2, 2, 3, 0, // Front
-            1, 5, 6, 6, 2, 1, // Right
-            5, 4, 7, 7, 6, 5, // Back
-            4, 0, 3, 3, 7, 4, // Left
-            3, 2, 6, 6, 7, 3, // Top
-            4, 5, 1, 1, 0, 4  // Bottom
-        };
-                foreach (int i in indices)
-                {
-                    cube.TriangleIndices.Add(i);
-                }
-                // Define the material color
-                Color color = Color.FromRgb(r, g, b);
-                DiffuseMaterial material = new DiffuseMaterial(new SolidColorBrush(color));
-                // Create a 3D model
-                GeometryModel3D model = new GeometryModel3D(cube, material);
-                // Add the model to the viewport
-                ModelVisual3D visual = new ModelVisual3D { Content = model };
-                viewport.Children.Add(visual);
-            }
-        }
+       
+       
+     
         private void LoadRecents()
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
@@ -390,14 +254,16 @@ namespace Wa3Tuner
             File.WriteAllLines(file, Recents.ToArray());
             RefreshRecents();
         }
-        private void OpenRecent(object sender, EventArgs e)
+        private void OpenRecent(object? sender, EventArgs e)
         {
-            MenuItem item = (MenuItem)sender;
-            string name = item.Header.ToString();
+            MenuItem? item =  sender as MenuItem; if (item == null) return;
+            string? name = item.Header.ToString();
+            if (name == null) { MessageBox.Show("Null string"); return; }
             LoadModel(name);
         }
         private void InitIcons()
         {
+            
             IconPaths.Add(nameof(CBone), System.IO.Path.Combine(IconsPath, "bone.png"));
             IconPaths.Add(nameof(CAttachment), System.IO.Path.Combine(IconsPath, "attach.png"));
             IconPaths.Add(nameof(CCollisionShape), System.IO.Path.Combine(IconsPath, "cols.png"));
@@ -410,8 +276,43 @@ namespace Wa3Tuner
             IconPaths.Add("lock", System.IO.Path.Combine(IconsPath, "Lock.png"));
             IconPaths.Add("unlock", System.IO.Path.Combine(IconsPath, "Unlocked.png"));
             IconPaths.Add("ground", System.IO.Path.Combine(IconsPath, "grass.png"));
+            ButtonNegateVertices.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "negate.png")) };
+            ButtonNegateTriangles.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "negate.png")) };
+            ButtonCreateTriangle.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "triangle.png")) };
+            ButtonDeleteVertex.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "delete.png")) };
+            ButtonDelTriangles.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "delete.png")) };
+            ButtonUncouple.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "uncouple.png")) };
+            ButtonWeld.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "weld.png")) };
+
+
+            ButtonCollapseV.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "collapse.png")) };
+            ButtonCollapseTriangleVertices.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "collapse.png")) };
+
+
+            ButtonCollapseVG.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "collapse_g.png")) };
+            ButtonCollapseTriangleVertices2.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "collapse_g.png")) };
+
+
+            ButtonCeiling.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "ceiling.png")) };
+            ButtonFloor.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "floor.png")) };
+            ButtonFlattenV.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "flatten.png")) };
+            ButtonFlattenTriangles.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "flatten.png")) };
+            ButtonDisperse.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "disperse.png")) };
+            ButtonMirror.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "mirror.png")) };
+            ButtonSplitVertex.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "split_v.png")) };
+            ButtonArrangeV.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "arrange.png")) };
+            ButtonSwapVertices.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "swap_v.png")) };
+            ButtonEditTrianglesUV.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "uv.png")) };
+            ButtonSubdivide.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "subdivide.png")) };
+            ButtonInset.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "inset.png")) };
+            ButtonInsetConnected.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "inset2.png")) };
+            ButtonMirror.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "mirror.png")) };
+            ButtonMirrorTriangles.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "mirror.png")) };
+            ButtonSimplify.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "simplify.png")) };
+            ButtonSwaptriangles.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "swap_t.png")) };
+            ButtonReattachVertex.Background = new ImageBrush() { ImageSource = ImageLoader.LoadPNGImageSource(Path.Combine(AppHelper.IconFolder, "swaptv.png")) };
         }
-        public void SetBackgroundImage(Button button, string imagePath)
+        public static void SetBackgroundImage(Button button, string imagePath)
         {
             if (string.IsNullOrEmpty(imagePath) || button == null)
                 return;
@@ -420,11 +321,12 @@ namespace Wa3Tuner
             brush.Stretch = Stretch.UniformToFill; // Ensures the image fills the button properly
             button.Background = brush;
         }
-        private void LoadModel(string FromFileName)
+        private void LoadModel(string ?FromFileName)
         {
+            if (FromFileName == null) return;
             if (!File.Exists(FromFileName))
             {
-                MessageBox.Show("File does not exist"); return;
+                MessageBox.Show("File was not found at that location"); return;
             }
             //CurrentModel = 
             CModel TemporaryModel = new CModel();
@@ -437,7 +339,7 @@ namespace Wa3Tuner
                     {
                         var ModelFormat = new MdxLib.ModelFormats.CMdx();
                         ModelFormat.Load(FromFileName, Stream, TemporaryModel);
-                        CurrentSaveLocaiton = FromFileName;
+                        CurrentSaveLocation = FromFileName;
                     }
                 }
                 catch (Exception ex)
@@ -455,7 +357,7 @@ namespace Wa3Tuner
                     {
                         var ModelFormat = new MdxLib.ModelFormats.CMdl();
                         ModelFormat.Load(FromFileName, Stream, TemporaryModel);
-                        CurrentSaveLocaiton = FromFileName;
+                        CurrentSaveLocation = FromFileName;
                     }
                 }
                 catch (Exception ex)
@@ -468,7 +370,7 @@ namespace Wa3Tuner
 
             else if (extension == ".json")
             {
-                CModel temp = JsonFormat.Load();
+                CModel? temp = JsonFormat.Load(); if (temp == null) return;
                 if (temp != null) { CurrentModel = temp; }
             }
 
@@ -477,15 +379,16 @@ namespace Wa3Tuner
             RenameAllNodes();
             Optimizer.RemoveInvalidGeosetAnimations(CurrentModel);
             Optimizer.HandleInvalidTextures(CurrentModel);
-            Box_Errors.Text = "";
+            Box_Errors.Document.Blocks.Clear();
             LabelDisplayInfo.Text = "";
-            CurrentSaveLocaiton = FromFileName;
-            CurrentSaveFolder = System.IO.Path.GetDirectoryName(CurrentSaveLocaiton); ;
+            CurrentSaveLocation = FromFileName;
+            string? folder = Path.GetDirectoryName(CurrentSaveLocation);
+            CurrentSaveFolder = folder == null? string.Empty : folder;
             MPQHelper.LocalModelFolder = CurrentSaveFolder;
-            //CollectTextures();
-            refresh_rData(null, null);
+           
+            RefreshRenderData(null, null);
             RefreshAll();
-            CParticleEmitter2 emitter = CurrentModel.Nodes[0] as CParticleEmitter2;
+            CParticleEmitter2? emitter = CurrentModel.Nodes[0] as CParticleEmitter2;
             if (Recents.Contains(FromFileName) == false) { Recents.Add(FromFileName); SaveRecents(); RefreshRecents(); }
             SetSaved(false);
         }
@@ -501,14 +404,15 @@ namespace Wa3Tuner
             foreach (var geoset in CurrentModel.Geosets) Optimizer.CalculateGeosetExtent(geoset);
             SetSaved(false);
         }
-        private void load(object sender, RoutedEventArgs e)
+        private void load(object? sender, RoutedEventArgs? e)
         {
-            string FromFileName = FileSeeker.OpenModelFileDialog();
+            string? FromFileName = FileSeeker.OpenModelFileDialog();
             if (!File.Exists(FromFileName)) { return; }
             LoadModel(FromFileName);
         }
         private void MultiplyAlphasForEmitter2_MDL()
         {
+            return;
             foreach (INode node in CurrentModel.Nodes)
             {
                 if (node is CParticleEmitter2)
@@ -533,50 +437,10 @@ namespace Wa3Tuner
                 }
             }
         }
-        private CModel GetModel(string FromFileName)
+       private void RefreshTitle()
         {
-            CModel TemporaryModel = new CModel();
-            string extension = System.IO.Path.GetExtension(FromFileName).ToLower();
-            if (extension == ".mdx")
-            {
-                try
-                {
-                    using (var Stream = new System.IO.FileStream(FromFileName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    {
-                        var ModelFormat = new MdxLib.ModelFormats.CMdx();
-                        ModelFormat.Load(FromFileName, Stream, TemporaryModel);
-                        CurrentSaveLocaiton = FromFileName;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.ToString(), "Exception occured while trying to open the .mdx file");
-                    return null;
-                }
-            }
-            if (extension == ".mdl")
-            {
-                try
-                {
-                    using (var Stream = new System.IO.FileStream(FromFileName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    {
-                        var ModelFormat = new MdxLib.ModelFormats.CMdl();
-                        ModelFormat.Load(FromFileName, Stream, TemporaryModel);
-                        CurrentSaveLocaiton = FromFileName;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.ToString(), "Exception occured while trying to open the .mdx file");
-                    return null;
-                }
-            }
-            return TemporaryModel;
-        }
-        private void RefreshTitle()
-        {
-            if (Saved) Title = "War3 Model Tuner - " + CurrentSaveLocaiton + $" ({CurrentModel.Name})";
-            else Title = "War3 Model Tuner - " + CurrentSaveLocaiton + $" ({CurrentModel.Name}) [Unsaved]";
+            if (Saved) Title = "War3 Model Tuner - " + CurrentSaveLocation + $" ({CurrentModel.Name})";
+            else Title = "War3 Model Tuner - " + CurrentSaveLocation + $" ({CurrentModel.Name}) [Unsaved]";
         }
         private void RefreshAll()
         {
@@ -593,7 +457,7 @@ namespace Wa3Tuner
             RefreshGeosetAnimationsList();
             RefreshLayersTextureList();
             RefreshLayersTextureAnimList();
-            RefreshViewPort();
+           
             RefreshPath_ModelNodes_List();
             RefreshSequencesList_Paths();
             //   RenderGeosets(Viewport_Main);
@@ -612,12 +476,14 @@ namespace Wa3Tuner
                     if (texture.ReplaceableId == 0)
                     {
                         name = texture.FileName;
-                        if (System.IO.Path.GetExtension(texture.FileName).ToLower() == ".blp")
+                        string extension = System.IO.Path.GetExtension(texture.FileName).ToLower();
+                       
+                        if (extension== ".blp")
                         {
                             image.Source = MPQHelper.GetImageSource(texture.FileName);
                             if (image.Source == null)
                             {
-                                string path = System.IO.Path.Combine(CurrentSaveFolder, texture.FileName);
+                                string? path = PathMaker.Make(CurrentSaveFolder, texture.FileName);
                                 image.Source = MPQHelper.GetImageSourceExternal(path);
                             }
                         }
@@ -656,7 +522,7 @@ namespace Wa3Tuner
             }
             LabelTextues.Text = $"Textures - {CurrentModel.Textures.Count}";
         }
-        private void RefreshSequencesList()
+        public void RefreshSequencesList()
         {
             ListSequenes.Items.Clear();
             Report_sequences.Text = $"{CurrentModel.Sequences.Count} sequences";
@@ -781,7 +647,7 @@ namespace Wa3Tuner
             }
         }
         private Dictionary<CGeoset, bool> GeosetVisible = new Dictionary<CGeoset, bool>();
-        private void RefreshGeosetsList()
+        public void RefreshGeosetsList()
         {
             ListGeosets.Items.Clear();
             Report_Geosets.Text = $"{CurrentModel.Geosets.Count} geosets";
@@ -796,7 +662,7 @@ namespace Wa3Tuner
                 Title.Text = TitleName;
                 CheckBox CheckPart = new CheckBox();
                 StackPanel Container = new StackPanel();
-                Item.MouseLeave += (object sender, MouseEventArgs e) =>
+                Item.MouseLeave += (object? sender, MouseEventArgs e) =>
                 {
                     if (Item.ToolTip is ToolTip toolTip)
                     {
@@ -808,38 +674,34 @@ namespace Wa3Tuner
                 Container.Children.Add(Title);
                 CheckPart.IsChecked = true;
                 //GeosetVisible.Add(geo, true);
-                CheckPart.Checked += (object sender, RoutedEventArgs e) => geo.isVisible = true; ;
-                CheckPart.Unchecked += (object sender, RoutedEventArgs e) => geo.isVisible = false; ;
+                CheckPart.Checked += (object? sender, RoutedEventArgs? e) => geo.isVisible = true; ;
+                CheckPart.Unchecked += (object? sender, RoutedEventArgs? e) => geo.isVisible = false; ;
                 Item.Content = Container;
                 ListGeosets.Items.Add(Item);
             }
         }
-        private void CheckedGeosetVisibility(object sender, EventArgs e)
+        private void CheckedGeosetVisibility(object? sender, EventArgs? e)
         {
             if (sender is CheckBox == false) { return; }
             int index = 0;
-            ListBoxItem item = null;
-            CheckBox CheckedBox = sender as CheckBox;
+            ListBoxItem? item = null;
+            CheckBox? CheckedBox = sender as CheckBox;
+            if (CheckedBox == null) return;
             for (int i = 0; i < ListGeosets.Items.Count; i++)
             {
-                ListBoxItem box = ListGeosets.Items[i] as ListBoxItem;
-                StackPanel p = box.Content as StackPanel;
-                CheckBox c = p.Children[0] as CheckBox;
+               
+                ListBoxItem? box = ListGeosets.Items[i] as ListBoxItem; if (box == null) return;
+                StackPanel? p = box.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
                 if (c == CheckedBox) { item = box; index = i; break; }
             }
             if (item == null) { return; }
             bool visible = CheckedBox.IsChecked == true;
             CGeoset geoset = CurrentModel.Geosets[index];
             GeosetVisible[geoset] = visible;
-            RefreshViewPort();
+           
         }
-        private CGeoset GetGEosetOfCheckbox(CheckBox c)
-        {
-            string start = c.Content.ToString().Split(" ")[0];
-            int id = int.Parse(start);
-            return CurrentModel.Geosets.First(X => X.ObjectId == id);
-        }
-        private void RefreshNodesTree()
+       public void RefreshNodesTree()
         {
             ListNodes.Items.Clear();
             Report_Nodes.Text = $"{CurrentModel.Nodes.Count} nodes";
@@ -925,7 +787,7 @@ namespace Wa3Tuner
             if (node is CLight) return LoadImageSource(IconPaths[nameof(CLight)]);
             throw new Exception("unknown type of node");
         }
-        private ImageSource LoadImageSource(string filePath)
+        private static ImageSource LoadImageSource(string filePath)
         {
             if (filePath.Length == 0)
                 throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
@@ -946,10 +808,10 @@ namespace Wa3Tuner
                 throw new InvalidOperationException("Failed to load image.", ex);
             }
         }
-        private void save(object sender, RoutedEventArgs e)
+        private void SaveModel(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentSaveLocaiton.Length == 0) { saveas(null, null); return; }
-            string ext = System.IO.Path.GetExtension(CurrentSaveLocaiton).ToLower();
+            if (CurrentSaveLocation.Length == 0) { saveas(null, null); return; }
+            string ext = System.IO.Path.GetExtension(CurrentSaveLocation).ToLower();
             if (
                (ext == ".mdx" || ext == ".mdl" || ext == ".json") == false
                 ) { MessageBox.Show("Invalid extension"); return; }
@@ -957,7 +819,7 @@ namespace Wa3Tuner
             if (OptimizeOnSave) OptimizeModelForSaving();
             if (ext == ".mdl")
             {
-                string ToFileName = CurrentSaveLocaiton;
+                string ToFileName = CurrentSaveLocation;
                 DivideAlphasForEmitter2_MDL();
                 using (var Stream = new System.IO.FileStream(ToFileName, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                 {
@@ -969,7 +831,7 @@ namespace Wa3Tuner
             }
             if (ext == ".mdx")
             {
-                string ToFileName = CurrentSaveLocaiton;
+                string ToFileName = CurrentSaveLocation;
                 using (var Stream = new System.IO.FileStream(ToFileName, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                 {
                     var ModelFormat = new MdxLib.ModelFormats.CMdx();
@@ -998,12 +860,12 @@ namespace Wa3Tuner
             Optimizer.Optimize(CurrentModel);
 
         }
-        private void saveas(object sender, RoutedEventArgs e)
+        private void saveas(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel == null) { MessageBox.Show("Null model"); return; }
             string ToFileName = FileSeeker.ShowSaveFileDialog();
             if (ToFileName.Length == 0) return;
-            CurrentSaveLocaiton = ToFileName; save(null, null);
+            CurrentSaveLocation = ToFileName; SaveModel(null, null);
             RefreshTitle();
         }
         public static void DrawCube(Viewport3D viewport, Point3D center, double size, System.Windows.Media.Color color)
@@ -1053,43 +915,34 @@ namespace Wa3Tuner
             // Add the model to the viewport
             viewport.Children.Add(modelVisual);
         }
-        public void AdjustCam()
-        {
-            Scene_Viewport3D.Camera = new PerspectiveCamera
-            {
-                Position = new Point3D(3, 3, 3),
-                LookDirection = new Vector3D(-3, -3, -3),
-                UpDirection = new Vector3D(0, 1, 0),
-                FieldOfView = 60
-            };
-        }
-        private void delcameras(object sender, RoutedEventArgs e)
+       
+        private void delcameras(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Cameras.Clear();
             SetSaved(false);
         }
-        private void delsequences(object sender, RoutedEventArgs e)
+        private void delsequences(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Sequences.Clear();
             RefreshSequencesList(); SetSaved(false);
         }
-        private void delgss(object sender, RoutedEventArgs e)
+        private void delgss(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.GlobalSequences.Clear();
             RefreshGlobalSequencesList();
             SetSaved(false);
         }
-        private void delgeosets(object sender, RoutedEventArgs e)
+        private void delgeosets(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Geosets.Clear(); SetSaved(false);
             RefreshGeosetsList();
         }
-        private void deltxa(object sender, RoutedEventArgs e)
+        private void deltxa(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.TextureAnimations.Clear(); SetSaved(false)
                ; RefreshTextureAnims();
         }
-        private void resetallgas(object sender, RoutedEventArgs e)
+        private void resetallgas(object? sender, RoutedEventArgs? e)
         {
             foreach (var gs in CurrentModel.GeosetAnimations)
             {
@@ -1097,7 +950,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void MakeAllGAAlphaStatic(object sender, RoutedEventArgs e)
+        private void MakeAllGAAlphaStatic(object? sender, RoutedEventArgs? e)
         {
             for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
             {
@@ -1106,14 +959,14 @@ namespace Wa3Tuner
             }
             RefreshGeosetAnimationsList(); SetSaved(false);
         }
-        private void ImportAllGeosetsOf(object sender, RoutedEventArgs e)
+        private void ImportAllGeosetsOf(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0)
             {
                 MessageBox.Show("There are no materials. At least one material is needed to be applied to the imported geosets."); return;
             }
             {
-                CModel TemporaryModel = GetTemporaryModel();
+                CModel? TemporaryModel = GetTemporaryModel();
                 if (TemporaryModel == null) { return; }
                 Pause = true;
                 foreach (CGeoset geoset in TemporaryModel.Geosets)
@@ -1123,7 +976,7 @@ namespace Wa3Tuner
                 }
                 RefreshGeosetsList();
                 RefreshNodesTree();
-                refresh_rData(null, null);
+                RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List(); SetSaved(false);
@@ -1135,12 +988,12 @@ namespace Wa3Tuner
             {
                 var Result = MessageBox.Show(
                     "The model is not saved. Save?",
-                    "wait...",
+                    "Wait...",
                     MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
                 if (Result == MessageBoxResult.Yes)
                 {
-                    save(null, null);
+                    SaveModel(null, null);
                     return true;
                 }
                 if (Result == MessageBoxResult.No)
@@ -1154,10 +1007,10 @@ namespace Wa3Tuner
             }
             return true;
         }
-        private CModel GetTemporaryModel(string file = "")
+        private CModel? GetTemporaryModel(string file = "")
         {
             CModel model = new CModel();
-            string FromFileName = file;
+            string? FromFileName = file;
             if (FromFileName == "")
             {
                 FromFileName = FileSeeker.OpenModelFileDialog();
@@ -1205,14 +1058,14 @@ namespace Wa3Tuner
             return
                 model;
         }
-        private void ImportAllNodesOf(object sender, RoutedEventArgs e)
+        private void ImportAllNodesOf(object? sender, RoutedEventArgs? e)
         {
             import_nodes_choice i = new import_nodes_choice();
             i.ShowDialog();
             if (i.DialogResult == true)
             {
                 int choice = i.selected;
-                CModel TemporaryModel = GetTemporaryModel();
+                CModel? TemporaryModel = GetTemporaryModel();
                 if (TemporaryModel == null) { return; }
                 if (choice == 1)
                 {
@@ -1292,7 +1145,7 @@ namespace Wa3Tuner
             }
             RefreshNodesTree();
         }
-        private void OVerwriteKeyframesForMatchingNodes(CModel currentModel, CModel temporaryModel)
+        private static void OVerwriteKeyframesForMatchingNodes(CModel currentModel, CModel temporaryModel)
         {
             foreach (INode externalNode in temporaryModel.Nodes)
             {
@@ -1696,7 +1549,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ImportAnimations(object sender, RoutedEventArgs e)
+        private void ImportAnimations(object? sender, RoutedEventArgs? e)
         {
             bool AndSequences = false;
             MessageBoxResult result = MessageBox.Show(
@@ -1709,7 +1562,7 @@ namespace Wa3Tuner
             {
                 AndSequences = true;
             }
-            CModel TemporaryModel = GetTemporaryModel();
+            CModel? TemporaryModel = GetTemporaryModel();
             if (TemporaryModel == null) { return; }
             if (AndSequences)
             {
@@ -1727,7 +1580,7 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private void RemoveAllLights(object sender, RoutedEventArgs e)
+        private void RemoveAllLights(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1743,7 +1596,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoveEmitters1(object sender, RoutedEventArgs e)
+        private void RemoveEmitters1(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1759,7 +1612,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoveEmitters2(object sender, RoutedEventArgs e)
+        private void RemoveEmitters2(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1775,7 +1628,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoveAllAttachments(object sender, RoutedEventArgs e)
+        private void RemoveAllAttachments(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1791,7 +1644,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoAllCOLS(object sender, RoutedEventArgs e)
+        private void RemoAllCOLS(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1807,7 +1660,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void removeAllHelpers(object sender, RoutedEventArgs e)
+        private void removeAllHelpers(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1823,7 +1676,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoveAllEventObjects(object sender, RoutedEventArgs e)
+        private void RemoveAllEventObjects(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1838,7 +1691,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void RemoveAllAnimations(object sender, RoutedEventArgs e)
+        private void RemoveAllAnimations(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes.ToList())
             {
@@ -1850,19 +1703,19 @@ namespace Wa3Tuner
         }
         private string GetNodeName()
         {
-            TreeViewItem item = (ListNodes.SelectedItem as TreeViewItem);
-            StackPanel s = item.Header as StackPanel;
-            TextBlock t = (TextBlock)s.Children[1];
+            TreeViewItem? item = (ListNodes.SelectedItem as TreeViewItem); if (item == null) return string.Empty;
+            StackPanel? s = item.Header as StackPanel; if (s == null) return string.Empty;
+            TextBlock? t = (TextBlock)s.Children[1]; if (t == null) return string.Empty;
             return t.Text;
         }
         private string GetNodeNameAnimator()
         {
-            TreeViewItem item = (List_Nodes_Animator.SelectedItem as TreeViewItem);
-            StackPanel s = item.Header as StackPanel;
-            TextBlock t = (TextBlock)s.Children[1];
+            TreeViewItem? item = (List_Nodes_Animator.SelectedItem as TreeViewItem); if (item == null) return string.Empty;
+            StackPanel? s = item.Header as StackPanel; if (s == null) return string.Empty;
+            TextBlock? t = (TextBlock)s.Children[1]; if (t == null) return string.Empty;
             return t.Text;
         }
-        private void RenameNode(object sender, RoutedEventArgs e)
+        private void RenameNode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -1886,15 +1739,15 @@ namespace Wa3Tuner
         {
             if (ListNodes.SelectedItem != null)
             {
-                TreeViewItem item = ListNodes.SelectedItem as TreeViewItem;
-                StackPanel s = item.Header as StackPanel;
-                TextBlock t = s.Children[1] as TextBlock;
+                TreeViewItem? item = ListNodes.SelectedItem as TreeViewItem; if (item == null) return;
+                StackPanel? s = item.Header as StackPanel; if (s == null) return;
+                TextBlock? t = s.Children[1] as TextBlock; if (t == null) return;
                 t.Text = name;
             }
         }
         private void RenameAllNodes()
         {
-            List<string> ExistingNames = new List<string>();
+            List<string> ExistingNames = new();
             foreach (INode node in CurrentModel.Nodes)
             {
                 if (ExistingNames.Contains(node.Name))
@@ -1909,7 +1762,7 @@ namespace Wa3Tuner
             string name = GetNodeName();
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void SetPivotPoint(object sender, RoutedEventArgs e)
+        private void SetPivotPoint(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode selected = GetSeletedNode();
@@ -1928,14 +1781,14 @@ namespace Wa3Tuner
         }
         private List<string> GetGoesetStringItems()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (CGeoset geo in CurrentModel.Geosets)
             {
                 list.Add($"Geoset {geo.ObjectId} ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles)");
             }
             return list;
         }
-        private void Setpiv(object sender, RoutedEventArgs e)
+        private void Setpiv(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode selected = GetSeletedNode();
@@ -1946,12 +1799,12 @@ namespace Wa3Tuner
             if (s.DialogResult == true)
             {
                 int index = s.box.SelectedIndex;
-                CGeoset geo = GetGeoset(s.Selected);
+                CGeoset geo = CurrentModel.Geosets[s.box.SelectedIndex];
                 CVector3 centroid = Calculator.GetCentroidOfGeoset(geo);
                 selected.PivotPoint = centroid;
             }
         }
-        private void reverseSequence(object sender, RoutedEventArgs e)
+        private void reverseSequence(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
             CSequence s = GetSelectedSequence();
@@ -2141,15 +1994,14 @@ namespace Wa3Tuner
         }
         private CSequence GetSelectedSequence()
         {
-            string s = (ListSequenes.SelectedItem as ListBoxItem).Content.ToString();
-            string[] parts = s.Split('[').ToArray();
-            return CurrentModel.Sequences.First(X => X.Name == parts[0].Trim());
+
+            return CurrentModel.Sequences[ListSequenes.SelectedIndex];
         }
         private CSequence GetSelectedSequenceAnimator()
         {
             return CurrentModel.Sequences[List_Sequences_Animator.SelectedIndex];
         }
-        private void switchLooping(object sender, RoutedEventArgs e)
+        private void switchLooping(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -2159,11 +2011,11 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void CopySQData(object sender, RoutedEventArgs e)
+        private void CopySQData(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences"); return;
+                MessageBox.Show("There are no sequences", "Nothing to work with"); return;
             }
             StringBuilder sb = new StringBuilder();
             foreach (CSequence s in CurrentModel.Sequences)
@@ -2175,11 +2027,11 @@ namespace Wa3Tuner
             tw.ShowDialog();
 
         }
-        private void ShowGaps(object sender, RoutedEventArgs e)
+        private void ShowGaps(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences"); return;
+                MessageBox.Show("There are no sequences",  "Nothing to work with"); return;
             }
             List<Interval> intervals = new List<Interval>();
             foreach (CSequence s in CurrentModel.Sequences) { intervals.Add(new Interval(s.IntervalStart, s.IntervalEnd)); }
@@ -2188,7 +2040,7 @@ namespace Wa3Tuner
             TextViewer tw = new TextViewer("Gaps between sequences up to 999,999:\n\n" + gaps);
             tw.ShowDialog();
         }
-        private string GetGaps(List<Interval> intervals)
+        private static string GetGaps(List<Interval> intervals)
         {
             StringBuilder stringBuilder = new StringBuilder();
             int limit = 999_999;
@@ -2264,7 +2116,7 @@ namespace Wa3Tuner
             foreach (var g in CurrentModel.Geosets) edges += g.CountEdges();
             sb.AppendLine($"Edges: {edges}");
             LabelDisplayInfo.Text = sb.ToString();
-            // MessageBox.Show(sb.ToString());
+           
         }
         private int GetLongestGS()
         {
@@ -2307,7 +2159,7 @@ namespace Wa3Tuner
             int nodes = 0;
             int datas = 0;
             int others = 0;
-            int all = 0;
+           
             int[] result = new int[4];
             //nodes
             foreach (INode node in CurrentModel.Nodes)
@@ -2321,12 +2173,12 @@ namespace Wa3Tuner
             {
                 if (node is CAttachment)
                 {
-                    CAttachment item = node as CAttachment;
+                    CAttachment? item = node as CAttachment;  if (item == null) continue;
                     datas += item.Visibility.Count;
                 }
                 if (node is CParticleEmitter)
                 {
-                    CParticleEmitter item = node as CParticleEmitter;
+                    CParticleEmitter? item = node as CParticleEmitter; if (item == null) continue;
                     datas += item.Visibility.Count;
                     datas += item.EmissionRate.Count;
                     datas += item.LifeSpan.Count;
@@ -2337,7 +2189,7 @@ namespace Wa3Tuner
                 }
                 if (node is CParticleEmitter2)
                 {
-                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) continue;
                     datas += item.Visibility.Count;
                     datas += item.Gravity.Count;
                     datas += item.Width.Count;
@@ -2349,7 +2201,7 @@ namespace Wa3Tuner
                 }
                 if (node is CRibbonEmitter)
                 {
-                    CRibbonEmitter item = node as CRibbonEmitter;
+                    CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) continue;
                     datas += item.Visibility.Count;
                     datas += item.HeightAbove.Count;
                     datas += item.HeightBelow.Count;
@@ -2359,7 +2211,7 @@ namespace Wa3Tuner
                 }
                 if (node is CLight)
                 {
-                    CLight item = node as CLight;
+                    CLight? item = node as CLight; if (item == null) continue;
                     datas += item.Visibility.Count;
                     datas += item.Color.Count;
                     datas += item.AmbientColor.Count;
@@ -2431,7 +2283,7 @@ namespace Wa3Tuner
                 return $"{name} - {low}";
             }
         }
-        private void rootall(object sender, RoutedEventArgs e)
+        private void rootall(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes)
             {
@@ -2439,14 +2291,14 @@ namespace Wa3Tuner
             }
             RefreshNodesTree(); SetSaved(false);
         }
-        private void removeAllNodes(object sender, RoutedEventArgs e)
+        private void removeAllNodes(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Nodes.Clear();
             RefreshNodesTree(); SetSaved(false);
         }
-        private void ImportTextures(object sender, RoutedEventArgs e)
+        private void ImportTextures(object? sender, RoutedEventArgs? e)
         {
-            CModel TemporaryModel = GetTemporaryModel();
+            CModel? TemporaryModel = GetTemporaryModel();
             if (TemporaryModel == null) { return; }
             foreach (CTexture tx in TemporaryModel.Textures)
             {
@@ -2462,13 +2314,13 @@ namespace Wa3Tuner
             }
             RefreshTexturesList(); SetSaved(false);
         }
-        private void masscreeatesequences(object sender, RoutedEventArgs e)
+        private void masscreeatesequences(object? sender, RoutedEventArgs? e)
         {
             Mass_Create_Sequences ms = new Mass_Create_Sequences(CurrentModel);
             ms.ShowDialog();
-            if (ms.DialogResult == true) { RefreshSequencesList(); SetSaved(false); }
+            if (ms.DialogResult == true) { RefreshSequencesList(); SetSaved(false); History.Sequences.Add(CurrentModel); }
         }
-        private void createTexture(object sender, RoutedEventArgs e)
+        private void createTexture(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input("");
             i.ShowDialog();
@@ -2547,66 +2399,67 @@ namespace Wa3Tuner
             Optimizer.MinimizeMatrixGroups = Check_Minimiematrixgroups.IsChecked == true;
             Optimizer.FixNoMatrixGroups = Check_FixNoMatrixGroups.IsChecked == true;
             Optimizer.SplitGeosets = Check_Splitgeosets.IsChecked == true && Check_Minimiematrixgroups.IsChecked == true;
+            Optimizer.DeduplicateMatrixGroups = Check_duplmgn.IsChecked == true;
         }
-        private void optimize(object sender, RoutedEventArgs e)
+        private void optimize(object? sender, RoutedEventArgs? e)
         {
             //Scene_Viewport3D.Children.Clear();
             CollectOptimizationSettings();
             Optimizer.Optimize(CurrentModel);
-            // CollectTextures();
+           
             CollectTexturesOpenGL();
             RefreshAll();
             MessageBox.Show("Done optimizing");
             SetSaved(false);
         }
-        private void checkallopts(object sender, RoutedEventArgs e)
+        private void checkallopts(object? sender, RoutedEventArgs? e)
         {
             for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
                 if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
+                    CheckBox? c = ListOptOptions.Children[i] as CheckBox; if (c == null) return;
                     if (c.IsEnabled) { c.IsChecked = true; }
                 }
             }
         }
-        private void uncheckallopts(object sender, RoutedEventArgs e)
+        private void uncheckallopts(object? sender, RoutedEventArgs? e)
         {
             for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
                 if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
+                    CheckBox? c = ListOptOptions.Children[i] as CheckBox; if (c == null) continue; ;
                     if (c.IsEnabled) { c.IsChecked = false; }
                 }
             }
         }
-        private void inversecheckopts(object sender, RoutedEventArgs e)
+        private void inversecheckopts(object? sender, RoutedEventArgs? e)
         {
             for (int i = 0; i < ListOptOptions.Children.Count; i++)
             {
                 if (ListOptOptions.Children[i] is CheckBox)
                 {
-                    CheckBox c = ListOptOptions.Children[i] as CheckBox;
+                    CheckBox? c = ListOptOptions.Children[i] as CheckBox; if (c == null) return;
                     if (c.IsEnabled) { c.IsChecked = c.IsChecked == true ? false : true; ; }
                 }
             }
         }
-        private void reload(object sender, RoutedEventArgs e)
+        private void reload(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentSaveLocaiton.Length != 0)
+            if (CurrentSaveLocation.Length != 0)
             {
-                LoadModel(CurrentSaveLocaiton);
+                LoadModel(CurrentSaveLocation);
             }
         }
-        private void showunanimatedseq(object sender, RoutedEventArgs e)
+        private void showunanimatedseq(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences"); return;
+                MessageBox.Show("There are no sequences", "Nothing to work with"); return;
             }
             Optimizer.Model = CurrentModel;
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (CSequence sequence in CurrentModel.Sequences.ToList())
             {
                 int from = sequence.IntervalStart;
@@ -2626,13 +2479,13 @@ namespace Wa3Tuner
                 MessageBox.Show("No un-animated sequences");
             }
         }
-        private void DelAllGeosets(object sender, RoutedEventArgs e)
+        private void DelAllGeosets(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Geosets.Clear();
             RefreshGeosetsList();
 
         }
-        private void clearAllnodetrans(object sender, RoutedEventArgs e)
+        private void clearAllnodetrans(object? sender, RoutedEventArgs? e)
         {
             foreach (INode node in CurrentModel.Nodes)
             {
@@ -2641,7 +2494,7 @@ namespace Wa3Tuner
                 node.Rotation.Clear();
             }
         }
-        private void clearnodeTrans(object sender, RoutedEventArgs e)
+        private void clearnodeTrans(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -2654,7 +2507,7 @@ namespace Wa3Tuner
                 if (st.Check_S.IsChecked == true) node.Scaling.Clear();
             }
         }
-        private void reversenodetr(object sender, RoutedEventArgs e)
+        private void reversenodetr(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -2667,10 +2520,11 @@ namespace Wa3Tuner
                 if (st.Check_S.IsChecked == true) node.Scaling.Reverse();
             }
         }
-        private void loaded(object sender, RoutedEventArgs e)
+        private void loaded(object? sender, RoutedEventArgs? e)
         {
             Initialize();
             LoadSettings();
+            Textbox_HistoryLimit.Text = "200";
             LoadGroundTextureImage();
             LoadPlayBackIcons();
             Radio_PlayDef.IsChecked = true;
@@ -2680,7 +2534,7 @@ namespace Wa3Tuner
             IconLoader2.LoadIconToImageControl(IconPlay, "tick");
             IconLoader2.LoadIconToImageControl(IconDontPlay, "cross");
         }
-        private void SpaceTras(object sender, RoutedEventArgs e)
+        private void SpaceTras(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -2711,7 +2565,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SpaceTransformation(CSequence sequence, CAnimator<CVector3> animator)
+        private static void SpaceTransformation(CSequence sequence, CAnimator<CVector3> animator)
         {
             int from = sequence.IntervalStart;
             int to = sequence.IntervalEnd;
@@ -2736,7 +2590,7 @@ namespace Wa3Tuner
                 isolated[i] = new CAnimatorNode<CVector3>(newTime, value);
             }
         }
-        private void SpaceTransformation(CSequence sequence, CAnimator<CVector4> animator)
+        private static void SpaceTransformation(CSequence sequence, CAnimator<CVector4> animator)
         {
             int from = sequence.IntervalStart;
             int to = sequence.IntervalEnd;
@@ -2761,7 +2615,7 @@ namespace Wa3Tuner
                 isolated[i] = new CAnimatorNode<CVector4>(newTime, value);
             }
         }
-        private void DelNode(object sender, RoutedEventArgs e)
+        private void DelNode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -2801,9 +2655,9 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private void CreateAtts1(object sender, RoutedEventArgs e)
+        private void CreateAtts1(object? sender, RoutedEventArgs? e)
         {
-            List<string> names = new List<string>()
+            List<string> names = new()
             {
                 "Sprite First Ref", "Sprite Second Ref", "Sprite Third Ref", "Sprite Fourth Ref", "Sprite RallyPoint Ref", "Mount Ref"
             };
@@ -2818,9 +2672,9 @@ namespace Wa3Tuner
             }
             RefreshNodesTree(); SetSaved(false);
         }
-        private void Createatts2(object sender, RoutedEventArgs e)
+        private void Createatts2(object? sender, RoutedEventArgs? e)
         {
-            List<string> names = new List<string>()
+            List<string> names = new()
             {
                 "Head Ref", "Chest Ref", "Hand Left Ref", "Hand Right Ref", "Foot Left Ref", "Foot Right Ref", "Overhead Ref",
                 "Weapon Right Ref", "Weapon Left Ref"
@@ -2836,7 +2690,7 @@ namespace Wa3Tuner
             }
             RefreshNodesTree(); SetSaved(false);
         }
-        private void movetoroot(object sender, RoutedEventArgs e)
+        private void movetoroot(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -2944,7 +2798,7 @@ namespace Wa3Tuner
             SetSaved(false);
         }
 
-        private void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<float> animator)
+        private static void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<float> animator)
         {
             if (animator.Animated == false) { return; }
             if (animator.Count == 0) { return; }
@@ -2956,7 +2810,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<CVector3> animator)
+        private static void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<CVector3> animator)
         {
             if (animator.Animated == false) { return; }
             if (animator.Count == 0) { return; }
@@ -2968,7 +2822,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<CVector4> animator)
+        private static void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<CVector4> animator)
         {
             if (animator.Animated == false) { return; }
             if (animator.Count == 0) { return; }
@@ -2980,7 +2834,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<int> animator)
+        private static void RemoveSequenceFromAnimator(CSequence sequence, CAnimator<int> animator)
         {
             if (animator.Animated == false) { return; }
             if (animator.Count == 0) { return; }
@@ -2993,7 +2847,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void delseqalong(object sender, RoutedEventArgs e)
+        private void delseqalong(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
             CSequence sequence = GetSelectedSequence();
@@ -3003,6 +2857,7 @@ namespace Wa3Tuner
             RefreshPath_ModelNodes_List();
             RefreshSequencesList();
             SetSaved(false);
+            History.Sequences.Add(CurrentModel);
         }
 
         private void AddNewMissingVisibilities(CSequence sequence)
@@ -3033,7 +2888,7 @@ namespace Wa3Tuner
 
             }
         }
-        private void AddMissingVisbility(CSequence sequence, CAnimator<float> a)
+        private static void AddMissingVisbility(CSequence sequence, CAnimator<float> a)
         {
             if (a.Animated == false) { return; }
             if (a.Count == 0) { return; }
@@ -3047,14 +2902,14 @@ namespace Wa3Tuner
 
             a.NodeList = a.NodeList.OrderBy(x => x.Time).ToList();
         }
-        private void ClearSequenceAnimations(object sender, RoutedEventArgs e)
+        private void ClearSequenceAnimations(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
             CSequence sequence = GetSelectedSequence();
             ClearAnimations(sequence, false); SetSaved(false);
             RefreshSequencesList();
         }
-        private void createTextures(object sender, RoutedEventArgs e)
+        private void createTextures(object? sender, RoutedEventArgs? e)
         {
             Mass_Create_Textures mass_Create_Textures = new Mass_Create_Textures();
             mass_Create_Textures.ShowDialog();
@@ -3077,12 +2932,12 @@ namespace Wa3Tuner
                 }
                 RefreshTexturesList();
                 RefreshLayersTextureList();
-                // CollectTextures();
+               
                 CollectTexturesOpenGL();
                 SetSaved(false);
             }
         }
-        private void delTexture(object sender, RoutedEventArgs e)
+        private void delTexture(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -3144,14 +2999,12 @@ namespace Wa3Tuner
             }
             return false;
         }
-        private void ReApplyTextureToLayersMissing()
-        {
-        }
+      
         private CTexture GetSElectedTexture()
         {
             return CurrentModel.Textures[List_Textures.SelectedIndex];
         }
-        private void delgeoset(object sender, RoutedEventArgs e)
+        private void delgeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             List<CGeoset> geosets = GetSelectedGeosets();
@@ -3166,10 +3019,10 @@ namespace Wa3Tuner
             }
             RefreshGeosetsList();
             RefreshGeosetAnimationsList();
-            RefreshViewPort();
+           
             SetSaved(false);
         }
-        private void creatematerialfortargettexture(object sender, RoutedEventArgs e)
+        private void creatematerialfortargettexture(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem == null) return;
             CTexture texture = GetSElectedTexture();
@@ -3179,7 +3032,7 @@ namespace Wa3Tuner
             material.Layers.Add(layer);
             CurrentModel.Materials.Add(material);
             RefreshMaterialsList();
-            //CollectTextures();
+          
             CollectTexturesOpenGL();
         }
         private CMaterial GetSelectedMAterial()
@@ -3218,7 +3071,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void DelMAterial(object sender, RoutedEventArgs e)
+        private void DelMAterial(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -3246,7 +3099,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void creatematsforalltextures(object sender, RoutedEventArgs e)
+        private void creatematsforalltextures(object? sender, RoutedEventArgs? e)
         {
             foreach (CTexture texture in CurrentModel.Textures)
             {
@@ -3257,7 +3110,7 @@ namespace Wa3Tuner
                 CurrentModel.Materials.Add(material);
             }
             RefreshMaterialsList();
-            // CollectTextures();
+          
             CollectTexturesOpenGL();
         }
         internal void ReapplyMaterialsToEmptyGeosets()
@@ -3274,7 +3127,7 @@ namespace Wa3Tuner
         {
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void movetargetnodeundernode(object sender, RoutedEventArgs e)
+        private void movetargetnodeundernode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -3284,6 +3137,7 @@ namespace Wa3Tuner
                 if (nodes.Count > 0)
                 {
                     Selector s = new Selector(nodes);
+                    if (s.Selected == null) return;
                     s.ShowDialog();
                     if (s.DialogResult == true)
                     {
@@ -3303,7 +3157,7 @@ namespace Wa3Tuner
                 else { MessageBox.Show("At least one other node must be present"); return; }
             }
         }
-        private void SelectAllGeosets(object sender, RoutedEventArgs e)
+        private void SelectAllGeosets(object? sender, RoutedEventArgs? e)
         {
             Pause = true;
             foreach (var item in ListGeosets.Items)
@@ -3311,13 +3165,13 @@ namespace Wa3Tuner
                 ListGeosets.SelectedItems.Add(item);
             }
             Pause = false;
-            RefreshViewPort();
+           
         }
-        private void DeselectAllGeosets(object sender, RoutedEventArgs e)
+        private void DeselectAllGeosets(object? sender, RoutedEventArgs? e)
         {
             ListGeosets.SelectedItems.Clear();
         }
-        private void InvertSelectGeosets(object sender, RoutedEventArgs e)
+        private void InvertSelectGeosets(object? sender, RoutedEventArgs? e)
         {
             List<object> unselected = new List<object>();
             foreach (var item0 in ListGeosets.Items)
@@ -3333,13 +3187,13 @@ namespace Wa3Tuner
                 ListGeosets.SelectedItems.Add(item);
             }
         }
-        private void clearRecents(object sender, RoutedEventArgs e)
+        private void clearRecents(object? sender, RoutedEventArgs? e)
         {
             Recents.Clear();
             SaveRecents();
         }
 
-        private void MergeSelectedSequences(object sender, RoutedEventArgs e)
+        private void MergeSelectedSequences(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -3358,10 +3212,11 @@ namespace Wa3Tuner
                     sequence.IntervalEnd = selected.IntervalEnd;
                     CurrentModel.Sequences.Remove(selected);
                     RefreshSequencesList();
+                    History.Sequences.Add(CurrentModel);
                 }
             }
         }
-        private void SplitSequences(object sender, RoutedEventArgs e)
+        private void SplitSequences(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -3420,7 +3275,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void ClearAllAnimationsOfSequence(object sender, RoutedEventArgs e)
+        private void ClearAllAnimationsOfSequence(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes)
@@ -3432,19 +3287,19 @@ namespace Wa3Tuner
             SetSaved(false);
 
         }
-        private void clearsequencetranslations(object sender, RoutedEventArgs e)
+        private void clearsequencetranslations(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes) node.Translation.Clear();
             SetSaved(false);
         }
-        private void clearsequencerotations(object sender, RoutedEventArgs e)
+        private void clearsequencerotations(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes) node.Rotation.Clear();
             SetSaved(false);
         }
-        private void clearsequencescalings(object sender, RoutedEventArgs e)
+        private void clearsequencescalings(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes) node.Scaling.Clear();
@@ -3460,7 +3315,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void createColsForTargetGeo(object sender, RoutedEventArgs e)
+        private void createColsForTargetGeo(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -3478,76 +3333,41 @@ namespace Wa3Tuner
                     CurrentModel.Nodes.Add(node);
                 }
                 RefreshNodesTree();
-                RefreshViewPort();
+               
             }
         }
-        private void putonground_click(object sender, RoutedEventArgs e)
-        {
-            putonground pg = new putonground();
-            pg.ShowDialog();
-            List<CGeoset> geosets = GetSelectedGeosets();
-            if (pg.DialogResult == true)
-            {
-                if (pg.Check_1.IsChecked == true)
-                {
-                    foreach (CGeoset geoset in geosets)
-                    {
-                        Calculator.PutOnGround(geoset);
-                    }
-                }
-                if (pg.Check_2.IsChecked == true)
-                {
-                    Calculator.PutOnGroundTogether(geosets);
-                }
-                if (pg.Check_3.IsChecked == true)
-                {
-                    foreach (CGeoset geoset in CurrentModel.Geosets)
-                    {
-                        Calculator.PutOnGround(geoset);
-                    }
-                }
-                if (pg.Check_4.IsChecked == true)
-                {
-                    List<CGeoset> all = new List<CGeoset>();
-                    foreach (CGeoset geo in CurrentModel.Geosets)
-                    {
-                        all.Add(geo);
-                    }
-                    Calculator.PutOnGroundTogether(all);
-                }
-            }
-            RefreshViewPort();
-        }
-        private void MergeGeosets(object sender, RoutedEventArgs e)
+       
+        private void MergeGeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 1)
             {
-                //Scene_Viewport3D.Children.Clear();
+                
                 Pause = true;
-                List<CGeoset> geosets = GetSelectedGeosets();
-                if (geosets.Count <= 1) { return; }
-                CGeoset First = geosets[0];
-                for (int i = 1; i < geosets.Count; i++)
+                List<CGeoset> SelectedGeosets = GetSelectedGeosets();
+                if (SelectedGeosets.Count <= 1) { return; }
+                CGeoset First = SelectedGeosets[0];
+                for (int i = 1; i < SelectedGeosets.Count; i++)
                 {
-                    Calculator.TransferGeosetData(First, geosets[i], CurrentModel);
+                    Calculator.TransferGeosetData(First, SelectedGeosets[i], CurrentModel);
                 }
                 // delete  
-                for (int i = 1; i < geosets.Count; i++)
+                for (int i = 1; i < SelectedGeosets.Count; i++)
                 {
-                    DeleteGeosetAnimationOf(geosets[i]);
-                    CurrentModel.Geosets.Remove(geosets[i]);
+                    DeleteGeosetAnimationOf(SelectedGeosets[i]);
+                    CurrentModel.Geosets.Remove(SelectedGeosets[i]);
                 }
+                Optimizer.MinimizeMatrixGroups_Geoset(First);
                 Pause = false;
                 RefreshGeosetsList();
                 RefreshGeosetAnimationsList();
-                //RefreshViewPort();
+                
             }
             else
             {
                 MessageBox.Show("Select at least 2 geosets");
             }
         }
-        private void negate(object sender, RoutedEventArgs e)
+        private void negate(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -3573,7 +3393,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void TranslateGeoserts(object sender, RoutedEventArgs e)
+        private void TranslateGeoserts(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Both);
             iv.ShowDialog();
@@ -3594,7 +3414,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void scalegeosets(object sender, RoutedEventArgs e)
+        private void scalegeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             InputVector iv = new InputVector(AllowedValue.Positive, new CVector3(100, 100, 100), "Percentage");
@@ -3616,25 +3436,113 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void Centergeosets(object sender, RoutedEventArgs e)
+        private void CenterSelectionEach(object? sender, RoutedEventArgs? e)
         {
-            List<CGeoset> geosets = GetSelectedGeosets();
-            if (geosets.Count == 0) { return; }
-            axis_selector ax = new axis_selector();
-            ax.ShowDialog();
-            if (ax.DialogResult == true)
+            if (Tabs_Geosets.SelectedIndex == 0) // geosets
             {
-                bool onX = ax.Check_x.IsChecked == true;
-                bool onY = ax.Check_y.IsChecked == true;
-                bool onZ = ax.Check_z.IsChecked == true;
-                foreach (CGeoset geoset in geosets)
+                List<CGeoset> geosets = GetSelectedGeosets();
+                if (geosets.Count == 0) { return; }
+                axis_selector ax = new axis_selector();
+                ax.ShowDialog();
+                if (ax.DialogResult == true)
                 {
-                    Calculator.CenterGeoset(geoset, onX, onZ, onZ);
+                    bool onX = ax.Check_x.IsChecked == true;
+                    bool onY = ax.Check_y.IsChecked == true;
+                    bool onZ = ax.Check_z.IsChecked == true;
+                    foreach (CGeoset geoset in geosets)
+                    {
+                        Calculator.CenterGeoset(geoset, onX, onZ, onZ);
+                    }
+                    SetSaved(false);
                 }
+
             }
-            SetSaved(false);
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                axis_selector ax = new axis_selector();
+                ax.ShowDialog();
+                if (ax.DialogResult == true)
+                {
+                    bool onX = ax.Check_x.IsChecked == true;
+                    bool onY = ax.Check_y.IsChecked == true;
+                    bool onZ = ax.Check_z.IsChecked == true;
+                    
+                    
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).ToList();
+                    if (triangles.Count == 1)
+                    {
+                        vertices[0].Position.X = onX ? 0 : vertices[0].Position.X;
+                        vertices[0].Position.Y = onY ? 0 : vertices[0].Position.Y;
+                        vertices[0].Position.Z = onZ ? 0 : vertices[0].Position.Z;
+                    }
+                    else if (triangles.Count > 1)
+                    {
+                        Axes axes = Axes.X;
+                        if (onY) axes = Axes.Y;
+                        if (onZ) axes = Axes.Z;
+                        Calculator.CenterVertices(vertices, axes);
+                    }
+                }
+                     
+                }
+            else if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) // vertices
+            {
+                axis_selector ax = new axis_selector();
+                ax.ShowDialog();
+                if (ax.DialogResult == true)
+                {
+                    bool onX = ax.Check_x.IsChecked == true;
+                    bool onY = ax.Check_y.IsChecked == true;
+                    bool onZ = ax.Check_z.IsChecked == true;
+                    var vertices = GetSelectedVertices();
+                    if (vertices.Count == 1)
+                    {
+                        vertices[0].Position.X = onX ? 0 : vertices[0].Position.X;
+                        vertices[0].Position.Y = onY ? 0 : vertices[0].Position.Y;
+                        vertices[0].Position.Z = onZ ? 0 : vertices[0].Position.Z;
+                    }
+                    else if (vertices.Count > 1)
+                    {
+                        Axes axes = Axes.X;
+                        if (onY) axes = Axes.Y;
+                        if (onZ) axes = Axes.Z;
+                        Calculator.CenterVertices(vertices, axes);
+                    }
+                }
+
+            }
+            if (Tabs_Geosets.SelectedIndex == 6) // nodes
+            {
+                axis_selector ax = new axis_selector();
+                ax.ShowDialog();
+                if (ax.DialogResult == true)
+                {
+                    bool onX = ax.Check_x.IsChecked == true;
+                    bool onY = ax.Check_y.IsChecked == true;
+                    bool onZ = ax.Check_z.IsChecked == true;
+                    var nodes = GetSelectedNodes_NodeEditor();
+                    if (nodes.Count == 1)
+                    {
+                        nodes[0].PivotPoint.X = onX ? 0 : nodes[0].PivotPoint.X;
+                        nodes[0].PivotPoint.Y = onY ? 0 : nodes[0].PivotPoint.Y;
+                        nodes[0].PivotPoint.Z = onZ ? 0 : nodes[0].PivotPoint.Z;
+                    }
+                    else if (nodes.Count >1)
+                    {
+                        Axes axes = Axes.X;
+                        if (onY) axes = Axes.Y;
+                        if (onZ) axes = Axes.Z;
+
+                        Calculator.centerNodes(nodes, axes);
+                    }
+                }
+
+
+                   
+            }
         }
-        private void scaleToFit(object sender, RoutedEventArgs e)
+        private void scaleToFit(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) { return; }
             SCALETOFIT sf = new SCALETOFIT();
@@ -3658,7 +3566,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void RotateGeosets(object sender, RoutedEventArgs e)
+        private void RotateGeosets(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Both, new CVector3(0, 0, 0), "Rotation (-360-360)");
             iv.ShowDialog();
@@ -3676,7 +3584,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void aligngeosets(object sender, RoutedEventArgs e)
+        private void aligngeosets(object? sender, RoutedEventArgs? e)
         {
             List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count < 2) { MessageBox.Show("Select 2 or more geosets"); return; }
@@ -3761,9 +3669,9 @@ namespace Wa3Tuner
             _newGeoset.Material.Attach(whichModel.Materials[0]);
             return _newGeoset;
         }
-        private void reattachToBone(object sender, RoutedEventArgs e)
+        private void reattachToBone(object? sender, RoutedEventArgs? e)
         {
-            List<CGeoset> geosets = GetSelectedGeosets();
+            var geosets = GetSelectedGeosets();
             if (geosets.Count < 1) { MessageBox.Show("Select 1 or more geosets"); return; }
             List<string> bones = CurrentModel.Bones.Select(x => x.Name).ToList();
             if (bones.Count > 0)
@@ -3795,7 +3703,7 @@ namespace Wa3Tuner
                 MessageBox.Show("There are no bones"); return;
             }
         }
-        private void PullTogether(object sender, RoutedEventArgs e)
+        private void PullTogether(object? sender, RoutedEventArgs? e)
         {
             List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count != 2) { MessageBox.Show("Select 2  geosets"); return; }
@@ -3812,7 +3720,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void renamesequence(object sender, RoutedEventArgs e)
+        private void renamesequence(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -3828,7 +3736,9 @@ namespace Wa3Tuner
                         return;
                     }
                     seq.Name = CapitalizeWords(n);
-                    RefreshSequencesList(); SetSaved(false);
+                    RefreshSequencesList(); 
+                    SetSaved(false);
+                   History.Sequences.Add(CurrentModel);
                 }
             }
         }
@@ -3838,7 +3748,7 @@ namespace Wa3Tuner
             TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
             return textInfo.ToTitleCase(input.ToLower());
         }
-        private bool TrackExistsInSEquences(int track, CSequence exclude)
+        private bool TrackExistsInSEquences(int track, CSequence? exclude)
         {
             foreach (CSequence seq in CurrentModel.Sequences)
             {
@@ -3946,7 +3856,7 @@ namespace Wa3Tuner
             isolated.Sort((a, b) => a.Time.CompareTo(b.Time));
             SetSaved(false);
         }
-        private void resizeSequence(object sender, RoutedEventArgs e)
+        private void resizeSequence(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) return;
             CSequence cSequence = GetSelectedSequence();
@@ -3971,7 +3881,7 @@ namespace Wa3Tuner
                         ResizeTargetSequenceKeyframes(from, oldTo, to, node.Scaling);
                         if (node is CParticleEmitter)
                         {
-                            CParticleEmitter item = node as CParticleEmitter;
+                            CParticleEmitter? item = node as CParticleEmitter; if (item == null) return;
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.EmissionRate);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.LifeSpan);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.InitialVelocity);
@@ -3981,7 +3891,7 @@ namespace Wa3Tuner
                         }
                         if (node is CParticleEmitter2)
                         {
-                            CParticleEmitter2 item = node as CParticleEmitter2;
+                            CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) return;
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.Gravity);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.Width);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.Length);
@@ -3992,7 +3902,7 @@ namespace Wa3Tuner
                         }
                         if (node is CRibbonEmitter)
                         {
-                            CRibbonEmitter item = node as CRibbonEmitter;
+                            CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) return;
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.HeightAbove);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.HeightBelow);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.TextureSlot);
@@ -4001,7 +3911,7 @@ namespace Wa3Tuner
                         }
                         if (node is CLight)
                         {
-                            CLight item = node as CLight;
+                            CLight? item = node as CLight; if (item == null) return;
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.Color);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.AmbientColor);
                             ResizeTargetSequenceKeyframes(from, oldTo, to, item.Intensity);
@@ -4034,6 +3944,7 @@ namespace Wa3Tuner
                         ResizeTargetSequenceKeyframes(from, oldTo, to, ta.Scaling);
                     }
                     RefreshSequencesList();
+                    History.Sequences.Add(CurrentModel);
                 }
                 SetSaved(false);
             }
@@ -4043,7 +3954,7 @@ namespace Wa3Tuner
         {
             return CurrentModel.Sequences.Any(x => x.Name.ToLower() == name.ToLower());
         }
-        private void DuplicateSEquenceWithMAtchingkeyframes(object sender, RoutedEventArgs e)
+        private void DuplicateSEquenceWithMAtchingkeyframes(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -4070,6 +3981,7 @@ namespace Wa3Tuner
                             duplicated.IntervalEnd = _new[0];
                             CurrentModel.Sequences.Add(duplicated);
                             duplicated.Name = name;
+                            History.Sequences.Add(CurrentModel);
                         }
                         else
                         {
@@ -4102,7 +4014,7 @@ namespace Wa3Tuner
                 DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, node.Scaling);
                 if (node is CParticleEmitter)
                 {
-                    CParticleEmitter item = node as CParticleEmitter;
+                    CParticleEmitter? item = node as CParticleEmitter; if (item == null) continue;
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.EmissionRate);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.LifeSpan);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.InitialVelocity);
@@ -4112,7 +4024,7 @@ namespace Wa3Tuner
                 }
                 if (node is CParticleEmitter2)
                 {
-                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) continue;
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.Gravity);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.Width);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.Length);
@@ -4123,7 +4035,7 @@ namespace Wa3Tuner
                 }
                 if (node is CRibbonEmitter)
                 {
-                    CRibbonEmitter item = node as CRibbonEmitter;
+                    CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) continue;
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.HeightAbove);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.HeightBelow);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.TextureSlot);
@@ -4132,7 +4044,7 @@ namespace Wa3Tuner
                 }
                 if (node is CLight)
                 {
-                    CLight item = node as CLight;
+                    CLight? item = node as CLight; if (item == null) continue;
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.Color);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.AmbientColor);
                     DuplicateKeyframes(oldFrom, oldTo, newFrom, newTo, item.Intensity);
@@ -4167,8 +4079,9 @@ namespace Wa3Tuner
             Optimizer.RearrangeKeyframes(CurrentModel);
             SetSaved(false);
         }
-        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<CVector3> animator)
+        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<CVector3>? animator)
         {
+            if (animator == null) return;
             // Isolate the keyframes within the old range
             List<CAnimatorNode<CVector3>> isolated = new List<CAnimatorNode<CVector3>>();
             foreach (var item in animator)
@@ -4192,8 +4105,9 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<CVector4> animator)
+        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<CVector4>? animator)
         {
+            if (animator == null) return;
             // Isolate the keyframes within the old range
             List<CAnimatorNode<CVector4>> isolated = new List<CAnimatorNode<CVector4>>();
             foreach (var item in animator)
@@ -4217,10 +4131,11 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<float> animator)
+        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<float>? animator)
         {
             // Isolate the keyframes within the old range
             List<CAnimatorNode<float>> isolated = new List<CAnimatorNode<float>>();
+            if (animator == null) return;
             foreach (var item in animator)
             {
                 if (item.Time >= oldFrom && item.Time <= oldTo)
@@ -4242,10 +4157,11 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<int> animator)
+        private void DuplicateKeyframes(int oldFrom, int oldTo, int newFrom, int newTo, CAnimator<int>? animator)
         {
             // Isolate the keyframes within the old range
             List<CAnimatorNode<int>> isolated = new List<CAnimatorNode<int>>();
+            if (animator == null) return;
             foreach (var item in animator)
             {
                 if (item.Time >= oldFrom && item.Time <= oldTo)
@@ -4269,7 +4185,7 @@ namespace Wa3Tuner
         }
         private List<string> GetGAsList(int skip)
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
             {
                 if (i == skip) continue;
@@ -4277,17 +4193,19 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void equalizegas_alpha(object sender, RoutedEventArgs e)
+        private void equalizegas_alpha(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem == null) { return; }
             if (CurrentModel.GeosetAnimations.Count > 1)
             {
                 List<string> list = GetGAsList(List_GeosetAnims.SelectedIndex);
-                Selector s = new Selector(list, "Based on");
+                Selector s = new(list, "Based on");
                 s.ShowDialog();
                 if (s.DialogResult == true)
                 {
-                    int id = int.Parse(s.Selected);
+                    int id = 0;
+                    if (s.Selected != null) { id = int.Parse(s.Selected); }
+                   
                     CGeosetAnimation source = CurrentModel.GeosetAnimations.First(x => x.ObjectId == id);
                     foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
                     {
@@ -4311,7 +4229,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void equalizegas_color(object sender, RoutedEventArgs e)
+        private void equalizegas_color(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.GeosetAnimations.Count > 1)
             {
@@ -4320,7 +4238,8 @@ namespace Wa3Tuner
                 s.ShowDialog();
                 if (s.DialogResult == true)
                 {
-                    int id = int.Parse(s.Selected);
+                    int id = 0;
+                    if (s.Selected != null) { int.Parse(s.Selected); }
                     CGeosetAnimation source = CurrentModel.GeosetAnimations.First(x => x.ObjectId == id);
                     foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
                     {
@@ -4370,7 +4289,7 @@ namespace Wa3Tuner
             }
             Label_GAs.Text = $"{CurrentModel.GeosetAnimations.Count} Geoset animations";
         }
-        private void AverageNormals(object sender, RoutedEventArgs e)
+        private void AverageNormals(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -4382,7 +4301,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void DuplicateGeoset(object sender, RoutedEventArgs e)
+        private void DuplicateGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -4395,7 +4314,7 @@ namespace Wa3Tuner
             RefreshGeosetsList();
             SetSaved(false);
         }
-        private void ViewNodeTransformations(object sender, RoutedEventArgs e)
+        private void ViewNodeTransformations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -4404,7 +4323,7 @@ namespace Wa3Tuner
                 tv.ShowDialog();
             }
         }
-        private void ViewGaTransformatons(object sender, RoutedEventArgs e)
+        private void ViewGaTransformatons(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
@@ -4413,28 +4332,12 @@ namespace Wa3Tuner
                 tv.ShowDialog();
             }
         }
-        private void ImportTargetGeosetOne(string file)
-        {
-            if (File.Exists(file))
-            {
-                CModel TemporaryModel = GetTemporaryModel(file);
-                if (TemporaryModel == null) { return; }
-                CGeoset new_Geoset = DuplicateGeogeset(TemporaryModel.Geosets[0], CurrentModel);
-                CMaterial new_material = GetTeamGlowMaterial();
-                new_Geoset.Material.Attach(new_material);
-                CurrentModel.Geosets.Add(new_Geoset);
-                RefreshAll();
-            }
-            else
-            {
-                MessageBox.Show($"{file} was not found");
-            }
-        }
-        private void CreateHeroGlow(object sender, RoutedEventArgs e)
+       
+        private void CreateHeroGlow(object? sender, RoutedEventArgs? e)
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
             string file = System.IO.Path.Combine(local, "geosets\\Hero_Glow.mdx");
-            CGeoset ImportedGeoset = GetImportedGeoset(file);
+            CGeoset? ImportedGeoset = GetImportedGeoset(file);
             if (ImportedGeoset != null)
             {
                 ImportedGeoset.Material.Attach(GetHerGlowMaterial());
@@ -4443,13 +4346,13 @@ namespace Wa3Tuner
                 RefreshGeosetsList();
                 RefreshNodesTree();
             }
-            //  CollectTextures();
+          
             CollectTexturesOpenGL();
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
             SetSaved(false);
         }
-        private CMaterial GetHerGlowMaterial()
+        private CMaterial? GetHerGlowMaterial()
         {
             if (CurrentModel.Textures.Any(x => x.ReplaceableId == 2) == false)
             {
@@ -4490,67 +4393,13 @@ namespace Wa3Tuner
             }
             return null;
         }
-        private CMaterial GetTeamColorMaterial()
+         
+        private CGeoset? GetImportedGeoset(string file)
         {
-            if (CurrentModel.Textures.Any(x => x.ReplaceableId == 1) == false)
-            {
-                CTexture texture = new CTexture(CurrentModel);
-                texture.ReplaceableId = 1;
-                CurrentModel.Textures.Add(texture);
-                RefreshMaterialsList();
-                CMaterial mat = new CMaterial(CurrentModel);
-                CMaterialLayer layer = new CMaterialLayer(CurrentModel);
-                layer.Texture.Attach(texture);
-                mat.Layers.Add(layer);
-                CurrentModel.Materials.Add(mat);
-                RefreshMaterialsList();
-                return mat;
-            }
-            else
-            {
-                CTexture texture = CurrentModel.Textures.First(x => x.ReplaceableId == 1);
-                bool found = false;
-                foreach (CMaterial mat in CurrentModel.Materials)
-                {
-                    foreach (CMaterialLayer layer in mat.Layers)
-                    {
-                        if (layer.Texture.Object == texture) { return mat; }
-                    }
-                }
-                if (!found)
-                {
-                    CMaterial mat = new CMaterial(CurrentModel);
-                    CMaterialLayer layer = new CMaterialLayer(CurrentModel);
-                    layer.Texture.Attach(texture);
-                    mat.Layers.Add(layer);
-                    CurrentModel.Materials.Add(mat);
-                    RefreshMaterialsList();
-                    return mat;
-                }
-            }
-            return null;
-        }
-        private CGeosetGroup GetGeosetGroup()
-        {
-            CGeosetGroup group = new CGeosetGroup(CurrentModel);
-            string bone_Name = "GeneratedBone_" + IDCounter.Next_;
-            //-------------------------
-            CBone bone = new CBone(CurrentModel);
-            bone.Name = bone_Name;
-            CurrentModel.Nodes.Add(bone);
-            //-------------------------
-            CGeosetGroupNode gNode = new CGeosetGroupNode(CurrentModel);
-            gNode.Node.Attach(bone);
-            //-------------------------
-            group.Nodes.Add(gNode);
-            return group;
-        }
-        private CGeoset GetImportedGeoset(string file)
-        {
-            CGeoset geo = null;
+            CGeoset? geo = null;
             if (File.Exists(file))
             {
-                CModel TemporaryModel = GetTemporaryModel(file);
+                CModel? TemporaryModel = GetTemporaryModel(file);
                 if (TemporaryModel == null) { return null; }
                 CGeoset new_Geoset = DuplicateGeogeset(TemporaryModel.Geosets[0], CurrentModel);
                 CMaterial new_material = GetTeamGlowMaterial();
@@ -4578,15 +4427,15 @@ namespace Wa3Tuner
             CurrentModel.Materials.Add(material);
             return material;
         }
-        private void refreshnodes(object sender, RoutedEventArgs e)
+        private void refreshnodes(object? sender, RoutedEventArgs? e)
         {
             RefreshNodesTree();
         }
-        private void importtbg(object sender, RoutedEventArgs e)
+        private void importtbg(object? sender, RoutedEventArgs? e)
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
             string file = System.IO.Path.Combine(local, "geosets\\Team_Background.mdx");
-            CGeoset ImportedGeoset = GetImportedGeoset(file);
+            CGeoset? ImportedGeoset = GetImportedGeoset(file);
             if (ImportedGeoset != null)
             {
                 ImportedGeoset.Material.Attach(GetHerGlowMaterial());
@@ -4595,7 +4444,7 @@ namespace Wa3Tuner
                 RefreshGeosetsList();
                 RefreshNodesTree();
             }
-            //   CollectTextures();
+            
             CollectTexturesOpenGL();
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
@@ -4617,7 +4466,7 @@ namespace Wa3Tuner
                 vertex.Group.Attach(group);
             }
         }
-        private void DelBonesGeometry(object sender, RoutedEventArgs e)
+        private void DelBonesGeometry(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -4654,7 +4503,7 @@ namespace Wa3Tuner
 
             }
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             if (CheckSaved() == true)
@@ -4663,7 +4512,7 @@ namespace Wa3Tuner
             }
 
         }
-        private void ListNodes_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void ListNodes_SelectedItemChanged(object? sender, RoutedPropertyChangedEventArgs<object>? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
@@ -4715,8 +4564,28 @@ namespace Wa3Tuner
             if (node is CRibbonEmitter ribbon)
             {
                 sb.AppendLine(GetVisibilitySequences(ribbon.Visibility));
+
+              
+                
+            }
+            if (node is CEvent eventObj)
+            {
+                sb.AppendLine(GetEvent_tracks(eventObj));
             }
             Report_Node_data.Text = sb.ToString();
+        }
+private string? GetEvent_tracks(CEvent eventObj)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var track in eventObj.Tracks.ObjectList)
+            {
+                CSequence? sq = GetSequenceFromTrack(track.Time);
+               
+                if (sq== null) { sb.AppendLine($"{track.Time} [null sequence]"); continue; }
+                string  s = sq.Name;
+                sb.AppendLine($"{track.Time} [{s}]");
+            }
+            return sb.ToString();
         }
 
         private string? GetAttachedGeosetsForBoneAsText(CBone bone)
@@ -4724,7 +4593,7 @@ namespace Wa3Tuner
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Attached geoset/s (or parts of):");
             List<int> ids = new List<int>();
-            List<string> names = new List<string>();
+            List<string> names = new();
             foreach (var geoset in CurrentModel.Geosets)
             {
                 foreach (var vertex in geoset.Vertices)
@@ -4782,7 +4651,7 @@ namespace Wa3Tuner
 
             foreach (var item in animator)
             {
-                CSequence sequence = GetSequenceFromTrack(item.Time);
+                CSequence? sequence = GetSequenceFromTrack(item.Time);
                 if (sequence == null) continue;
 
                 string visibility = item.Value >= 0.5f ? "✓" : "";
@@ -4802,7 +4671,7 @@ namespace Wa3Tuner
         }
 
 
-        private CSequence GetSequenceFromTrack(int time)
+        private CSequence? GetSequenceFromTrack(int time)
         {
             return CurrentModel.Sequences.FirstOrDefault(x => time >= x.IntervalStart && time <= x.IntervalEnd);
         }
@@ -4824,11 +4693,11 @@ namespace Wa3Tuner
             }
             return $"Attached vertices: {count}";
         }
-        private void about(object sender, RoutedEventArgs e)
+        private void about(object? sender, RoutedEventArgs? e)
         {
             about_w w = new about_w(); w.ShowDialog();
         }
-        private void Checked_MatFullRes(object sender, RoutedEventArgs e)
+        private void Checked_MatFullRes(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -4836,7 +4705,7 @@ namespace Wa3Tuner
                 material.FullResolution = Check_MatFS.IsChecked == true;
             }
         }
-        private void Checked_MatSort(object sender, RoutedEventArgs e)
+        private void Checked_MatSort(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -4844,7 +4713,7 @@ namespace Wa3Tuner
                 material.SortPrimitivesFarZ = Check_MatSort.IsChecked == true;
             }
         }
-        private void Checked_MatCC(object sender, RoutedEventArgs e)
+        private void Checked_MatCC(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -4852,7 +4721,7 @@ namespace Wa3Tuner
                 material.ConstantColor = Check_MatCC.IsChecked == true;
             }
         }
-        private void List_MAterials_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void List_MAterials_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -4877,25 +4746,14 @@ namespace Wa3Tuner
                 List_Layers.Items.Add(new ListBoxItem() { Content = i + info });
             }
         }
-        private void Scene_MouseWheelViewPort3D(object sender, MouseWheelEventArgs e)
-        {//unused
-            int zoomStep = 10; // Define the zoom step size
-            if (e.Delta > 0)
-            {
-                // AdjustZoomViewPort3D(zoomStep); // Zoom in
-            }
-            else if (e.Delta < 0)
-            {
-                // AdjustZoomViewPort3D(-zoomStep); // Zoom out
-            }
-        }
+        
         private float minimumZoom = 5;
         private float distance = CameraControl.eyeX; // Camera's initial distance from the center
-        private void Scene_MouseWheelGL(object sender, MouseWheelEventArgs e)
+        private void Scene_MouseWheelGL(object? sender, MouseWheelEventArgs e)
         {
             if (CurrentSceneInteraction == SceneInteractionState.Modify)
             {
-                MessageBox.Show("Called");
+               
                 ModifySelectionByDragging(modifyMode_current, axisMode, e.Delta > 0);
                 return;
             }
@@ -4920,17 +4778,17 @@ namespace Wa3Tuner
             CheckForNaNCamera();
             RefreshViewportCameraDEbugInfo();
         }
-        enum TransformPolarity
-        {
-            Increse, Decrese,
-            Set
-        }
+      
         private void ModifySelectionByDragging(ModifyMode modifyMode_current, Axes axisMode, bool positive)
         {
             ModelInfoLabel.Text = modifyMode_current.ToString();
             if (modifyMode_current == ModifyMode.Scale)
             {
-                ScaleUniform(positive, axisMode);
+                ScaleSelection(positive, axisMode, false);
+            }
+            if (modifyMode_current == ModifyMode.ScaleEach)
+            {
+                ScaleSelection(positive, axisMode, true);
             }
             else if (modifyMode_current == ModifyMode.Rotate)
             {
@@ -5081,7 +4939,7 @@ namespace Wa3Tuner
         {
             var geosets = GetSelectedGeosets();
             float change = positive ? 0.00277777777f : -0.00277777777f; // 1%
-            var m = axisMode;
+            
             foreach (var geose in geosets)
             {
                 foreach (var vertex in geose.Vertices)
@@ -5126,11 +4984,33 @@ namespace Wa3Tuner
 
         private void DragUVv(bool positive)
         {
-            var geosets = GetSelectedGeosets();
             float change = positive ? 0.005f : -0.005f; ;
-            foreach (var geose in geosets)
+            if (Tabs_Geosets.SelectedIndex == 0)
             {
-                foreach (var vertex in geose.Vertices)
+                var geosets = GetSelectedGeosets();
+
+                foreach (var geose in geosets)
+                {
+                    foreach (var vertex in geose.Vertices)
+                    {
+                        vertex.TexturePosition.X += change;
+                    }
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                var traingles = getSelectedTriangles();
+                if (traingles.Count == 0) return;
+                var vertices = traingles.SelectMany(x => x.Vertices).Distinct().ToList();
+                foreach (var vertex in vertices)
+                {
+                    vertex.TexturePosition.X += change;
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // vetices
+            {
+                var vertices = GetSelectedVertices();
+                foreach (var vertex in vertices)
                 {
                     vertex.TexturePosition.X += change;
                 }
@@ -5139,11 +5019,33 @@ namespace Wa3Tuner
 
         private void DragUVu(bool positive)
         {
-            var geosets = GetSelectedGeosets();
             float change = positive ? 0.005f : -0.005f; ;
-            foreach (var geose in geosets)
+            if (Tabs_Geosets.SelectedIndex == 0)
             {
-                foreach (var vertex in geose.Vertices)
+                var geosets = GetSelectedGeosets();
+               
+                foreach (var geose in geosets)
+                {
+                    foreach (var vertex in geose.Vertices)
+                    {
+                        vertex.TexturePosition.Y += change;
+                    }
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                var traingles = getSelectedTriangles();
+                if (traingles.Count == 0) return;
+                var vertices = traingles.SelectMany(x => x.Vertices).Distinct().ToList();
+                foreach (var vertex in vertices)
+                {
+                    vertex.TexturePosition.Y += change;
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // vetices
+            {
+                var vertices = GetSelectedVertices();
+                foreach (var vertex in vertices)
                 {
                     vertex.TexturePosition.Y += change;
                 }
@@ -5178,497 +5080,22 @@ namespace Wa3Tuner
         private string TeamColor = "ReplaceableTextures\\TeamColor\\TeamColor00.blp";
         private string TeamGlow = "ReplaceableTextures\\TeamGlow\\TeamGlow00.blp";
         private string White = "Textures\\white.blp";
-        private void CollectTextures()
-        {
-            if (CurrentModel.Textures.Count == 0) { return; }
-            Textures_Loaded = new ImageSource[CurrentModel.Textures.Count];
-            for (int i = 0; i < CurrentModel.Textures.Count; i++)
-            {
-                CTexture texture = CurrentModel.Textures[i];
-                if (texture.ReplaceableId == 0)
-                {
-                    if (System.IO.Path.GetExtension(texture.FileName).ToLower() == ".blp")
-                    {
-                        Textures_Loaded[i] = MPQHelper.GetImageSource(texture.FileName);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Could not load {texture.FileName}, because it is not a BLP image");
-                        Textures_Loaded[i] = MPQHelper.GetImageSource(White);
-                    }
-                }
-                if (texture.ReplaceableId == 1)
-                {
-                    Textures_Loaded[i] = MPQHelper.GetImageSource(TeamColorPaths[CurrentTeamColor]);
-                }
-                if (texture.ReplaceableId == 2)
-                {
-                    Textures_Loaded[i] = MPQHelper.GetImageSource(TeamGlows[CurrentTeamColor]);
-                }
-                if (texture.ReplaceableId > 2)
-                {
-                    Textures_Loaded[i] = MPQHelper.GetImageSource(White);
-                }
-            }
-        }
-        private void refreshalllists(object sender, RoutedEventArgs e)
+        private string Black = "UI\\Glues\\SinglePlayer\\HumanCampaign3D\\Black32.blp";
+       
+        private void refreshalllists(object? sender, RoutedEventArgs? e)
         {
             RefreshAll();
         }
-        private void RefreshViewPort()
-        {
-            return; // no longer used, replaced by openGL
-            if (!RenderEnabled) { return; }
-            CollectTextures();
-            // Clear existing models in the viewport
-            Viewport3D viewport = Scene_Viewport3D;
-            if (viewport == null) { return; }
-            viewport.Children.Clear();
-            // Initialize bounding box variables
-            Point3D minPoint = new Point3D(double.MaxValue, double.MaxValue, double.MaxValue);
-            Point3D maxPoint = new Point3D(double.MinValue, double.MinValue, double.MinValue);
-            // Add a light source
-            DirectionalLight light = new DirectionalLight
-            {
-                Color = Colors.White,
-                Direction = new Vector3D(-1, -1, -1)
-            };
-            ModelVisual3D lightModel = new ModelVisual3D { Content = light };
-            viewport.Children.Add(lightModel);
-            // Render each geoset
-            foreach (CGeoset geo in CurrentModel.Geosets)
-            {
-                if (GeosetVisible[geo] == false) { continue; }
-                MeshGeometry3D mesh = new MeshGeometry3D();
-                // render the last layer's texture of the material
-                int last = geo.Material.Object.Layers.Count - 1;
-                int indexOfTexture = CurrentModel.Textures.IndexOf(geo.Material.Object.Layers[last].Texture.Object);
-                ImageSource texture = Textures_Loaded[indexOfTexture];
-                bool hasAlphaTransparency = geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.Additive || geo.Material.Object.Layers[0].FilterMode == EMaterialLayerFilterMode.AdditiveAlpha;
-                // Loop through each face in the geoset
-                foreach (CGeosetTriangle face in geo.Triangles)
-                {
-                    // Get vertex positions, normals, and texture coordinates
-                    Point3D vertex1 = new Point3D(face.Vertex1.Object.Position.X, face.Vertex1.Object.Position.Y, face.Vertex1.Object.Position.Z);
-                    Point3D vertex2 = new Point3D(face.Vertex2.Object.Position.X, face.Vertex2.Object.Position.Y, face.Vertex2.Object.Position.Z);
-                    Point3D vertex3 = new Point3D(face.Vertex3.Object.Position.X, face.Vertex3.Object.Position.Y, face.Vertex3.Object.Position.Z);
-                    Vector3D normal3 = new Vector3D(face.Vertex3.Object.Normal.X, face.Vertex3.Object.Normal.Y, face.Vertex3.Object.Normal.Z);
-                    Vector3D normal2 = new Vector3D(face.Vertex2.Object.Normal.X, face.Vertex2.Object.Normal.Y, face.Vertex2.Object.Normal.Z);
-                    Vector3D normal1 = new Vector3D(face.Vertex1.Object.Normal.X, face.Vertex1.Object.Normal.Y, face.Vertex1.Object.Normal.Z);
-                    double scaleFactorX = 1.0 / texture.Width;  // Texture width scaling factor
-                    double scaleFactorY = 1.0 / texture.Height; // Texture height scaling factor
-                    Point vertex1TexCoord = new Point(face.Vertex1.Object.TexturePosition.X * scaleFactorX, face.Vertex1.Object.TexturePosition.Y * scaleFactorY);
-                    Point vertex2TexCoord = new Point(face.Vertex2.Object.TexturePosition.X * scaleFactorX, face.Vertex2.Object.TexturePosition.Y * scaleFactorY);
-                    Point vertex3TexCoord = new Point(face.Vertex3.Object.TexturePosition.X * scaleFactorX, face.Vertex3.Object.TexturePosition.Y * scaleFactorY);
-                    // Update bounding box
-                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex1);
-                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex2);
-                    UpdateBoundingBox(ref minPoint, ref maxPoint, vertex3);
-                    // Add vertices, normals, and texture coordinates
-                    mesh.Positions.Add(vertex1);
-                    if (RenderShading) mesh.Normals.Add(normal1);
-                    mesh.TextureCoordinates.Add(vertex1TexCoord);
-                    mesh.Positions.Add(vertex2);
-                    if (RenderShading) mesh.Normals.Add(normal2);
-                    mesh.TextureCoordinates.Add(vertex2TexCoord);
-                    mesh.Positions.Add(vertex3);
-                    if (RenderShading) mesh.Normals.Add(normal3);
-                    mesh.TextureCoordinates.Add(vertex3TexCoord);
-                    // Add triangle indices
-                    int baseIndex = mesh.Positions.Count - 3;
-                    mesh.TriangleIndices.Add(baseIndex);
-                    mesh.TriangleIndices.Add(baseIndex + 1);
-                    mesh.TriangleIndices.Add(baseIndex + 2);
-                }
-                // Create a material for the geoset
-                System.Windows.Media.Media3D.Material material;
-                if (c.Contains(geo))
-                {
-                    material = new DiffuseMaterial(new SolidColorBrush(Colors.Yellow));
-                }
-                else
-                {
-                    if (!RenderTextures)
-                    {
-                        material = new DiffuseMaterial(new SolidColorBrush(Colors.Gray));
-                    }
-                    else
-                    {
-                        // Handle transparency logic based on the hasAlphaTransparency flag
-                        if (hasAlphaTransparency)
-                        {
-                            // Use an ImageBrush for the texture and set Opacity to allow transparency
-                            ImageBrush imageBrush = new ImageBrush(texture)
-                            {
-                                Opacity = 0.5 // Set transparency here, adjust as needed
-                            };
-                            // Create a material using the ImageBrush for transparency
-                            material = new DiffuseMaterial(imageBrush);
-                        }
-                        else
-                        {
-                            // If no alpha transparency, use the diffuse material with the texture
-                            material = new DiffuseMaterial(new ImageBrush(texture));
-                        }
-                    }
-                }
-                // Create a GeometryModel3D
-                GeometryModel3D geometryModel = new GeometryModel3D
-                {
-                    Geometry = mesh,
-                    Material = material,
-                    BackMaterial = material, // Ensures the material is used for both sides of the geometry
-                };
-                // Enable double-sided rendering by setting BackFaceCulling to None
-                geometryModel.Material = material;
-                geometryModel.BackMaterial = material;  // Apply the same material to both sides
-                                                        // Add the model to the viewport
-                ModelVisual3D model = new ModelVisual3D { Content = geometryModel };
-                if (RenderGeometry) viewport.Children.Add(model);
-                if (RenderGeosetExtents) RenderGeosetBoxAction(Scene_Viewport3D, geo);
-                if (RenderGeosetExtentSphere) { RenderGeosetSphereAction(Scene_Viewport3D, geo); }
-            }
-            // Adjust the camera to fit the geometry
-            AdjustCamera(viewport, minPoint, maxPoint);
-            if (RenderCollisionShapes) RenderCollisionShapesAction(Scene_Viewport3D);
-            if (RenderNodes) RenderNodesInViewport(Scene_Viewport3D);
-            // if (RenderGround) DrawGroundPlane(Scene_Viewport3D, 1000, GroundTexture);
-        }
-        private void RenderGeosetSphereAction(Viewport3D viewport, CGeoset geo)
-        {
-            float radius = geo.Extent.Radius;
-            if (radius <= 0) return;
-            var sphereGeometry = new MeshGeometry3D();
-            const int segments = 32;
-            const int rings = 16;
-            var centroid = Calculator.GetCentroidOfGeoset(geo);
-            Point3D pivot = new Point3D(centroid.X, centroid.Y, centroid.Z);
-            // Generate sphere vertices
-            for (int y = 0; y <= rings; y++)
-            {
-                double theta = Math.PI * y / rings;
-                double sinTheta = Math.Sin(theta);
-                double cosTheta = Math.Cos(theta);
-                for (int x = 0; x <= segments; x++)
-                {
-                    double phi = 2 * Math.PI * x / segments;
-                    double sinPhi = Math.Sin(phi);
-                    double cosPhi = Math.Cos(phi);
-                    float xCoord = (float)(radius * cosPhi * sinTheta);
-                    float yCoord = (float)(radius * cosTheta);
-                    float zCoord = (float)(radius * sinPhi * sinTheta);
-                    var position = new Point3D(
-                        xCoord + pivot.X,
-                        yCoord + pivot.Y,
-                        zCoord + pivot.Z);
-                    sphereGeometry.Positions.Add(position);
-                    // Calculate and add normals
-                    Vector3D normal = new Vector3D(xCoord, yCoord, zCoord);
-                    normal.Normalize();
-                    sphereGeometry.Normals.Add(normal);
-                }
-            }
-            // Generate sphere triangles
-            for (int y = 0; y < rings; y++)
-            {
-                for (int x = 0; x < segments; x++)
-                {
-                    int first = y * (segments + 1) + x;
-                    int second = first + segments + 1;
-                    sphereGeometry.TriangleIndices.Add(first);
-                    sphereGeometry.TriangleIndices.Add(second);
-                    sphereGeometry.TriangleIndices.Add(first + 1);
-                    sphereGeometry.TriangleIndices.Add(second);
-                    sphereGeometry.TriangleIndices.Add(second + 1);
-                    sphereGeometry.TriangleIndices.Add(first + 1);
-                }
-            }
-            AddGeometryToViewport(viewport, sphereGeometry, 0, 255, 0);
-        }
-        private void RenderGeosetBoxAction(Viewport3D viewport, CGeoset geo)
-        {
-            RenderBoxGeoset(viewport, geo);
-        }
-        private void RenderBoxGeoset(Viewport3D viewport, CGeoset geoset)
-        {
-            Point3D pivot = new Point3D();//0
-            float minX = geoset.Extent.Min.X;
-            float minY = geoset.Extent.Min.Y;
-            float minZ = geoset.Extent.Min.Z;
-            float maxX = geoset.Extent.Max.X;
-            float maxY = geoset.Extent.Max.Y;
-            float maxZ = geoset.Extent.Max.Z;
-            if (!BoxHasArea(minX, minY, minZ, maxX, maxY, maxZ))
-                return;
-            var boxGeometry = new MeshGeometry3D();
-            var corners = new[]
-            {
-        new Point3D(minX, minY, minZ) + (Vector3D)pivot, // 0
-        new Point3D(maxX, minY, minZ) + (Vector3D)pivot, // 1
-        new Point3D(maxX, maxY, minZ) + (Vector3D)pivot, // 2
-        new Point3D(minX, maxY, minZ) + (Vector3D)pivot, // 3
-        new Point3D(minX, minY, maxZ) + (Vector3D)pivot, // 4
-        new Point3D(maxX, minY, maxZ) + (Vector3D)pivot, // 5
-        new Point3D(maxX, maxY, maxZ) + (Vector3D)pivot, // 6
-        new Point3D(minX, maxY, maxZ) + (Vector3D)pivot  // 7
-    };
-            foreach (var corner in corners)
-                boxGeometry.Positions.Add(corner);
-            // Corrected indices for all six faces
-            int[] faceIndices = {
-        0, 1, 2, 0, 2, 3,  // Front
-        4, 6, 5, 4, 7, 6,  // Back
-        0, 4, 5, 0, 5, 1,  // Bottom
-        2, 6, 7, 2, 7, 3,  // Top
-        0, 3, 7, 0, 7, 4,  // Left
-        1, 5, 6, 1, 6, 2   // Right
-    };
-            foreach (int index in faceIndices)
-                boxGeometry.TriangleIndices.Add(index);
-            // Add normals for shading
-            for (int i = 0; i < 8; i++)
-            {
-                Vector3D normal = new Vector3D(corners[i].X, corners[i].Y, corners[i].Z);
-                normal.Normalize();
-                boxGeometry.Normals.Add(normal);
-            }
-            AddGeometryToViewport(viewport, boxGeometry, 0, 255, 0);
-        }
+      
+       
         //----------------------------------------------------
-        private void RenderCollisionShapesAction(Viewport3D viewport)
-        {
-            foreach (var node in CurrentModel.Nodes)
-            {
-                if (node is CCollisionShape cols)
-                {
-                    if (cols.Type == ECollisionShapeType.Box)
-                    {
-                        RenderBox(viewport, cols);
-                    }
-                    else if (cols.Type == ECollisionShapeType.Sphere)
-                    {
-                        RenderSphere(viewport, cols);
-                    }
-                }
-            }
-        }
-        private void RenderSphere(Viewport3D viewport, CCollisionShape cols)
-        {
-            float radius = cols.Radius;
-            if (radius <= 0) return;
-            var sphereGeometry = new MeshGeometry3D();
-            const int segments = 32;
-            const int rings = 16;
-            Point3D pivot = new Point3D(cols.PivotPoint.X, cols.PivotPoint.Y, cols.PivotPoint.Z);
-            // Generate sphere vertices
-            for (int y = 0; y <= rings; y++)
-            {
-                double theta = Math.PI * y / rings;
-                double sinTheta = Math.Sin(theta);
-                double cosTheta = Math.Cos(theta);
-                for (int x = 0; x <= segments; x++)
-                {
-                    double phi = 2 * Math.PI * x / segments;
-                    double sinPhi = Math.Sin(phi);
-                    double cosPhi = Math.Cos(phi);
-                    float xCoord = (float)(radius * cosPhi * sinTheta);
-                    float yCoord = (float)(radius * cosTheta);
-                    float zCoord = (float)(radius * sinPhi * sinTheta);
-                    var position = new Point3D(
-                        xCoord + pivot.X,
-                        yCoord + pivot.Y,
-                        zCoord + pivot.Z);
-                    sphereGeometry.Positions.Add(position);
-                    // Calculate and add normals
-                    Vector3D normal = new Vector3D(xCoord, yCoord, zCoord);
-                    normal.Normalize();
-                    sphereGeometry.Normals.Add(normal);
-                }
-            }
-            // Generate sphere triangles
-            for (int y = 0; y < rings; y++)
-            {
-                for (int x = 0; x < segments; x++)
-                {
-                    int first = y * (segments + 1) + x;
-                    int second = first + segments + 1;
-                    sphereGeometry.TriangleIndices.Add(first);
-                    sphereGeometry.TriangleIndices.Add(second);
-                    sphereGeometry.TriangleIndices.Add(first + 1);
-                    sphereGeometry.TriangleIndices.Add(second);
-                    sphereGeometry.TriangleIndices.Add(second + 1);
-                    sphereGeometry.TriangleIndices.Add(first + 1);
-                }
-            }
-            AddGeometryToViewport(viewport, sphereGeometry, 0, 0, 255);
-        }
-        private void RenderBox(Viewport3D viewport, CCollisionShape cols)
-        {
-            Point3D pivot = new Point3D(cols.PivotPoint.X, cols.PivotPoint.Y, cols.PivotPoint.Z);
-            float minX = cols.Vertex1.X;
-            float minY = cols.Vertex1.Y;
-            float minZ = cols.Vertex1.Z;
-            float maxX = cols.Vertex2.X;
-            float maxY = cols.Vertex2.Y;
-            float maxZ = cols.Vertex2.Z;
-            if (!BoxHasArea(minX, minY, minZ, maxX, maxY, maxZ))
-                return;
-            var boxGeometry = new MeshGeometry3D();
-            var corners = new[]
-            {
-        new Point3D(minX, minY, minZ) + (Vector3D)pivot, // 0
-        new Point3D(maxX, minY, minZ) + (Vector3D)pivot, // 1
-        new Point3D(maxX, maxY, minZ) + (Vector3D)pivot, // 2
-        new Point3D(minX, maxY, minZ) + (Vector3D)pivot, // 3
-        new Point3D(minX, minY, maxZ) + (Vector3D)pivot, // 4
-        new Point3D(maxX, minY, maxZ) + (Vector3D)pivot, // 5
-        new Point3D(maxX, maxY, maxZ) + (Vector3D)pivot, // 6
-        new Point3D(minX, maxY, maxZ) + (Vector3D)pivot  // 7
-    };
-            foreach (var corner in corners)
-                boxGeometry.Positions.Add(corner);
-            // Corrected indices for all six faces
-            int[] faceIndices = {
-        0, 1, 2, 0, 2, 3,  // Front
-        4, 6, 5, 4, 7, 6,  // Back
-        0, 4, 5, 0, 5, 1,  // Bottom
-        2, 6, 7, 2, 7, 3,  // Top
-        0, 3, 7, 0, 7, 4,  // Left
-        1, 5, 6, 1, 6, 2   // Right
-    };
-            foreach (int index in faceIndices)
-                boxGeometry.TriangleIndices.Add(index);
-            // Add normals for shading
-            for (int i = 0; i < 8; i++)
-            {
-                Vector3D normal = new Vector3D(corners[i].X, corners[i].Y, corners[i].Z);
-                normal.Normalize();
-                boxGeometry.Normals.Add(normal);
-            }
-            AddGeometryToViewport(viewport, boxGeometry, 0, 0, 255);
-        }
-        private bool BoxHasArea(float minX, float minY, float minZ, float maxX, float maxY, float maxZ)
-        {
-            return (maxX - minX) > float.Epsilon && (maxY - minY) > float.Epsilon && (maxZ - minZ) > float.Epsilon;
-        }
-        private void AddGeometryToViewport(Viewport3D viewport, MeshGeometry3D geometry, byte r, byte g, byte b)
-        {
-            var material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(100, r, g, b)));
-            var model = new GeometryModel3D(geometry, material);
-            model.BackMaterial = material;
-            var visual = new ModelVisual3D { Content = model };
-            viewport.Children.Add(visual);
-        }
+      
+      
         //----------------------------------------------------
-        private float rotation_angle = 0;
-        private float CameraAngle
-        {
-            get { return rotation_angle; }
-            set
-            {
-                if (value >= 360) { rotation_angle = 0; } // Wrap around when exceeding 360 degrees
-                else if (value < 0) { rotation_angle = 359; } // Wrap around when going below 0 degrees
-                else { rotation_angle = value; }
-            }
-        }
-        //----------------------------------------------------
-        private void UpdateBoundingBox(ref Point3D minPoint, ref Point3D maxPoint, Point3D vertex)
-        {
-            minPoint.X = Math.Min(minPoint.X, vertex.X);
-            minPoint.Y = Math.Min(minPoint.Y, vertex.Y);
-            minPoint.Z = Math.Min(minPoint.Z, vertex.Z);
-            maxPoint.X = Math.Max(maxPoint.X, vertex.X);
-            maxPoint.Y = Math.Max(maxPoint.Y, vertex.Y);
-            maxPoint.Z = Math.Max(maxPoint.Z, vertex.Z);
-        }
-        private void AdjustCamera(Viewport3D viewport, Point3D minPoint, Point3D maxPoint)
-        {
-            // Calculate the center and size of the bounding box
-            Point3D center = new Point3D(
-                (minPoint.X + maxPoint.X) / 2,
-                (minPoint.Y + maxPoint.Y) / 2,
-                (minPoint.Z + maxPoint.Z) / 2
-            );
-            Vector3D size = new Vector3D(
-                maxPoint.X - minPoint.X,
-                maxPoint.Y - minPoint.Y,
-                maxPoint.Z - minPoint.Z
-            );
-            // Calculate the diagonal of the bounding box
-            double boundingDiagonal = size.Length;
-            // Calculate the camera distance to fit the entire geometry
-            double distance = boundingDiagonal / (2 * Math.Tan(45 * Math.PI / 360)); // Assuming a 45° field of view
-            // Create a new PerspectiveCamera
-            PerspectiveCamera camera = new PerspectiveCamera
-            {
-                Position = new Point3D(center.X, center.Y, center.Z + distance),
-                LookDirection = new Vector3D(0, 0, -distance),
-                UpDirection = new Vector3D(0, 1, 0),
-                FieldOfView = 45 // Adjust this value if necessary
-            };
-            // Assign the new camera to the viewport
-            viewport.Camera = camera;
-            double zoom = (camera.Position - new Point3D(0, 0, 0)).Length;
-            UpdateCameraPosition(viewport, (int)zoom, CameraAngle);
-        }
-        /*  private void AdjustZoomViewPort3D(double zoomFactor)
-          {
-              if (CurrentModel.Geosets.Count == 0) { return; }
-              //MessageBox.Show("called");
-              if (Scene_Viewport3D.Camera is PerspectiveCamera camera)
-              {
-                  // MessageBox.Show("called");
-                  // Normalize the LookDirection vector to ensure consistent movement
-                  Vector3D lookDirection = camera.LookDirection;
-                  lookDirection.Normalize();
-                  // Calculate the new position by scaling the look direction with zoomFactor
-                  Point3D newPosition = new Point3D(
-                      camera.Position.X + lookDirection.X * zoomFactor,
-                      camera.Position.Y + lookDirection.Y * zoomFactor,
-                      camera.Position.Z + lookDirection.Z * zoomFactor
-                  );
-                  // Update the camera's position
-                  camera.Position = newPosition;
-              }
-          }*/
-        private double Elevation = 0;
-        private void UpdateCameraPosition(Viewport3D viewport, int zoom, float rotation)
-        {
-            try
-            {
-                if (viewport.Camera is PerspectiveCamera camera)
-                {
-                    // Define the center of the scene (default at origin)
-                    Point3D center = new Point3D(0, 0, 0);
-                    // Convert rotation angle to radians
-                    double rotationRadians = Math.PI * rotation / 180.0;
-                    // Calculate the new position in the X-Y plane
-                    double x = center.X + zoom * Math.Cos(rotationRadians);
-                    double y = center.Y + zoom * Math.Sin(rotationRadians);
-                    double z = center.Z; // Keep Z constant for rotation around Z-axis
-                    // Update the camera's position
-                    camera.Position = new Point3D(x, y, z);
-                    // Ensure the camera looks at the center of the scene
-                    camera.LookDirection = new Vector3D(center.X - x, center.Y - y, center.Z - z);
-                    // Correctly set the camera's UpDirection to always point along the Z-axis
-                    camera.UpDirection = new Vector3D(0, 0, 1);
-                }
-            }
-            catch { return; }
-        }
-        private void AdjustRotation(float currentAngle)
-        {
-            return;
-            Viewport3D viewport = Scene_Viewport3D;
-            if (viewport.Camera is PerspectiveCamera camera)
-            {
-                // Define the zoom level (distance from the center)
-                // You can make this dynamic or retrieve it from the current camera position
-                double zoom = (camera.Position - new Point3D(0, 0, 0)).Length;
-                UpdateCameraPosition(viewport, (int)zoom, currentAngle);
-            }
-        }
-        private void setModelName(object sender, RoutedEventArgs e)
+       
+       
+        
+        private void setModelName(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input(CurrentModel.Name);
             i.ShowDialog();
@@ -5679,7 +5106,7 @@ namespace Wa3Tuner
             }
         }
         private List<CGeoset> c = new List<CGeoset>();
-        private void SelectedGeosets(object sender, SelectionChangedEventArgs e)
+        private void SelectedGeosets(object? sender, SelectionChangedEventArgs? e)
         {
             c = GetSelectedGeosets();
             foreach (var geoset in CurrentModel.Geosets) geoset.isSelected = c.Contains(geoset);
@@ -5691,11 +5118,7 @@ namespace Wa3Tuner
             FillManualValuesForSelectedGeosts();
         }
 
-        private void MakeToolTipForGeoset(CGeoset g, ListBoxItem box)
-        {
-
-
-        }
+       
 
         private void FillManualValuesForSelectedGeosts()
         {
@@ -5716,7 +5139,7 @@ namespace Wa3Tuner
                 InputAnimatorZ.Text = centroid.Z.ToString();
             }
         }
-        public void SelectedLayer(object sender, SelectionChangedEventArgs e)
+        public void SelectedLayer(object? sender, SelectionChangedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5729,10 +5152,19 @@ namespace Wa3Tuner
                 Check_NoDepthSet.IsChecked = layer.NoDepthSet;
                 Check_NoDepthTest.IsChecked = layer.NoDepthTest;
                 Combo_FilterModeLayer.SelectedIndex = (int)layer.FilterMode;
-                // Pause = true;
-                ;
+                Pause = true;
+                CheckLayerTextureID.IsChecked = layer.TextureId.Animated;
+                ButtonTextureID.IsEnabled = layer.TextureId.Animated;
+                CheckLayerAlpha.IsChecked = layer.Alpha.Animated;
+                ButtonLayerAlpha.IsEnabled = layer.Alpha.Animated; ;
+                InputLayerAlpha.Text = layer.Alpha.Static ? ( layer.Alpha.GetValue() * 100f).ToString() : "";
+                InputLayerAlpha.IsEnabled = layer.Alpha.Static;
+                Pause = false;
                 Combo_LayerUsedTexture.SelectedIndex = CurrentModel.Textures.IndexOf(layer.Texture.Object);
-                // Pause = false;
+                Combo_LayerUsedTexture.IsEnabled = layer.TextureId.Static;
+                InputLayerAlpha.IsEnabled = layer.Alpha.Static;
+                    ButtonLayerAlpha.Content = $"Edit ({layer.Alpha.Count})";
+               ButtonTextureID.Content = $"Edit ({layer.TextureId.Count})";
                 Combo_LayerUsedTextureAnim.SelectedIndex = 0;
                 if (layer.TextureAnimation != null)
                 {
@@ -5755,7 +5187,7 @@ namespace Wa3Tuner
             }
             Combo_LayerUsedTextureAnim.SelectedIndex = 0;
         }
-        private void RefreshLayersTextureList()
+        public void RefreshLayersTextureList()
         {
             Combo_LayerUsedTexture.Items.Clear();
             foreach (CTexture texture in CurrentModel.Textures)
@@ -5771,7 +5203,7 @@ namespace Wa3Tuner
                 FillLayers(List_MAterials.SelectedIndex);
             }
         }
-        private void DelLayer(object sender, RoutedEventArgs e)
+        private void DelLayer(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5781,7 +5213,7 @@ namespace Wa3Tuner
                 RefreshLayersList();
             }
         }
-        private void Checked_Unshaded(object sender, RoutedEventArgs e)
+        private void Checked_Unshaded(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5790,7 +5222,7 @@ namespace Wa3Tuner
                 layer.Unshaded = Check_Unshaded.IsChecked == true;
             }
         }
-        private void Checked_Unfogged(object sender, RoutedEventArgs e)
+        private void Checked_Unfogged(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5799,7 +5231,7 @@ namespace Wa3Tuner
                 layer.Unfogged = Check_Unfogged.IsChecked == true;
             }
         }
-        private void Checked_twosided(object sender, RoutedEventArgs e)
+        private void Checked_twosided(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5808,7 +5240,7 @@ namespace Wa3Tuner
                 layer.TwoSided = Check_twosided.IsChecked == true;
             }
         }
-        private void Checked_sf(object sender, RoutedEventArgs e)
+        private void Checked_sf(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5817,7 +5249,7 @@ namespace Wa3Tuner
                 layer.SphereEnvironmentMap = Check_sf.IsChecked == true;
             }
         }
-        private void Checked_NoDepthTest(object sender, RoutedEventArgs e)
+        private void Checked_NoDepthTest(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5826,7 +5258,7 @@ namespace Wa3Tuner
                 layer.NoDepthTest = Check_NoDepthTest.IsChecked == true;
             }
         }
-        private void Checked_NoDepthSet(object sender, RoutedEventArgs e)
+        private void Checked_NoDepthSet(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5835,7 +5267,7 @@ namespace Wa3Tuner
                 layer.NoDepthSet = Check_NoDepthSet.IsChecked == true;
             }
         }
-        private void viewLayerTransformations(object sender, RoutedEventArgs e)
+        private void viewLayerTransformations(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -5845,7 +5277,7 @@ namespace Wa3Tuner
                 tv.ShowDialog();
             }
         }
-        private void DeleteTextureAnim(object sender, RoutedEventArgs e)
+        private void DeleteTextureAnim(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
@@ -5865,7 +5297,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void viewTextureAnims(object sender, RoutedEventArgs e)
+        private void viewTextureAnims(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
@@ -5873,8 +5305,8 @@ namespace Wa3Tuner
                 tv.ShowDialog();
             }
         }
-        private INode CopiedNode;
-        private void copyNodeTranslations(object sender, RoutedEventArgs e)
+      
+        private void copyNodeTranslations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -5882,7 +5314,7 @@ namespace Wa3Tuner
             }
             else { MessageBox.Show("Select a node"); }
         }
-        private void pastenodetranslations(object sender, RoutedEventArgs e)
+        private void pastenodetranslations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -5940,7 +5372,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NegateNodePositon(object sender, RoutedEventArgs e)
+        private void NegateNodePositon(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -5956,7 +5388,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void Tranlateallnodes(object sender, RoutedEventArgs e)
+        private void Tranlateallnodes(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Both);
             iv.ShowDialog();
@@ -5974,7 +5406,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void syncwhith(object sender, RoutedEventArgs e)
+        private void syncwhith(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
             CSequence FirstSequence = GetSelectedSequence();
@@ -6381,7 +5813,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        public List<CAnimatorNode<CVector3>> Synchronize(List<CAnimatorNode<CVector3>> list1, List<CAnimatorNode<CVector3>> list2)
+        public static List<CAnimatorNode<CVector3>> Synchronize(List<CAnimatorNode<CVector3>> list1, List<CAnimatorNode<CVector3>> list2)
         {
             if (list2.Count == 0) { return list2; }
             List<CAnimatorNode<CVector3>> result = new List<CAnimatorNode<CVector3>>();
@@ -6406,7 +5838,7 @@ namespace Wa3Tuner
             }
             return result;
         }
-        public List<CAnimatorNode<CVector4>> Synchronize(List<CAnimatorNode<CVector4>> list1, List<CAnimatorNode<CVector4>> list2)
+        public static List<CAnimatorNode<CVector4>> Synchronize(List<CAnimatorNode<CVector4>> list1, List<CAnimatorNode<CVector4>> list2)
         {
             if (list2.Count == 0) { return list2; }
             List<CAnimatorNode<CVector4>> result = new List<CAnimatorNode<CVector4>>();
@@ -6431,7 +5863,7 @@ namespace Wa3Tuner
             }
             return result;
         }
-        public List<CAnimatorNode<int>> Synchronize(List<CAnimatorNode<int>> list1, List<CAnimatorNode<int>> list2)
+        public static List<CAnimatorNode<int>> Synchronize(List<CAnimatorNode<int>> list1, List<CAnimatorNode<int>> list2)
         {
             if (list2.Count == 0) { return list2; }
             List<CAnimatorNode<int>> result = new List<CAnimatorNode<int>>();
@@ -6456,7 +5888,7 @@ namespace Wa3Tuner
             }
             return result;
         }
-        public List<CAnimatorNode<float>> Synchronize(List<CAnimatorNode<float>> list1, List<CAnimatorNode<float>> list2)
+        public static List<CAnimatorNode<float>> Synchronize(List<CAnimatorNode<float>> list1, List<CAnimatorNode<float>> list2)
         {
             if (list2.Count == 0) { return list2; }
             List<CAnimatorNode<float>> result = new List<CAnimatorNode<float>>();
@@ -6481,7 +5913,7 @@ namespace Wa3Tuner
             }
             return result;
         }
-        private void changegeosetusedmaterial(object sender, RoutedEventArgs e)
+        private void changegeosetusedmaterial(object? sender, RoutedEventArgs? e)
         {
             List<CGeoset> geos = GetSelectedGeosets();
             if (geos.Count == 0)
@@ -6494,7 +5926,7 @@ namespace Wa3Tuner
                 return;
             }
             List<string> materials = GetMaterialsList();
-            Selector s = new Selector(materials);
+            Selector s = new Selector(materials, "Selector - change used material");
             s.ShowDialog();
             if (s?.DialogResult == true)
             {
@@ -6504,7 +5936,7 @@ namespace Wa3Tuner
                 {
                     geo.Material.Attach(CurrentModel.Materials[index]);
                 }
-                // CollectTextures();
+              
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 Pause = false;
@@ -6512,7 +5944,7 @@ namespace Wa3Tuner
         }
         private List<string> GetMaterialsList()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             for (int i = 0; i < CurrentModel.Materials.Count; i++)
             {
                 string name = "";
@@ -6528,14 +5960,14 @@ namespace Wa3Tuner
             }
             return list; ;
         }
-        private void createnode_click(object sender, RoutedEventArgs e)
+        private void createnode_click(object? sender, RoutedEventArgs? e)
         {
             createnode cr = new createnode(CurrentModel);
             cr.ShowDialog();
             if (cr.DialogResult == true)
             {
-                INode SelectedNode = ListNodes.SelectedItem == null ? null : GetSeletedNode();
-                INode _new = null;
+                INode? SelectedNode = ListNodes.SelectedItem == null ? null : GetSeletedNode();
+                INode? _new = null;
                 NodeType type = cr.Result;
                 string name = cr.ResultName;
                 if (type == NodeType.Bone) _new = new CBone(CurrentModel);
@@ -6543,14 +5975,14 @@ namespace Wa3Tuner
                 if (type == NodeType.Attachment) _new = new CAttachment(CurrentModel);
                 if (type == NodeType.Ribbon)
                 {
-                    if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+                    if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
                     _new = new CRibbonEmitter(CurrentModel);
                 }
                 if (type == NodeType.Emitter1)
-                { if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; } _new = new CRibbonEmitter(CurrentModel); }
+                { if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; } _new = new CRibbonEmitter(CurrentModel); }
                 if (type == NodeType.Emitter2)
                 {
-                    if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+                    if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
                     _new = new CParticleEmitter2(CurrentModel); CParticleEmitter2 node = (CParticleEmitter2)_new;
                     node.FilterMode = EParticleEmitter2FilterMode.None;
                 }
@@ -6563,6 +5995,7 @@ namespace Wa3Tuner
                     if (ew.DialogResult == true) { RefreshNodesTree(); }
                     return;
                 }
+                if (_new == null) return;
                 _new.Name = name;
                 CurrentModel.Nodes.Add(_new);
                 if (SelectedNode != null && cr.Check_parent.IsChecked == true)
@@ -6574,7 +6007,7 @@ namespace Wa3Tuner
                 RefreshPath_ModelNodes_List();
             }
         }
-        private void flattengeosets(object sender, RoutedEventArgs e)
+        private void flattengeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -6605,10 +6038,10 @@ namespace Wa3Tuner
                         }
                     }
                 }
-                RefreshViewPort();
+               
             }
         }
-        private CSequence AskSequenceName(CSequence except)
+        private CSequence? AskSequenceName(CSequence except)
         {
             List<string> names = CurrentModel.Sequences.Select(x => x.Name).ToList();
             names.Remove(except.Name);
@@ -6620,31 +6053,33 @@ namespace Wa3Tuner
             }
             return null;
         }
-        private void swapnames(object sender, RoutedEventArgs e)
+        private void swapnames(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null && CurrentModel.Sequences.Count > 1)
             {
-                CSequence selected = GetSelectedSequence();
-                CSequence target = AskSequenceName(selected);
+                CSequence? selected = GetSelectedSequence();
+                CSequence? target = AskSequenceName(selected);
                 if (target != null)
                 {
-                    string temp = selected.Name;
-                    selected.Name = target.Name;
-                    target.Name = temp; // Fix: Assign temp to target.Name
+                    (target.Name, selected.Name) = (selected.Name, target.Name);
                     RefreshSequencesList();
+                      History.Sequences.Add(CurrentModel);
                 }
             }
         }
-        private void newsequence_(object sender, RoutedEventArgs e)
+        private void newsequence_(object? sender, RoutedEventArgs? e)
         {
             newsequence ns = new newsequence(CurrentModel);
             ns.ShowDialog();
             if (ns.DialogResult == true)
             {
-                RefreshSequencesList();
-                RefreshSequencesList_Paths();
+                if (ns.CreatedSequence == null) { return; }
+              
                 RefreshPath_ModelNodes_List();
                 AddNewMissingVisibilities(ns.CreatedSequence);
+                History.Sequences.Add(CurrentModel);
+                RefreshSequencesList();
+                RefreshSequencesList_Paths();
             }
         }
         private void RefreshGlobalSequencesList()
@@ -6656,7 +6091,7 @@ namespace Wa3Tuner
                 ListGSequenes.Items.Add($"{gs.ObjectId}: {gs.Duration}");
             }
         }
-        private void Centergeosetsat(object sender, RoutedEventArgs e)
+        private void Centergeosetsat(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -6675,7 +6110,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SetUsedLayerTexture(object sender, SelectionChangedEventArgs e)
+        private void SetUsedLayerTexture(object? sender, SelectionChangedEventArgs? e)
         {
             if (Pause) { return; }
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
@@ -6688,9 +6123,9 @@ namespace Wa3Tuner
                 layer.Texture.Attach(CurrentModel.Textures[indx]);
                 //  MessageBox.Show($"attaching {CurrentModel.Textures[indx].FileName}");
                 if (layer.Texture.Object == null) { MessageBox.Show("Failed"); }
-                //  CollectTextures();
+             
                 CollectTexturesOpenGL();
-                RefreshViewPort();
+               
             }
         }
         private List<INode> GetNodes(List<string> list)
@@ -6702,7 +6137,7 @@ namespace Wa3Tuner
             }
             return nodes;
         }
-        private void alignnodes(object sender, RoutedEventArgs e)
+        private void alignnodes(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.Items.Count < 2) { return; }
             List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
@@ -6731,7 +6166,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void scalenodes(object sender, RoutedEventArgs e)
+        private void scalenodes(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.Items.Count < 2) { return; }
             List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
@@ -6755,12 +6190,12 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void geosetInfobone(object sender, RoutedEventArgs e)
+        private void geosetInfobone(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
                 INode node = GetSeletedNode();
-                List<string> indexes = new List<string>();
+                List<string> indexes = new();
                 bool found = false;
                 for (int i = 0; i < CurrentModel.Geosets.Count; i++)
                 {
@@ -6789,7 +6224,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void shiftnodetranslations(object sender, RoutedEventArgs e)
+        private void shiftnodetranslations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -6810,7 +6245,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void scalekeyframesofnode(object sender, RoutedEventArgs e)
+        private void scalekeyframesofnode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -6831,7 +6266,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void CenterAllNodes(object sender, RoutedEventArgs e)
+        private void CenterAllNodes(object? sender, RoutedEventArgs? e)
         {
             axis_selector ax = new axis_selector();
             ax.ShowDialog();
@@ -6861,7 +6296,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void RotateAllNodesCollectively(object sender, RoutedEventArgs e)
+        private void RotateAllNodesCollectively(object? sender, RoutedEventArgs? e)
         {
             InputVector ax = new InputVector(AllowedValue.Both);
             ax.ShowDialog();
@@ -6918,7 +6353,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void reversenodekeyframesrotations(object sender, RoutedEventArgs e)
+        private void reversenodekeyframesrotations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -6930,7 +6365,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void ChangedInspector(object sender, SelectionChangedEventArgs e)
+        private void ChangedInspector(object? sender, SelectionChangedEventArgs? e)
         {
             if (TC_Inspector.SelectedIndex == 0)
             {
@@ -6938,11 +6373,11 @@ namespace Wa3Tuner
             }
             if (TC_Inspector.SelectedIndex == 1)
             {
-                ShowErrors();
+               // ShowErrors();
             }
         }
-        private async void ChangedTabEvent(object sender, SelectionChangedEventArgs e)
-        {
+        private async void ChangedTabEvent(object? sender, SelectionChangedEventArgs? e)
+        {if (e == null) return;
             if (e.OriginalSource is TabControl tc && tc == ListOptions)
             {
                 if (ListOptions.SelectedIndex == 5)
@@ -6981,15 +6416,22 @@ namespace Wa3Tuner
         }
         private void RefreshGeosetsListRigging()
         {
-            ListBonesRiggings.Items.Clear();
+            Listbox_Geosets_Rigging.Items.Clear();
             foreach (var geoset in CurrentModel.Geosets)
             {
+                geoset.isVisible = true;
+               
                 CheckBox c = new CheckBox();
-                c.Content = geoset.ObjectId.ToString();
+                c.IsChecked = true;
+                c.Content = GetGeosetName(geoset);
                 c.Checked += (sender, e) => { geoset.isVisible = true; };
                 c.Unchecked += (sender, e) => { geoset.isVisible = false; };
-                ListBonesRiggings.Items.Add(new ListBoxItem() { Content = c });
+                Listbox_Geosets_Rigging.Items.Add(new ListBoxItem() { Content = c , Width=250, HorizontalAlignment= HorizontalAlignment.Left});
             }
+        }
+        private static string GetGeosetName(CGeoset geo)
+        {
+            return $"{geo.ObjectId} ({geo.Name}) (vertices {geo.Vertices.Count} triangles {geo.Triangles.Count})";
         }
         private void RefreshBonesInRigging()
         {
@@ -6999,14 +6441,21 @@ namespace Wa3Tuner
                 if (node is CBone) ListBonesRiggings.Items.Add(new ListBoxItem() { Content = node.Name });
             }
         }
-        private void ShowErrors()
+        private async void ShowErrors()
         {
             ErrorChecker.CurrentModel = CurrentModel;
-            Box_Errors.Text = ErrorChecker.Inspect(CurrentModel);
+
+            // Generate string off the UI thread
+            string[] report = await Task.Run(() => ErrorChecker.InspectAndReport(CurrentModel));
+
+            // Now back on UI thread: update the TextBox
+            ErrorPopulator.ReportErrorsWithText(Box_Errors, report[0], report[1], report[2], report[3]);
+             
         }
-        private void EditGeosetViisibilities(object sender, RoutedEventArgs e)
+
+        private void EditGeosetViisibilities(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
             if (ListGeosets.SelectedItems.Count != 1)
             {
                 MessageBox.Show("Select a single geoset"); return;
@@ -7019,43 +6468,86 @@ namespace Wa3Tuner
                 RefreshGeosetAnimationsList();
             }
         }
-        private void createprimitiveshape(object sender, RoutedEventArgs e)
+        private void createprimitiveshape(object? sender, RoutedEventArgs? e)
         {
             //  MenuPrimitiveShape.ContextMenu.IsEnabled = true;
         }
-        private void movelayerup(object sender, RoutedEventArgs e)
+        private void MoveLayerUp(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
                 int index = List_Layers.SelectedIndex;
-                if (index == 0) { return; }
+                if (index == 0) return;
+
                 CMaterial mat = GetSelectedMAterial();
-                CMaterialLayer layer = mat.Layers[index];
-                var temp = mat.Layers[index - 1];
-                mat.Layers[index] = mat.Layers[index - 1];
-                mat.Layers[index] = temp;
-                RefreshLayersList();
+                if (mat.Layers.Count == 1) return;
+
+                List<CMaterialLayer> tempList = new List<CMaterialLayer>();
+
+                for (int i = 0; i < mat.Layers.Count; i++)
+                {
+                    if (i == index - 1)
+                    {
+                        // Swap the order of index-1 and index
+                        tempList.Add(mat.Layers[i + 1]); // Add selected item first
+                        tempList.Add(mat.Layers[i]);     // Then the one before it
+                        i++; // Skip next since it's already added
+                    }
+                    else
+                    {
+                        tempList.Add(mat.Layers[i]);
+                    }
+                }
+
+                mat.Layers.ObjectList = tempList;
+
+                
+                List_Layers.SelectedIndex = index - 1;
+
                 CollectTexturesOpenGL();
                 SetSaved(false);
             }
         }
-        private void movelayerdown(object sender, RoutedEventArgs e)
+
+
+
+
+        private void MoveLayerDown(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
                 int index = List_Layers.SelectedIndex;
                 CMaterial mat = GetSelectedMAterial();
-                if (index == mat.Layers.Count - 1) { return; }
-                CMaterialLayer layer = mat.Layers[index];
-                var temp = mat.Layers[index + 1];
-                mat.Layers[index + 1] = mat.Layers[index];
-                mat.Layers[index] = temp;
-                RefreshLayersList();
+                if (index >= mat.Layers.Count - 1) return;
+
+                if (mat.Layers.Count == 1) return;
+
+                List<CMaterialLayer> tempList = new List<CMaterialLayer>();
+
+                for (int i = 0; i < mat.Layers.Count; i++)
+                {
+                    if (i == index)
+                    {
+                        // Swap current and next
+                        tempList.Add(mat.Layers[i + 1]);
+                        tempList.Add(mat.Layers[i]);
+                        i++; // Skip next, already added
+                    }
+                    else
+                    {
+                        tempList.Add(mat.Layers[i]);
+                    }
+                }
+
+                mat.Layers.ObjectList = tempList;
+                List_Layers.SelectedIndex = index + 1;
                 CollectTexturesOpenGL();
                 SetSaved(false);
             }
         }
-        private void createnewlayer(object sender, RoutedEventArgs e)
+
+
+        private void createnewlayer(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Textures.Count == 0) { MessageBox.Show("There are no textures"); return; }
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
@@ -7068,14 +6560,14 @@ namespace Wa3Tuner
                 RefreshLayersList(); SetSaved(false);
             }
         }
-        private void opentargetfolder(object sender, RoutedEventArgs e)
+        private void opentargetfolder(object? sender, RoutedEventArgs? e)
         {
-            if (File.Exists(CurrentSaveLocaiton))
+            if (File.Exists(CurrentSaveLocation))
             {
-                OpenFileLocation(CurrentSaveLocaiton);
+                OpenFileLocation(CurrentSaveLocation);
             }
         }
-        static void OpenFileLocation(string filePath)
+        static void OpenFileLocation(string? filePath)
         {
             if (string.IsNullOrEmpty(filePath))
             {
@@ -7084,10 +6576,10 @@ namespace Wa3Tuner
             }
             if (!File.Exists(filePath))
             {
-                MessageBox.Show("The specified file does not exist.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("File was not found at that location.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            string folderPath = System.IO.Path.GetDirectoryName(filePath);
+            string? folderPath = System.IO.Path.GetDirectoryName(filePath);
             if (string.IsNullOrEmpty(folderPath))
             {
                 MessageBox.Show("Unable to determine the folder path.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -7102,7 +6594,7 @@ namespace Wa3Tuner
                 MessageBox.Show($"An error occurred while opening the folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void CreateMAterial(object sender, RoutedEventArgs e)
+        private void CreateMAterial(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Textures.Count == 0) { MessageBox.Show("No textures"); return; }
             CMaterial mat = new CMaterial(CurrentModel);
@@ -7112,7 +6604,7 @@ namespace Wa3Tuner
             CurrentModel.Materials.Add(mat);
             RefreshMaterialsList(); SetSaved(false);
         }
-        private void createTC(object sender, RoutedEventArgs e)
+        private void createTC(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Textures.Any(x => x.ReplaceableId == 1) == false)
             {
@@ -7124,7 +6616,7 @@ namespace Wa3Tuner
             }
             else { MessageBox.Show("There is already TC Texture"); }
         }
-        private void createTG(object sender, RoutedEventArgs e)
+        private void createTG(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Textures.Any(x => x.ReplaceableId == 2) == false)
             {
@@ -7132,10 +6624,11 @@ namespace Wa3Tuner
                 textue.ReplaceableId = 2;
                 CurrentModel.Textures.Add(textue);
                 RefreshTexturesList(); SetSaved(false);
+                RefreshLayersTextureList();
             }
             else { MessageBox.Show("There is already TG Texture"); }
         }
-        private void ga_editalphas(object sender, RoutedEventArgs e)
+        private void ga_editalphas(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
@@ -7145,7 +6638,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void ga_editcolors(object sender, RoutedEventArgs e)
+        private void ga_editcolors(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
@@ -7155,7 +6648,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void editnodetranslations(object sender, RoutedEventArgs e)
+        private void editnodetranslations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7169,7 +6662,7 @@ namespace Wa3Tuner
 
             }
         }
-        private void editnoderotations(object sender, RoutedEventArgs e)
+        private void editnoderotations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7183,7 +6676,7 @@ namespace Wa3Tuner
 
             }
         }
-        private void editnodescalings(object sender, RoutedEventArgs e)
+        private void editnodescalings(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7195,7 +6688,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void editlayeralpha(object sender, RoutedEventArgs e)
+        private void editlayeralpha(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -7203,10 +6696,14 @@ namespace Wa3Tuner
                 CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
                 transformation_editor tr = new transformation_editor(CurrentModel, layer.Alpha, true, TransformationType.Alpha);
                 tr.ShowDialog();
+                if (tr.DialogResult == true)
+                {
+                    ButtonLayerAlpha.Content = $"Edit ({layer.Alpha.Count})";
+                }
                 SetSaved(false);
             }
         }
-        private void editlayertextureid(object sender, RoutedEventArgs e)
+        private void editlayertextureid(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -7214,42 +6711,51 @@ namespace Wa3Tuner
                 CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
                 transformation_editor tr = new transformation_editor(CurrentModel, layer.TextureId, false);
                 tr.ShowDialog();
+                if (tr.DialogResult == true)
+                {
+                    ButtonLayerAlpha.Content = $"Edit ({layer.TextureId.Count})";
+                }
                 SetSaved(false);
             }
         }
-        private void ta_edit_tr(object sender, RoutedEventArgs e)
+        private void ta_edit_tr(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
                 CTextureAnimation ta = GetSelectedTextureAnim();
                 transformation_editor tr = new transformation_editor(CurrentModel, ta.Translation, false, TransformationType.Translation);
                 tr.ShowDialog();
+                Selected_TA(null, null);
+                SetSaved(false);
             }
         }
         private CTextureAnimation GetSelectedTextureAnim()
         {
             return CurrentModel.TextureAnimations[List_TextureAnims.SelectedIndex];
         }
-        private void ta_edit_ro(object sender, RoutedEventArgs e)
+        private void ta_edit_ro(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
                 CTextureAnimation ta = GetSelectedTextureAnim();
                 transformation_editor tr = new transformation_editor(CurrentModel, ta.Rotation, false);
                 tr.ShowDialog();
+                Selected_TA(null, null);
+                SetSaved(false);
             }
         }
-        private void ta_edit_scaling(object sender, RoutedEventArgs e)
+        private void ta_edit_scaling(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
                 CTextureAnimation ta = GetSelectedTextureAnim();
                 transformation_editor tr = new transformation_editor(CurrentModel, ta.Scaling, false, TransformationType.Scaling);
                 tr.ShowDialog();
+                Selected_TA(null, null);
                 SetSaved(false);
             }
         }
-        private void EditNodeData(object sender, RoutedEventArgs e)
+        private void EditNodeData(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7270,7 +6776,7 @@ namespace Wa3Tuner
                 {
                     window_edit_cols edit = new window_edit_cols(cols, CurrentModel);
                     edit.ShowDialog();
-                    if (RenderCollisionShapes) { CurrentModel.CalculateCollisionShapeEdges(); }
+                    if (RenderSettings.RenderCollisionShapes) { CurrentModel.CalculateCollisionShapeEdges(); }
                     ListNodes_SelectedItemChanged(null, null);
                     return;
                 }
@@ -7283,7 +6789,7 @@ namespace Wa3Tuner
                 }
                 if (node is CParticleEmitter2 emitter2)
                 {
-                    edit_emitter2 e2 = new edit_emitter2(emitter2, CurrentModel);
+                     edit_emitter2 e2 = new edit_emitter2(emitter2, CurrentModel);
                     e2.ShowDialog();
                     ListNodes_SelectedItemChanged(null, null);
                     return;
@@ -7315,7 +6821,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void subdivide(object sender, RoutedEventArgs e)
+        private void subdivide(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7330,17 +6836,17 @@ namespace Wa3Tuner
         }
         private void ChangeNameOfSelectedNode(string name)
         {
-            TreeViewItem item = ListNodes.SelectedItem as TreeViewItem;
-            StackPanel panel = item.Header as StackPanel;
-            TextBlock t = panel.Children[1] as TextBlock;
+            TreeViewItem? item = ListNodes.SelectedItem as TreeViewItem; if (item == null) return;
+            StackPanel? panel = item.Header as StackPanel; if (panel == null) return;
+            TextBlock? t = panel.Children[1] as TextBlock; if (t == null) return;
             t.Text = name;
         }
-        private void explain(object sender, RoutedEventArgs e)
+        private void explain(object? sender, RoutedEventArgs? e)
         {
             Explanation h = new Explanation();
             h.ShowDialog();
         }
-        private void Checked_Billlboarded(object sender, RoutedEventArgs e)
+        private void Checked_Billlboarded(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7348,7 +6854,7 @@ namespace Wa3Tuner
                 node.Billboarded = Check_Billlboarded.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_Billlboardedx(object sender, RoutedEventArgs e)
+        private void Checked_Billlboardedx(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7356,7 +6862,7 @@ namespace Wa3Tuner
                 node.BillboardedLockX = Check_Billlboardedx.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_Billlboardedy(object sender, RoutedEventArgs e)
+        private void Checked_Billlboardedy(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7364,7 +6870,7 @@ namespace Wa3Tuner
                 node.BillboardedLockY = Check_Billlboardedy.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_Billlboardedz(object sender, RoutedEventArgs e)
+        private void Checked_Billlboardedz(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7372,7 +6878,7 @@ namespace Wa3Tuner
                 node.BillboardedLockZ = Check_Billlboardedz.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_cameraAnchored(object sender, RoutedEventArgs e)
+        private void Checked_cameraAnchored(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7380,7 +6886,7 @@ namespace Wa3Tuner
                 node.CameraAnchored = Check_cameraAnchored.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_dontInhRotation(object sender, RoutedEventArgs e)
+        private void Checked_dontInhRotation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7388,7 +6894,7 @@ namespace Wa3Tuner
                 node.DontInheritRotation = Check_dontInhRotation.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_DontinhScaling(object sender, RoutedEventArgs e)
+        private void Checked_DontinhScaling(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7396,7 +6902,7 @@ namespace Wa3Tuner
                 node.DontInheritScaling = Check_cameraAnchored.IsChecked == true; SetSaved(false);
             }
         }
-        private void Checked_dontInhTranslation(object sender, RoutedEventArgs e)
+        private void Checked_dontInhTranslation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -7404,7 +6910,7 @@ namespace Wa3Tuner
                 node.DontInheritTranslation = Check_dontInhTranslation.IsChecked == true; SetSaved(false);
             }
         }
-        private void SetUsedLayerTextureAnim(object sender, SelectionChangedEventArgs e)
+        private void SetUsedLayerTextureAnim(object? sender, SelectionChangedEventArgs? e)
         {
             if (Combo_LayerUsedTextureAnim.SelectedIndex == -1) { return; }
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
@@ -7423,7 +6929,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void createta(object sender, RoutedEventArgs e)
+        private void CreateTextureAnimation(object? sender, RoutedEventArgs? e)
         {
             CTextureAnimation ta = new CTextureAnimation(CurrentModel);
             CurrentModel.TextureAnimations.Add(ta);
@@ -7431,41 +6937,9 @@ namespace Wa3Tuner
             RefreshLayersTextureAnimList();
             SetSaved(false);
         }
-        private bool _isRotating = false; // Track if rotation is active
-        private Point _lastMousePosition; // Store the last mouse position
-        private void RotateMoved(object sender, MouseEventArgs e)
-        {
-            if (!_isRotating)
-                return;
-            // Get the current mouse position
-            Point currentMousePosition = e.GetPosition((UIElement)sender);
-            // Calculate the change in horizontal position
-            double deltaX = currentMousePosition.X - _lastMousePosition.X;
-            // Update the rotation angle based on movement
-            CameraAngle += (float)(deltaX * 0.5); // Adjust sensitivity as needed
-            // Update the last mouse position
-            _lastMousePosition = currentMousePosition;
-            // Apply the rotation
-            AdjustRotation(CameraAngle);
-
-        }
-        private void RotateOn(object sender, MouseButtonEventArgs e)
-        {
-            _isRotating = true;
-            // Capture the mouse for consistent input
-            UIElement element = (UIElement)sender;
-            element.CaptureMouse();
-            // Store the initial mouse position
-            _lastMousePosition = e.GetPosition(element);
-        }
-        private void RotateOff(object sender, MouseButtonEventArgs e)
-        {
-            _isRotating = false;
-            // Release the mouse capture
-            UIElement element = (UIElement)sender;
-            element.ReleaseMouseCapture();
-        }
-        private void SetLayerFilterMode(object sender, SelectionChangedEventArgs e)
+      
+       
+        private void SetLayerFilterMode(object? sender, SelectionChangedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -7475,7 +6949,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void scr(object sender, RoutedEventArgs e)
+        private void scr(object? sender, RoutedEventArgs? e)
         {
             var dir = AppDomain.CurrentDomain.BaseDirectory;
             string folder = System.IO.Path.Combine(dir, "Screenshots");
@@ -7485,6 +6959,8 @@ namespace Wa3Tuner
             }
             string filename = System.IO.Path.Combine(folder, "SCreenshot_" + DateTime.Now.ToString("dd mm yyyy hh mm ss") + ".png");
             CaptureScreenshot(App_window, filename);
+            string? pat = System.IO.Path.GetDirectoryName(filename); if (pat == null) return;
+            Process.Start("explorer.exe", pat);
         }
         public static void CaptureScreenshot(UIElement visual, string filePath)
         {
@@ -7505,9 +6981,9 @@ namespace Wa3Tuner
             {
                 encoder.Save(fileStream);
             }
-            Process.Start("explorer.exe", System.IO.Path.GetDirectoryName(filePath));
+          
         }
-        private void scr2(object sender, RoutedEventArgs e)
+        private void scr2(object? sender, RoutedEventArgs? e)
         {
             if (ListOptions.SelectedIndex != 0) { MessageBox.Show("Select geosets tab"); return; }
             var dir = AppDomain.CurrentDomain.BaseDirectory;
@@ -7516,22 +6992,23 @@ namespace Wa3Tuner
             {
                 Directory.CreateDirectory(folder);
             }
-            string filename = System.IO.Path.Combine(folder, "SCreenshot_" + DateTime.Now.ToString("dd mm yyyy hh mm ss") + ".png");
-            CaptureScreenshot(Scene_Viewport3D, filename);
+            string filename = System.IO.Path.Combine(folder, "Screenshot_" + DateTime.Now.ToString("dd mm yyyy hh mm ss") + ".png");
+            CaptureScreenshot(Scene_ViewportGL, filename);
         }
-        private void findTexture(object sender, RoutedEventArgs e)
+        private void findTexture(object? sender, RoutedEventArgs? e)
         {
+            if (TextureFinder == null) return;
             TextureFinder.ShowDialog();
         }
-        private void ToggleTextures(object sender, RoutedEventArgs e)
+        private void ToggleTextures(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            if (Scene_Viewport3D == null) { return; }
-            RenderTextures = !RenderTextures;
-            RefreshViewPort();
+
+            RenderSettings.RenderTextures = !RenderSettings.RenderTextures;
+            
             SaveSettings();
         }
-        private void createcube(object sender, RoutedEventArgs e)
+        private void createcube(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
             Pause = true;
@@ -7540,12 +7017,12 @@ namespace Wa3Tuner
             CreateBoneForGeoset(cube);
             CurrentModel.Geosets.Add(cube);
             RefreshGeosetsList();
-            //CollectTextures();
+         
             CollectTexturesOpenGL();
             RefreshGeosetsList();
             RefreshNodesTree();
-            RefreshViewPort();
-            refresh_rData(null, null);
+           
+            RefreshRenderData(null, null);
             Pause = false;
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
@@ -7566,13 +7043,13 @@ namespace Wa3Tuner
             }
             if (CurrentModel.Nodes.Contains(bone) == false) { CurrentModel.Nodes.Add(bone); }
         }
-        private void createcyllinder(object sender, RoutedEventArgs e)
+        private void createcyllinder(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
             Input i = new Input("Sides");
             i.ShowDialog();
             bool parse = int.TryParse(i.Result, out int sides);
-            if (!parse) { MessageBox.Show("Inout not and integer"); return; }
+            if (!parse) { MessageBox.Show("Input not an integer"); return; }
             else
             {
                 if (sides < 3) { MessageBox.Show("Sides cannot be less than 3"); return; }
@@ -7581,18 +7058,18 @@ namespace Wa3Tuner
                 CreateBoneForGeoset(cyllinder);
                 CurrentModel.Geosets.Add(cyllinder);
                 cyllinder.Material.Attach(CurrentModel.Materials[0]);
-                //  CollectTextures();
+              
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
-                RefreshViewPort();
-                refresh_rData(null, null);
+               
+                RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
             }
         }
-        private void createsphere(object sender, RoutedEventArgs e)
+        private void createsphere(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0)
             { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
@@ -7603,19 +7080,19 @@ namespace Wa3Tuner
                 CreateBoneForGeoset(sphere);
                 sphere.Material.Attach(CurrentModel.Materials[0]);
                 CurrentModel.Geosets.Add(sphere);
-                // CollectTextures();
+                
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
-                // RefreshViewPort();
-                refresh_rData(null, null);
+                //
+                RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
                 SetSaved(false);
             }
         }
-        private void createcone(object sender, RoutedEventArgs e)
+        private void createcone(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials to apply to a new geoset"); return; }
             Input i = new Input("Sides");
@@ -7630,12 +7107,12 @@ namespace Wa3Tuner
                 CreateBoneForGeoset(cone);
                 cone.Material.Attach(CurrentModel.Materials[0]);
                 CurrentModel.Geosets.Add(cone);
-                // CollectTextures();
+               
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
-                // RefreshViewPort();
-                refresh_rData(null, null);
+                //
+                RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
@@ -7652,7 +7129,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void FragmentTrianglesIntoGeosets(object sender, RoutedEventArgs e)
+        private void FragmentTrianglesIntoGeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7673,7 +7150,7 @@ namespace Wa3Tuner
                 RefreshAll();
             }
         }
-        private void WeldAll(object sender, RoutedEventArgs e)
+        private void WeldAll(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7686,7 +7163,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void flattengeosetsside(object sender, RoutedEventArgs e)
+        private void flattengeosetsside(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7704,7 +7181,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Simplify(object sender, RoutedEventArgs e)
+        private void Simplify(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7716,15 +7193,15 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void showgm(object sender, RoutedEventArgs e)
+        private void showgm(object? sender, RoutedEventArgs? e)
         {
             ButtonGeosetOptions.ContextMenu.IsOpen = true;
         }
-        private void showgam(object sender, RoutedEventArgs e)
+        private void showgam(object? sender, RoutedEventArgs? e)
         {
             Buttongam.ContextMenu.IsOpen = true;
         }
-        private void SelectedGS(object sender, SelectionChangedEventArgs e)
+        private void SelectedGS(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListGSequenes.SelectedItem != null)
             {
@@ -7800,7 +7277,7 @@ namespace Wa3Tuner
             }
             Report_GSequence_UsedNodes.Text = sb.ToString();
         }
-        private void addgs(object sender, RoutedEventArgs e)
+        private void addgs(object? sender, RoutedEventArgs? e)
         {
             bool parse = int.TryParse(InputGSDuration.Text, out int duration);
             if (!parse) { MessageBox.Show("Expected integer"); return; }
@@ -7817,7 +7294,7 @@ namespace Wa3Tuner
                 RefreshGlobalSequencesList();
             }
         }
-        private void editgs(object sender, RoutedEventArgs e)
+        private void editgs(object? sender, RoutedEventArgs? e)
         {
             if (ListGSequenes.SelectedItem != null)
             {
@@ -7831,7 +7308,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void delgs(object sender, RoutedEventArgs e)
+        private void delgs(object? sender, RoutedEventArgs? e)
         {
             if (ListGSequenes.SelectedItem != null)
             {
@@ -7853,7 +7330,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private bool askDelete()
+        private static bool askDelete()
         {
             // Show a MessageBox with Yes/No options
             MessageBoxResult result = MessageBox.Show(
@@ -7864,7 +7341,7 @@ namespace Wa3Tuner
             // Return true if the user clicked Yes, false otherwise
             return result == MessageBoxResult.Yes;
         }
-        private void negateusofgeosets(object sender, RoutedEventArgs e)
+        private void negateusofgeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7882,7 +7359,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void negavsofgeosets(object sender, RoutedEventArgs e)
+        private void negavsofgeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7900,7 +7377,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void fituvgeoet(object sender, RoutedEventArgs e)
+        private void fituvgeoet(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7916,7 +7393,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void swapusvsgeosets(object sender, RoutedEventArgs e)
+        private void swapusvsgeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -7936,25 +7413,25 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void gotogeosettexture(object sender, RoutedEventArgs e)
+        private void gotogeosettexture(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
                 List<CGeoset> geosets = GetSelectedGeosets();
                 int index = CurrentModel.Materials.IndexOf(geosets[0].Material.Object);
                 List_MAterials.SelectedIndex = index;
-                ListOptions.SelectedIndex = 2;
+                ListOptions.SelectedIndex = 3;
             }
             else
             {
                 MessageBox.Show("Select a single geoset");
             }
         }
-        private void gotogeosetbone(object sender, RoutedEventArgs e)
+        private void gotogeosetbone(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) { return; }
             List<CGeoset> geosets = GetSelectedGeosets();
-            CBone AttachedToBone = null;
+            CBone? AttachedToBone = null;
             bool same = true;
             foreach (CGeoset geoset in geosets)
             {
@@ -7971,14 +7448,17 @@ namespace Wa3Tuner
                     else
                     {
                         AttachedToBone = (CBone)attachedToNode;
+                        break;
                     }
                 }
-                end:
+                
                 if (same)
                 {
-                    string name = AttachedToBone.Name;
+                    string name = AttachedToBone ==null? string.Empty : AttachedToBone.Name;
                     SelectNodeByName(name);
+                    ListOptions.SelectedIndex = 2;
                 }
+
             }
         }
         private void SelectNodeByName(string name)
@@ -7993,12 +7473,12 @@ namespace Wa3Tuner
             }
             ListOptions.SelectedIndex = 3;
         }
-        private bool SelectNodeByNameRecursive(TreeViewItem node, string name)
+        private static bool SelectNodeByNameRecursive(TreeViewItem node, string name)
         {
             // Ensure the node's header is correctly structured
             if (node.Header is StackPanel container)
             {
-                TextBlock nameContainer = container.Children.OfType<TextBlock>().FirstOrDefault();
+                TextBlock ?nameContainer = container.Children.OfType<TextBlock>().FirstOrDefault();
                 if (nameContainer != null && nameContainer.Text == name)
                 {
                     node.IsSelected = true;
@@ -8022,7 +7502,7 @@ namespace Wa3Tuner
             }
             return false; // Node not found in this branch
         }
-        private void negatenormals(object sender, RoutedEventArgs e)
+        private void negatenormals(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -8040,7 +7520,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void makegassameasga(object sender, RoutedEventArgs e)
+        private void makegassameasga(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
@@ -8078,9 +7558,9 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void ImportSequences(object sender, RoutedEventArgs e)
+        private void ImportSequences(object? sender, RoutedEventArgs? e)
         {
-            CModel TemporaryModel = GetTemporaryModel();
+            CModel ?TemporaryModel = GetTemporaryModel();
             if (TemporaryModel == null) { return; }
             CurrentModel.Sequences.Clear();
             List<CSequence> importedSequences = new List<CSequence>();
@@ -8103,41 +7583,8 @@ namespace Wa3Tuner
             RefreshSequencesList();
             SetSaved(false);
         }
-        private void Box_Errors_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
-        {
-        }
-        private void reportwbaaits(object sender, RoutedEventArgs e)
-        {
-            if (ListSequenes.SelectedItem != null)
-            {
-                CSequence sequence = GetSelectedSequence();
-                List<string> names = new List<string>();
-                foreach (INode node in CurrentModel.Nodes)
-                {
-                    if (node.Translation.Any(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd))
-                    {
-                        names.Add($"The {node.GetType().Name} '{node.Name}'"); continue; ;
-                    }
-                    if (node.Rotation.Any(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd))
-                    {
-                        names.Add($"The {node.GetType().Name} '{node.Name}'"); continue; ;
-                    }
-                    if (node.Scaling.Any(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd))
-                    {
-                        names.Add($"The {node.GetType().Name} '{node.Name}'"); continue; ;
-                    }
-                }
-                if (names.Count == 0)
-                {
-                    MessageBox.Show("No nodes are animated in this sequence"); return;
-                }
-                else
-                {
-                }
-                MessageBox.Show($"These nodes are animated in the sequence '{sequence.Name}':\n\n" + string.Join("\n", names));
-            }
-        }
-        private void Checked_WW(object sender, RoutedEventArgs e)
+        
+        private void Checked_WW(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -8146,7 +7593,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Checked_WH(object sender, RoutedEventArgs e)
+        private void Checked_WH(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -8155,7 +7602,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void SelectedTexture(object sender, SelectionChangedEventArgs e)
+        private void SelectedTexture(object? sender, SelectionChangedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -8164,11 +7611,14 @@ namespace Wa3Tuner
                 Check_WW.IsChecked = texture.WrapWidth;
             }
         }
-        private void SelectedSequence(object sender, SelectionChangedEventArgs e)
+        private void SelectedSequence(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
-                CSequence sequence = GetSelectedSequence();
+                CSequence sequence = CurrentModel.Sequences[ListSequenes.SelectedIndex];
+                InputRarity.Text = sequence.Rarity.ToString();
+                InputMovespeed.Text = sequence.MoveSpeed.ToString();
+                CheckLooping.IsChecked = sequence.NonLooping;
                 StringBuilder sb = new StringBuilder();
                 foreach (INode node in CurrentModel.Nodes)
                 {
@@ -8184,25 +7634,38 @@ namespace Wa3Tuner
                 Report_Sequence_UsedNodes.Text = sb.ToString();
             }
         }
-        private void Hotkeys(object sender, KeyEventArgs e)
+        private void Hotkeys(object? sender, KeyEventArgs e)
         {
             //  if (e.Key == Key.Escape) {
             // var focusedElement = FocusManager.GetFocusedElement(this);
             //   MessageBox.Show(focusedElement?.GetType().Name ?? "Nothing focused");
             // } // TEST
             // if (e.Key == Key.A) { InitializeSharpGL(Scene_ViewportGL, EventArgs.Empty); }
+            if (e.Key == Key.LeftCtrl) { SetSelectionMode(mSelectionMode.Remove); }
+            else if (e.Key == Key.LeftShift) { SetSelectionMode(mSelectionMode.Add); }
+
+            //================================================================
             if (e.Key == Key.Delete) { DeleteBasedOnFocus(); return; }
+            else if (e.Key == Key.Space) { unselectAll(null, null);  return; }
             else if (e.Key == Key.Up) { CameraControl.CenterZ += 1; return; }
             else if (e.Key == Key.Down) { CameraControl.CenterZ -= 1; return; }
             else if (e.Key == Key.M) { SetWorkModeMove(null, null); }
+            else if (e.Key == Key.P) { edituv_mini(null, null); }
             else if (e.Key == Key.R) { SetWorkModeRotate(null, null); }
-            else if (e.Key == Key.S) { SetWorkModeScale(null, null); }
+            else if (e.Key == Key.C) { SetWorkModeScale(null, null); }
             else if (e.Key == Key.U) { setAxsModeU(null, null); }
             else if (e.Key == Key.X) { setAxsModeX(null, null); }
             else if (e.Key == Key.Y) { setAxsModeY(null, null); }
             else if (e.Key == Key.Z) { setAxsModeZ(null, null); }
-            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.S)
-                save(null, null);
+            else if (e.Key == Key.V) { Menuitem_vertices.IsChecked = true; }
+            else if (e.Key == Key.E) { Menuitem_edges.IsChecked = true; }
+            else if (e.Key == Key.N) { Menuitem_Nodes.IsChecked = true; }
+            else if (e.Key == Key.K) { Menuitem_skeleton.IsChecked = true; }
+            else if (e.Key == Key.L) { Menuitem_normals.IsChecked = true; }
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.S) SaveModel(null, null);
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.A) selectAall(null, null);
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.N) newm(null, null);
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.I) selectInverse(null, null);
             else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && e.Key == Key.S) saveas(null, null);
             else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.O) load(null, null);
             else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.R) reload(null, null);
@@ -8259,7 +7722,7 @@ namespace Wa3Tuner
         }
 
 
-        private void explain2(object sender, RoutedEventArgs e)
+        private void explain2(object? sender, RoutedEventArgs? e)
         {
             var messageBuilder = new StringBuilder();
             messageBuilder.AppendLine("For rotations, this app uses euler(x, y, z) instead of quaternion (x, y, z, w).");
@@ -8270,7 +7733,7 @@ namespace Wa3Tuner
             messageBuilder.AppendLine("Int and float transformations remain the same.");
             MessageBox.Show(messageBuilder.ToString());
         }
-        private void CreatePresets(object sender, RoutedEventArgs e)
+        private void CreatePresets(object? sender, RoutedEventArgs? e)
         {
             presets p = new presets(CurrentModel);
             p.ShowDialog();
@@ -8279,15 +7742,16 @@ namespace Wa3Tuner
                 RefreshSequencesList();
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
+                History.Sequences.Add(CurrentModel);
             }
         }
-        private void removesequencesfromnodetransfromations(object sender, RoutedEventArgs e)
+        private void removesequencesfromnodetransfromations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
                 if (CurrentModel.Sequences.Count == 0)
                 {
-                    MessageBox.Show("There are no sequences"); return;
+                    MessageBox.Show("There are no sequences", "Nothing to work with"); return;
                 }
                 INode node = GetSeletedNode();
                 transformation_selector ts = new transformation_selector();
@@ -8322,7 +7786,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void duplicatenode(object sender, RoutedEventArgs e)
+        private void duplicatenode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -8334,60 +7798,64 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void resetkeyframes(object sender, RoutedEventArgs e)
+        private void resetkeyframes(object? sender, RoutedEventArgs? e)
         {
-            if (ListNodes.SelectedItem != null)
+            if (ListNodes.SelectedItem == null)
+                return;
+
+            INode node = GetSeletedNode();
+
+            transformation_selector ts = new transformation_selector();
+            bool? result = ts.ShowDialog();
+
+            if (result != true)
+                return;
+
+            bool resetTranslation = ts.C1.IsChecked == true;
+            bool resetRotation = ts.C2.IsChecked == true;
+            bool resetScaling = ts.C3.IsChecked == true;
+
+            if (resetTranslation)
             {
-                INode node = GetSeletedNode();
-                transformation_selector ts = new transformation_selector();
-                ts.ShowDialog();
-                if (ts.DialogResult == true)
+                for (int i = 0; i < node.Translation.Count; i++)
                 {
-                    bool t = ts.C1.IsChecked == true;
-                    bool r = ts.C2.IsChecked == true;
-                    bool s = ts.C3.IsChecked == true;
-                    if (t)
-                    {
-                        for (int i = 0; i < node.Translation.Count; i++)
-                        {
-                            var item = node.Translation[i];
-                            item = new CAnimatorNode<CVector3>(item.Time, new CVector3(0, 0, 0));
-                        }
-                    }
-                    if (r)
-                    {
-                        for (int i = 0; i < node.Rotation.Count; i++)
-                        {
-                            var item = node.Rotation[i];
-                            item = new CAnimatorNode<CVector4>(item.Time, new CVector4(0, 0, 0, 0));
-                        }
-                    }
-                    if (s)
-                    {
-                        for (int i = 0; i < node.Scaling.Count; i++)
-                        {
-                            var item = node.Scaling[i];
-                            item = new CAnimatorNode<CVector3>(item.Time, new CVector3(0, 0, 0));
-                        }
-                    }
+                    var old = node.Translation[i];
+                    node.Translation[i] = new CAnimatorNode<CVector3>(old.Time, new CVector3(0, 0, 0));
+                }
+            }
+
+            if (resetRotation)
+            {
+                for (int i = 0; i < node.Rotation.Count; i++)
+                {
+                    var old = node.Rotation[i];
+                    node.Rotation[i] = new CAnimatorNode<CVector4>(old.Time, new CVector4(0, 0, 0, 0));
+                }
+            }
+
+            if (resetScaling)
+            {
+                for (int i = 0; i < node.Scaling.Count; i++)
+                {
+                    var old = node.Scaling[i];
+                    node.Scaling[i] = new CAnimatorNode<CVector3>(old.Time, new CVector3(0, 0, 0));
                 }
             }
         }
-        private void nodepresets_click(object sender, RoutedEventArgs e)
+
+
+        private void createpixies(object? sender, RoutedEventArgs? e)
         {
-        }
-        private void createpixies(object sender, RoutedEventArgs e)
-        {
-            INode cloned = NodeCloner.Clone(NodeCollection.ItemPixie, CurrentModel);
+            INode cloned = NodeCloner.Clone(NodeMaker.ItemPixie, CurrentModel);
             HandleRequiredTexture((CParticleEmitter2)cloned);
             cloned.Name = "ItemPixies_" + IDCounter.Next_; ;
             CurrentModel.Nodes.Add(cloned);
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void createdust(object sender, RoutedEventArgs e)
+        private void createdust(object? sender, RoutedEventArgs? e)
         {
-            INode cloned = NodeCloner.Clone(NodeCollection.Dust, CurrentModel);
+            INode cloned = NodeCloner.Clone(NodeMaker.Dust, CurrentModel);
             cloned.Name = "Dust_" + IDCounter.Next_; ;
             HandleRequiredTexture((CParticleEmitter2)cloned);
             CurrentModel.Nodes.Add(cloned);
@@ -8414,50 +7882,22 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void createsmoke(object sender, RoutedEventArgs e)
+        private void createsmoke(object? sender, RoutedEventArgs? e)
         {
-            INode cloned = NodeCloner.Clone(NodeCollection.Smoke, CurrentModel);
+            INode cloned = NodeCloner.Clone(NodeMaker.Smoke, CurrentModel);
             HandleRequiredTexture((CParticleEmitter2)cloned);
             cloned.Name = "Smoke_" + IDCounter.Next_; ;
             CurrentModel.Nodes.Add(cloned);
             RefreshNodesTree();
             SetSaved(false);
         }
-        public static void FilterFile(string filePath)
-        {
-            if (!File.Exists(filePath))
-            {
-                Console.WriteLine("File does not exist.");
-                return;
-            }
-            try
-            {
-                // Read all bytes from the file
-                byte[] fileBytes = File.ReadAllBytes(filePath);
-                // Define valid characters as a string
-                string validCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\t\n\r !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-                // Convert the valid characters to a HashSet of bytes for fast lookup
-                var validBytes = new HashSet<byte>(validCharacters.Select(c => (byte)c));
-                // Filter the bytes and replace '\r' with '\n'
-                byte[] filteredBytes = fileBytes
-                    .Where(b => validBytes.Contains(b))
-                    .Select(b => b == (byte)'\r' ? (byte)'\n' : b)
-                    .ToArray();
-                // Write the filtered bytes back to the file
-                File.WriteAllBytes(filePath, filteredBytes);
-                Console.WriteLine("File has been filtered successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-            }
-        }
-        private void cameras(object sender, RoutedEventArgs e)
+      
+        private void cameras(object? sender, RoutedEventArgs? e)
         {
             cameraManager cm = new cameraManager(CurrentModel);
             cm.ShowDialog();
         }
-        private void findnode(object sender, RoutedEventArgs e)
+        private void findnode(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input("");
             i.ShowDialog();
@@ -8471,7 +7911,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void Checked_MatSort2(object sender, RoutedEventArgs e)
+        private void Checked_MatSort2(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -8479,45 +7919,15 @@ namespace Wa3Tuner
                 material.SortPrimitivesNearZ = Check_MatSort2.IsChecked == true;
             }
         }
-        private void reattachallToBone(object sender, RoutedEventArgs e)
-        {
-            if (CurrentModel.Nodes.Count(x => x is CBone) == 0)
-            {
-                MessageBox.Show("There are no bones"); return;
-            }
-            List<string> bones = CurrentModel.Nodes.Where(x => x is CBone).Select(x => x.Name).ToList();
-            Selector s = new Selector(bones);
-            s.ShowDialog();
-            if (s.DialogResult == true)
-            {
-                CBone bone = CurrentModel.Nodes.First(x => x.Name == s.Selected) as CBone;
-                if (bone != null)
-                {
-                    int id = bone.ObjectId;
-                    foreach (CGeoset geo in CurrentModel.Geosets)
-                    {
-                        geo.Groups.Clear();
-                        CGeosetGroup group = new CGeosetGroup(CurrentModel);
-                        CGeosetGroupNode node = new CGeosetGroupNode(CurrentModel);
-                        node.Node.Attach(bone);
-                        group.Nodes.Add(node);
-                        geo.Groups.Add(group);
-                        foreach (CGeosetVertex vertex in geo.Vertices)
-                        {
-                            vertex.Group.Attach(group);
-                        }
-                    }
-                }
-            }
-        }
-        private void delallgas(object sender, RoutedEventArgs e)
+        
+        private void delallgas(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.GeosetAnimations.Clear();
             List_GeosetAnims.Items.Clear();
             Label_GAs.Text = "0 Geoset Animations";
             SetSaved(false);
         }
-        private void createmissinggas(object sender, RoutedEventArgs e)
+        private void createmissinggas(object? sender, RoutedEventArgs? e)
         {
             foreach (CGeoset geoset in CurrentModel.Geosets)
             {
@@ -8532,7 +7942,7 @@ namespace Wa3Tuner
             RefreshGeosetAnimationsList();
             SetSaved(false);
         }
-        private void separate(object sender, RoutedEventArgs e)
+        private void separate(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -8600,16 +8010,29 @@ namespace Wa3Tuner
 
             }
         }
-        private void drawshape(object sender, RoutedEventArgs e)
+        private void drawshape(object? sender, RoutedEventArgs? e)
         {
-            DrawShape ds = new DrawShape(CurrentModel);
+            if (CurrentModel.Textures.Count == 0)
+            {
+                MessageBox.Show("There are no textures");return;
+            }
+            if (CurrentModel.Materials.Count == 0)
+            {
+                MessageBox.Show("There are no textures"); return;
+            }
+            if (CurrentModel.Materials[0].Layers.Count == 0)
+            {
+                MessageBox.Show("material 0 has no layers"); return;
+            }
+            DrawShapeWindow ds = new DrawShapeWindow(CurrentModel);
             if (ds.ShowDialog() == true)
             {
                 RefreshGeosetsList();
                 SetSaved(false);
+                RefreshRenderData(null,null);
             }
         }
-        private void extrudedpolygon(object sender, RoutedEventArgs e)
+        private void extrudedpolygon(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0 || CurrentModel.Textures.Count == 0)
             {
@@ -8619,15 +8042,19 @@ namespace Wa3Tuner
             cpw.ShowDialog();
             if (cpw.DialogResult == true)
             {
+                Pause = true;
                 RefreshGeosetsList();
-                RefreshViewPort();
+
+                CollectTexturesOpenGL();
+                RefreshRenderData(null,null);
                 RefreshNodesTree();
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
                 SetSaved(false);
+                Pause = false;
             }
         }
-        private void FragmentTrianglesInGeoset(object sender, RoutedEventArgs e)
+        private void FragmentTrianglesInGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -8649,7 +8076,7 @@ namespace Wa3Tuner
             RefreshGeosetsList();
             SetSaved(false);
         }
-        private void FragmentFacesInGeoset(object sender, RoutedEventArgs e)
+        private void FragmentFacesInGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -8676,7 +8103,7 @@ namespace Wa3Tuner
 
             }
         }
-        private void FragmentFacesIntoGeosets(object sender, RoutedEventArgs e)
+        private void FragmentFacesIntoGeosets(object? sender, RoutedEventArgs? e)
         {
             // Scene_Viewport3D.Children.Clear();
             Pause = true;
@@ -8699,30 +8126,34 @@ namespace Wa3Tuner
             Pause = false;
             SetSaved(false);
         }
-        private void load_from_mpqs(object sender, RoutedEventArgs e)
+        private void load_from_mpqs(object? sender, RoutedEventArgs? e)
         {
             ModelBrowser browser = new ModelBrowser();
             if (browser.ShowDialog() == true)
             {
-                MPQHelper.Export(browser.Selected, AppHelper.TemporaryModelLocation);
+                if (browser.Selected == null)
+                {
+                    MessageBox.Show("null string"); return;
+                }
+                MPQHelper.Export(browser.Selected, AppHelper.TemporaryModelLocation, "", true);
                 LoadModel(AppHelper.TemporaryModelLocation);
             }
         }
-        private void ToggleShading(object sender, RoutedEventArgs e)
+        private void ToggleShading(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderShading = Menuitem_Shading.IsChecked == true;
-            RefreshViewPort();
+            RenderSettings.RenderShading = Menuitem_Shading.IsChecked == true;
+           
             SaveSettings();
         }
-        private void ToggleCols(object sender, RoutedEventArgs e)
+        private void ToggleCols(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderCollisionShapes = Menuitem_Cols.IsChecked == true;
+            RenderSettings.RenderCollisionShapes = Menuitem_Cols.IsChecked == true;
             SetSaved(false);
             SaveSettings();
         }
-        private void RotateGeosetsTogether(object sender, RoutedEventArgs e)
+        private void RotateGeosetsTogether(object? sender, RoutedEventArgs? e)
         {
             InputVector iv = new InputVector(AllowedValue.Both, new CVector3(0, 0, 0), "Rotation (-360-360)");
             iv.ShowDialog();
@@ -8744,7 +8175,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void Clampuvofgeoset(object sender, RoutedEventArgs e)
+        private void Clampuvofgeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -8759,12 +8190,12 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void ListGSequenes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void ListGSequenes_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
         }
         #region Animator
-        private INode SelectedNodeInAnimator;
-        private void SelectedSEquenceInAnimator(object sender, SelectionChangedEventArgs e)
+   
+        private void SelectedSEquenceInAnimator(object? sender, SelectionChangedEventArgs? e)
         {
             Animator_RefreshKeyframesList();
             if (List_Keyframes_Animator.Items.Count > 0) List_Keyframes_Animator.SelectedIndex = 0;
@@ -8774,30 +8205,32 @@ namespace Wa3Tuner
         {
             if (Tabs_Geosets.TabIndex != 4) return;
             float ctrack = Animator_GetTrack();
-            var node = animator_GetNode();
+            INode? node = animator_GetNode();
+            if (node == null) {  return; }
             float x = 0;
             float y = 0;
             float z = 0;
             if (ctrack != -1 && node != null)
-            {
-                var t = node.Translation.FirstOrDefault(x => x.Time == ctrack);
-                var r = node.Rotation.FirstOrDefault(x => x.Time == ctrack);
-                var s = node.Scaling.FirstOrDefault(x => x.Time == ctrack);
-                if (modifyMode_current == ModifyMode.Translate)
+            { 
+                var t = node.Translation.FirstOrDefault(x => x.Time == ctrack); 
+                var r = node.Rotation.FirstOrDefault(x => x.Time == ctrack);  
+                var s = node.Scaling.FirstOrDefault(x => x.Time == ctrack);  
+                if (modifyMode_current == ModifyMode.Translate && t != null)
                 {
+                 
                     x = t.Value.X;
                     y = t.Value.Y;
                     z = t.Value.Z;
 
                 }
-                if (modifyMode_current == ModifyMode.Rotate)
+                if (modifyMode_current == ModifyMode.Rotate && r != null)
                 {
                     CVector3 euler = Calculator.QuaternionToEuler(r.Value);
                     x = euler.X;
                     y = euler.Y;
                     z = euler.Z;
                 }
-                if (modifyMode_current == ModifyMode.Scale)
+                if (modifyMode_current == ModifyMode.Scale && s != null)
                 {
                     x = s.Value.X * 100;
                     y = s.Value.Y * 100;
@@ -8808,24 +8241,24 @@ namespace Wa3Tuner
                 InputAnimatorZ.Text = z.ToString();
             }
         }
-        private INode GetSelectedNodeInanimator()
+        private INode? GetSelectedNodeInanimator()
         {
-            string name = (List_Nodes_Animator.SelectedItem as ListBoxItem).Content.ToString();
+            string? name = Extractor.GetString(List_Nodes_Animator);
+            if (name == null) return null;
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void ResetKeyframeTranslations(object sender, RoutedEventArgs e)
+        private void ResetKeyframeTranslations(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 ResetKeyframe(track, TransformationType.Translation);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        private void DeleteKeyframe(object sender, RoutedEventArgs e)
+        private void DeleteKeyframe(object? sender, RoutedEventArgs? e)
         {
-            ListBoxItem item = List_Keyframes_Animator.SelectedItem as ListBoxItem;
-            int time = int.Parse(item.Content.ToString());
+            int time = Extractor.GetInt(List_Keyframes_Animator);
             foreach (var node in CurrentModel.Nodes)
             {
                 if (node is CHelper || node is CBone)
@@ -8837,11 +8270,11 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void ResetKeyframeRotations(object sender, RoutedEventArgs e)
+        private void ResetKeyframeRotations(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 ResetKeyframe(track, TransformationType.Rotation);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
                 SetSaved(false);
@@ -8869,34 +8302,42 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void ResetKeyframeScalings(object sender, RoutedEventArgs e)
+        private void ResetKeyframeScalings(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int  track = Extractor.GetInt((List_Keyframes_Animator));
                 ResetKeyframe(track, TransformationType.Scaling);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
                 SetSaved(false);
             }
         }
-        AnimatorMode Animator_Mode = AnimatorMode.Translate;
-        AnimatorAxis Animator_Axis = AnimatorAxis.X;
-        private void SelectedKeyframeInAnimator(object sender, SelectionChangedEventArgs e)
+
+
+
+        private void SelectedKeyframeInAnimator(object? sender, SelectionChangedEventArgs? e)
         {
-            if (List_Keyframes_Animator.SelectedItem == null) return;
-            ListBoxItem item = List_Keyframes_Animator.SelectedItem as ListBoxItem;
-            int time = int.Parse(item.Content.ToString().Split(" ")[0]);
+            if (List_Keyframes_Animator?.SelectedItem is not ListBoxItem item || item.Content == null)
+                return;
+
+            string content = item.Content.ToString()!;
+            string[] parts = content.Split(' ');
+            if (parts.Length == 0 || !int.TryParse(parts[0], out int time))
+                return;
+
             InputCurrentFrame.Text = time.ToString();
             // LoadKeyframeInViewport(time);
             FillInputsForKeyframe(time);
             RefreshAnimatedVertexAndNodePositionsForRendering(time);
         }
 
+
         private void FillInputsForKeyframe(int time)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
                 var node = GetSelectedNodeInanimator();
+                if (node == null) return;
                 if (modifyMode_current == ModifyMode.Translate)
                 {
                     var kf = node.Translation.FirstOrDefault(x => x.Time == time);
@@ -8953,11 +8394,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void LoadKeyframeInViewport(int time)
-        {
-            return;
-            throw new NotImplementedException();
-        }
+       
         private void RefreshBonesInAnimator()
         {
             if (List_Nodes_Animator == null) { return; }
@@ -8985,7 +8422,7 @@ namespace Wa3Tuner
             }
         }
         private int CurrentlySelectedTrack = -1;
-        private void gototrack(object sender, RoutedEventArgs e)
+        private void gototrack(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null)
             {
@@ -9060,7 +8497,7 @@ namespace Wa3Tuner
                 List<int> tracks = new List<int>();
                 List_Keyframes_Animator.Items.Clear();
                 var sequecne = GetSelectedSequenceAnimator();
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator(); if (node == null) return;
                 foreach (var kf in node.Translation)
                 {
                     if (kf.Time >= sequecne.IntervalStart && kf.Time <= sequecne.IntervalEnd)
@@ -9081,8 +8518,9 @@ namespace Wa3Tuner
             }
         }
 
-        private string GetKeyframeTitle(INode node, int tr)
+        private static string GetKeyframeTitle(INode? node, int tr)
         {
+            if (node == null) return string.Empty;
             bool un = true;
             string t = "";
             string r = "";
@@ -9093,12 +8531,9 @@ namespace Wa3Tuner
             return un ? $"{tr} (Unanimated)" : $"{tr} {t}{r}{s}";
         }
 
-        private void SelectTrackInAnimatorTracksList(int track)
-        {
-            throw new NotImplementedException();
-        }
+       
         #endregion
-        private void DetachBoneFromSelectedVertices(object sender, RoutedEventArgs e)
+        private void DetachBoneFromSelectedVertices(object? sender, RoutedEventArgs? e)
         {
             if (ListAttachedToRiggings.SelectedItem == null)
             {
@@ -9115,31 +8550,13 @@ namespace Wa3Tuner
                 // DetachBoneFromVertices(vertices, node);
             }
         }
-        private void DetachBoneFromVertices(List<CGeosetVertex> vertices, INode node)
-        {
-            foreach (CGeosetVertex vertex in vertices)
-            {
-                var group = vertex.Group.Object;
-                List<CGeosetGroupNode> gnodes = new();
-                foreach (var gnode in group.Nodes)
-                {
-                    if (gnode.Node.Node == node)
-                    {
-                        gnodes.Add(gnode);
-                    }
-                }
-                foreach (var gnode in gnodes)
-                {
-                    group.Nodes.Remove(gnode);
-                }
-            }
-        }
+       
         private INode GetSelectedAttachedNode()
         {
-            string name = (ListAttachedToRiggings.SelectedItem as ListBoxItem).Content.ToString();
+            string? name = Extractor.GetString(ListAttachedToRiggings);  
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void ClearAndATtach(object sender, RoutedEventArgs e)
+        private void ClearAndATtach(object? sender, RoutedEventArgs? e)
         {
             if (ListBonesRiggings.SelectedItem == null)
             {
@@ -9147,36 +8564,28 @@ namespace Wa3Tuner
             }
             else
             {
-                INode node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNode_Rigging(); 
+                if (node == null) { return; }
                 List<CGeosetVertex> vertices = GetSelectedVertices();
                 if (vertices.Count == 0) { MessageBox.Show("Select vertices in the viewport"); return; }
+                if (NodeExistsInRiggingList(node.Name)) { MessageBox.Show("this node already is attached"); return; }
+
                 EditMatrixGroup(RiggingAction.ClearAdd, node, vertices);
                 ListAttachedToRiggings.Items.Clear();
                 ListAttachedToRiggings.Items.Add(new ListBoxItem() { Content = node.Name });
             }
         }
-        private void ChangeAttachment(List<CGeosetVertex> vertices, INode node, bool clear)
+
+        private INode? GetSelectedNode_Rigging()
         {
-            foreach (var vertex in vertices)
-            {
-                var group = vertex.Group.Object;
-                if (clear) group.Nodes.Clear();
-                if (GroupHasNode(group, node) == false)
-                {
-                    CGeosetGroupNode gnode = new CGeosetGroupNode(CurrentModel);
-                    gnode.Node.Attach(node);
-                    group.Nodes.Add(gnode);
-                }
-            }
+            ListBoxItem? item = ListBonesRiggings.SelectedItem as ListBoxItem;  if (item == null) return null;
+            string? name = item.Content as string;
+            return CurrentModel.Nodes.First(x => x.Name == name);
+            
         }
-        private bool GroupHasNode(CGeosetGroup group, INode node)
-        {
-            foreach (var gnode in group.Nodes)
-            {
-                if (gnode.Node.Node == node) { return true; }
-            }
-            return false;
-        }
+
+       
+       
         private List<CGeosetVertex> GetSelectedVertices()
         {
             List<CGeosetVertex> list = new List<CGeosetVertex>();
@@ -9192,7 +8601,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void AddAttachRiggin(object sender, RoutedEventArgs e)
+        private void AddAttachRiggin(object? sender, RoutedEventArgs? e)
         {
             if (ListBonesRiggings.SelectedItem == null)
             {
@@ -9206,15 +8615,26 @@ namespace Wa3Tuner
                 }
                 else
                 {
-                    INode node = GetSelectedNodeInanimator();
+                    INode? node = getselectedBoneInRigging(); if (node == null) return;
                     List<CGeosetVertex> vertices = GetSelectedVertices();
                     if (vertices.Count == 0) { MessageBox.Show("Select vertices in the viewport"); return; }
+                    if (NodeExistsInRiggingList(node.Name)) { MessageBox.Show("this node already is attached"); return; }
                     EditMatrixGroup(RiggingAction.Add, node, vertices);
                     ListAttachedToRiggings.Items.Add(new ListBoxItem() { Content = node.Name });
                 }
             }
         }
-        private void ReverseAllSequences(object sender, RoutedEventArgs e)
+
+        private bool NodeExistsInRiggingList(string name)
+        {
+           foreach (var item in ListAttachedToRiggings.Items)
+            {
+                if (Extractor.GetString(item)   == name) { return true; }
+            }
+            return false;
+        }
+
+        private void ReverseAllSequences(object? sender, RoutedEventArgs? e)
         {
             foreach (var sequence in CurrentModel.Sequences)
             {
@@ -9222,15 +8642,15 @@ namespace Wa3Tuner
             }
         }
         int CopedKeyframe = -1;
-        private void CopyKeyframe(object sender, RoutedEventArgs e)
+        private void CopyKeyframe(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 CopedKeyframe = track;
             }
         }
-        private void Paste_Ov_Keyframe(object sender, RoutedEventArgs e)
+        private void Paste_Ov_Keyframe(object? sender, RoutedEventArgs? e)
         {
 
             if (CopedKeyframe != -1)
@@ -9320,19 +8740,15 @@ namespace Wa3Tuner
         }
 
 
-        private bool KeyframeExists(int value)
-        {
-            throw new NotImplementedException();
-        }
+       
 
-
-        private void makeallGAUseColor(object sender, RoutedEventArgs e)
+        private void makeallGAUseColor(object? sender, RoutedEventArgs? e)
         {
             foreach (var ga in CurrentModel.GeosetAnimations) ga.UseColor = true;
             RefreshGeosetAnimationsList();
             SetSaved(false);
         }
-        private void makeallGAUseColorNOT(object sender, RoutedEventArgs e)
+        private void makeallGAUseColorNOT(object? sender, RoutedEventArgs? e)
         {
             foreach (var ga in CurrentModel.GeosetAnimations) ga.UseColor = false;
             RefreshGeosetAnimationsList();
@@ -9341,7 +8757,7 @@ namespace Wa3Tuner
         //--------------------------------------------------
         // ANIMATOR
         //--------------------------------------------------
-        private void Animator_ClearTranslations(object sender, RoutedEventArgs e)
+        private void Animator_ClearTranslations(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9375,7 +8791,7 @@ namespace Wa3Tuner
             string name = GetNodeNameAnimator();
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void Animator_ClearRotations(object sender, RoutedEventArgs e)
+        private void Animator_ClearRotations(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9384,7 +8800,7 @@ namespace Wa3Tuner
             RefreshAnimatedVertexAndNodePositionsForRendering();
             SetSaved(false);
         }
-        private void Animator_ClearScalings(object sender, RoutedEventArgs e)
+        private void Animator_ClearScalings(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9399,7 +8815,7 @@ namespace Wa3Tuner
             if (parsed) return value;
             return -1;
         }
-        private void Animator_ClearTranslations_Track(object sender, RoutedEventArgs e)
+        private void Animator_ClearTranslations_Track(object? sender, RoutedEventArgs? e)
         {
             int track = Animator_GetTrack();
             if (track != -1)
@@ -9411,7 +8827,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Animator_ClearRotations_Track(object sender, RoutedEventArgs e)
+        private void Animator_ClearRotations_Track(object? sender, RoutedEventArgs? e)
         {
             int track = Animator_GetTrack();
             if (track != -1)
@@ -9423,7 +8839,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Animator_ClearScalings_Track(object sender, RoutedEventArgs e)
+        private void Animator_ClearScalings_Track(object? sender, RoutedEventArgs? e)
         {
             int track = Animator_GetTrack();
             if (track != -1)
@@ -9435,7 +8851,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Animator_ResetTranslations(object sender, RoutedEventArgs e)
+        private void Animator_ResetTranslations(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9448,7 +8864,7 @@ namespace Wa3Tuner
             RefreshAnimatedVertexAndNodePositionsForRendering();
             SetSaved(false);
         }
-        private void Animator_ResetRotations(object sender, RoutedEventArgs e)
+        private void Animator_ResetRotations(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9462,7 +8878,7 @@ namespace Wa3Tuner
             RefreshAnimatedVertexAndNodePositionsForRendering();
             SetSaved(false);
         }
-        private void Animator_ResetScalings(object sender, RoutedEventArgs e)
+        private void Animator_ResetScalings(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9477,7 +8893,7 @@ namespace Wa3Tuner
             RefreshAnimatedVertexAndNodePositionsForRendering();
             SetSaved(false);
         }
-        private void Animator_ResetTranslations_Bone(object sender, RoutedEventArgs e)
+        private void Animator_ResetTranslations_Bone(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9492,7 +8908,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Animator_ResetRorations_Bone(object sender, RoutedEventArgs e)
+        private void Animator_ResetRorations_Bone(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9508,7 +8924,7 @@ namespace Wa3Tuner
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        private void Animator_ResetScalings_Bone(object sender, RoutedEventArgs e)
+        private void Animator_ResetScalings_Bone(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem == null) return;
             INode node = GetSeletedNodeInAnimator();
@@ -9523,69 +8939,16 @@ namespace Wa3Tuner
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        UVLockType UVMapperLock = UVLockType.None;
-        private void ToggleGround(object sender, RoutedEventArgs e)
+        
+        private void ToggleGround(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGroundPlane = Menuitem_ground.IsChecked == true;
+            RenderSettings.RenderGroundPlane = Menuitem_ground.IsChecked == true;
             SaveSettings();
         }
-        private void DrawGroundPlane(Viewport3D viewport, int edgeLength, BitmapSource texture)
-        {
-            // Create a 3D model for the ground plane
-            GeometryModel3D groundPlane = CreateGroundPlaneGeometry(edgeLength);
-            // Apply texture as material (make it two-sided)
-            DiffuseMaterial material = new DiffuseMaterial(new ImageBrush(texture));
-            groundPlane.Material = material;
-            // Make the material two-sided
-            groundPlane.BackMaterial = material;
-            // Create a ModelVisual3D to display in the Viewport3D
-            ModelVisual3D groundModel = new ModelVisual3D();
-            groundModel.Content = groundPlane;
-            // Add the ground model to the viewport
-            viewport.Children.Add(groundModel);
-        }
-        private GeometryModel3D CreateGroundPlaneGeometry(int edgeLength)
-        {
-            // Define the vertices of the ground plane (a square)
-            Point3DCollection positions = new Point3DCollection
-    {
-       new Point3D(-edgeLength / 2.0, 0, -edgeLength / 2.0), // bottom-left
-        new Point3D(edgeLength / 2.0, 0, -edgeLength / 2.0),  // bottom-right
-        new Point3D(edgeLength / 2.0, 0, edgeLength / 2.0),   // top-right
-        new Point3D(-edgeLength / 2.0, 0, edgeLength / 2.0),  // top-left
-    };
-            // Define the triangle indices (two triangles for the square)
-            Int32Collection triangleIndices = new Int32Collection
-    {
-        0, 1, 2,  // First triangle
-        0, 2, 3   // Second triangle
-    };
-            // Create the geometry for the ground plane
-            MeshGeometry3D mesh = new MeshGeometry3D
-            {
-                Positions = positions,
-                TriangleIndices = triangleIndices
-            };
-            // Set texture coordinates for the plane to properly map the texture
-            mesh.TextureCoordinates = new PointCollection
-    {
-        new Point(0, 0), // bottom-left
-        new Point(1, 0), // bottom-right
-        new Point(1, 1), // top-right
-        new Point(0, 1)  // top-left
-    };
-            // Make the plane face upwards (along the XZ plane)
-            Transform3DGroup transformGroup = new Transform3DGroup();
-            transformGroup.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 90)));
-            // Return a GeometryModel3D with the mesh
-            GeometryModel3D groundPlane = new GeometryModel3D(mesh, null)
-            {
-                Transform = transformGroup
-            };
-            return groundPlane;
-        }
-        private void createCols2ForTargetGeo(object sender, RoutedEventArgs e)
+      
+        
+        private void createCols2ForTargetGeo(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -9603,19 +8966,20 @@ namespace Wa3Tuner
                     cs.PivotPoint = centroid;
                     CurrentModel.Nodes.Add(cs);
                     RefreshNodesTree();
-                    if (RenderCollisionShapes) RefreshViewPort();
+                     
                 }
             }
             //--------------------------------------------------
             //--------------------------------------------------
             //--------------------------------------------------
         }
-        private void closemodel(object sender, RoutedEventArgs e)
+        private void closemodel(object? sender, RoutedEventArgs? e)
         {
             CurrentModel = new CModel();
             CurrentSaveFolder = "";
-            CurrentSaveLocaiton = "";
+            CurrentSaveLocation = "";
             refreshalllists(null, null);
+            SetNewModelName();
             RefreshTitle();
             PathManager.Selected = null;
             PathManager.Paths.Clear();
@@ -9626,22 +8990,22 @@ namespace Wa3Tuner
             ListModelNodes_Paths.Items.Clear();
             SetSaved(false);
         }
-        private void saveasCopy(object sender, RoutedEventArgs e)
+        private void saveasCopy(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentSaveLocaiton
+            if (CurrentSaveLocation
                 .Length > 0 && Directory.Exists(CurrentSaveFolder))
             {
-                string temp = CurrentSaveLocaiton;
-                CurrentSaveLocaiton = AppendTimestampToFilePath(CurrentSaveLocaiton);
-                save(null, null);
-                CurrentSaveLocaiton = temp;
+                string temp = CurrentSaveLocation;
+                CurrentSaveLocation = AppendTimestampToFilePath(CurrentSaveLocation);
+                SaveModel(null, null);
+                CurrentSaveLocation = temp;
             }
         }
         public static string AppendTimestampToFilePath(string filePath)
         {
-            string directory = System.IO.Path.GetDirectoryName(filePath);
-            string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(filePath);
-            string extension = System.IO.Path.GetExtension(filePath);
+            string ?directory = System.IO.Path.GetDirectoryName(filePath);
+            string ?fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            string? extension = System.IO.Path.GetExtension(filePath);
             // Get current date and time
             DateTime now = DateTime.Now;
             string dayWithSuffix = AddDaySuffix(now.Day);
@@ -9675,7 +9039,7 @@ namespace Wa3Tuner
             return day + suffix;
         }
 
-        private void newtexturefrominput(object sender, RoutedEventArgs e)
+        private void newtexturefrominput(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input("");
             if (i.ShowDialog() == true)
@@ -9688,6 +9052,7 @@ namespace Wa3Tuner
                     texture.FileName = text;
                     CurrentModel.Textures.Add(texture);
                     RefreshTexturesList();
+                      RefreshLayersTextureList();
                 }
                 else
                 {
@@ -9707,9 +9072,9 @@ namespace Wa3Tuner
              { NodeType.Attachment, true},
              { NodeType.Light, true},
          };
-        private INode Animator_CopiedNode;
+        
         private TransformationType Animator_CopiedNodeData;
-        private void Animator_CopyNodeTranslation(object sender, RoutedEventArgs e)
+        private void Animator_CopyNodeTranslation(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
@@ -9718,23 +9083,24 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void Animator_CopyNodeRotation(object sender, RoutedEventArgs e)
+        private void Animator_CopyNodeRotation(object? sender, RoutedEventArgs? e)
         {
             Animator_CopiedNode = GetSeletedNodeInAnimator();
             Animator_CopiedNodeData = TransformationType.Rotation;
             SetSaved(false);
         }
-        private void Animator_CopyNodeScaling(object sender, RoutedEventArgs e)
+        private void Animator_CopyNodeScaling(object? sender, RoutedEventArgs? e)
         {
             Animator_CopiedNode = GetSeletedNodeInAnimator();
             Animator_CopiedNodeData = TransformationType.Scaling;
             SetSaved(false);
         }
-        private void Animator_PasteNodeMerge(object sender, RoutedEventArgs e)
+        private void Animator_PasteNodeMerge(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
                 var pasteOn = GetSeletedNodeInAnimator();
+                if (Animator_CopiedNode == null) { MessageBox.Show("Nothing to paste"); return; }
                 if (pasteOn == Animator_CopiedNode) { MessageBox.Show("Copied and pasted on cannot be the same"); return; }
                 if (Animator_CopiedNodeData == TransformationType.Translation)
                 {
@@ -9788,8 +9154,9 @@ namespace Wa3Tuner
             SetSaved(false);
             RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void Animator_PasteNodeOverwrite(object sender, RoutedEventArgs e)
+        private void Animator_PasteNodeOverwrite(object? sender, RoutedEventArgs? e)
         {
+            if (Animator_CopiedNode == null) return;
             if (List_Nodes_Animator.SelectedItem != null)
             {
                 var pasteOn = GetSeletedNodeInAnimator();
@@ -9840,7 +9207,7 @@ namespace Wa3Tuner
             SetSaved(false);
             RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void SplitMatrixGroups(object sender, RoutedEventArgs e)
+        private void SplitMatrixGroups(object? sender, RoutedEventArgs? e)
         {
             foreach (var geoset in CurrentModel.Geosets)
             {
@@ -9851,6 +9218,7 @@ namespace Wa3Tuner
                     vertex.Group.Attach(group);
                     groups.Add(group);
                 }
+                // add the groups
                 geoset.Groups.Clear();
                 foreach (var group in groups) geoset.Groups.Add(group);
             }
@@ -9863,18 +9231,19 @@ namespace Wa3Tuner
         private CGeosetGroup CloneGroup(CGeosetGroup original)
         {
             CGeosetGroup group = new CGeosetGroup(CurrentModel);
-            foreach (var item in group.Nodes)
+            foreach (var gnode in original.Nodes)
             {
                 CGeosetGroupNode node = new CGeosetGroupNode(CurrentModel);
-                node.Node.Attach(item.Node.Node);
                 group.Nodes.Add(node);
+                node.Node.Attach(gnode.Node.Node);
+               
             }
             return group;
         }
-        private void ToggleSkinning(object sender, RoutedEventArgs e)
+        private void ToggleSkinning(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderSkinning = Menuitem_skinning.IsChecked == true;
+            RenderSettings.RenderSkinning = Menuitem_skinning.IsChecked == true;
             SaveSettings();
         }
         private void SaveSettings()
@@ -9883,36 +9252,38 @@ namespace Wa3Tuner
             string path = System.IO.Path.Combine(AppPath, "Settings.txt");
             StringBuilder settings = new StringBuilder();
             settings.AppendLine($"{nameof(CanDrag)}={CanDrag}");
-            settings.AppendLine($"{nameof(RenderLighing)}={RenderLighing}");
-            settings.AppendLine($"{nameof(RenderSkinning)}={RenderSkinning}");
-            settings.AppendLine($"{nameof(RenderEnabled)}={RenderEnabled}");
-            settings.AppendLine($"{nameof(RenderTextures)}={RenderTextures}");
-            settings.AppendLine($"{nameof(RenderShading)}={RenderShading}");
-            settings.AppendLine($"{nameof(RenderCollisionShapes)}={RenderCollisionShapes}");
-            settings.AppendLine($"{nameof(RenderGroundPlane)}={RenderGroundPlane}");
-            settings.AppendLine($"{nameof(RenderGeosetExtents)}={RenderGeosetExtents}");
-            settings.AppendLine($"{nameof(RenderGeosetExtentSphere)}={RenderGeosetExtentSphere}");
-            settings.AppendLine($"{nameof(RenderNodes)}={RenderNodes}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderLighing)}={RenderSettings.RenderLighing}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderSkinning)}={RenderSettings.RenderSkinning}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderEnabled)}={RenderSettings.RenderEnabled}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderTextures)}={RenderSettings.RenderTextures}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderShading)}={RenderSettings.RenderShading}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderCollisionShapes)}={RenderSettings.RenderCollisionShapes}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGroundPlane)}={RenderSettings.RenderGroundPlane}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGeosetExtents)}={RenderSettings.RenderGeosetExtents}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGeosetExtentSphere)}={RenderSettings.RenderGeosetExtentSphere}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderNodes)}={RenderSettings.RenderNodes}");
             settings.AppendLine($"{nameof(OptimizeOnSave)}={OptimizeOnSave}");
-            settings.AppendLine($"{nameof(RenderGeometry)}={RenderGeometry}");
-            settings.AppendLine($"{nameof(RenderGroundGrid)}={RenderGroundGrid}");
-            settings.AppendLine($"{nameof(RenderGridX)}={RenderGridX}");
-            settings.AppendLine($"{nameof(RenderTriangles)}={RenderGridX}");
-            settings.AppendLine($"{nameof(RenderGridY)}={RenderGridY}");
-            settings.AppendLine($"{nameof(RenderVertices)}={RenderVertices}");
-            settings.AppendLine($"{nameof(RenderEdges)}={RenderEdges}");
-            settings.AppendLine($"{nameof(RenderSkeleton)}={RenderSkeleton}");
-            settings.AppendLine($"{nameof(RenderNormals)}={RenderNormals}");
-            settings.AppendLine($"{nameof(LineSpacing)}={LineSpacing}");
-            settings.AppendLine($"{nameof(RenderAxis)}={RenderAxis}");
-            settings.AppendLine($"{nameof(ViewportGridSizeOverlay)}={ViewportGridSizeOverlay}");
-            settings.AppendLine($"{nameof(ViewportGridSize)}={ViewportGridSize}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGeometry)}={RenderSettings.RenderGeometry}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGroundGrid)}={RenderSettings.RenderGroundGrid}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderGridX)}={RenderSettings.RenderGridX}");
+            
+            settings.AppendLine($"{nameof(RenderSettings.RenderGridY)}={RenderSettings.RenderGridY}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderVertices)}={RenderSettings.RenderVertices}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderEdges)}={RenderSettings.RenderEdges}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderSkeleton)}={RenderSettings.RenderSkeleton}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderNormals)}={RenderSettings.RenderNormals}");
+            settings.AppendLine($"{nameof(RenderSettings.LineSpacing)}={RenderSettings.LineSpacing}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderAxis)}={RenderSettings.RenderAxis}");
+            settings.AppendLine($"{nameof(RenderSettings.ViewportGridSizeOverlay)}={RenderSettings.ViewportGridSizeOverlay}");
+            settings.AppendLine($"{nameof(RenderSettings.ViewportGridSize)}={RenderSettings.ViewportGridSize  }");
             settings.AppendLine($"{nameof(ZoomIncrement)}={ZoomIncrement}");
-            settings.AppendLine($"{nameof(RenderFPS)}={RenderFPS}");
+            settings.AppendLine($"{nameof(RenderSettings.RenderFPS)}={RenderSettings.RenderFPS}");
+            settings.AppendLine($"{nameof(DefaultAuthor)}={DefaultAuthor}");
             settings.AppendLine($"{nameof(MaximizeOnStart)}={MaximizeOnStart}");
             settings.AppendLine($"{nameof(ColorizeTransformations)}={ColorizeTransformations}");
-
-            // render settings
+            settings.AppendLine($"{nameof(RayCaster.MousePickRadius)}={RayCaster.MousePickRadius}");
+            
+            // render settingsload
 
             settings.AppendLine($"{nameof(RenderSettings.Color_Skinning)}={Array2S(RenderSettings.Color_Skinning)}");
             settings.AppendLine($"{nameof(RenderSettings.Color_Vertex)}={Array2S(RenderSettings.Color_Vertex)}");
@@ -9939,7 +9310,7 @@ namespace Wa3Tuner
             File.WriteAllText(path, settings.ToString());
         }
 
-        private string Array2S(float[] f)
+        private static string Array2S(float[] f)
         {
             return string.Join(", ", f);
         }
@@ -9953,30 +9324,38 @@ namespace Wa3Tuner
             foreach (var line in lines)
             {
                 string[] parts = line.Split("=");
-                if (parts[0] == nameof(RenderSkinning)) RenderSkinning = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderEnabled)) RenderEnabled = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderTextures)) RenderTextures = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderShading)) RenderShading = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderCollisionShapes)) RenderCollisionShapes = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGroundPlane)) RenderGroundPlane = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGeosetExtents)) RenderGeosetExtents = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGeosetExtentSphere)) RenderGeosetExtentSphere = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderNodes)) RenderNodes = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGeometry)) RenderGeometry = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGroundGrid)) RenderGroundGrid = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderGridX)) RenderGridX = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(ViewportGridSize)) ViewportGridSize = int.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderVertices)) RenderVertices = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderEdges)) RenderEdges = bool.Parse(parts[1]);
+                if (parts[0] == nameof(RenderSettings.RenderSkinning)) RenderSettings.RenderSkinning = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings. RenderEnabled)) RenderSettings.RenderEnabled = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderTextures)) RenderSettings.RenderTextures = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderShading)) RenderSettings.RenderShading = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderCollisionShapes)) RenderSettings.RenderCollisionShapes = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGroundPlane)) RenderSettings.RenderGroundPlane = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGeosetExtents)) RenderSettings.RenderGeosetExtents = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGeosetExtentSphere)) RenderSettings.RenderGeosetExtentSphere = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderNodes)) RenderSettings.RenderNodes = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGeometry)) RenderSettings.RenderGeometry = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGroundGrid)) RenderSettings.RenderGroundGrid = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderGridX)) RenderSettings.RenderGridX = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.ViewportGridSize)) RenderSettings.ViewportGridSize = int.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderVertices)) RenderSettings.RenderVertices = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderEdges)) RenderSettings.RenderEdges = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(OptimizeOnSave)) OptimizeOnSave = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderTriangles)) RenderTriangles = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderNormals)) RenderNormals = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderAxis)) RenderAxis = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(LineSpacing)) LineSpacing = int.Parse(parts[1]);
-                else if (parts[0] == nameof(ViewportGridSizeOverlay)) ViewportGridSizeOverlay = int.Parse(parts[1]);
+                
+                else if (parts[0] == nameof(RenderSettings.RenderNormals)) RenderSettings.RenderNormals = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderAxis)) RenderSettings.RenderAxis = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.LineSpacing)) RenderSettings.LineSpacing = int.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.ViewportGridSizeOverlay)) RenderSettings.ViewportGridSizeOverlay = int.Parse(parts[1]);
                 else if (parts[0] == nameof(ZoomIncrement)) ZoomIncrement = float.Parse(parts[1]);
                 else if (parts[0] == nameof(MaximizeOnStart)) MaximizeOnStart = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderLighing)) RenderLighing = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderLighing)) RenderSettings.RenderLighing = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(DefaultAuthor)) DefaultAuthor =   parts[1] ;
+                else if (parts[0] == nameof(History.HistoryLimit))
+                {
+                    
+                    Textbox_HistoryLimit.Text = parts[1];
+                }
+                  
+                else if (parts[0] == nameof(RayCaster.MousePickRadius)) RayCaster.MousePickRadius = float.Parse(parts[1]);
                 else if (parts[0] == nameof(CanDrag))
 
                 {
@@ -9986,8 +9365,8 @@ namespace Wa3Tuner
                     Pause = false;
                 }
                 else if (parts[0] == nameof(ColorizeTransformations)) ColorizeTransformations = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderFPS))
-                { RenderFPS = bool.Parse(parts[1]); Scene_ViewportGL.DrawFPS = RenderFPS; }
+                else if (parts[0] == nameof(RenderSettings.RenderFPS))
+                { RenderSettings.RenderFPS = bool.Parse(parts[1]); Scene_ViewportGL.DrawFPS = RenderSettings.RenderFPS; }
                 // render settngs:
                 else if (parts[0] == nameof(RenderSettings.Path_Line)) { RenderSettings.Path_Line = GetTrio(parts[1]); }
                 else if (parts[0] == nameof(RenderSettings.Path_Node)) { RenderSettings.Path_Node = GetTrio(parts[1]); }
@@ -10018,7 +9397,7 @@ namespace Wa3Tuner
             RefreshGrdOverlay();
         }
 
-        private float[] GetTrio(string v)
+        private static float[] GetTrio(string v)
         {
             return v.Split(", ")
                     .Select(float.Parse)
@@ -10028,33 +9407,34 @@ namespace Wa3Tuner
 
         private void CheckAllSettings()
         {
-            Menuitem_Lightng.IsChecked = RenderLighing;
+            InputMousePickRaius.Text = RayCaster.MousePickRadius.ToString();
+            Menuitem_Lightng.IsChecked = RenderSettings.RenderLighing;
             Menuitem_colorize.IsChecked = ColorizeTransformations;
             Menuitem_Maximize.IsChecked = MaximizeOnStart;
-            Menuitem_Enabled.IsChecked = RenderEnabled;
-            Menuitem_vertices.IsChecked = RenderVertices;
-            Menuitem_skinning.IsChecked = RenderSkinning;
-            Menuitem_Textured.IsChecked = RenderTextures;
-            Menuitem_Shading.IsChecked = RenderShading;
-            Menuitem_Cols.IsChecked = RenderCollisionShapes;
-            Menuitem_GAE.IsChecked = RenderGeosetExtents;
-            Menuitem_GAES.IsChecked = RenderGeosetExtentSphere;
-            Menuitem_Nodes.IsChecked = RenderNodes;
-            Menuitem_ground.IsChecked = RenderGroundPlane;
-            Menuitem_groundGrid.IsChecked = RenderGroundGrid;
-            Menuitem_groundGridX.IsChecked = RenderGridX;
-            Menuitem_groundGridY.IsChecked = RenderGridY;
+            Menuitem_Enabled.IsChecked =RenderSettings. RenderEnabled;
+            Menuitem_vertices.IsChecked = RenderSettings.RenderVertices;
+            Menuitem_skinning.IsChecked = RenderSettings.RenderSkinning;
+            Menuitem_Textured.IsChecked = RenderSettings.RenderTextures;
+            Menuitem_Shading.IsChecked = RenderSettings.RenderShading;
+            Menuitem_Cols.IsChecked = RenderSettings.RenderCollisionShapes;
+            Menuitem_GAE.IsChecked = RenderSettings.RenderGeosetExtents;
+             
+            Menuitem_Nodes.IsChecked = RenderSettings.RenderNodes;
+            Menuitem_ground.IsChecked = RenderSettings.RenderGroundPlane;
+            Menuitem_groundGrid.IsChecked = RenderSettings.RenderGroundGrid;
+            Menuitem_groundGridX.IsChecked = RenderSettings.RenderGridX;
+            Menuitem_groundGridY.IsChecked = RenderSettings.RenderGridY;
             ButtonOptimizeOnSave.IsChecked = OptimizeOnSave;
             InputZoomIncrement.Text = ZoomIncrement.ToString(); ;
-            Menuitem_Geometry.IsChecked = RenderGeometry;
-            Menuitem_edges.IsChecked = RenderEdges;
-            Menuitem_Triangles.IsChecked = RenderTriangles;
-            Menuitem_axis.IsChecked = RenderAxis;
-            ViewPortLineSpacing.Text = LineSpacing.ToString();
-            ViewPortGrid.Text = ViewportGridSize.ToString();
-            InputGridOverlay.Text = ViewportGridSizeOverlay.ToString();
-            Menuitem_normals.IsChecked = RenderNormals;
-            Menuitem_fps.IsChecked = RenderFPS;
+            Menuitem_Geometry.IsChecked = RenderSettings.RenderGeometry;
+            Menuitem_edges.IsChecked = RenderSettings.RenderEdges;
+           
+            Menuitem_axis.IsChecked = RenderSettings.RenderAxis;
+            ViewPortLineSpacing.Text = RenderSettings.LineSpacing.ToString();
+            ViewPortGrid.Text = RenderSettings.ViewportGridSize.ToString();
+            InputGridOverlay.Text = RenderSettings.ViewportGridSizeOverlay.ToString();
+            Menuitem_normals.IsChecked = RenderSettings.RenderNormals;
+            Menuitem_fps.IsChecked = RenderSettings.RenderFPS;
             CameraControl.ZoomIncrement = ZoomIncrement;
             RefreshGrdOverlay();
         }
@@ -10067,61 +9447,51 @@ namespace Wa3Tuner
                 if (t == TransformationType.Scaling) node.Scaling.NodeList.RemoveAll(x => x.Time == track);
             }
         }
-        private void CopyKeyframeT(object sender, RoutedEventArgs e)
+        private void CopyKeyframeT(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 RemoveTrackFromAllNodes(track, TransformationType.Translation);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        private void CopyKeyframeR(object sender, RoutedEventArgs e)
+        private void CopyKeyframeR(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 RemoveTrackFromAllNodes(track, TransformationType.Rotation);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        private void CopyKeyframeS(object sender, RoutedEventArgs e)
+        private void CopyKeyframeS(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int track = int.Parse((List_Keyframes_Animator.SelectedItem as ListBoxItem).Content.ToString());
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 RemoveTrackFromAllNodes(track, TransformationType.Scaling);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
         private List<CBone> ListBones_Rigging = new List<CBone>();
-        private void CollectBonesForRigging()
-        {
-            ListBones_Rigging.Clear();
-            foreach (var node in CurrentModel.Nodes)
-            {
-                if (node is CBone bone)
-                {
-                    ListBones_Rigging.Add(bone);
-                }
-            }
-        }
-        private void SelectedBoneInRigging(object sender, SelectionChangedEventArgs e)
+      
+        private void SelectedBoneInRigging(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListBonesRiggings.SelectedItem == null) return;
-            CBone bone = getselectedBoneInRigging();
+            CBone? bone = getselectedBoneInRigging(); if (bone == null) return;
             foreach (var node in ListBones_Rigging)
             {
                 node.IsSelected = false;
             }
             bone.IsSelected = true;
         }
-        private CBone getselectedBoneInRigging()
+        private CBone? getselectedBoneInRigging()
         {
-            string name = (ListBonesRiggings.SelectedItem as ListBoxItem).Content.ToString();
-            return ListBones_Rigging.First(x => x.Name == name);
+            string? name = Extractor.GetString(ListBonesRiggings);
+            return CurrentModel.Nodes.FirstOrDefault(x => x.Name == name) as CBone;
         }
-        private void SEtCeilings(object sender, RoutedEventArgs e)
+        private void SEtCeilings(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count > 0)
             {
@@ -10142,6 +9512,7 @@ namespace Wa3Tuner
                                 extent.Extent.Max.Z = value;
                             }
                         }
+                        History.Sequences.Add(CurrentModel);
                     }
                     else
                     {
@@ -10151,7 +9522,7 @@ namespace Wa3Tuner
             }
             else
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
             }
         }
         private void CalculateModelLines()
@@ -10159,7 +9530,7 @@ namespace Wa3Tuner
             CurrentModel.CalculateCollisionShapeEdges();
             CurrentModel.CalculateGeosetBoundingBoxes();
         }
-        private void scalegeosetsTogether(object sender, RoutedEventArgs e)
+        private void scalegeosetsTogether(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             InputVector iv = new InputVector(AllowedValue.Positive, new CVector3(100, 100, 100), "Percentage");
@@ -10177,10 +9548,10 @@ namespace Wa3Tuner
                         vertex.Position.Z * (z / 100f)
                     );
                 }
-                RefreshViewPort();
+               
             }
         }
-        private List<CGeosetVertex> GetVerticesOfGeosets(List<CGeoset> geosets)
+        private static List<CGeosetVertex> GetVerticesOfGeosets(List<CGeoset> geosets)
         {
             List<CGeosetVertex> vertices = new List<CGeosetVertex>();
             foreach (var geoset in geosets)
@@ -10189,7 +9560,7 @@ namespace Wa3Tuner
             }
             return vertices;
         }
-        private void rotateeachCP(object sender, RoutedEventArgs e)
+        private void rotateeachCP(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             List<CGeoset> geosets = GetSelectedGeosets();
@@ -10204,10 +9575,10 @@ namespace Wa3Tuner
                 {
                     Calculator.RotateGeoset(geoset, x, y, z);
                 }
-                RefreshViewPort();
+               
             }
         }
-        private bool RotationInRange(float x, float y, float z)
+        private static bool RotationInRange(float x, float y, float z)
         {
             if (x < -360) return false;
             if (x > 360) return false;
@@ -10217,7 +9588,7 @@ namespace Wa3Tuner
             if (z > 360) return false;
             return true;
         }
-        private void rotateallCP(object sender, RoutedEventArgs e)
+        private void rotateallCP(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             List<CGeoset> geosets = GetSelectedGeosets();
@@ -10231,13 +9602,47 @@ namespace Wa3Tuner
                 Calculator.RotateGeosetsTogether(geosets, x, y, z);
             }
         }
-        private void SelectionChanged_Geosets(object sender, SelectionChangedEventArgs e)
+        private void SelectionChanged_Geosets(object? sender, SelectionChangedEventArgs? e)
         {
+            if (e == null) return;
             if (e.OriginalSource is TabControl tc && tc == Tabs_Geosets)
             {
                 InAnimator = Tabs_Geosets.SelectedIndex == 4 && Tab_Animator.SelectedIndex == 1;
+                if (Tabs_Geosets.SelectedIndex == 0) // geosets
+                {
+                    Menuitem_Geometry.IsChecked = true;
+                    Menuitem_Cols.IsChecked = false;
+                    Menuitem_skinning.IsChecked = false;
+                    RefreshGeosetsList();
+
+                }
+                if (Tabs_Geosets.SelectedIndex == 1) // triangles
+                { 
+                    Menuitem_Geometry.IsChecked = true;
+                    Menuitem_Cols.IsChecked = false;
+                    Menuitem_skinning.IsChecked = false;
+                    RefreshGeosets_Triangles();
+                }
+                if (Tabs_Geosets.SelectedIndex == 2) // vertices
+                {
+                    Menuitem_vertices.IsChecked = true;
+                    Menuitem_Cols.IsChecked = false;
+                    Menuitem_skinning.IsChecked = false;
+                    RefreshGeosets_Vertices();
+                }
+                if (Tabs_Geosets.SelectedIndex == 6) // nodes
+                {
+                    Menuitem_vertices.IsChecked = true;
+                    Menuitem_Nodes.IsChecked = true;
+                    Menuitem_Cols.IsChecked = false;
+                    Menuitem_skinning.IsChecked = false;
+                }
                 if (Tabs_Geosets.SelectedIndex == 3) // rigging
                 {
+                    Menuitem_vertices.IsChecked = true;
+                    Menuitem_Nodes.IsChecked = true;
+                    Menuitem_skinning.IsChecked = true;
+                   
                     RefreshGeosetsListRigging();
                     RefreshBonesInRigging();
                     ListAttachedToRiggings.Items.Clear();
@@ -10252,6 +9657,7 @@ namespace Wa3Tuner
                 }
                 else if (Tabs_Geosets.SelectedIndex == 4) // animator
                 {
+                    Menuitem_Nodes.IsChecked = true;
                     if (Tab_Animator.SelectedIndex == 0)
                     {
                         if (CurrentModel.Nodes.Count == 0)
@@ -10262,7 +9668,7 @@ namespace Wa3Tuner
                         }
                         if (CurrentModel.Sequences.Count == 0)
                         {
-                            MessageBox.Show("There are no sequences", "Nothing to animate"); return;
+                            MessageBox.Show("There are no sequences",   "Nothing to animate"); return;
                         }
                         bool b = int.TryParse(InputCurrentFrame.Text, out int track);
                         if (b)
@@ -10278,15 +9684,17 @@ namespace Wa3Tuner
                 else if (Tabs_Geosets.SelectedIndex == 5) // cs
                 {
                     RefreshCollisionShapeList();
+                    Menuitem_Cols.IsChecked = true;
                 }
                 else if (Tabs_Geosets.SelectedIndex == 6)// nodes
                 {
-                    RefreshNodeEditorList();
+                    RefreshNodeEditorList(); Menuitem_Nodes.IsChecked = true;
                 }
                 e.Handled = true;
+
             }
         }
-        private void RefreshNodeEditorList()
+        internal void RefreshNodeEditorList()
         {
             list_Node_Editor.Items.Clear();
             foreach (var node in CurrentModel.Nodes)
@@ -10306,24 +9714,87 @@ namespace Wa3Tuner
                 }
             }
         }
-        private CCollisionShape CurrentlySelectedCollisionShape;
+        private CCollisionShape? CurrentlySelectedCollisionShape;
         private float CurentCSModifyAmount = 1;
-        private CCollisionShape GetSelectedCollisionShape()
+        private CCollisionShape? GetSelectedCollisionShape()
         {
-            ListBoxItem item = list_cs.SelectedItem as ListBoxItem;
-            string name = item.Content.ToString();
+            ListBoxItem? item = list_cs.SelectedItem as ListBoxItem; if (item == null) return null;
+            string? name = item.Content.ToString();
             return CurrentModel.Nodes.First(x => x.Name == name) as CCollisionShape;
         }
-        private void SetWorkModeMove(object sender, RoutedEventArgs e)
+        private void SetWorkModeMove(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.Translate;
             ButtonManual_Move.BorderBrush = Brushes.Green;
             ButtonManual_Scale.BorderBrush = Brushes.Gray;
             ButtonManual_Rotate.BorderBrush = Brushes.Gray;
             ButtonManual_More.BorderBrush = Brushes.Gray;
-            UpdateManualInputForAnimator();
+
+            UpdaManualTranslationInput();
+           
+              
         }
-        private void SetWorkModeRotate(object sender, RoutedEventArgs e)
+
+        private void UpdaManualTranslationInput()
+        {
+            if (Tabs_Geosets.SelectedIndex == 0) // gesooets
+            {
+                var geosets = GetSelectedGeosets();
+                if (geosets.Count > 0)
+                {
+                    var centroid = Calculator.GetCentroidOfGeosets(geosets);
+                    InputAnimatorX.Text = centroid.X.ToString();
+                    InputAnimatorY.Text = centroid.Y.ToString();
+                    InputAnimatorZ.Text = centroid.Z.ToString();
+
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) //triangles
+            {
+                var triangles = getSelectedTriangles();
+                if (triangles.Count > 0)
+                {
+                    var centroid = Calculator.GetCentroidofTriangles(triangles);
+                    InputAnimatorX.Text = centroid.X.ToString();
+                    InputAnimatorY.Text = centroid.Y.ToString();
+                    InputAnimatorZ.Text = centroid.Z.ToString();
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 2) //vertices
+            {
+                var vertices = GetSelectedVertices();
+                if (vertices.Count > 0)
+                {
+                    var centroid = Calculator.GetCentroidOfVertices(vertices);
+                    InputAnimatorX.Text = centroid.X.ToString();
+                    InputAnimatorY.Text = centroid.Y.ToString();
+                    InputAnimatorZ.Text = centroid.Z.ToString();
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 3) //rigging
+            {
+                
+            }
+
+            else if (Tabs_Geosets.SelectedIndex == 4) //animator
+            {
+                UpdateManualInputForAnimator();
+            }
+            else if (Tabs_Geosets.SelectedIndex == 5) //cols
+            { 
+
+            }
+            else if (Tabs_Geosets.SelectedIndex == 6) //nodes
+            {
+                if (list_Node_Editor.SelectedItem == null) return;
+                var node = CurrentModel.Nodes[list_Node_Editor.SelectedIndex];
+                InputAnimatorX.Text = node.PivotPoint.X.ToString();
+                InputAnimatorY.Text = node.PivotPoint.Y.ToString();
+                InputAnimatorZ.Text = node.PivotPoint.Z.ToString();
+            }
+        }
+
+        private void SetWorkModeRotate(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.Rotate;
             ButtonManual_Move.BorderBrush = Brushes.Gray;
@@ -10335,7 +9806,7 @@ namespace Wa3Tuner
             InputAnimatorZ.Text = "0";
             UpdateManualInputForAnimator();
         }
-        private void SetWorkModeScale(object sender, RoutedEventArgs e)
+        private void SetWorkModeScale(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.Scale;
             ButtonManual_Move.BorderBrush = Brushes.Gray;
@@ -10348,7 +9819,7 @@ namespace Wa3Tuner
             UpdateManualInputForAnimator();
         }
 
-        private CSequence CurrentlySelectedSequenceInAnimator;
+        
         private void GoToTrackWithChange(int change, bool plus, bool percent = false)
         {
             bool b = int.TryParse(InputCurrentFrame.Text, out int track);
@@ -10374,83 +9845,83 @@ namespace Wa3Tuner
                 MessageBox.Show("This track does not exist in the selected sequence");
             }
         }
-        private void MenuItemMinus1_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus1_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1, false);
         }
-        private void MenuItemPlus1_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus1_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1, true);
         }
-        private void MenuItemMinus5_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus5_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(5, false);
         }
-        private void MenuItemPlus5_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus5_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(5, true);
         }
-        private void MenuItemMinus10_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus10_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(10, false);
         }
-        private void MenuItemPlus10_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus10_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(10, true);
         }
-        private void MenuItemMinus50_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus50_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(50, false);
         }
-        private void MenuItemPlus50_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus50_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(50, true);
         }
-        private void MenuItemMinus100_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus100_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1000, false);
         }
-        private void MenuItemPlus100_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus100_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1000, true);
         }
-        private void MenuItemMinus1Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus1Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1, false, true);
         }
-        private void MenuItemPlus1Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus1Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(1, true, true);
         }
-        private void MenuItemMinus5Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus5Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(5, false, true);
         }
-        private void MenuItemPlus5Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus5Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(5, true, true);
         }
-        private void MenuItemMinus10Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemMinus10Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(10, false, true);
         }
-        private void MenuItemPlus10Percent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemPlus10Percent_Click(object? sender, RoutedEventArgs? e)
         {
             GoToTrackWithChange(10, true, true);
         }
-        private void MenuItemZeroPercent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemZeroPercent_Click(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentlySelectedSequenceInAnimator == null) { MessageBox.Show("Select a sequence"); }
+            if (CurrentlySelectedSequenceInAnimator == null) { MessageBox.Show("Select a sequence");return; }
             InputCurrentFrame.Text = CurrentlySelectedSequenceInAnimator.IntervalStart.ToString();
             gototrack(null, null);
         }
-        private void MenuItemHundredPercent_Click(object sender, RoutedEventArgs e)
+        private void MenuItemHundredPercent_Click(object? sender, RoutedEventArgs? e)
         {
             if (CurrentlySelectedSequenceInAnimator == null) { MessageBox.Show("Select a sequence"); return; }
             InputCurrentFrame.Text = CurrentlySelectedSequenceInAnimator.IntervalEnd.ToString();
             gototrack(null, null);
         }
-        private void ExportGeoset(object sender, RoutedEventArgs e)
+        private void ExportGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count != 1)
             {
@@ -10464,7 +9935,7 @@ namespace Wa3Tuner
                 File.WriteAllText(savePath, data);
             }
         }
-        private void ImportGeoset(object sender, RoutedEventArgs e)
+        private void ImportGeoset(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0)
             {
@@ -10487,14 +9958,14 @@ namespace Wa3Tuner
                     imported.Material.Attach(finalize.SelectedMaterial);
                     CurrentModel.Geosets.Add(imported);
                     RefreshGeosetsList();
-                    RefreshViewPort();
-                    refresh_rData(null, null);
+                   
+                    RefreshRenderData(null, null);
                     Pause = false;
                     SetSaved(false);
                 }
             }
         }
-        private void SetPriorityPlane(object sender, TextChangedEventArgs e)
+        private void SetPriorityPlane(object? sender, TextChangedEventArgs e)
         {
             bool parsed = int.TryParse(PRiortyPlaneInput.Text, out int value);
             if (parsed && List_MAterials.SelectedItem != null)
@@ -10504,7 +9975,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void ReattachNodeGeometryToAnotherBone(object sender, RoutedEventArgs e)
+        private void ReattachNodeGeometryToAnotherBone(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10531,7 +10002,7 @@ namespace Wa3Tuner
                         {
                             foreach (var vertex in geoset.Vertices)
                             {
-                                CGeosetGroupNode groupNode = null;
+                                CGeosetGroupNode? groupNode = null;
                                 foreach (var gnode in vertex.Group.Object.Nodes)
                                 {
                                     if (gnode.Node.Node == Selectednode)
@@ -10595,42 +10066,40 @@ namespace Wa3Tuner
                     break;
             }
         }
-        private void SetSequenceLoop(object sender, MouseButtonEventArgs e)
+        private void SetSequenceLoop(object? sender, MouseButtonEventArgs? e)
         {
             if (ListSequenes.SelectedItem == null) { return; }
             CSequence sequence = GetSelectedSequence();
             sequence.NonLooping = !sequence.NonLooping;
+            Pause = true;
+            CheckLooping.IsChecked = sequence.NonLooping;
+            Pause = false;
             RefreshSequencesList();
+           History.Sequences.Add(CurrentModel);
         }
-        private void ToggleGAE(object sender, RoutedEventArgs e)
+        private void ToggleGAE(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGeosetExtents = Menuitem_GAE.IsChecked == true;
+            RenderSettings.RenderGeosetExtents = Menuitem_GAE.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleGAES(object sender, RoutedEventArgs e)
+       
+        private void ToggleNodes(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGeosetExtentSphere = Menuitem_GAES.IsChecked == true;
+            RenderSettings.RenderNodes = Menuitem_Nodes.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleNodes(object sender, RoutedEventArgs e)
+        private void ToggleGeometry(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderNodes = Menuitem_Nodes.IsChecked == true;
-            SaveSettings();
-        }
-        private void ToggleGeometry(object sender, RoutedEventArgs e)
-        {
-            if (Pause) return;
-            RenderGeometry = Menuitem_Geometry.IsChecked == true;
+            RenderSettings.RenderGeometry = Menuitem_Geometry.IsChecked == true;
             SaveSettings();
         }
         private CVector3 CopiedPivotPoint = new CVector3();
-        private EditMode editMode_current = EditMode.Geosets;
-        private bool playingAnimation;
-        private float LineSpacing = 1;
-        private void CopyPivot(object sender, RoutedEventArgs e)
+        
+       
+        private void CopyPivot(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10638,7 +10107,7 @@ namespace Wa3Tuner
                 CopiedPivotPoint = new CVector3(selected.PivotPoint);
             }
         }
-        private void PastePivot(object sender, RoutedEventArgs e)
+        private void PastePivot(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10646,7 +10115,7 @@ namespace Wa3Tuner
                 selected.PivotPoint = new CVector3(CopiedPivotPoint);
             }
         }
-        private void SetSamePPAsParent(object sender, RoutedEventArgs e)
+        private void SetSamePPAsParent(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10654,7 +10123,7 @@ namespace Wa3Tuner
                 selected.PivotPoint = new CVector3(selected.Parent.Node.PivotPoint);
             }
         }
-        private CVector3 GetPolarOffsetPoint(CVector3 Point, float Distance, Axes axes, float angle)
+        private static CVector3 GetPolarOffsetPoint(CVector3 Point, float Distance, Axes axes, float angle)
         {
             // Convert angle to radians
             float radians = angle * (float)Math.PI / 180f;
@@ -10677,7 +10146,7 @@ namespace Wa3Tuner
                     return Point;
             }
         }
-        private void CenterAtItsAttachedVertices(object sender, RoutedEventArgs e)
+        private void CenterAtItsAttachedVertices(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10703,7 +10172,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void REsetNode(object sender, RoutedEventArgs e)
+        private void REsetNode(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10712,7 +10181,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void NegatePPX(object sender, RoutedEventArgs e)
+        private void NegatePPX(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10721,7 +10190,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void NegatePPY(object sender, RoutedEventArgs e)
+        private void NegatePPY(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10730,7 +10199,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void NegatePPZ(object sender, RoutedEventArgs e)
+        private void NegatePPZ(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10739,7 +10208,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void NegatePPA(object sender, RoutedEventArgs e)
+        private void NegatePPA(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10750,7 +10219,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void SetPolarOffsetPP(object sender, RoutedEventArgs e)
+        private void SetPolarOffsetPP(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10764,23 +10233,23 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void ResetAllnodepp(object sender, RoutedEventArgs e)
+        private void ResetAllnodepp(object? sender, RoutedEventArgs? e)
         {
             foreach (var node in CurrentModel.Nodes) node.PivotPoint = new CVector3();
         }
-        private void negateallnodes_x(object sender, RoutedEventArgs e)
+        private void negateallnodes_x(object? sender, RoutedEventArgs? e)
         {
             foreach (var node in CurrentModel.Nodes) node.PivotPoint.X = -node.PivotPoint.X;
         }
-        private void negateallnodes_y(object sender, RoutedEventArgs e)
+        private void negateallnodes_y(object? sender, RoutedEventArgs? e)
         {
             foreach (var node in CurrentModel.Nodes) node.PivotPoint.Y = -node.PivotPoint.Y;
         }
-        private void negateallnodes_z(object sender, RoutedEventArgs e)
+        private void negateallnodes_z(object? sender, RoutedEventArgs? e)
         {
             foreach (var node in CurrentModel.Nodes) node.PivotPoint.Z = -node.PivotPoint.Z;
         }
-        private void negateallnodes_all(object sender, RoutedEventArgs e)
+        private void negateallnodes_all(object? sender, RoutedEventArgs? e)
         {
             foreach (var node in CurrentModel.Nodes)
             {
@@ -10790,7 +10259,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void alignallnodes_x(object sender, RoutedEventArgs e)
+        private void alignallnodes_x(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Count > 1)
             {
@@ -10802,7 +10271,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void alignallnodes_y(object sender, RoutedEventArgs e)
+        private void alignallnodes_y(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Count > 1)
             {
@@ -10814,7 +10283,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void alignallnodes_z(object sender, RoutedEventArgs e)
+        private void alignallnodes_z(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Count > 1)
             {
@@ -10826,7 +10295,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void SetDistanceBetween2Geosets(object sender, RoutedEventArgs e)
+        private void SetDistanceBetween2Geosets(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count < 2)
             {
@@ -10878,7 +10347,7 @@ namespace Wa3Tuner
             RefreshGeosetsList();
             SetSaved(false);
         }
-        private void setGeosetUnselectable(object sender, RoutedEventArgs e)
+        private void setGeosetUnselectable(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -10909,22 +10378,14 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void setGeosetSelection(object sender, RoutedEventArgs e)
+        private void setGeosetSelection(object? sender, RoutedEventArgs? e)
         {
-            if (ListGeosets.SelectedItems.Count == 0) return;
-            List<CGeoset> geosets = GetSelectedGeosets();
-            string value = geosets.Count == 1 ? geosets[0].SelectionGroup.ToString() : "";
-            Input i = new(value, "");
-            if (i.ShowDialog() == true)
-            {
-                bool parsed = int.TryParse(i.Result, out int result);
-                foreach (var geoset in geosets)
-                {
-                    geoset.SelectionGroup = result;
-                }
-            }
+            if (ListGeosets.SelectedItems.Count != 1) { MessageBox.Show("Select a single geoset");return; }
+            var geoet = GetSelectedGeosets()[0];
+            Geoset_Selection s = new Geoset_Selection(geoet);
+            s.ShowDialog();
         }
-        private void rootchildren(object sender, RoutedEventArgs e)
+        private void rootchildren(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10959,7 +10420,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
 
         }
-        private void rootchildreninfinite(object sender, RoutedEventArgs e)
+        private void rootchildreninfinite(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
@@ -10969,7 +10430,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void setallnodespoint(object sender, RoutedEventArgs e)
+        private void setallnodespoint(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Count > 0)
             {
@@ -10983,7 +10444,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void setGeosetExtent(object sender, RoutedEventArgs e)
+        private void setGeosetExtent(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -10993,7 +10454,7 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void setGeosetExtents(object sender, RoutedEventArgs e)
+        private void setGeosetExtents(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -11008,16 +10469,19 @@ namespace Wa3Tuner
                 MessageBox.Show("Select a single geoset");
             }
         }
-        private void setSEquenceExtent(object sender, RoutedEventArgs e)
+        private void setSEquenceExtent(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
                 var sequence = GetSelectedSequence();
                 Edit_Extent ee = new Edit_Extent(sequence.Extent);
-                ee.ShowDialog(); SetSaved(false);
+                ee.ShowDialog(); 
+                if (ee.DialogResult == true) History.Sequences.Add(CurrentModel);
+                SetSaved(false);
+                 
             }
         }
-        private void setRarity(object sender, RoutedEventArgs e)
+        private void setRarity(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -11030,7 +10494,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void setMovespeed(object sender, RoutedEventArgs e)
+        private void setMovespeed(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -11043,14 +10507,14 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void S62(object sender, RoutedEventArgs e)
+        private void S62(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderEnabled = Menuitem_Enabled.IsChecked == true;
-            RefreshViewPort();
+            RenderSettings.RenderEnabled = Menuitem_Enabled.IsChecked == true;
+           
             SaveSettings(); SetSaved(false);
         }
-        private void leavesequenceatframe(object sender, RoutedEventArgs e)
+        private void leavesequenceatframe(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -11061,7 +10525,12 @@ namespace Wa3Tuner
                     Selector s = new Selector(Keyframes.Select(x => x.ToString()).ToList());
                     if (s.ShowDialog() == true)
                     {
-                        int selected = int.Parse(s.Selected);
+                        int selected = 0;
+                        if (s.Selected != null)
+                        {
+                            selected = int.Parse(s.Selected);
+                        }
+                        
                         LeaveSequenceAtFrame_Finalize(sequence, selected); SetSaved(false);
                     }
                 }
@@ -11083,7 +10552,7 @@ namespace Wa3Tuner
                 LeaveSequenceAtFrame_Single(from, to, keep, node.Scaling);
                 if (node is CParticleEmitter)
                 {
-                    CParticleEmitter item = node as CParticleEmitter;
+                    CParticleEmitter? item = node as CParticleEmitter; if (item == null) continue; ;
                     LeaveSequenceAtFrame_Single(from, to, keep, item.EmissionRate);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.LifeSpan);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.InitialVelocity);
@@ -11093,7 +10562,7 @@ namespace Wa3Tuner
                 }
                 if (node is CParticleEmitter2)
                 {
-                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) continue;
                     LeaveSequenceAtFrame_Single(from, to, keep, item.Gravity);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.Width);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.Length);
@@ -11104,7 +10573,7 @@ namespace Wa3Tuner
                 }
                 if (node is CRibbonEmitter)
                 {
-                    CRibbonEmitter item = node as CRibbonEmitter;
+                    CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) continue;
                     LeaveSequenceAtFrame_Single(from, to, keep, item.HeightAbove);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.HeightBelow);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.TextureSlot);
@@ -11113,7 +10582,7 @@ namespace Wa3Tuner
                 }
                 if (node is CLight)
                 {
-                    CLight item = node as CLight;
+                    CLight? item = node as CLight; if (item == null) continue;
                     LeaveSequenceAtFrame_Single(from, to, keep, item.Color);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.AmbientColor);
                     LeaveSequenceAtFrame_Single(from, to, keep, item.Intensity);
@@ -11146,7 +10615,7 @@ namespace Wa3Tuner
                 LeaveSequenceAtFrame_Single(from, to, keep, ta.Scaling);
             }
         }
-        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<float> animator)
+        private static void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<float> animator)
         {
             if (animator.NodeList.Any(x => x.Time == keep))
             {
@@ -11157,7 +10626,7 @@ namespace Wa3Tuner
             }
             else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
         }
-        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector4> animator)
+        private static void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector4> animator)
         {
             if (animator.NodeList.Any(x => x.Time == keep))
             {
@@ -11168,7 +10637,7 @@ namespace Wa3Tuner
             }
             else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
         }
-        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector3> animator)
+        private static void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<CVector3> animator)
         {
             if (animator.NodeList.Any(x => x.Time == keep))
             {
@@ -11179,7 +10648,7 @@ namespace Wa3Tuner
             }
             else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
         }
-        private void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<int> animator)
+        private static void LeaveSequenceAtFrame_Single(int from, int to, int keep, CAnimator<int> animator)
         {
             if (animator.NodeList.Any(x => x.Time == keep))
             {
@@ -11190,10 +10659,10 @@ namespace Wa3Tuner
             }
             else { animator.NodeList.RemoveAll(x => x.Time >= from && x.Time <= to); }
         }
-        private void GetKeyframes(List<int> list_, CAnimator<int> animator) { foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
-        private void GetKeyframes(List<int> list_, CAnimator<float> animator) { foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
-        private void GetKeyframes(List<int> list_, CAnimator<CVector3> animator) { foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
-        private void GetKeyframes(List<int> list_, CAnimator<CVector4> animator) { foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
+        private static void GetKeyframes(List<int> list_, CAnimator<int>? animator) { if (animator == null) { return; } foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
+        private static void GetKeyframes(List<int> list_, CAnimator<float>? animator) { if (animator == null) { return; } foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
+        private static void GetKeyframes(List<int> list_, CAnimator<CVector3>? animator) { if (animator == null) { return; } foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
+        private static void GetKeyframes(List<int> list_, CAnimator<CVector4>? animator) { if (animator == null) { return; } foreach (var frame in animator) { if (!list_.Contains(frame.Time)) list_.Add(frame.Time); } }
         private List<int> GetKeyframesOfSequence(CSequence sequence)
         {
             List<int> list = new List<int>();
@@ -11204,7 +10673,7 @@ namespace Wa3Tuner
                 GetKeyframes(list, node.Scaling);
                 if (node is CParticleEmitter)
                 {
-                    CParticleEmitter item = node as CParticleEmitter;
+                    CParticleEmitter? item = node as CParticleEmitter; if (item == null) continue;
                     GetKeyframes(list, item.EmissionRate);
                     GetKeyframes(list, item.LifeSpan);
                     GetKeyframes(list, item.InitialVelocity);
@@ -11214,7 +10683,7 @@ namespace Wa3Tuner
                 }
                 if (node is CParticleEmitter2)
                 {
-                    CParticleEmitter2 item = node as CParticleEmitter2;
+                    CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) continue;
                     GetKeyframes(list, item.Gravity);
                     GetKeyframes(list, item.Width);
                     GetKeyframes(list, item.Length);
@@ -11225,7 +10694,7 @@ namespace Wa3Tuner
                 }
                 if (node is CRibbonEmitter)
                 {
-                    CRibbonEmitter item = node as CRibbonEmitter;
+                    CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) continue;
                     GetKeyframes(list, item.HeightAbove);
                     GetKeyframes(list, item.HeightBelow);
                     GetKeyframes(list, item.TextureSlot);
@@ -11234,7 +10703,7 @@ namespace Wa3Tuner
                 }
                 if (node is CLight)
                 {
-                    CLight item = node as CLight;
+                    CLight? item = node as CLight; if (item == null) continue;
                     GetKeyframes(list, item.Color);
                     GetKeyframes(list, item.AmbientColor);
                     GetKeyframes(list, item.Intensity);
@@ -11268,7 +10737,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void deleteinbetweenkeyframes(object sender, RoutedEventArgs e)
+        private void deleteinbetweenkeyframes(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -11282,7 +10751,7 @@ namespace Wa3Tuner
                     LeaveStartEnd(from, to, node.Scaling);
                     if (node is CParticleEmitter)
                     {
-                        CParticleEmitter item = node as CParticleEmitter;
+                        CParticleEmitter? item = node as CParticleEmitter; if (item == null) return;
                         LeaveStartEnd(from, to, item.EmissionRate);
                         LeaveStartEnd(from, to, item.LifeSpan);
                         LeaveStartEnd(from, to, item.InitialVelocity);
@@ -11292,7 +10761,7 @@ namespace Wa3Tuner
                     }
                     if (node is CParticleEmitter2)
                     {
-                        CParticleEmitter2 item = node as CParticleEmitter2;
+                        CParticleEmitter2? item = node as CParticleEmitter2; if (item == null) return;
                         LeaveStartEnd(from, to, item.Gravity);
                         LeaveStartEnd(from, to, item.Width);
                         LeaveStartEnd(from, to, item.Length);
@@ -11303,7 +10772,7 @@ namespace Wa3Tuner
                     }
                     if (node is CRibbonEmitter)
                     {
-                        CRibbonEmitter item = node as CRibbonEmitter;
+                        CRibbonEmitter? item = node as CRibbonEmitter; if (item == null) return;
                         LeaveStartEnd(from, to, item.HeightAbove);
                         LeaveStartEnd(from, to, item.HeightBelow);
                         LeaveStartEnd(from, to, item.TextureSlot);
@@ -11312,7 +10781,7 @@ namespace Wa3Tuner
                     }
                     if (node is CLight)
                     {
-                        CLight item = node as CLight;
+                        CLight? item = node as CLight; if (item == null) return;
                         LeaveStartEnd(from, to, item.Color);
                         LeaveStartEnd(from, to, item.AmbientColor);
                         LeaveStartEnd(from, to, item.Intensity);
@@ -11346,11 +10815,11 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void LeaveStartEnd(int from, int to, CAnimator<CVector3> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
-        private void LeaveStartEnd(int from, int to, CAnimator<CVector4> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
-        private void LeaveStartEnd(int from, int to, CAnimator<float> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
-        private void LeaveStartEnd(int from, int to, CAnimator<int> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
-        private void CentergeosetAtNode(object sender, RoutedEventArgs e)
+        private static void LeaveStartEnd(int from, int to, CAnimator<CVector3> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
+        private static void LeaveStartEnd(int from, int to, CAnimator<CVector4> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
+        private static void LeaveStartEnd(int from, int to, CAnimator<float> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
+        private static void LeaveStartEnd(int from, int to, CAnimator<int> animator) { animator.NodeList.RemoveAll(x => x.Time > from && x.Time < to); }
+        private void CentergeosetAtNode(object? sender, RoutedEventArgs? e)
         {
             List<CGeoset> gesoets = GetSelectedGeosets();
             if (gesoets.Count > 0)
@@ -11369,7 +10838,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void spreadv(object sender, RoutedEventArgs e)
+        private void spreadv(object? sender, RoutedEventArgs? e)
         {
             List<CGeoset> geosets = GetSelectedGeosets();
             if (geosets.Count > 0)
@@ -11433,10 +10902,10 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void editVisallseq(object sender, RoutedEventArgs e)
+        private void editVisallseq(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
-            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
             vis_v v = new vis_v(CurrentModel); v.ShowDialog();
         }
         private CMaterial CreateMaterialForTargetTexture(CTexture texture)
@@ -11449,7 +10918,7 @@ namespace Wa3Tuner
             mat.Layers.Add(layer);
             return mat;
         }
-        private void createplane_t(object sender, RoutedEventArgs e)
+        private void createplane_t(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -11475,7 +10944,7 @@ namespace Wa3Tuner
                     RefreshMaterialsList();
                     RefreshNodesTree();
                     Pause = true;
-                    refresh_rData(null, null);
+                    RefreshRenderData(null, null);
                     Pause = false;
                     //RefreshViewPort();
                 }
@@ -11535,7 +11004,7 @@ namespace Wa3Tuner
             vertex4.TexturePosition = new CVector2(0, 1);
             return geoset;
         }
-        private void SetCameraView(CameraView view)
+        private static void SetCameraView(CameraView view)
         {
             switch (view)
             {
@@ -11584,79 +11053,30 @@ namespace Wa3Tuner
                     break;
             }
         }
-        private void SetCameraView(CameraView view, Viewport3D viewport)
-        {
-            if (viewport.Camera is not ProjectionCamera camera)
-                return;
-            Point3D center = new Point3D(0, 0, 0); // Assume the center of the scene is at (0,0,0)
-            Vector3D upDirection = new Vector3D(0, 1, 0);
-            Vector3D lookDirection;
-            Point3D position;
-            switch (view)
-            {
-                case CameraView.Top:
-                    position = new Point3D(0, 10, 0);
-                    lookDirection = new Vector3D(0, -1, 0);
-                    upDirection = new Vector3D(0, 0, -1);
-                    break;
-                case CameraView.Bottom:
-                    position = new Point3D(0, -10, 0);
-                    lookDirection = new Vector3D(0, 1, 0);
-                    upDirection = new Vector3D(0, 0, 1);
-                    break;
-                case CameraView.Left:
-                    position = new Point3D(-10, 0, 0);
-                    lookDirection = new Vector3D(1, 0, 0);
-                    break;
-                case CameraView.Right:
-                    position = new Point3D(10, 0, 0);
-                    lookDirection = new Vector3D(-1, 0, 0);
-                    break;
-                case CameraView.Front:
-                    position = new Point3D(0, 0, 10);
-                    lookDirection = new Vector3D(0, 0, -1);
-                    break;
-                case CameraView.Back:
-                    position = new Point3D(0, 0, -10);
-                    lookDirection = new Vector3D(0, 0, 1);
-                    break;
-                default:
-                    return;
-            }
-            camera.Position = position;
-            camera.LookDirection = lookDirection;
-            camera.UpDirection = upDirection;
-        }
-        private void view_top(object sender, RoutedEventArgs e)
+       private void view_top(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Top);
         }
-        private void view_bot(object sender, RoutedEventArgs e)
+        private void view_bot(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Bottom);
         }
-        private void view_left(object sender, RoutedEventArgs e)
+        private void view_left(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Left);
-            // CameraAngle = 270;
-            // AdjustRotation(CameraAngle);
-            //SetCameraView(CameraView.Left, Scene_Viewport);
+           
         }
-        private void view_right(object sender, RoutedEventArgs e)
+        private void view_right(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Right);
-            // CameraAngle = 90;
-            // AdjustRotation(CameraAngle);
-            //SetCameraView(CameraView.Right, Scene_Viewport);
+         
         }
-        private void view_back(object sender, RoutedEventArgs e)
+        private void view_back(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Back);
-            //CameraAngle = 180;
-            //AdjustRotation(CameraAngle);
-            // SetCameraView(CameraView.Back, Scene_Viewport);
+           
         }
-        private void atmtag(object sender, RoutedEventArgs e)
+        private void atmtag(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && CurrentModel.Geosets.Count > 0)
             {
@@ -11667,7 +11087,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void batch_convert(object sender, RoutedEventArgs e)
+        private void batch_convert(object? sender, RoutedEventArgs? e)
         {
             List<string> files = FileSeeker.OpenMdlMdxFiles();
             if (files.Count > 0)
@@ -11675,7 +11095,7 @@ namespace Wa3Tuner
                 BatchConverter.Convert(files);
             }
         }
-        private void importObj(object sender, RoutedEventArgs e)
+        private void importObj(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0) { MessageBox.Show("There are no materials"); return; }
             ObjImporter ip = new ObjImporter(CurrentModel);
@@ -11683,22 +11103,22 @@ namespace Wa3Tuner
             ip.ShowDialog();
             RefreshGeosetsList();
             RefreshNodesTree();
-            refresh_rData(null, null);
+            RefreshRenderData(null, null);
             Pause = false;
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
         }
-        private void batch_convertImages(object sender, RoutedEventArgs e)
+        private void batch_convertImages(object? sender, RoutedEventArgs? e)
         {
             List<string> files = FileSeeker.openBLPs();
             BatchConverter.ConvertBLPs(files);
         }
-        private void textColorizer(object sender, RoutedEventArgs e)
+        private void textColorizer(object? sender, RoutedEventArgs? e)
         {
             TextColorizer_Window tw = new TextColorizer_Window();
             tw.ShowDialog();
         }
-        private void SwapGeoPos(object sender, RoutedEventArgs e)
+        private void SwapGeoPos(object? sender, RoutedEventArgs? e)
         {
             // Swap the positions of the two selected geosets
             if (ListGeosets.SelectedItems.Count == 2)
@@ -11722,11 +11142,11 @@ namespace Wa3Tuner
                 MessageBox.Show("Select exactly 2 geosets");
             }
         }
-        private void swapnodesintree(object sender, RoutedEventArgs e)
+        private void swapnodesintree(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null && CurrentModel.Nodes.Count > 1)
             {
-                var node = GetSelectedNode();
+                INode? node = GetSelectedNode(); if (node == null) { MessageBox.Show("Null node");return; }
                 List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
                 nodes.Remove(node.Name);
                 Selector s = new Selector(nodes);
@@ -11770,7 +11190,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private bool IsNestedChild(INode Node1, INode Node2)
+        private static bool IsNestedChild(INode Node1, INode Node2)
         {
             // If Node2 has no parent, it's not a nested child of anything.
             if (Node2.Parent.Node == null) return false;
@@ -11779,19 +11199,21 @@ namespace Wa3Tuner
             // Recursively check if Node1 is an ancestor of Node2.
             return IsNestedChild(Node1, Node2.Parent.Node);
         }
-        private INode GetSelectedNode()
+        private INode? GetSelectedNode()
         {
             if (ListNodes.SelectedItem == null) return null;
-            TreeViewItem item = ListNodes.SelectedItem as TreeViewItem;
-            StackPanel sp = item.Header as StackPanel;
-            string name = (sp.Children[1] as TextBlock).Text;
+            TreeViewItem? item = ListNodes.SelectedItem as TreeViewItem; if (item == null) return null;
+            StackPanel? sp = item.Header as StackPanel; if (sp == null) return null;
+            TextBlock? t = sp.Children[1] as TextBlock; if (t == null) return null;
+            string? name = t.Text; if (name == null) return null;
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
-        private void swappivotswith(object sender, RoutedEventArgs e)
+        private void swappivotswith(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null && CurrentModel.Nodes.Count > 1)
             {
-                var node = GetSelectedNode();
+                INode? node = GetSelectedNode();
+                if (node == null) { return; }
                 List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
                 nodes.Remove(node.Name);
                 Selector s = new Selector(nodes);
@@ -11804,11 +11226,11 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void view_front(object sender, RoutedEventArgs e)
+        private void view_front(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Front);
         }
-        private void mirrorgeosets(object sender, RoutedEventArgs e)
+        private void mirrorgeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -11824,11 +11246,11 @@ namespace Wa3Tuner
                     {
                         Calculator.MirrorGeoset(geoset, onX, onY, onZ);
                     }
-                    RefreshViewPort();
+                   
                 }
             }
         }
-        private void distanceGeosFromPoint(object sender, RoutedEventArgs e)
+        private void distanceGeosFromPoint(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 0) return;
             DistanceSelector ds = new DistanceSelector();
@@ -11841,9 +11263,9 @@ namespace Wa3Tuner
                     Calculator.DistanceGeosetFromPoint(geoset, ds.X, ds.Y, ds.Z, ds.Distance, ds.Method);
                 }
             }
-            RefreshViewPort();
+           
         }
-        private void copycentroid(object sender, RoutedEventArgs e)
+        private void copycentroid(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -11852,11 +11274,11 @@ namespace Wa3Tuner
                 Clipboard.SetText($"Centroid of geoset {geosets[0].ObjectId}: {centroid.X}, {centroid.Y}, {centroid.Z}");
             }
         }
-        private void lsmak(object sender, RoutedEventArgs e)
+        private void lsmak(object? sender, RoutedEventArgs? e)
         {
             OpenLink("https://www.hiveworkshop.com/threads/loading-screen-maker.357087/");
         }
-        void OpenLink(string link)
+        static void OpenLink(string link)
         {
             try
             {
@@ -11871,11 +11293,11 @@ namespace Wa3Tuner
                 MessageBox.Show("Failed to open link: " + link, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void tli(object sender, RoutedEventArgs e)
+        private void tli(object? sender, RoutedEventArgs? e)
         {
             OpenLink("https://www.hiveworkshop.com/threads/custom-pathing-texture-maker-v1-03.356305/");
         }
-        private void OpenExe(string partOfPath)
+        private static void OpenExe(string partOfPath)
         {
             string fullPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, partOfPath);
             if (File.Exists(fullPath))
@@ -11898,27 +11320,27 @@ namespace Wa3Tuner
                 MessageBox.Show("File not found: " + fullPath, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-        private void txm(object sender, RoutedEventArgs e)
+        private void txm(object? sender, RoutedEventArgs? e)
         {
             OpenExe("Tools\\cptm.exe");
         }
-        private void setModelExtents(object sender, RoutedEventArgs e)
+        private void setModelExtents(object? sender, RoutedEventArgs? e)
         {
             Edit_Extent ee = new Edit_Extent(CurrentModel.Extent);
             ee.ShowDialog();
         }
-        private void custom_view(object sender, RoutedEventArgs e)
+        private void custom_view(object? sender, RoutedEventArgs? e)
         {
             CameraController c = new CameraController(Scene_ViewportGL.OpenGL);
             c.ShowDialog();
             RefreshViewportCameraDEbugInfo();
         }
-        private void mpqbrowser(object sender, RoutedEventArgs e)
+        private void mpqbrowser(object? sender, RoutedEventArgs? e)
         {
             MPQBrowser broswer = new MPQBrowser();
             broswer.ShowDialog();
         }
-        private void batch_optimize(object sender, RoutedEventArgs e)
+        private void batch_optimize(object? sender, RoutedEventArgs? e)
         {
             List<string> files = FileSeeker.OpenMdlMdxFiles();
             if (files.Count > 0)
@@ -11926,7 +11348,7 @@ namespace Wa3Tuner
                 CollectOptimizationSettings();
                 foreach (string file in files)
                 {
-                    CModel model = ModelSaverLoader.Load(file);
+                    CModel? model = ModelSaverLoader.Load(file);
                     if (model == null) continue;
                     Optimizer.Optimize(model);
                     ModelSaverLoader.Save(model, file);
@@ -11934,14 +11356,15 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetViewportGrid(object sender, TextChangedEventArgs e)
+        private void SetViewportGrid(object? sender, TextChangedEventArgs e)
         {
             if (Pause) return;
             bool parse = int.TryParse(ViewPortGrid.Text, out int value);
             if (parse)
             {
-                if (value >= 0)
+                if (value >= 0 && value <= 1000)
                 {
+                    RenderSettings.
                     ViewportGridSize = value;
                     SaveSettings();
 
@@ -11949,43 +11372,43 @@ namespace Wa3Tuner
             }
         }
 
-        private void ToggleEdges(object sender, RoutedEventArgs e)
+        private void ToggleEdges(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderEdges = Menuitem_edges.IsChecked == true;
+            RenderSettings.RenderEdges = Menuitem_edges.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleVertices(object sender, RoutedEventArgs e)
+        private void ToggleVertices(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderVertices = Menuitem_vertices.IsChecked == true;
+            RenderSettings.RenderVertices = Menuitem_vertices.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleGroundGridX(object sender, RoutedEventArgs e)
+        private void ToggleGroundGridX(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGridX = Menuitem_groundGridX.IsChecked == true;
+            RenderSettings.RenderGridX = Menuitem_groundGridX.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleGroundGridZ(object sender, RoutedEventArgs e)
+        private void ToggleGroundGridZ(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGridX = Menuitem_groundGridY.IsChecked == true;
+            RenderSettings.RenderGridX = Menuitem_groundGridY.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleGroundGrid(object sender, RoutedEventArgs e)
+        private void ToggleGroundGrid(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderGroundGrid = Menuitem_groundGrid.IsChecked == true;
+            RenderSettings.RenderGroundGrid = Menuitem_groundGrid.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleOOS(object sender, RoutedEventArgs e)
+        private void ToggleOOS(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             OptimizeOnSave = ButtonOptimizeOnSave.IsChecked == true;
             SaveSettings();
         }
-        private void massCreateGS(object sender, RoutedEventArgs e)
+        private void massCreateGS(object? sender, RoutedEventArgs? e)
         {
             Mass_create_global_sequences msg = new Mass_create_global_sequences(CurrentModel);
             if (msg.ShowDialog() == true)
@@ -11994,9 +11417,9 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void whichnodesnotanimated(object sender, RoutedEventArgs e)
+        private void whichnodesnotanimated(object? sender, RoutedEventArgs? e)
         {
-            List<string> names = new List<string>();
+            List<string> names = new();
             foreach (var node in CurrentModel.Nodes)
             {
                 if (node is CBone)
@@ -12030,7 +11453,7 @@ namespace Wa3Tuner
             sb.Append($"Roll: {CameraControl.UpX} {CameraControl.UpY} {CameraControl.UpZ}");
             DebugInfoCam.Text = sb.ToString();
         }
-        private void createcam(object sender, RoutedEventArgs e)
+        private void createcam(object? sender, RoutedEventArgs? e)
         {
             // Create camera
             CCamera cam = new CCamera(CurrentModel);
@@ -12045,13 +11468,13 @@ namespace Wa3Tuner
             cam.TargetPosition.Z = CameraControl.CenterZ;
             CurrentModel.Cameras.Add(cam);
         }
-        private void ToggleSkeleton(object sender, RoutedEventArgs e)
+        private void ToggleSkeleton(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderSkeleton = Menuitem_skeleton.IsChecked == true;
+            RenderSettings.RenderSkeleton = Menuitem_skeleton.IsChecked == true;
             SaveSettings();
         }
-        private CSequence SelectSequence()
+        private CSequence? SelectSequence()
         {
             List<string> s = CurrentModel.Sequences.Select(X => X.Name).ToList();
             Selector c = new Selector(s);
@@ -12064,12 +11487,7 @@ namespace Wa3Tuner
                 return null;
             }
         }
-        private void Check_Triangles(object sender, RoutedEventArgs e)
-        {
-            if (Pause) return;
-            RenderTriangles = Menuitem_Triangles.IsChecked == true;
-            SaveSettings();
-        }
+       
         List<Texture> Textures_GL = new List<Texture>();
 
         private void LoadGroundTextureImage()
@@ -12112,12 +11530,12 @@ namespace Wa3Tuner
            CameraControl.UpY,
            CameraControl.UpZ);
         }
-        private void DrawScene(object sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
+        private void DrawScene(object? sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
         {
             // MessageBox.Show($"paused; {Pause}, Enabled: {RenderEnabled}, null: {args.OpenGL == null}");
             OpenGL gl = args.OpenGL;
             if (Pause) return;
-            if (!RenderEnabled)
+            if (!RenderSettings.RenderEnabled)
             {
                 gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
                 return;
@@ -12146,33 +11564,36 @@ namespace Wa3Tuner
             //culling
             Renderer.HandleCulling(gl);
             // anti anti aliasing
-            //Renderer.HandleAntiAliasing(gl);
+          
             gl.Enable(OpenGL.GL_LINE_SMOOTH);  // Enable line smoothing
             gl.Hint(OpenGL.GL_LINE_SMOOTH_HINT, OpenGL.GL_NICEST);  // Use the nicest option for smoothing
-            //----------------------------------------------------
-            // rendering
-            //----------------------------------------------------
-            if (RenderGroundPlane) Renderer.RenderGroundTexture(gl, GroundTexture, 100);
-            if (RenderAxis) { Renderer.RenderAxis(gl, ViewportGridSize); }
-            if (RenderGeosetExtents) { Renderer.RenderExtents(gl, CurrentModel); }
-            if (RenderCollisionShapes) { Renderer.RenderCollisionShapes(gl, CurrentModel); }
-            if (RenderSkinning) { Renderer.RenderRigging(gl, CurrentModel); } // attachments
-            if (RenderSkeleton) { Renderer.RenderSkeleton(gl, CurrentModel); }
-            if (RenderGroundGrid) { Renderer.RenderGrid(gl, ViewportGridSize, LineSpacing); }
-            if (RenderGridX) { Renderer.RenderYZGrid(gl, ViewportGridSize, LineSpacing); }
-            if (RenderGridY) { Renderer.RenderXZGrid(gl, ViewportGridSize, LineSpacing); }
+                                                                    //----------------------------------------------------
+                                                                    // rendering
+                                                                    //----------------------------------------------------
+          
+            if (RenderSettings.RenderGroundPlane) Renderer.RenderGroundTexture(gl, GroundTexture, 100);
+            if (RenderSettings.RenderAxis) { Renderer.RenderAxis(gl, RenderSettings.ViewportGridSize); }
+            if (RenderSettings.RenderGeosetExtents) { Renderer.RenderExtents(gl, CurrentModel); }
+            if (RenderSettings.RenderCollisionShapes) { Renderer.RenderCollisionShapes(gl, CurrentModel); }
+            if (RenderSettings.RenderSkinning) { Renderer.RenderRigging(gl, CurrentModel); } // attachments
+            if (RenderSettings.RenderSkeleton) { Renderer.RenderSkeleton(gl, CurrentModel); }
+            if (RenderSettings.RenderGroundGrid) { Renderer.RenderGrid(gl, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing); }
+            if (RenderSettings.RenderGridX) { Renderer.RenderYZGrid(gl, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing); }
+            if (RenderSettings.RenderGridY) { Renderer.RenderXZGrid(gl, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing); }
             //MessageBox.Show(RenderTextures.ToString());
-            if (RenderGeometry) Renderer.RenderTriangles(gl, CurrentModel, RenderTextures, Textures_GL, InAnimator, RenderShading);
-            if (RenderVertices) Renderer.RenderVertices(gl, Model, InAnimator);
-            Renderer.RenderEdges(gl, Model, RenderEdges);
-            if (RenderNodes) Renderer.RenderNodes(gl, Model, InAnimator);
-            if (RenderNormals) Renderer.RenderNormals(gl, Model);
+            if (RenderSettings.RenderGeometry) Renderer.RenderTriangles(gl, CurrentModel, RenderSettings.RenderTextures, Textures_GL, InAnimator, RenderSettings.RenderShading);
+            if (RenderSettings.RenderVertices) Renderer.RenderVertices(gl, Model, InAnimator);
+            Renderer.RenderEdges(gl, Model, RenderSettings.RenderEdges);
+            if (RenderSettings.RenderNodes) Renderer.RenderNodes(gl, Model, InAnimator);
+            if (RenderSettings.RenderNormals) Renderer.RenderNormals(gl, Model);
             if (ViewingPaths) Renderer.RenderSelectedPath(gl);
             // test
-           //  Renderer.RenderTestLines(gl);
+           // Renderer.RenderTestLines(gl);
            //  Renderer.RendertestPoints(gl);
-            Renderer.HandleLighting(gl, RenderLighing);
+           //  Renderer.RenderTestExtents(gl);
+            Renderer.HandleLighting(gl, RenderSettings.RenderLighing);
 
+  
             //-----------------------------------------------------------
 
             // Renderer.HandeShading(gl, RenderShading);
@@ -12197,33 +11618,33 @@ namespace Wa3Tuner
             gl.MatrixMode(OpenGL.GL_MODELVIEW);
             gl.LoadIdentity();
         }
-        private void ToggleNormals(object sender, RoutedEventArgs e)
+        private void ToggleNormals(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderNormals = Menuitem_normals.IsChecked == true;
+            RenderSettings.RenderNormals = Menuitem_normals.IsChecked == true;
             SaveSettings();
         }
-        private void ToggleAxis(object sender, RoutedEventArgs e)
+        private void ToggleAxis(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderAxis = Menuitem_axis.IsChecked == true;
+            RenderSettings.RenderAxis = Menuitem_axis.IsChecked == true;
             SaveSettings();
         }
-        private void SetViewportGridSpacing(object sender, TextChangedEventArgs e)
+        private void SetViewportGridSpacing(object? sender, TextChangedEventArgs e)
         {
             if (Pause) return;
             bool r = int.TryParse(ViewPortLineSpacing.Text, out int result);
-            if (r) LineSpacing = result;
+            if (r) RenderSettings.LineSpacing = result;
             SaveSettings();
         }
-        private void Resized(object sender, SizeChangedEventArgs e)
+        private void Resized(object? sender, SizeChangedEventArgs e)
         {
             RefreshGrdOverlay();
         }
         private void RefreshGrdOverlay()
         {
             if (Canvas_Grid_Overlay == null) return;
-            int SquareSize = ViewportGridSizeOverlay;
+            int SquareSize = RenderSettings.ViewportGridSizeOverlay;
             if (SquareSize <= 0 || SquareSize >= Canvas_Grid_Overlay.ActualWidth || SquareSize >= Canvas_Grid_Overlay.ActualHeight)
             {
                 Canvas_Grid_Overlay.Children.Clear();
@@ -12265,20 +11686,20 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void inputGridOverlaySet(object sender, TextChangedEventArgs e)
+        private void inputGridOverlaySet(object? sender, TextChangedEventArgs e)
         {
             bool p = int.TryParse(InputGridOverlay.Text, out int value);
             if (p)
             {
                 if (value >= 0)
                 {
-                    ViewportGridSizeOverlay = value;
+                    RenderSettings.ViewportGridSizeOverlay = value;
                     RefreshGrdOverlay();
                     SaveSettings();
                 }
             }
         }
-        private void exportGeosetOBJ(object sender, RoutedEventArgs e)
+        private void exportGeosetOBJ(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -12290,7 +11711,7 @@ namespace Wa3Tuner
             }
         }
         // OR -> ||
-        private void exportallobj(object sender, RoutedEventArgs e)
+        private void exportallobj(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
             CGeoset all = new CGeoset(CurrentModel);
@@ -12311,7 +11732,7 @@ namespace Wa3Tuner
             string content = GeosetOBJConverter.GetContent(all);
             File.WriteAllText(savePath, content);
         }
-        private void REmoveAllLoneNodes(object sender, RoutedEventArgs e)
+        private void REmoveAllLoneNodes(object? sender, RoutedEventArgs? e)
         {
             List<INode> nodes = new List<INode>();
             foreach (var node in CurrentModel.Nodes)
@@ -12325,7 +11746,7 @@ namespace Wa3Tuner
             RefreshNodesTree();
             SetSaved(false);
         }
-        private void exportstl1(object sender, RoutedEventArgs e)
+        private void exportstl1(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
             StringBuilder sb = new StringBuilder();
@@ -12337,7 +11758,7 @@ namespace Wa3Tuner
             }
             File.WriteAllText(p, sb.ToString());
         }
-        private void exportstl2(object sender, RoutedEventArgs e)
+        private void exportstl2(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
             StringBuilder sb = new StringBuilder();
@@ -12356,7 +11777,7 @@ namespace Wa3Tuner
             }
             return geo;
         }
-        private void importSTL(object sender, RoutedEventArgs e)
+        private void importSTL(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Materials.Count == 0)
             {
@@ -12373,22 +11794,18 @@ namespace Wa3Tuner
                 }
                 RefreshGeosetsList();
                 RefreshNodesTree();
-                refresh_rData(null, null);
+                RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
                 SetSaved(false);
             }
         }
-        private void import3DS(object sender, RoutedEventArgs e)
+        private void import3DS(object? sender, RoutedEventArgs? e)
         {
-            string p = FileSeeker.open3DS();
-            if (p.Length == 0) return;
-            CurrentModel = new CModel();
-            CurrentModel = D3dsParser.ParseAndConvert(p);
-            RefreshAll();
+            
         }
-        private void exportply1(object sender, RoutedEventArgs e)
+        private void exportply1(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -12412,7 +11829,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void exportply2(object sender, RoutedEventArgs e)
+        private void exportply2(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
             {
@@ -12436,7 +11853,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void adjustmdlpoa(object sender, RoutedEventArgs e)
+        private void adjustmdlpoa(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0 && CurrentModel.Nodes.Count == 0)
             {
@@ -12466,7 +11883,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void renamegeoset(object sender, RoutedEventArgs e)
+        private void renamegeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count != 1)
             {
@@ -12489,39 +11906,28 @@ namespace Wa3Tuner
                 RefreshGeosetsList();
             }
         }
-        private void setAllSqExtents(object sender, RoutedEventArgs e)
-        {
-        }
-        private void Scene_ViewportGL_Loaded(object sender, RoutedEventArgs e)
-        {
-            // Ensure initialization happens here
-            var gl = (sender as OpenGLControl)?.OpenGL;
-            {
-                gl.ClearColor(0f, 0f, 0f, 1f);  // Black background
-                gl.Enable(OpenGL.GL_DEPTH_TEST); // Enable depth testing
-                // Perform any necessary setup
-            }
-        }
-        private void batch_images(object sender, RoutedEventArgs e)
+       
+        private void batch_images(object? sender, RoutedEventArgs? e)
         {
             List<string> images = FileSeeker.OpenImages();
-            if (images.Count > 0)
+           if (images.Count > 0)
             {
                 foreach (string image in images)
                 {
                     string blp = System.IO.Path.ChangeExtension(image, ".blp");
-                    BLPConverter.Conver(image, blp);
+                  
+                    BLPConverter.Convert(image, blp, this, "");
                 }
             }
         }
-        private void fps(object sender, RoutedEventArgs e)
+        private void fps(object? sender, RoutedEventArgs? e)
         {
             if (Pause) { return; }
-            RenderFPS = Menuitem_fps.IsChecked == true;
-            Scene_ViewportGL.DrawFPS = RenderFPS;
+            RenderSettings.RenderFPS = Menuitem_fps.IsChecked == true;
+            Scene_ViewportGL.DrawFPS = RenderSettings.RenderFPS;
             SaveSettings();
         }
-        private void addw3imp(object sender, RoutedEventArgs e)
+        private void addw3imp(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -12537,12 +11943,12 @@ namespace Wa3Tuner
                 }
             }
         }
-        string prependWar3Imported(string original)
+        static string prependWar3Imported(string original)
         {
             string prepend = "War3Imported\\";
             return original.StartsWith(prepend) ? original : prepend + original;
         }
-        private void stripPath(object sender, RoutedEventArgs e)
+        private void stripPath(object? sender, RoutedEventArgs? e)
         {
             var t = CurrentModel.Textures[List_Textures.SelectedIndex];
             if (t.ReplaceableId == 0)
@@ -12557,13 +11963,13 @@ namespace Wa3Tuner
                 MessageBox.Show("This texture's replaceable ID is not 0");
             }
         }
-        private void importTexture_(object sender, RoutedEventArgs e)
+        private void importTexture_(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentSaveLocaiton.Length == 0)
+            if (CurrentSaveLocation.Length == 0)
             {
                 MessageBox.Show("Empty save path"); return;
             }
-            if (File.Exists(CurrentSaveLocaiton))
+            if (File.Exists(CurrentSaveLocation))
             {
                 List<string> Files = Directory.GetFiles(CurrentSaveFolder).Where(x => System.IO.Path.GetExtension(x).ToLower() == ".blp").ToList();
                 if (Files.Count == 0)
@@ -12595,7 +12001,7 @@ namespace Wa3Tuner
                 MessageBox.Show("The file does not exist at its initially assigned location"); return;
             }
         }
-        private void calcexex(object sender, RoutedEventArgs e)
+        private void calcexex(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count <= 1) { MessageBox.Show("This command requres at least 2 geosets to be present"); return; }
             List<string> list = getGeosetsAsList();
@@ -12611,7 +12017,7 @@ namespace Wa3Tuner
         }
         private List<string> getGeosetsAsList()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (var geo in CurrentModel.Geosets)
             {
                 string TitleName = geo.ObjectId.ToString() + $" ({geo.Name}) ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles)";
@@ -12619,7 +12025,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void alignNodeWithParent(object sender, RoutedEventArgs e)
+        private void alignNodeWithParent(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null)
             {
@@ -12627,7 +12033,12 @@ namespace Wa3Tuner
             }
             else
             {
-                INode node = GetSelectedNode();
+                INode? node = GetSelectedNode();
+                if (node == null)
+                {
+                    MessageBox.Show("Null node"); return;
+                    
+                }
                 if (node.Parent == null || node.Parent.Node == null)
                 {
                     MessageBox.Show("This node has no parent"); return;
@@ -12649,18 +12060,19 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void stobj(object sender, RoutedEventArgs e)
+        private void stobj(object? sender, RoutedEventArgs? e)
         {
             OpenExe("Tools\\OBJ2MDL Batch Converter.exe");
         }
-        private void centeratextent(object sender, RoutedEventArgs e)
+        private void centeratextent(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             ExtentSelector s = new ExtentSelector(CurrentModel, node);
             s.ShowDialog();
         }
-        private void delTextureAndMaterials(object sender, RoutedEventArgs e)
+        private void delTextureAndMaterials(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem == null) return;
             CTexture texture = GetSElectedTexture();
@@ -12689,6 +12101,7 @@ namespace Wa3Tuner
                 }
                 CurrentModel.Textures.Remove(texture);
                 GiveMaterialToGeosetsWithout();
+                RefreshLayersTextureList();
                 RefreshMaterialsList();
                 RefreshTexturesList();
                 SetSaved(false);
@@ -12696,13 +12109,16 @@ namespace Wa3Tuner
         }
         private void GiveMaterialToGeosetsWithout()
         {
-            foreach (var geoset in CurrentModel.Geosets)
+            foreach (CGeoset geoset in CurrentModel.Geosets)
             {
-                if (geoset.Material == null || geoset.Material.Object == null || !CurrentModel.Materials.Contains(geoset.Material.Object))
+                if (geoset == null) { continue; }
+                if (geoset.Material == null || geoset.Material.Object == null ||
+                    !CurrentModel.Materials.Contains(geoset.Material.Object))
                 {
+                    if (geoset.Material == null) { continue; }
                     geoset.Material.Attach(CurrentModel.Materials[0]);
                 }
-            }
+            } 
         }
         private bool AllMaterialsUseTexture(CTexture t)
         {
@@ -12716,12 +12132,13 @@ namespace Wa3Tuner
             }
             return CurrentModel.Materials.Count == c;
         }
-        private void CopyNodeSequenceKeyframes_Translation(object sender, RoutedEventArgs e)
+        private void CopyNodeSequenceKeyframes_Translation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Selct a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             if (node.Rotation.Count == 0 && node.Translation.Count == 0)
             {
                 MessageBox.Show("This node has no translation keyframes"); return;
@@ -12743,12 +12160,12 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CopyNodeSequenceKeyframes_Rotation(object sender, RoutedEventArgs e)
+        private void CopyNodeSequenceKeyframes_Rotation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             if (node.Rotation.Count == 0 && node.Rotation.Count == 0)
             {
                 MessageBox.Show("This node has no rotation keyframes"); return;
@@ -12770,12 +12187,13 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CopyNodeSequenceKeyframes_Scaling(object sender, RoutedEventArgs e)
+        private void CopyNodeSequenceKeyframes_Scaling(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node==null)return;
             if (node.Rotation.Count == 0 && node.Scaling.Count == 0)
             {
                 MessageBox.Show("This node has no scaling keyframes"); return;
@@ -12797,12 +12215,12 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CutNodeSequenceKeyframes_Translation(object sender, RoutedEventArgs e)
+        private void CutNodeSequenceKeyframes_Translation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Selct a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             if (node.Rotation.Count == 0 && node.Translation.Count == 0)
             {
                 MessageBox.Show("This node has no translation keyframes"); return;
@@ -12824,12 +12242,12 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CutNodeSequenceKeyframes_Rotation(object sender, RoutedEventArgs e)
+        private void CutNodeSequenceKeyframes_Rotation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             if (node.Rotation.Count == 0 && node.Rotation.Count == 0)
             {
                 MessageBox.Show("This node has no rotation keyframes"); return;
@@ -12851,12 +12269,12 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CutNodeSequenceKeyframes_Scaling(object sender, RoutedEventArgs e)
+        private void CutNodeSequenceKeyframes_Scaling(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();  if (node == null) return;
             if (node.Rotation.Count == 0 && node.Scaling.Count == 0)
             {
                 MessageBox.Show("This node has no scaling keyframes"); return;
@@ -12878,11 +12296,13 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void PaseNodeSpecificKeyframesSEquence(object sender, RoutedEventArgs e)
+        private void PaseNodeSpecificKeyframesSEquence(object? sender, RoutedEventArgs? e)
         {
             if (CopiedKeyframesData.Sequence != null && CopiedKeyframesData.CopiedNode != null)
             {
-                INode pastedOn = GetSelectedNode();
+                INode? pastedOn = GetSelectedNode(); 
+                if (CopiedKeyframesData.CopiedNode == null) return;
+                if (pastedOn == null) return;
                 if (CopiedKeyframesData.CopiedNode == pastedOn)
                 {
                     MessageBox.Show("Copied and pasted on nodes cannot be the same"); return;
@@ -12987,12 +12407,12 @@ namespace Wa3Tuner
             }
         }
         private bool OpenGLInitialized = false;
-        private void InitializeSharpGL(object sender, EventArgs e)
+        private void InitializeSharpGL(object? sender, EventArgs e)
         {
 
             if (OpenGLInitialized) return;
             // if (Scene_ViewportGL.IsInitialized || Scene_ViewportGL.OpenGL != null) { return; }
-            OpenGLControl c = (OpenGLControl)sender;
+            OpenGLControl? c = sender as OpenGLControl; if (c == null) return;
             OpenGL gl = c.OpenGL;
             Dispatcher.Invoke(() =>
             {
@@ -13004,14 +12424,10 @@ namespace Wa3Tuner
         }
         private SceneInteractionState CurrentSceneInteraction = SceneInteractionState.None;
         private Point selectionStart; // Starting point for selection rectangle
-        private System.Windows.Shapes.Rectangle selectionRectangle = new System.Windows.Shapes.Rectangle(); // Fully qualified path to avoid ambiguity
+        private System.Windows.Shapes.Rectangle? selectionRectangle = new System.Windows.Shapes.Rectangle(); // Fully qualified path to avoid ambiguity
         private bool isRotating = false; // Flag for camera rotation
-        private double rotationSpeed = 1000f; // Speed of rotation
-        private double rotationAngleX = 0f; // Rotation angle for X-axis
-        private double rotationAngleY = 0f; // Rotation angle for Y-axis
-        private double rotationAngleZ = 0f; // Rotation angle for Y-axis
-        private Vector2[] SelectionData; // all 4 points of the selection square
-        private void Scene_MouseDown(object sender, MouseButtonEventArgs e)
+         
+        private void Scene_MouseDown(object? sender, MouseButtonEventArgs e)
         {
             var Canvas_Selection = Scene_Selection_Overlay;
             if (e.MiddleButton == MouseButtonState.Pressed)
@@ -13078,11 +12494,104 @@ namespace Wa3Tuner
         }
 
 
-
+         
         private void DrawRay(Point currentMousePos)
         {
-            var line = RayCaster.GetRay(Scene_ViewportGL.OpenGL
-                ); 
+          
+            if (Tabs_Geosets.SelectedIndex > 3) return;
+            var ray = RayCaster.GetRay((float)currentMousePos.X, (float)currentMousePos.Y, (float)Scene_ViewportGL.ActualWidth, (float)Scene_ViewportGL.ActualHeight, Scene_ViewportGL.OpenGL);
+
+
+            if (Tabs_Geosets.SelectedIndex == 0)
+            {
+                if (CurrentModel.Geosets.Count == 0) return;
+               
+                for (int i = 0; i < CurrentModel.Geosets.Count; i++)
+                {
+              
+                    bool inside = RayCaster.GeosetInsideRay(CurrentModel.Geosets[i], ray);
+                    CurrentModel.Geosets[i].isSelected = inside;
+                    if (inside)
+                    {
+                        ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
+                    }
+                    else
+                    {
+                        ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
+                    }
+
+                }
+            }
+           
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+               List<CGeosetTriangle> selected = new List<CGeosetTriangle>();
+                foreach (var g in CurrentModel.Geosets)
+                {
+                    foreach (var triangle in g.Triangles)
+                    {
+                        bool inside = RayCaster.TriangleInsideRayRadius(ray, triangle);
+                        if (SelectionMode == mSelectionMode.Clear)
+                        {
+                            if (inside) selected.Add(triangle);
+                            else { triangle.isSelected = false; }
+                        }
+                        else if (SelectionMode == mSelectionMode.Remove)
+                        {
+                            if (triangle.isSelected == false) selected.Add(triangle);
+                            else { triangle.isSelected = false; }
+                        }
+                        else if (SelectionMode == mSelectionMode.Add && inside)
+                        {
+                            selected.Add(triangle);
+                        }
+                        // 
+                    }
+                }
+                SelectClosestTriangle(ray, selected);
+                ListSelectedTriangles();
+            }
+            else if (Tabs_Geosets.SelectedIndex >= 2) //vertices, rigging
+            {
+                
+                List<CGeosetVertex> SelectionGroup = new List<CGeosetVertex>();
+                foreach (var g in CurrentModel.Geosets)
+                {
+                    foreach (var vertex in g.Vertices)
+                    {
+                        if (g.isVisible == false) { vertex.isSelected = false; continue; }
+                        bool inside =  RayCaster.VertexInsideRayRadius(ray, vertex);
+                        if (SelectionMode == mSelectionMode.Clear)
+                        {
+                            vertex.isSelected = false;
+                            if (inside) { vertex.isSelected = true; }
+                        }
+                        else if (SelectionMode == mSelectionMode.Remove)
+                        {
+
+                            vertex.isSelected = false;
+                        }
+                        else if (SelectionMode == mSelectionMode.Add && inside)
+                        {
+                             
+                            SelectionGroup.Add(vertex);
+                            vertex.isSelected = true;
+                        }
+                        // 
+                    }
+                    UpdateSelectedVerticesInfo( );
+                }
+               // if (SelectionGroup.Count == 0) return;
+              //  CGeosetVertex closest = GetClosestVertex(SelectionGroup, ray.From);
+                
+               // closest.isSelected = true;
+                RefreshrigingAttachedList( );
+
+
+
+
+            }
+           // RayCaster.Lines.Add(line);
 
 
           
@@ -13091,68 +12600,223 @@ namespace Wa3Tuner
             
         }
 
-        private void SelectAffectedGeosets(xLine lne)
+        private void ListSelectedTriangles()
         {
-            foreach (var geose in CurrentModel.Geosets)
+            
+           int count = CurrentModel.Geosets.SelectMany(x => x.Triangles).Where(x => x.isSelected).Count();
+            Label_SelectedTriangles.Text = $"Selected Triangles: {count}";
+        }
+
+        private static void SelectClosestTriangle(Ray ray, List<CGeosetTriangle> selected)
+        {
+            if (selected.Count == 0) return;
+            List<Vector3> centroids = new();
+             foreach (var triangle in selected)
             {
-                if (Calculator.RayInsideGeoset(lne, geose))
+                centroids.Add(Calculator.GetCentroidofTriangleC(triangle));
+            }
+            var closest =Calculator.FindClosestVector(ray.From, centroids);
+           
+            for (int i = 0; i < selected.Count; i++) 
+            {
+                if (
+                    closest.X == centroids[i].X &&
+                    closest.Y == centroids[i].Y &&
+                    closest.Z == centroids[i].Z
+
+                    ) 
                 {
-                    geose.isSelected = true;
+                    selected[i].isSelected = true;
+                    return;
                 }
             }
         }
 
-        private void Scene_MouseUp(object sender, MouseButtonEventArgs e)
+        public static CGeosetVertex? GetClosestVertex(List<CGeosetVertex> vertices,  Vector3 target)
         {
+            if (vertices == null || vertices.Count == 0)
+                return null;
+            if (vertices.Count == 1) { return vertices[0]; }
+            CGeosetVertex? closest = null;
+            float closestDistanceSq = float.MaxValue;
 
-            var Scene_Canvas_ = Scene_Selection_Overlay;
-
-            var currentMousePos = e.GetPosition(Scene_Canvas_);
-            // var glPos = e.GetPosition(Scene_ViewportGL);
-             // DrawRay(currentMousePos);//tst
-            if (CurrentSceneInteraction == SceneInteractionState.RotatingView)
+            foreach (var vertex in vertices)
             {
+                float dx = vertex.Position.X - target.X;
+                float dy = vertex.Position.Y - target.Y;
+                float dz = vertex.Position.Z - target.Z;
+
+                float distanceSq = dx * dx + dy * dy + dz * dz;
+                if (distanceSq < closestDistanceSq)
+                {
+                    closestDistanceSq = distanceSq;
+                    closest = vertex;
+                }
+            }
+
+            return closest;
+        }
+
+        private void UpdateSelectedVerticesInfo( )
+        {
+            int count = 0;
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var vertex in geoset.Vertices)
+                {
+                    count = vertex.isSelected ? count + 1 : count;
+                }
+            }
+            Label_SelectedVertices.Text = $"Selected vertices: {count}";
+        }
+
+
+        private void Scene_MouseUp(object? sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                if (CurrentSceneInteraction == SceneInteractionState.RotatingView)
+                {
+                    return;
+                }
+
+                CurrentSceneInteraction = SceneInteractionState.None;
                 return;
             }
-            else if (e.RightButton == MouseButtonState.Pressed)
+
+            if (e.ChangedButton != MouseButton.Left)
+            {
+                return; // Ignore non-left clicks
+            }
+
+            // Only proceed if we're in a selection mode or idle
+            if (CurrentSceneInteraction != SceneInteractionState.None &&
+                CurrentSceneInteraction != SceneInteractionState.DrawRectangle)
             {
                 CurrentSceneInteraction = SceneInteractionState.None;
-
                 return;
             }
+
+            // ----- Selection Logic Below -----
+
+            var Scene_Canvas_ = Scene_Selection_Overlay;
+            var currentMousePos = e.GetPosition(Scene_Canvas_);
 
             double x1 = Math.Min(selectionStart.X, currentMousePos.X);
             double y1 = Math.Min(selectionStart.Y, currentMousePos.Y);
             double x2 = Math.Max(selectionStart.X, currentMousePos.X);
             double y2 = Math.Max(selectionStart.Y, currentMousePos.Y);
-            // Store selection data
-            SelectionData = new Vector2[]
+
+            if (Math.Abs(x2 - x1) < 1.0 && Math.Abs(y2 - y1) < 1.0)
             {
-        new Vector2((float)x1, (float)y1), // Top-left
-        new Vector2((float)x2, (float)y1), // Top-right
-        new Vector2((float)x2, (float)y2), // Bottom-right
-        new Vector2((float)x1, (float)y2)  // Bottom-left
+                DrawRay(currentMousePos);
+            }
+            else
+            {
+                DrawRay(x1, x2, y1, y2);
+            }
+
+            Vector2[] SelectionData = new Vector2[]
+            {
+        new Vector2((float)x1, (float)y1),
+        new Vector2((float)x2, (float)y1),
+        new Vector2((float)x2, (float)y2),
+        new Vector2((float)x1, (float)y2)
             };
 
-            // SelectGeometryBasedOnSelectionSquare(SelectionData);
-            // Remove the selection rectangle from the canvas
             if (selectionRectangle != null)
             {
                 Scene_Canvas_.Children.Remove(selectionRectangle);
                 selectionRectangle = null;
             }
-            // Reset interaction state
+
             CurrentSceneInteraction = SceneInteractionState.None;
         }
 
+
+        private void DrawRay(double x1, double x2, double y1, double y2)
+        {
+           if (Tabs_Geosets.SelectedIndex > 3) return;
+          var SelectionExtent =  RayCaster.ExtentFromMouseSelectionRectangle(x1, x2, y1, y2, (float)Scene_ViewportGL.ActualWidth, (float)Scene_ViewportGL.ActualHeight, Scene_ViewportGL.OpenGL);
+            if (Tabs_Geosets.SelectedIndex == 0)
+            {
+                if (CurrentModel.Geosets.Count == 0) return;
+                for (int i = 0; i < CurrentModel.Geosets.Count; i++)
+                {
+                    bool selected = RayCaster.GeosetInsideExtent(CurrentModel.Geosets[i], SelectionExtent);
+                    CurrentModel.Geosets[i].isSelected = selected;
+                   switch (SelectionMode)
+                    {
+                        case mSelectionMode.Clear:
+                            if (selected)
+                            {
+                                ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
+                            }
+                            else
+                            {
+                                ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
+                            }
+                            break;
+                        case mSelectionMode.Remove:
+                            
+                              ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
+                             
+                            break;
+                        case mSelectionMode.Add:
+                            
+                                ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
+                            
+                           
+                            break;
+                    }
+                    
+
+                }
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                // unfinished
+            }
+            else if (Tabs_Geosets.SelectedIndex >= 2) //vertices, rigging
+            {
+                List<CGeosetVertex> vertices = new List<CGeosetVertex>(0);
+                foreach (var g in CurrentModel.Geosets)
+                {
+                    foreach (var vertex in g.Vertices)
+                    {
+                        bool inside = RayCaster.VertexInsideSelectionExtent(SelectionExtent, vertex);
+                        if (SelectionMode == mSelectionMode.Clear)
+                        {
+                            vertex.isSelected = inside;
+                            if (inside) vertices.Add(vertex);
+                        }
+                        else if (SelectionMode == mSelectionMode.Remove)
+                        {
+                            vertex.isSelected = !inside;
+                            if (inside) vertices.Add(vertex);
+                        }
+                        else if (SelectionMode == mSelectionMode.Add && inside)
+                        {
+                            vertex.isSelected = true;
+                            if (inside) vertices.Add(vertex);
+                        }
+                        // 
+                    }
+                }
+                RefreshrigingAttachedList( );
+            }
+            
+        }
+
         double previousY = 0;
-        private void Scene_Selection_Overlay_MouseMove(object sender, MouseEventArgs e)
+        private void Scene_Selection_Overlay_MouseMove(object? sender, MouseEventArgs e)
         {
             var currentMousePos = e.GetPosition(Scene_Selection_Overlay);
 
 
             if (CurrentSceneInteraction == SceneInteractionState.DrawRectangle && e.LeftButton == MouseButtonState.Pressed)
             {
+                if (selectionRectangle == null) return;
                 double x = Math.Min(selectionStart.X, currentMousePos.X);
                 double y = Math.Min(selectionStart.Y, currentMousePos.Y);
                 double width = Math.Abs(currentMousePos.X - selectionStart.X);
@@ -13162,21 +12826,7 @@ namespace Wa3Tuner
                 Canvas.SetLeft(selectionRectangle, x);
                 Canvas.SetTop(selectionRectangle, y);
             }
-            /* else if (CurrentSceneInteraction == SceneInteractionState.DragView)
-              {
-                  float increment = float.TryParse(InputZoomIncrement.Text, out float val) ? Math.Abs( val) : 1;
-
-                  float incrementX = currentMousePos.X > LastClickPositionX ? increment : -increment;
-                  float incrementY = currentMousePos.X > LastClickPositionX ? increment : -increment;
-                  CameraControl.eyeX += incrementX;
-                  CameraControl.eyeY += incrementY;
-                  CameraControl.CenterX += incrementX;
-                  CameraControl.CenterY += incrementY;
-
-
-                  LastClickPositionX = currentMousePos.X;
-                  LastClickPositionY = currentMousePos.Y;
-              }*/
+             
             else if (CurrentSceneInteraction == SceneInteractionState.RotatingView && isRotating)
             {
                 float angle = 0.5f;
@@ -13201,7 +12851,7 @@ namespace Wa3Tuner
                 LastClickPositionX = currentMousePos.X;
                 LastClickPositionY = currentMousePos.Y;
             }
-            else if (CurrentSceneInteraction == SceneInteractionState.Modify && CanDrag)
+            else if (CurrentSceneInteraction == SceneInteractionState.Modify && CanDrag && e.RightButton == MouseButtonState.Pressed)
             {
                 bool positive = currentMousePos.Y < previousY;
                 previousY = currentMousePos.Y;
@@ -13214,7 +12864,7 @@ namespace Wa3Tuner
             }
 
         }
-        private void SetViewportZoomIncrement(object sender, TextChangedEventArgs e)
+        private void SetViewportZoomIncrement(object? sender, TextChangedEventArgs e)
         {
             bool get = int.TryParse(InputZoomIncrement.Text, out int val);
             if (get)
@@ -13226,7 +12876,7 @@ namespace Wa3Tuner
                 SaveSettings();
             }
         }
-        private void ResetStaticColorToDefault(object sender, RoutedEventArgs e)
+        private void ResetStaticColorToDefault(object? sender, RoutedEventArgs? e)
         {
             foreach (var gs in CurrentModel.GeosetAnimations)
             {
@@ -13237,7 +12887,7 @@ namespace Wa3Tuner
             }
             RefreshGeosetAnimationsList();
         }
-        private void shatterGeoset(object sender, RoutedEventArgs e)
+        private void shatterGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count != 1) { MessageBox.Show("select a single geoset"); return; }
             var g = GetSelectedGeosets()[0];
@@ -13248,7 +12898,7 @@ namespace Wa3Tuner
                 RefreshNodesTree();
             }
         }
-        private void changeoebasedonkef(object sender, RoutedEventArgs e)
+        private void changeoebasedonkef(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count < 1)
             {
@@ -13311,7 +12961,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Not an integer"); return;
             }
         }
-        private bool GeosetVerticesAttachedToOneGroup(CGeoset geoset)
+        private static bool GeosetVerticesAttachedToOneGroup(CGeoset geoset)
         {
             if (geoset.Vertices.Count <= 1) { return true; }
             var group = geoset.Vertices[0].Group.Object;
@@ -13322,62 +12972,68 @@ namespace Wa3Tuner
             return true;
             throw new NotImplementedException();
         }
-        private void CopyNodeKeyframes_Translation(object sender, RoutedEventArgs e)
+        private void CopyNodeKeyframes_Translation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             CopiedKeyframesData.Cut = false;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Translation;
         }
-        private void CopyNodeKeyframes_Rotation(object sender, RoutedEventArgs e)
+        private void CopyNodeKeyframes_Rotation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             CopiedKeyframesData.Cut = false;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Rotation;
         }
-        private void CopyNodeKeyframes_Scaling(object sender, RoutedEventArgs e)
+        private void CopyNodeKeyframes_Scaling(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
             CopiedKeyframesData.Cut = false;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Scaling;
         }
-        private void CutNodeKeyframes_Translation(object sender, RoutedEventArgs e)
+        private void CutNodeKeyframes_Translation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             CopiedKeyframesData.Cut = true;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Translation;
         }
-        private void CutNodeKeyframes_Rotation(object sender, RoutedEventArgs e)
+        private void CutNodeKeyframes_Rotation(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             CopiedKeyframesData.Cut = true;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Rotation;
         }
-        private void CutNodeKeyframes_Scaling(object sender, RoutedEventArgs e)
+        private void CutNodeKeyframes_Scaling(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode node = GetSelectedNode();
+            INode? node = GetSelectedNode();
+            if (node == null) return;
             CopiedKeyframesData.Cut = true;
             CopiedKeyframesData.CopiedNodeKeyframeType = TransformationType.Scaling;
         }
-        private void PaseNodeSpecificKeyframes(object sender, RoutedEventArgs e)
+        private void PaseNodeSpecificKeyframes(object? sender, RoutedEventArgs? e)
         {
             if (CopiedKeyframesData.CopiedNode == null) { MessageBox.Show("Copied node does not exist"); }
             if (CurrentModel.Nodes.Contains(CopiedKeyframesData.CopiedNode) == false)
             {
                 MessageBox.Show("Copied node is not part of the model");
                 if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-                var node = GetSelectedNode();
+                INode? node = GetSelectedNode(); 
+                if (node == null) return;
+                if (CopiedKeyframesData.CopiedNode == null) return;
                 if (CopiedKeyframesData.CopiedNode == node) { MessageBox.Show("Copied cannot be the as pasted on"); return; }
                 switch (CopiedKeyframesData.CopiedNodeKeyframeType)
                 {
@@ -13406,9 +13062,10 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void PaseNodeSpecificKeyframesSEquenceMultiple(object sender, RoutedEventArgs e)
+        private void PaseNodeSpecificKeyframesSEquenceMultiple(object? sender, RoutedEventArgs? e)
         {
-            if (CopiedKeyframesData.CopiedNode == null) { MessageBox.Show("Copied node does not exist"); }
+            if (CopiedKeyframesData.CopiedNode == null) { MessageBox.Show("Copied node does not exist"); return; }
+            
             if (CurrentModel.Nodes.Contains(CopiedKeyframesData.CopiedNode) == false)
             {
                 MessageBox.Show("Copied node is not part of the model");
@@ -13449,7 +13106,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void refresh_rData(object sender, RoutedEventArgs e)
+        private void RefreshRenderData(object? sender, RoutedEventArgs? e)
         {
             Pause = true;
             CollectTexturesOpenGL();
@@ -13458,24 +13115,25 @@ namespace Wa3Tuner
             foreach (var g in CurrentModel.Geosets) g.RecalculateEdges();
             Pause = false;
         }
-        private void renameModelFile(object sender, RoutedEventArgs e)
+      
+        private void renameModelFile(object? sender, RoutedEventArgs? e)
         {
-            if (File.Exists(CurrentSaveLocaiton))
+            if (File.Exists(CurrentSaveLocation))
             {
-                string name = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocaiton);
-                Input s = new Input(name);
+                string? name = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocation);
+                Input s = new  (name);
                 if (s.ShowDialog() == true)
                 {
                     string i = s.Result;
                     if (i.Length > 0)
                     {
-                        CurrentSaveLocaiton = FileRenamer.RenameFile(CurrentSaveLocaiton, i);
+                        CurrentSaveLocation = FileRenamer.RenameFile(CurrentSaveLocation, i);
                         RefreshTitle();
                     }
                 }
             }
         }
-        private void removeAllExtents(object sender, RoutedEventArgs e)
+        private void removeAllExtents(object? sender, RoutedEventArgs? e)
         {
             foreach (var sequence in CurrentModel.Sequences)
             {
@@ -13489,9 +13147,9 @@ namespace Wa3Tuner
                     extent.Extent = new CExtent();
                 }
             }
-            refresh_rData(null, null);
+            RefreshRenderData(null, null);
         }
-        private void view_gs_groups(object sender, RoutedEventArgs e)
+        private void view_gs_groups(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -13505,35 +13163,36 @@ namespace Wa3Tuner
                 MessageBox.Show("Select a single geoset");
             }
         }
-        private void edituv_g(object sender, RoutedEventArgs e)
+        private void edituv_g(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
-                mapper.Show();
-                mapper.SetData(CurrentModel, ListGeosets.Items.IndexOf(ListGeosets.SelectedItems[0]));
+              //  mapper.Show();
+              //  mapper.SetData(CurrentModel, ListGeosets.Items.IndexOf(ListGeosets.SelectedItems[0]));
             }
             else
             {
                 MessageBox.Show("Select a single geoset");
             }
         }
-        private void rkr(object sender, RoutedEventArgs e)
+        private void rkr(object? sender, RoutedEventArgs? e)
         {
             var rk = new RawKeyframeRearranger();
             rk.ShowDialog();
         }
-        private void setsqExtentsall(object sender, RoutedEventArgs e)
+        private void setsqExtentsall(object? sender, RoutedEventArgs? e)
         {
             Edit_Extent ee = new Edit_Extent(CurrentModel, true);
             ee.ShowDialog();
+            if (ee.DialogResult == true) History.Sequences.Add(CurrentModel);
         }
-        private void tss(object sender, RoutedEventArgs e)
+        private void tss(object? sender, RoutedEventArgs? e)
         {
             string path = System.IO.Path.Combine(AppHelper.Local, "Paths\\Tilepaths.txt");
             bigTextContainer bx = new bigTextContainer(path);
             bx.ShowDialog();
         }
-        private void pastega_a(object sender, RoutedEventArgs e)
+        private void pastega_a(object? sender, RoutedEventArgs? e)
         {
             var selected = GetSelectedGeosetAnimation();
             if (CopiedAnimation != null && CurrentModel.GeosetAnimations.Contains(CopiedAnimation))
@@ -13558,7 +13217,7 @@ namespace Wa3Tuner
                 RefreshGeosetAnimationsList();
             }
         }
-        private void pastega_c(object sender, RoutedEventArgs e)
+        private void pastega_c(object? sender, RoutedEventArgs? e)
         {
             var selected = GetSelectedGeosetAnimation();
             if (CopiedAnimation != null && CurrentModel.GeosetAnimations.Contains(CopiedAnimation))
@@ -13583,7 +13242,7 @@ namespace Wa3Tuner
                 RefreshGeosetAnimationsList();
             }
         }
-        private void pastega_ca(object sender, RoutedEventArgs e)
+        private void pastega_ca(object? sender, RoutedEventArgs? e)
         {
             var selected = GetSelectedGeosetAnimation();
             if (CopiedAnimation != null && CurrentModel.GeosetAnimations.Contains(CopiedAnimation))
@@ -13621,15 +13280,15 @@ namespace Wa3Tuner
                 RefreshGeosetAnimationsList();
             }
         }
-        private CGeosetAnimation CopiedAnimation;
-        private void copyga(object sender, RoutedEventArgs e)
+       
+        private void copyga(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
                 CopiedAnimation = GetSelectedGeosetAnimation();
             }
         }
-        private void CopyTexture(object sender, RoutedEventArgs e)
+        private void CopyTexture(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -13644,7 +13303,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void PasteTexture(object sender, RoutedEventArgs e)
+        private void PasteTexture(object? sender, RoutedEventArgs? e)
         {
             string copied = Clipboard.GetText();
             if (CurrentModel.Textures.Any(x => x.FileName.ToLower() == copied.ToLower()))
@@ -13663,12 +13322,12 @@ namespace Wa3Tuner
                 else { MessageBox.Show("The pasted string is not a valid path within the MPQs"); return; }
             }
         }
-        private void SelectedCS(object sender, SelectionChangedEventArgs e)
+        private void SelectedCS(object? sender, SelectionChangedEventArgs? e)
         {
             if (list_cs.SelectedItem == null) return;
             CurrentlySelectedCollisionShape = GetSelectedCollisionShape();
         }
-        private void SetCurrentCSModAmount(object sender, TextChangedEventArgs e)
+        private void SetCurrentCSModAmount(object? sender, TextChangedEventArgs e)
         {
             bool p = float.TryParse(inputCSModifyAmmount.Text, out float val);
             if (p)
@@ -13681,7 +13340,7 @@ namespace Wa3Tuner
                 CurentCSModifyAmount = 1;
             }
         }
-        private void ScaleUpCS(object sender, RoutedEventArgs e)
+        private void ScaleUpCS(object? sender, RoutedEventArgs? e)
         {
             if (CurrentlySelectedCollisionShape != null)
             {
@@ -13701,7 +13360,7 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void ScaleDownCS(object sender, RoutedEventArgs e)
+        private void ScaleDownCS(object? sender, RoutedEventArgs? e)
         {
             if (CurrentlySelectedCollisionShape != null)
             {
@@ -13737,10 +13396,10 @@ namespace Wa3Tuner
                 CurrentModel.CalculateCollisionShapeEdges();
             }
         }
-        private void CSBack_PreviewMouseDown(object sender, MouseEventArgs e)
+        private void CSBack_PreviewMouseDown(object? sender, MouseEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13757,10 +13416,10 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void CSFront_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void CSFront_PreviewMouseDown(object? sender, MouseButtonEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13777,10 +13436,10 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void CSBottom_PM(object sender, MouseButtonEventArgs e)
+        private void CSBottom_PM(object? sender, MouseButtonEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13797,10 +13456,10 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void CSTop_PM(object sender, MouseButtonEventArgs e)
+        private void CSTop_PM(object? sender, MouseButtonEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13817,10 +13476,10 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void CSLeft_PM(object sender, MouseButtonEventArgs e)
+        private void CSLeft_PM(object? sender, MouseButtonEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13837,10 +13496,10 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void CSRight_PM(object sender, MouseButtonEventArgs e)
+        private void CSRight_PM(object? sender, MouseButtonEventArgs e)
         {
             float m = CurentCSModifyAmount;
-            var c = CurrentlySelectedCollisionShape; if (c == null) return;
+            var c = CurrentlySelectedCollisionShape; if (c == null || !CurrentModel.Nodes.Contains(CurrentlySelectedCollisionShape)) { MessageBox.Show("Select a collision shape"); return; }
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 if (c.Type == ECollisionShapeType.Box)
@@ -13857,7 +13516,7 @@ namespace Wa3Tuner
             }
             CurrentModel.CalculateCollisionShapeEdges();
         }
-        private void Manual_SetX(object sender, KeyEventArgs e)
+        private void Manual_SetX(object? sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
             bool v = float.TryParse(InputAnimatorX.Text, out float value);
@@ -13872,7 +13531,9 @@ namespace Wa3Tuner
             {
                 if (Tabs_Geosets.SelectedIndex == 3) // rigging
                 {
-                    var bone = getselectedBoneInRigging();
+                    if (ListBonesRiggings.SelectedItem == null) return;
+                    CBone? bone = getselectedBoneInRigging();
+                    if (bone == null) return;
                     bone.PivotPoint.X = value;
                 }
                 else if (Tabs_Geosets.SelectedIndex == 0) // geosets
@@ -13897,6 +13558,97 @@ namespace Wa3Tuner
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Translation, Axes.X, value);
                 }
 
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.translateVertices(Axes.X, vertices, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    var verices = GetSelectedVertices();
+                    Calculator.translateVertices(Axes.X, verices,value);
+                    
+                }
+                else if (modifyMode_current == ModifyMode.Rotate)
+                {
+                    if (Tabs_Geosets.SelectedIndex == 0) // geosets
+                    {
+                        if (ListGeosets.SelectedItems.Count == 0) return;
+                        var list = GetSelectedGeosets();
+                        Calculator.RotateGeosetsTogether(list, value, 0, 0);
+
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 6) // nodes
+                    {
+                        var selected = GetSelectedNodes_NodeEditor();
+                        Calculator.RotateNodes(selected, Axes.X, value);
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 4) // animator
+                    {
+                        int track = Animator_GetTrack();
+                        var node = animator_GetNode();
+                        ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Rotation, Axes.X, value);
+                        return;
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                    {
+                        var triangles = getSelectedTriangles();
+                        var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                        Calculator.RotateVertices(Axes.X, GetSelectedVertices(), value);
+                        
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                    {
+                        Calculator.RotateVertices(Axes.X, GetSelectedVertices(), value);
+                    }
+                    else if (ViewingPaths)
+                    {
+                        RotateSelectedPath(Axes.X, value);
+                    }
+
+                    ResetManualValues_R();
+                }
+                else if (modifyMode_current == ModifyMode.Scale)
+                {
+                    if (Tabs_Geosets.SelectedIndex == 0) // geosets
+                    {
+                        if (ListGeosets.SelectedItems.Count == 0) return;
+                        var list = GetSelectedGeosets();
+                        Calculator.ScaleGeosets(list, Axes.X, value);
+                        InputAnimatorX.Text = "100";
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 6) // nodes
+                    {
+                        var selected = GetSelectedNodes_NodeEditor();
+                        Calculator.ScaleNodes(selected, Axes.X, value);
+                    }
+                    else if (ViewingPaths)
+                    {
+
+                        ScaleSelectedPath(Axes.X, value);
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 4) // animator
+                    {
+                        int track = Animator_GetTrack();
+                        var node = animator_GetNode();
+                        ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Scaling, Axes.X, value);
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                    {
+                        var triangles = getSelectedTriangles();
+                        var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                        Calculator.RotateVertices(Axes.Z, GetSelectedVertices(), value);
+                    }
+                    else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                    {
+                        Calculator.ScaleVertices(Axes.Z, GetSelectedVertices(), value);
+                    }
+                    ResetManualValues_S();
+                }
             }
             else if (modifyMode_current == ModifyMode.Rotate)
             {
@@ -13905,23 +13657,32 @@ namespace Wa3Tuner
                     if (ListGeosets.SelectedItems.Count == 0) return;
                     var list = GetSelectedGeosets();
                     Calculator.RotateGeosetsTogether(list, value, 0, 0);
-
                 }
                 else if (Tabs_Geosets.SelectedIndex == 6) // nodes
                 {
                     var selected = GetSelectedNodes_NodeEditor();
                     Calculator.RotateNodes(selected, Axes.X, value);
                 }
+                else if (ViewingPaths)
+                {
+                    RotateSelectedPath(Axes.X, value);
+                }
                 else if (Tabs_Geosets.SelectedIndex == 4) // animator
                 {
                     int track = Animator_GetTrack();
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Rotation, Axes.X, value);
-                    return;
                 }
-                else if (ViewingPaths)
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
                 {
-                    RotateSelectedPath(Axes.X, value);
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.RotateVertices(Axes.X, GetSelectedVertices(), value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.RotateVertices(Axes.X, GetSelectedVertices(), value);
                 }
                 ResetManualValues_R();
             }
@@ -13932,7 +13693,6 @@ namespace Wa3Tuner
                     if (ListGeosets.SelectedItems.Count == 0) return;
                     var list = GetSelectedGeosets();
                     Calculator.ScaleGeosets(list, Axes.X, value);
-                    InputAnimatorX.Text = "100";
                 }
                 else if (Tabs_Geosets.SelectedIndex == 6) // nodes
                 {
@@ -13941,7 +13701,6 @@ namespace Wa3Tuner
                 }
                 else if (ViewingPaths)
                 {
-
                     ScaleSelectedPath(Axes.X, value);
                 }
                 else if (Tabs_Geosets.SelectedIndex == 4) // animator
@@ -13949,6 +13708,14 @@ namespace Wa3Tuner
                     int track = Animator_GetTrack();
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Scaling, Axes.X, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //  triangles
+                {
+                    //unfinished
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.ScaleVertices(Axes.X, GetSelectedVertices(), value);
                 }
                 ResetManualValues_S();
             }
@@ -14008,8 +13775,9 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ModifyAnimatedPositionOfNodeAndVertices(int track, INode node, TransformationType type, Axes axes, float value, bool increment = false)
+        private void ModifyAnimatedPositionOfNodeAndVertices(int track, INode? node, TransformationType type, Axes axes, float value, bool increment = false)
         {
+            if (node == null) return;
             //  MessageBox.Show($"type {type}, axes {axes}, value {value}");
             if (type == TransformationType.Translation)
             {
@@ -14093,7 +13861,7 @@ namespace Wa3Tuner
             if (List_Sequences_Animator.SelectedItem != null && List_Nodes_Animator.SelectedItem != null)
             {
                 CSequence sequence = GetSelectedSequenceAnimator();
-                SelectedNodeInAnimator = GetSelectedNodeInanimator();
+                SelectedNodeInAnimator = GetSelectedNodeInanimator(); if (SelectedNodeInAnimator == null) return;
                 List<int> tracks = new List<int>();
                 for (int i = sequence.IntervalStart; i <= sequence.IntervalEnd; i++)
                 {
@@ -14138,12 +13906,12 @@ namespace Wa3Tuner
                 List_Keyframes_Animator.Items.Clear();
             }
         }
-        private INode animator_GetNode()
+        private INode? animator_GetNode()
         {
             if (List_Nodes_Animator.SelectedItem == null) { return null; }
             return CurrentModel.Nodes[List_Nodes_Animator.SelectedIndex];
         }
-        private void Manual_SetY(object sender, KeyEventArgs e)
+        private void Manual_SetY(object? sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
             bool v = float.TryParse(InputAnimatorY.Text, out float value);
@@ -14158,7 +13926,9 @@ namespace Wa3Tuner
             {
                 if (Tabs_Geosets.SelectedIndex == 3) // rigging
                 {
-                    var bone = getselectedBoneInRigging();
+                    if (ListBonesRiggings.SelectedItem == null) return;
+                    CBone? bone = getselectedBoneInRigging();
+                    if (bone == null) return;
                     bone.PivotPoint.Y = value;
                 }
                 else if (Tabs_Geosets.SelectedIndex == 0) // geosets
@@ -14182,6 +13952,18 @@ namespace Wa3Tuner
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Translation, Axes.Y, value);
                     return;
+                }
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.translateVertices(Axes.Y, vertices, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    var verices = GetSelectedVertices();
+                    Calculator.translateVertices(Axes.Y, verices, value);
                 }
 
             }
@@ -14208,6 +13990,17 @@ namespace Wa3Tuner
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Rotation, Axes.X, value);
                 }
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.translateVertices(Axes.Y, vertices, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.RotateVertices(Axes.Y, GetSelectedVertices(), value);
+                }
                 ResetManualValues_R();
             }
             else if (modifyMode_current == ModifyMode.Scale)
@@ -14230,13 +14023,21 @@ namespace Wa3Tuner
                 else if (Tabs_Geosets.SelectedIndex == 4) // animator
                 {
                     int track = Animator_GetTrack();
-                    var node = animator_GetNode();
+                    INode? node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Scaling, Axes.Y, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //  triangles
+                {
+                    //unfinished
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.ScaleVertices(Axes.Y, GetSelectedVertices(), value);
                 }
                 ResetManualValues_S();
             }
         }
-        private void Manual_SetZ(object sender, KeyEventArgs e)
+        private void Manual_SetZ(object? sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
             bool v = float.TryParse(InputAnimatorZ.Text, out float value);
@@ -14249,7 +14050,9 @@ namespace Wa3Tuner
             {
                 if (Tabs_Geosets.SelectedIndex == 3) // rigging
                 {
-                    var bone = getselectedBoneInRigging();
+                    if (ListBonesRiggings.SelectedItem == null) return; 
+                    CBone? bone = getselectedBoneInRigging();
+                    if (bone == null) return;
                     bone.PivotPoint.Z = value;
                 }
                 else if (Tabs_Geosets.SelectedIndex == 0) // geosets
@@ -14272,6 +14075,15 @@ namespace Wa3Tuner
                     int track = Animator_GetTrack();
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Translation, Axes.Z, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //  triangles
+                {
+                    //unfinished
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    var verices = GetSelectedVertices();
+                    Calculator.translateVertices(Axes.Z, verices, value);
                 }
             }
             else if (modifyMode_current == ModifyMode.Rotate)
@@ -14297,6 +14109,17 @@ namespace Wa3Tuner
                     var node = animator_GetNode();
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Rotation, Axes.Z, value);
                     return;
+                }
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.translateVertices(Axes.Z, vertices, value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.RotateVertices(Axes.Z, GetSelectedVertices(), value);
                 }
                 ResetManualValues_R();
             }
@@ -14324,6 +14147,17 @@ namespace Wa3Tuner
                     ModifyAnimatedPositionOfNodeAndVertices(track, node, TransformationType.Scaling, Axes.Z, value);
                     return;
                 }
+                else if (Tabs_Geosets.SelectedIndex == 1) //  triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+
+                    Calculator.ScaleVertices(Axes.Z, GetSelectedVertices(), value);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
+                {
+                    Calculator.ScaleVertices(Axes.Z, GetSelectedVertices(), value);
+                }
                 ResetManualValues_S();
             }
         }
@@ -14339,7 +14173,7 @@ namespace Wa3Tuner
             InputAnimatorY.Text = "100";
             InputAnimatorZ.Text = "100";
         }
-        private void MergeBones(object sender, RoutedEventArgs e)
+        private void MergeBones(object? sender, RoutedEventArgs? e)
         {
             List<string> list = GetMergeableBones();
             if (list.Count <= 1)
@@ -14375,6 +14209,11 @@ namespace Wa3Tuner
             {
                 foreach (var vertex in geoset.Vertices)
                 {
+                    if (vertex.Group == null)
+                    {
+                        MessageBox.Show($"Null group for vertex {vertex.ObjectId} of geoset {geoset.ObjectId}");
+                        continue;
+                    }
                     if (vertex.Group.Object == null)
                     {
                         MessageBox.Show($"Null group object for vertex {vertex.ObjectId} of geoset {geoset.ObjectId}");
@@ -14415,17 +14254,10 @@ namespace Wa3Tuner
                 }
             }
         }
-        private bool GGroupHasNode(INode node, CObjectReference<CGeosetGroup> group)
-        {
-            foreach (var gnode in group.Object.Nodes)
-            {
-                if (gnode.Node.Node == node) { return true; }
-            }
-            return false;
-        }
+         
         private List<string> GetMergeableBones()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (var node in CurrentModel.Nodes)
             {
                 if (node is CBone)
@@ -14441,7 +14273,7 @@ namespace Wa3Tuner
         }
         private List<INode> SelectedNodesInNodeEditor = new List<INode>();
         private bool InAnimator = false;
-        private void SelectedNodeInNodeEditor(object sender, SelectionChangedEventArgs e)
+        private void SelectedNodeInNodeEditor(object? sender, SelectionChangedEventArgs? e)
         {
             SelectedNodesInNodeEditor.Clear();
             if (list_Node_Editor.Items.Count == 0 || CurrentModel.Nodes.Count < list_Node_Editor.Items.Count) { return; }
@@ -14478,11 +14310,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void NodeList_SelectAll(object sender, RoutedEventArgs e)
+        private void NodeList_SelectAll(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.SelectAll();
         }
-        private void NodeList_SelectN(object sender, RoutedEventArgs e)
+        private void NodeList_SelectN(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.SelectedItems.Clear();
             foreach (var node in CurrentModel.Nodes)
@@ -14490,7 +14322,7 @@ namespace Wa3Tuner
                 node.IsSelected = false;
             }
         }
-        private void NodeList_SelectI(object sender, RoutedEventArgs e)
+        private void NodeList_SelectI(object? sender, RoutedEventArgs? e)
         {
             foreach (var item in list_Node_Editor.Items)
             {
@@ -14504,7 +14336,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_AlignX(object sender, RoutedEventArgs e)
+        private void NodeEditor_AlignX(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
@@ -14514,7 +14346,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_AlignY(object sender, RoutedEventArgs e)
+        private void NodeEditor_AlignY(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
@@ -14524,7 +14356,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_AlignZ(object sender, RoutedEventArgs e)
+        private void NodeEditor_AlignZ(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
@@ -14534,7 +14366,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_SwapLocs(object sender, RoutedEventArgs e)
+        private void NodeEditor_SwapLocs(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count == 2)
             {
@@ -14547,7 +14379,7 @@ namespace Wa3Tuner
                 MessageBox.Show("Select exactly two nodes");
             }
         }
-        private void NodeEditor_NegateX(object sender, RoutedEventArgs e)
+        private void NodeEditor_NegateX(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 0)
             {
@@ -14563,14 +14395,14 @@ namespace Wa3Tuner
             {
                 if (!File.Exists(filename))
                     throw new FileNotFoundException("The file does not exist.", filename);
-                string directory = System.IO.Path.GetDirectoryName(filename);
-                string extension = System.IO.Path.GetExtension(filename);
-                string newFilePath = System.IO.Path.Combine(directory, newname + extension);
+                string? directory = System.IO.Path.GetDirectoryName(filename) ?? throw new FileNotFoundException("The file does not exist.", filename);
+                string? extension = System.IO.Path.GetExtension(filename) ?? throw new FileNotFoundException("The file does not exist.", filename);
+                string? newFilePath = System.IO.Path.Combine(directory, newname + extension);
                 File.Move(filename, newFilePath);
                 return newFilePath;
             }
         }
-        private void NodeEditor_NegateY(object sender, RoutedEventArgs e)
+        private void NodeEditor_NegateY(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 0)
             {
@@ -14580,7 +14412,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_NegateZ(object sender, RoutedEventArgs e)
+        private void NodeEditor_NegateZ(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 0)
             {
@@ -14590,45 +14422,45 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void NodeEditor_MirrorX(object sender, RoutedEventArgs e)
+        private void NodeEditor_MirrorX(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
                 Calculator.MirrorNodePositions(SelectedNodesInNodeEditor, Axes.X);
             }
         }
-        private void NodeEditor_MirrorY(object sender, RoutedEventArgs e)
+        private void NodeEditor_MirrorY(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
                 Calculator.MirrorNodePositions(SelectedNodesInNodeEditor, Axes.Y);
             }
         }
-        private void NodeEditor_MirrorZ(object sender, RoutedEventArgs e)
+        private void NodeEditor_MirrorZ(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
                 Calculator.MirrorNodePositions(SelectedNodesInNodeEditor, Axes.Z);
             }
         }
-        private void NodeEditor_Disperce(object sender, RoutedEventArgs e)
+        private void NodeEditor_Disperce(object? sender, RoutedEventArgs? e)
         {
             if (SelectedNodesInNodeEditor.Count > 1)
             {
                 Calculator.DisperceVectors(SelectedNodesInNodeEditor.Select(x => x.PivotPoint).ToList());
             }
         }
-        private void removeAllgse(object sender, RoutedEventArgs e)
+        private void removeAllgse(object? sender, RoutedEventArgs? e)
         {
             foreach (var g in CurrentModel.Geosets) g.Extents.Clear();
         }
-        private void SetFullScreenMode(object sender, RoutedEventArgs e)
+        private void SetFullScreenMode(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             MaximizeOnStart = Menuitem_Maximize.IsChecked == true;
             SaveSettings();
         }
-        private void MergeSimilarBones(object sender, RoutedEventArgs e)
+        private void MergeSimilarBones(object? sender, RoutedEventArgs? e)
         {
             // collect all bone groups with identical transfomrations from the root
             List<INode> Bones = CurrentModel.Nodes.Where(x => hasParent(x) == false && x is CBone).ToList();
@@ -14657,24 +14489,8 @@ namespace Wa3Tuner
             }
             RefreshNodesTree();
         }
-        private void ReplaceNodeInMatrixGroupsWithNode(INode groupedNode, CBone generatedBone)
-        {
-            foreach (var geoset in CurrentModel.Geosets)
-            {
-                foreach (var vertex in geoset.Vertices)
-                {
-                    foreach (var gnode in vertex.Group.Object.Nodes)
-                    {
-                        if (gnode.Node.Node == groupedNode)
-                        {
-                            gnode.Node.Detach();
-                            gnode.Node.Attach(generatedBone);
-                        }
-                    }
-                }
-            }
-        }
-        private List<List<INode>> CollectIdenticalBoneGroups(List<INode> bones)
+       
+        private static List<List<INode>> CollectIdenticalBoneGroups(List<INode> bones)
         {
             var Copy = bones;
             List<List<INode>> BigList = new List<List<INode>>();
@@ -14708,7 +14524,7 @@ namespace Wa3Tuner
             }
             return BigList;
         }
-        private bool AreNodeTransformationsIdentical(INode node1, INode node2)
+        private static bool AreNodeTransformationsIdentical(INode node1, INode node2)
         {
             if (node1.Translation.Count > 0 && node1.Translation.Count == node2.Translation.Count)
             {
@@ -14733,10 +14549,10 @@ namespace Wa3Tuner
             }
             return true;
         }
-        private void ebti(object sender, RoutedEventArgs e)
+        private void ebti(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) return;
-            var node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             InputVector iv = new InputVector(AllowedValue.Both, "Percentage");
             iv.x.Text = node.WeightScaling.X.ToString();
             iv.y.Text = node.WeightScaling.Y.ToString();
@@ -14753,10 +14569,10 @@ namespace Wa3Tuner
                 node.WeightTranslation = new CVector3(x, y, z);
             }
         }
-        private void ebtr(object sender, RoutedEventArgs e)
+        private void ebtr(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) return;
-            var node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             InputVector iv = new InputVector(AllowedValue.Both, "Percentage");
             iv.x.Text = node.WeightRotation.X.ToString();
             iv.y.Text = node.WeightRotation.Y.ToString();
@@ -14773,10 +14589,10 @@ namespace Wa3Tuner
                 node.WeightRotation = new CVector3(x, y, z);
             }
         }
-        private void ebts(object sender, RoutedEventArgs e)
+        private void ebts(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) return;
-            var node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node == null) return;
             InputVector iv = new InputVector(AllowedValue.Both, "Percentage");
             iv.x.Text = node.WeightScaling.X.ToString();
             iv.y.Text = node.WeightScaling.Y.ToString();
@@ -14813,7 +14629,7 @@ namespace Wa3Tuner
         /// <param name="WhichKeyframe"></param>
         public void RefreshAnimatedVertexAndNodePositionsForRendering(int WhichKeyframe = -1)
         {
-            // MessageBox.Show("called");
+            
             int value = WhichKeyframe == -1 ? GetCurrentnpuTrack() : WhichKeyframe;
             if (value < 0) return;
             foreach (var node in CurrentModel.Nodes)
@@ -14830,7 +14646,7 @@ namespace Wa3Tuner
             if (v) { return val; }
             return -2;
         }
-        private void setAxsModeX(object sender, RoutedEventArgs e)
+        private void setAxsModeX(object? sender, RoutedEventArgs? e)
         {
             axisMode = Axes.X;
             button_X.BorderBrush = Brushes.Green;
@@ -14838,7 +14654,7 @@ namespace Wa3Tuner
             button_Z.BorderBrush = Brushes.Gray;
             button_U.BorderBrush = Brushes.Gray;
         }
-        private void setAxsModeY(object sender, RoutedEventArgs e)
+        private void setAxsModeY(object? sender, RoutedEventArgs? e)
         {
             axisMode = Axes.Y;
             button_X.BorderBrush = Brushes.Gray;
@@ -14846,7 +14662,7 @@ namespace Wa3Tuner
             button_Z.BorderBrush = Brushes.Gray;
             button_U.BorderBrush = Brushes.Gray;
         }
-        private void setAxsModeZ(object sender, RoutedEventArgs e)
+        private void setAxsModeZ(object? sender, RoutedEventArgs? e)
         {
             axisMode = Axes.Z;
             button_X.BorderBrush = Brushes.Gray;
@@ -14854,7 +14670,7 @@ namespace Wa3Tuner
             button_Z.BorderBrush = Brushes.Green;
             button_U.BorderBrush = Brushes.Gray;
         }
-        private void setAxsModeU(object sender, RoutedEventArgs e)
+        private void setAxsModeU(object? sender, RoutedEventArgs? e)
         {
             axisMode = Axes.U;
             button_X.BorderBrush = Brushes.Gray;
@@ -14865,13 +14681,13 @@ namespace Wa3Tuner
         //------------------------------------------------------
         //--ANIMATOR FUNCTIONS END
         //------------------------------------------------------
-        private void Disperse(object sender, RoutedEventArgs e)
+        private void Disperse(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             Calculator.DisperceVectors(Vertices.Select(X => X.Position).ToList());
             SetSaved(false);
         }
-        private void flattenVertices(object sender, RoutedEventArgs e)
+        private void flattenVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count < 2) { MessageBox.Show("Select at least 2 vertices"); return; }
@@ -14897,17 +14713,58 @@ namespace Wa3Tuner
                 SetSaved(false);
             }
         }
-        private void collaprseVertices(object sender, RoutedEventArgs e)
+        private void CollapseVertices(object? sender, RoutedEventArgs? e)
         {
-            List<CGeosetVertex> Vertices = GetSelectedVertices();
-            if (Vertices.Count < 2) { MessageBox.Show("Select at least 2 vertices"); return; }
-            for (int i = 1; i < Vertices.Count; i++)
+            List<CGeosetVertex> vertices = GetSelectedVertices();
+            if (vertices.Count < 2)
             {
-                Vertices[i].Position = new CVector3(Vertices[0].Position);
+                MessageBox.Show("Select at least 2 vertices");
+                return;
             }
+
+            Dictionary<CGeoset, List<CGeosetVertex>> reference = new Dictionary<CGeoset, List<CGeosetVertex>>();
+
+            // Group vertices by geoset
+            foreach (var vertex in vertices)
+            {
+                foreach (var geoset in CurrentModel.Geosets)
+                {
+                    if (geoset.Vertices.Contains(vertex))
+                    {
+                        if (!reference.ContainsKey(geoset))
+                            reference[geoset] = new List<CGeosetVertex>();
+                        reference[geoset].Add(vertex);
+                        break; // One vertex should belong to only one geoset
+                    }
+                }
+            }
+
+            foreach (var pair in reference)
+            {
+                if (pair.Value.Count <= 1) continue;
+
+                var first = pair.Value.First();
+                var redundantVertices = pair.Value.Skip(1).ToList();
+
+                foreach (var triangle in pair.Key.Triangles)
+                {
+                    if (redundantVertices.Contains(triangle.Vertex1.Object))
+                        triangle.Vertex1.Attach(first);
+                    if (redundantVertices.Contains(triangle.Vertex2.Object))
+                        triangle.Vertex2.Attach(first);
+                    if (redundantVertices.Contains(triangle.Vertex3.Object))
+                        triangle.Vertex3.Attach(first);
+                }
+
+                foreach (var v in redundantVertices)
+                    pair.Key.Vertices.Remove(v);
+            }
+            UpdateSelectedVerticesInfo();
             SetSaved(false);
+            RefreshRenderData(null, null); RefreshGeosets_Vertices();
         }
-        private void floorVertices(object sender, RoutedEventArgs e)
+
+        private void floorVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             foreach (var vertex in Vertices)
@@ -14916,7 +14773,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void CelingVertices(object sender, RoutedEventArgs e)
+        private void CelingVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             foreach (var vertex in Vertices)
@@ -14925,7 +14782,7 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void swapTrianglePositions(object sender, RoutedEventArgs e)
+        private void swapTrianglePositions(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetTriangle> triangles = getSelectedTriangles();
             if (triangles.Count != 2) { MessageBox.Show("Select eactly 2 triangles"); return; }
@@ -14942,7 +14799,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void splitVertices(object sender, RoutedEventArgs e)
+        private void splitVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             foreach (var vertex in Vertices)
@@ -14950,7 +14807,7 @@ namespace Wa3Tuner
                 SplitVertex(vertex);
             }
         }
-        private CGeoset GetGeosetOfVertex(CGeosetVertex vertex)
+        private CGeoset? GetGeosetOfVertex(CGeosetVertex vertex)
         {
             foreach (var geoset in CurrentModel.Geosets)
             {
@@ -15012,20 +14869,20 @@ namespace Wa3Tuner
         private CVector3 CopiedVertexPosition = new CVector3();
         private CVector3 CopiedNormalPosition = new CVector3();
         private CVector2 CopiedUVPosition = new CVector2();
-        private void CopyVertexPos(object sender, RoutedEventArgs e)
+        private void CopyVertexPos(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             CopiedVertexPosition = new CVector3(Vertices[0].Position);
         }
-        private void pasteVertexPos(object sender, RoutedEventArgs e)
+        private void pasteVertexPos(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             Vertices[0].Position = new CVector3(CopiedVertexPosition);
             SetSaved(false);
         }
-        private void SwapVerticesPos(object sender, RoutedEventArgs e)
+        private void SwapVerticesPos(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 2) { MessageBox.Show("Select exactly 2 vertices"); return; }
@@ -15033,37 +14890,51 @@ namespace Wa3Tuner
             Vertices[0].Position = new CVector3(Vertices[1].Position);
             Vertices[1].Position = new CVector3(temp);
         }
-        private void copynormal(object sender, RoutedEventArgs e)
+        private void copynormal(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             CopiedNormalPosition = new CVector3(Vertices[0].Normal);
         }
-        private void pastenormal(object sender, RoutedEventArgs e)
+        private void pastenormal(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             Vertices[0].Normal = new CVector3(CopiedNormalPosition);
             SetSaved(false);
         }
-        private void copyuvv(object sender, RoutedEventArgs e)
+        private void copyuvv(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             CopiedUVPosition = new CVector2(Vertices[0].TexturePosition);
         }
-        private void pasteuvv(object sender, RoutedEventArgs e)
+        private void pasteuvv(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 1) { MessageBox.Show("Select exactly 1 vertex"); return; }
             Vertices[0].TexturePosition = new CVector2(CopiedUVPosition);
         }
-        private void putongroundvertices(object sender, RoutedEventArgs e)
+        private void putongroundvertices(object? sender, RoutedEventArgs? e)
         {
-            List<CGeosetVertex> Vertices = GetSelectedVertices();
-            Calculator.PutOnGround(Vertices);
+            if (Tabs_Geosets.SelectedIndex == 0)
+            {
+                var Vertices = GetSelectedGeosets().SelectMany(x => x.Vertices.ObjectList).ToList();
+                Calculator.PutOnGround(Vertices);
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                var Vertices = getSelectedTriangles().SelectMany(x => x.Vertices).Distinct().ToList();
+                Calculator.PutOnGround(Vertices);
+            }
+            else if (Tabs_Geosets.SelectedIndex == 0) // vertices
+            {
+                List<CGeosetVertex> Vertices = GetSelectedVertices();
+                Calculator.PutOnGround(Vertices);
+            }
+           
         }
-        private void cernterverticesAtNode(object sender, RoutedEventArgs e)
+        private void cernterverticesAtNode(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count == 0) return;
@@ -15077,7 +14948,7 @@ namespace Wa3Tuner
                 Calculator.CenterVerticesAtVector(node.PivotPoint, Vertices);
             }
         }
-        private void mirrorvertices(object sender, RoutedEventArgs e)
+        private void mirrorvertices(object? sender, RoutedEventArgs? e)
         {
             //unfinished
             List<CGeosetVertex> Vertices = GetSelectedVertices();
@@ -15090,20 +14961,21 @@ namespace Wa3Tuner
             }
             SetSaved(false);
         }
-        private void weldVertices(object sender, RoutedEventArgs e)
+        private void weldVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count != 2) { MessageBox.Show("Select exactly 2 vertices"); return; }
             var owner = VerticesBelongToSameGeoset(Vertices);
-            if (owner == null) { MessageBox.Show("The selected vertces don't belong to the sae geoset"); return; }
+            if (owner == null) { MessageBox.Show("The selected vertces don't belong to the same geoset"); return; }
             var centroid = Calculator.GetCentroidOfVertices(Vertices);
             Vertices[0].Position = new CVector3(centroid);
             ReattachVertexWithVertex(Vertices[1], Vertices[0], owner);
             owner.Vertices.Remove(Vertices[1]);
             SetSaved(false);
+            RefreshRenderData(null, null); RefreshGeosets_Vertices();
         }
 
-        private void ReattachVertexWithVertex(CGeosetVertex target, CGeosetVertex with, CGeoset owner)
+        private static void ReattachVertexWithVertex(CGeosetVertex target, CGeosetVertex with, CGeoset owner)
         {
             foreach (var trangle in owner.Triangles)
             {
@@ -15113,7 +14985,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void negateVertices(object sender, RoutedEventArgs e)
+        private void negateVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count < 0) { MessageBox.Show("Select at least 1 vertex"); return; }
@@ -15140,22 +15012,22 @@ namespace Wa3Tuner
             }
 
         }
-        private CGeoset VerticesBelongToSameGeoset(List<CGeosetVertex> vertices)
+        private CGeoset? VerticesBelongToSameGeoset(List<CGeosetVertex> vertices)
         {
+            
             foreach (var geoset in CurrentModel.Geosets)
             {
-                if (
-                    geoset.Vertices.Contains(vertices[0]) &&
-                    geoset.Vertices.Contains(vertices[1]) &&
-                    geoset.Vertices.Contains(vertices[2])
-                    )
+
+              foreach (var vertex in vertices)
                 {
-                    return geoset;
+                    if (geoset.Vertices.Contains(vertex) == false) return null;
+
                 }
+                return geoset;
             }
             return null;
         }
-        private void createTriangleinVertices(object sender, RoutedEventArgs e)
+        private void createTriangleinVertices(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             if (Vertices.Count < 3 || Vertices.Count > 4)
@@ -15164,7 +15036,7 @@ namespace Wa3Tuner
                 return;
             }
 
-            CGeoset owner = VerticesBelongToSameGeoset(Vertices);
+            CGeoset ? owner = VerticesBelongToSameGeoset(Vertices);
             if (owner == null)
             {
                 MessageBox.Show("All selected vertices must belong to the same geoset");
@@ -15221,7 +15093,7 @@ namespace Wa3Tuner
                 }
 
                 // Check if one of the two triangles exists and complete the quad
-                CGeosetTriangle existingTriangle = owner.Triangles.FirstOrDefault(t =>
+                CGeosetTriangle? existingTriangle = owner.Triangles.FirstOrDefault(t =>
                     (t.Vertex1.Object == v0 && t.Vertex2.Object == v1 && t.Vertex3.Object == v2) ||
                     (t.Vertex1.Object == v0 && t.Vertex2.Object == v2 && t.Vertex3.Object == v3) ||
                     (t.Vertex1.Object == v1 && t.Vertex2.Object == v2 && t.Vertex3.Object == v3) ||
@@ -15255,7 +15127,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void deleteVertex(object sender, RoutedEventArgs e)
+        private void deleteVertex(object? sender, RoutedEventArgs? e)
         {
             List<CGeosetVertex> Vertices = GetSelectedVertices();
             foreach (var v in Vertices)
@@ -15273,15 +15145,17 @@ namespace Wa3Tuner
                     }
                 }
             }
+            RefreshGeosets_Vertices();
         }
-        private void DEleteTriangles(object sender, RoutedEventArgs e)
+        private void DEleteTriangles(object? sender, RoutedEventArgs? e)
         {
             foreach (var geoset in CurrentModel.Geosets)
             {
                 geoset.Triangles.ObjectList.RemoveAll(x => x.isSelected == true);
             }
+            RefreshGeosets_Triangles();
         }
-        private void Animator_ClearTranslations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ClearTranslations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15290,7 +15164,7 @@ namespace Wa3Tuner
                 node.Translation.NodeList.RemoveAll(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd);
             }
         }
-        private void Animator_ClearRotations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ClearRotations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15299,7 +15173,7 @@ namespace Wa3Tuner
                 node.Rotation.NodeList.RemoveAll(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd);
             }
         }
-        private void Animator_ClearScalings_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ClearScalings_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15308,7 +15182,7 @@ namespace Wa3Tuner
                 node.Scaling.NodeList.RemoveAll(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd);
             }
         }
-        private void Animator_ReverseTranslations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ReverseTranslations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15329,7 +15203,7 @@ namespace Wa3Tuner
             }
             RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void Animator_ReverseRotations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ReverseRotations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15350,7 +15224,7 @@ namespace Wa3Tuner
             }
             RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void Animator_ReverseScalings_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_ReverseScalings_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15371,7 +15245,7 @@ namespace Wa3Tuner
             }
             RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void Animator_NegateTranslations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_NegateTranslations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15385,7 +15259,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void Animator_NegateRotations_Sequence(object sender, RoutedEventArgs e)
+        private void Animator_NegateRotations_Sequence(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             var sequence = GetSelectedSequenceAnimator();
@@ -15401,27 +15275,26 @@ namespace Wa3Tuner
                 }
             }
         }
-        private CSequence CopiedAnimatorSequence;
-        private TransformationType CopiedAnimatorSequenceType;
-        private void Animator_CopySequenceTranslation(object sender, RoutedEventArgs e)
+      
+        private void Animator_CopySequenceTranslation(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             CopiedAnimatorSequence = GetSelectedSequenceAnimator();
             CopiedAnimatorSequenceType = TransformationType.Translation;
         }
-        private void Animator_CopySequenceRotation(object sender, RoutedEventArgs e)
+        private void Animator_CopySequenceRotation(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             CopiedAnimatorSequence = GetSelectedSequenceAnimator();
             CopiedAnimatorSequenceType = TransformationType.Rotation;
         }
-        private void Animator_CopySequenceScaling(object sender, RoutedEventArgs e)
+        private void Animator_CopySequenceScaling(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
             CopiedAnimatorSequence = GetSelectedSequenceAnimator();
             CopiedAnimatorSequenceType = TransformationType.Scaling;
         }
-        private void Animator_PasteSequence(object sender, RoutedEventArgs e)
+        private void Animator_PasteSequence(object? sender, RoutedEventArgs? e)
         {
             if (CopiedAnimatorSequence == null) { return; }
             if (CurrentModel.Sequences.Contains(CopiedAnimatorSequence) == false) { return; }
@@ -15452,30 +15325,30 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void CopyKeyframeAll(object sender, RoutedEventArgs e)
+        private void CopyKeyframeAll(object? sender, RoutedEventArgs? e)
         {
         }
-        private void clearquads(object sender, RoutedEventArgs e)
+        private void clearquads(object? sender, RoutedEventArgs? e)
         {
             QuadCollector.Clear();
         }
-        private void clearquadsexcpet(object sender, RoutedEventArgs e)
+        private void clearquadsexcpet(object? sender, RoutedEventArgs? e)
         {
             var t = getSelectedTriangles();
             QuadCollector.ClearExcept(t);
         }
-        private void addSelectedTrianglesAsQuads(object sender, RoutedEventArgs e)
+        private void addSelectedTrianglesAsQuads(object? sender, RoutedEventArgs? e)
         {
             var t = getSelectedTriangles();
             if (t.Count != 2) { MessageBox.Show("Select exactly 2 triangles"); return; }
             QuadCollector.Add(t[0], t[1]);
         }
-        private void fitQuads(object sender, RoutedEventArgs e)
+        private void fitQuads(object? sender, RoutedEventArgs? e)
         {
             QuadFitter qf = new QuadFitter();
             qf.ShowDialog();
         }
-        private void SelectAllBonesInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllBonesInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15486,7 +15359,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllAttachments(object sender, RoutedEventArgs e)
+        private void SelectAllAttachments(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15497,7 +15370,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllCollisionShapesInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllCollisionShapesInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15508,7 +15381,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllEmitters1InNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllEmitters1InNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15519,7 +15392,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllEmitters2InNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllEmitters2InNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15530,7 +15403,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllLightsInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllLightsInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15541,7 +15414,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllRibbonsInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllRibbonsInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15552,7 +15425,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllEventsInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllEventsInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15563,7 +15436,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void SelectAllHelpersInNodeEditor(object sender, RoutedEventArgs e)
+        private void SelectAllHelpersInNodeEditor(object? sender, RoutedEventArgs? e)
         {
             list_Node_Editor.UnselectAll(); // Unselect before modifying
             for (int i = 0; i < list_Node_Editor.Items.Count; i++)
@@ -15574,7 +15447,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void centerGeosetAtGeoset(object sender, RoutedEventArgs e)
+        private void centerGeosetAtGeoset(object? sender, RoutedEventArgs? e)
         {
             var geosets = GetSelectedGeosets();
             if (geosets.Count == 0) { MessageBox.Show("Select at least 1 geoset"); return; }
@@ -15586,7 +15459,7 @@ namespace Wa3Tuner
                 Calculator.CenterGeosetsAtGeoset(geosets, CurrentModel.Geosets[index]); ;
             }
         }
-        private void SelectedPath(object sender, SelectionChangedEventArgs e)
+        private void SelectedPath(object? sender, SelectionChangedEventArgs? e)
         {
             ListPathNodes.Items.Clear();
             if (ListPaths.SelectedItem != null)
@@ -15601,7 +15474,7 @@ namespace Wa3Tuner
                 PathManager.Selected = null;
             }
         }
-        private void newPath(object sender, RoutedEventArgs e)
+        private void newPath(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input("Name");
             if (i.ShowDialog() == true)
@@ -15616,7 +15489,7 @@ namespace Wa3Tuner
                 ListPaths.Items.Add(new ListBoxItem() { Content = s + " [0]" });
             }
         }
-        private void Delath(object sender, RoutedEventArgs e)
+        private void Delath(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem != null)
             {
@@ -15626,7 +15499,7 @@ namespace Wa3Tuner
                 ListPathNodes.Items.Clear();
             }
         }
-        private void RenamePath(object sender, RoutedEventArgs e)
+        private void RenamePath(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem != null)
             {
@@ -15646,11 +15519,11 @@ namespace Wa3Tuner
                 }
             }
         }
-        private PathNode CurrentlySelectedPathNode;
-        private void SelectedPathNode(object sender, SelectionChangedEventArgs e)
+      
+        private void SelectedPathNode(object? sender, SelectionChangedEventArgs? e)
         {
         }
-        private void PullPath(object sender, RoutedEventArgs e)
+        private void PullPath(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem != null)
             {
@@ -15664,16 +15537,16 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ScalePath(object sender, RoutedEventArgs e)
+        private void ScalePath(object? sender, RoutedEventArgs? e)
         {
         }
-        private void RotatePath(object sender, RoutedEventArgs e)
+        private void RotatePath(object? sender, RoutedEventArgs? e)
         {
         }
-        private void MovePath(object sender, RoutedEventArgs e)
+        private void MovePath(object? sender, RoutedEventArgs? e)
         {
         }
-        private void AnimatePath(object sender, RoutedEventArgs e)
+        private void AnimatePath(object? sender, RoutedEventArgs? e)
         {
             if (PathManager.Selected == null)
             {
@@ -15729,7 +15602,7 @@ namespace Wa3Tuner
             t.Close();
             //  RefreshAnimatedVertexAndNodePositionsForRendering();
         }
-        private void AnimatePathRelative(object sender, RoutedEventArgs e)
+        private void AnimatePathRelative(object? sender, RoutedEventArgs? e)
         {
             if (PathManager.Selected == null)
             {
@@ -15793,7 +15666,7 @@ namespace Wa3Tuner
             }
             return list;
         }
-        private void SwapPathNodePos(object sender, RoutedEventArgs e)
+        private void SwapPathNodePos(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.SelectedItems.Count != 2) { MessageBox.Show("Select exactly 2 path nodes"); return; }
@@ -15802,7 +15675,7 @@ namespace Wa3Tuner
             list[0].Position = new CVector3(list[1].Position);
             list[1].Position = new CVector3(temp);
         }
-        private void delPathNode(object sender, RoutedEventArgs e)
+        private void delPathNode(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.SelectedItems.Count == 0) { MessageBox.Show("Select   path node/s"); return; }
@@ -15818,7 +15691,7 @@ namespace Wa3Tuner
                 ListPathNodes.Items.Remove(item);
             }
         }
-        private void duplPathNode(object sender, RoutedEventArgs e)
+        private void duplPathNode(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.SelectedItems.Count == 0) { MessageBox.Show("Select   path node/s"); return; }
@@ -15842,7 +15715,8 @@ namespace Wa3Tuner
         private void RefreshPathNodesList()
         {
             if (ListPaths.SelectedItem == null) { return; }
-            var path = PathManager.Selected;
+            var path = PathManager.Selected ?? throw new FileNotFoundException("null path.");
+
             ListPathNodes.Items.Clear();
             string count = $"{path.Count} Nodes of selected path";
             LabelCountPathNodes.Text = count;
@@ -15853,15 +15727,15 @@ namespace Wa3Tuner
                 ListPathNodes.Items.Add(new ListBoxItem() { Content = content });
             }
         }
-        private void NewPathNode0(object sender, RoutedEventArgs e)
+        private void NewPathNode0(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
-            var path = PathManager.Selected;
+            var path = PathManager.Selected; if (path == null) return;
             path.Add(new PathNode());
             RefreshPathNodesList();
             SetSaved(false);
         }
-        private void NewPathNodeAtNode(object sender, RoutedEventArgs e)
+        private void NewPathNodeAtNode(object? sender, RoutedEventArgs? e)
         {
             if (ListModelNodes_Paths.SelectedItem == null) { MessageBox.Show("Select a model node"); return; }
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
@@ -15873,8 +15747,8 @@ namespace Wa3Tuner
             SetSaved(false);
             RefreshPathNodesList();
         }
-        private CVector3 CopiedPathNodePosition;
-        private void CopyPathNodePos(object sender, RoutedEventArgs e)
+    
+        private void CopyPathNodePos(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.SelectedItems.Count != 1) { MessageBox.Show("Select 1 path node"); return; }
@@ -15882,7 +15756,7 @@ namespace Wa3Tuner
             var pnode = path.List[ListPathNodes.SelectedIndex];
             CopiedPathNodePosition = new CVector3(pnode.Position);
         }
-        private void PastePathNodePos(object sender, RoutedEventArgs e)
+        private void PastePathNodePos(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.SelectedItems.Count != 1) { MessageBox.Show("Select 1 path node"); return; }
@@ -15903,7 +15777,7 @@ namespace Wa3Tuner
             list[one] = list[two];
             list[two] = temp;
         }
-        private void movePahNodeUp(object sender, RoutedEventArgs e)
+        private void movePahNodeUp(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.Items.Count < 2) { MessageBox.Show("Not enough path nodes in the list"); return; }
@@ -15914,7 +15788,7 @@ namespace Wa3Tuner
             SwapElements(path.List, ListPathNodes.SelectedIndex, ListPathNodes.SelectedIndex - 1);
             RefreshPathNodesList();
         }
-        private void movePahNodeDown(object sender, RoutedEventArgs e)
+        private void movePahNodeDown(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.Items.Count < 2) { MessageBox.Show("Not enough path nodes in the list"); return; }
@@ -15925,7 +15799,7 @@ namespace Wa3Tuner
             SwapElements(path.List, ListPathNodes.SelectedIndex, ListPathNodes.SelectedIndex + 1);
             RefreshPathNodesList();
         }
-        private void SwapNodeInOrder(object sender, RoutedEventArgs e)
+        private void SwapNodeInOrder(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
             if (ListPathNodes.Items.Count < 2) { MessageBox.Show("Not enough path nodes in the list"); return; }
@@ -15937,9 +15811,11 @@ namespace Wa3Tuner
             SwapElements(path.List, one, two);
             RefreshPathNodesList();
         }
-        private bool ViewingPaths = false;
-        private void Tab_Animator_SelectionChanged(object sender, SelectionChangedEventArgs e)
+       
+        private void Tab_Animator_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
+            if (PlayTimer == null) return;
+            if (e == null) return;
             if (e.OriginalSource is TabControl tc && tc == Tab_Animator)
             {
                 //----------------------------------
@@ -15988,9 +15864,10 @@ namespace Wa3Tuner
                 }
             }
         }
-        private bool PlayAnimation = false;
-        private void Play(object sender, RoutedEventArgs e)
+       
+        private void Play(object? sender, RoutedEventArgs? e)
         {
+            if (PlayTimer == null) return;
             if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("No sequences"); return; }
             Playback.Sequences = CurrentModel;
             if (ListSequences_Play.SelectedItem == null)
@@ -16017,7 +15894,7 @@ namespace Wa3Tuner
                 IconDontPlay.Visibility = Visibility.Collapsed;
             }
         }
-        private void ChangePlayType(object sender, RoutedEventArgs e)
+        private void ChangePlayType(object? sender, RoutedEventArgs? e)
         {
             if (Radio_PlayDef.IsChecked == true) Playback.Type = PlayBackType.Default;
             else if (Radio_PlayAlways.IsChecked == true) Playback.Type = PlayBackType.Loop;
@@ -16025,48 +15902,50 @@ namespace Wa3Tuner
             else if (Radio_PlayCycle.IsChecked == true) Playback.Type = PlayBackType.Cycle;
             else { Playback.Type = PlayBackType.Paused; }
         }
-        private void SetPlayDefault(object sender, RoutedEventArgs e)
+        private void SetPlayDefault(object? sender, RoutedEventArgs? e)
         {
             playMode = PlayMode.Default;
         }
-        private void setplayNever(object sender, RoutedEventArgs e)
+        private void setplayNever(object? sender, RoutedEventArgs? e)
         {
             playMode = PlayMode.DontLoop;
         }
-        private void setplayalways(object sender, RoutedEventArgs e)
+        private void setplayalways(object? sender, RoutedEventArgs? e)
         {
             playMode = PlayMode.Loop;
         }
-        private void SetPlayCycle(object sender, RoutedEventArgs e)
+        private void SetPlayCycle(object? sender, RoutedEventArgs? e)
         {
             playMode = PlayMode.Cycle;
         }
-        private void ListSequences_Play_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListSequences_Play_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListSequences_Play.SelectedItem != null)
             {
                 Playback.CurrentSequence = CurrentModel.Sequences[ListSequences_Play.SelectedIndex];
             }
         }
-        private void SelectedPathNodes(object sender, SelectionChangedEventArgs e)
+        private void SelectedPathNodes(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListPaths.SelectedItem != null)
             {
                 if (ListPathNodes.SelectedItems.Count == 0)
                 {
+                    if (PathManager.Selected == null) return;
                     foreach (var node in PathManager.Selected.List) { node.IsSelected = false; }
                     InputAnimatorX.Text = "0";
                     InputAnimatorY.Text = "0";
                     InputAnimatorZ.Text = "0";
                     return;
                 }
-                var path = PathManager.Selected;
+                var path = PathManager.Selected; if (path == null) return;
                 // select based on listbox
                 for (int i = 0; i < ListPathNodes.Items.Count; i++)
                 {
                     path.List[i].IsSelected = ListPathNodes.SelectedItems.Contains(ListPathNodes.Items[i]);
                 }
                 // get all selected
+                if (PathManager.Selected == null) return;
                 List<PathNode> SelectedPathNodes = PathManager.Selected.List.Where(x => x.IsSelected).ToList();
                 // set the coodinates in the manual input based on selected
                 if (Selected.Count == 1)
@@ -16084,7 +15963,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ExportPath(object sender, RoutedEventArgs e)
+        private void ExportPath(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem != null)
             {
@@ -16092,7 +15971,7 @@ namespace Wa3Tuner
                 PathManager.Export(path);
             }
         }
-        private void ImportPaths(object sender, RoutedEventArgs e)
+        private void ImportPaths(object? sender, RoutedEventArgs? e)
         {
             if (PathManager.Import())
             {
@@ -16100,20 +15979,20 @@ namespace Wa3Tuner
                 ListPathNodes.Items.Clear();
             }
         }
-        private void ListPathNodes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListPathNodes_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
         }
-        private void editBoneInfluence(object sender, RoutedEventArgs e)
+        private void editBoneInfluence(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) return;
             var node = GetSelectedNode();
             Bone_Influence_Editor be = new Bone_Influence_Editor(node);
         }
-        private void saveNative(object sender, RoutedEventArgs e)
+        private void saveNative(object? sender, RoutedEventArgs? e)
         {
             NativeFormat.Save(CurrentModel);
         }
-        private void load_native(object sender, RoutedEventArgs e)
+        private void load_native(object? sender, RoutedEventArgs? e)
         {
         }
         private void MoveWithArrows(Axes ax, bool positive)
@@ -16124,7 +16003,7 @@ namespace Wa3Tuner
             if (InAnimator)
             {
 
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator(); if (node == null) return;
                 int track = Animator_GetTrack();
                 var first = node.Translation.First(x => x.Time == track);
                 first.Value.X = ax == Axes.X ? (first.Value.X + (positive ? val : -val)) : first.Value.X;
@@ -16188,7 +16067,27 @@ namespace Wa3Tuner
                     }
                 }
             }
-            if (Tabs_Geosets.SelectedIndex == 4) // animator
+            if (Tabs_Geosets.SelectedIndex == 2) // vertuces
+            { 
+                var vertices = GetSelectedVertices();
+                foreach (var v in vertices)
+                {
+                    if (positive)
+                    {
+
+                        v.Position.X += ax == Axes.X ? val : 0;
+                        v.Position.Y += ax == Axes.Y ? val : 0;
+                        v.Position.Z += ax == Axes.Z ? val : 0;
+                    }
+                    else
+                    {
+                        v.Position.X -= ax == Axes.X ? val : 0;
+                        v.Position.Y -= ax == Axes.Y ? val : 0;
+                        v.Position.Z -= ax == Axes.Z ? val : 0;
+                    }
+                }
+            }
+                if (Tabs_Geosets.SelectedIndex == 4) // animator
             {
                 if (Tab_Animator.SelectedIndex == 0) // paths
                 {
@@ -16239,18 +16138,20 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void MoveBackward(object sender, RoutedEventArgs e)
+        private void MoveBackward(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.X, false);
         }
-        private void ScaleUniform(bool positive, Axes AxisMode)
+        private void ScaleSelection(bool positive, Axes AxisMode, bool each)
         {
             float value = GetTransformationIncrement() / 100; // scaling increment
             float scaleFactor = positive ? (1 + value) : (1 - value);
 
             if (InAnimator)
             {
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator();
+                if (node == null) return;
+
                 int track = Animator_GetTrack();
                 var first = node.Scaling.First(x => x.Time == track);
 
@@ -16265,14 +16166,36 @@ namespace Wa3Tuner
             if (Tabs_Geosets.SelectedIndex == 0) // Geosets
             {
                 var geosets = GetSelectedGeosets();
-                foreach (var geoset in geosets)
+                if (each)
                 {
-                    CVector3 centroid = Calculator.GetCentroidOfGeoset(geoset);
-                    foreach (var vertex in geoset.Vertices)
+                    foreach (var geoset in geosets)
                     {
-                        vertex.Position.X = centroid.X + (vertex.Position.X - centroid.X) * scaleFactor;
-                        vertex.Position.Y = centroid.Y + (vertex.Position.Y - centroid.Y) * scaleFactor;
-                        vertex.Position.Z = centroid.Z + (vertex.Position.Z - centroid.Z) * scaleFactor;
+                        CVector3 centroid = Calculator.GetCentroidOfGeoset(geoset);
+
+                        foreach (var vertex in geoset.Vertices)
+                        {
+                            if (AxisMode == Axes.U || AxisMode == Axes.X)
+                                vertex.Position.X = centroid.X + (vertex.Position.X - centroid.X) * scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Y)
+                                vertex.Position.Y = centroid.Y + (vertex.Position.Y - centroid.Y) * scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Z)
+                                vertex.Position.Z = centroid.Z + (vertex.Position.Z - centroid.Z) * scaleFactor;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var geoset in geosets)
+                    {
+                        foreach (var vertex in geoset.Vertices)
+                        {
+                            if (AxisMode == Axes.U || AxisMode == Axes.X)
+                                vertex.Position.X *= scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Y)
+                                vertex.Position.Y *= scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Z)
+                                vertex.Position.Z *= scaleFactor;
+                        }
                     }
                 }
             }
@@ -16282,20 +16205,42 @@ namespace Wa3Tuner
                 var triangles = getSelectedTriangles();
                 CVector3 centroid = Calculator.GetCentroidofTriangles(triangles);
 
-                foreach (var triangle in triangles)
+                if (each)
                 {
-                    triangle.Vertex1.Object.Position.X = centroid.X + (triangle.Vertex1.Object.Position.X - centroid.X) * scaleFactor;
-                    triangle.Vertex1.Object.Position.Y = centroid.Y + (triangle.Vertex1.Object.Position.Y - centroid.Y) * scaleFactor;
-                    triangle.Vertex1.Object.Position.Z = centroid.Z + (triangle.Vertex1.Object.Position.Z - centroid.Z) * scaleFactor;
-
-                    triangle.Vertex2.Object.Position.X = centroid.X + (triangle.Vertex2.Object.Position.X - centroid.X) * scaleFactor;
-                    triangle.Vertex2.Object.Position.Y = centroid.Y + (triangle.Vertex2.Object.Position.Y - centroid.Y) * scaleFactor;
-                    triangle.Vertex2.Object.Position.Z = centroid.Z + (triangle.Vertex2.Object.Position.Z - centroid.Z) * scaleFactor;
-
-                    triangle.Vertex3.Object.Position.X = centroid.X + (triangle.Vertex3.Object.Position.X - centroid.X) * scaleFactor;
-                    triangle.Vertex3.Object.Position.Y = centroid.Y + (triangle.Vertex3.Object.Position.Y - centroid.Y) * scaleFactor;
-                    triangle.Vertex3.Object.Position.Z = centroid.Z + (triangle.Vertex3.Object.Position.Z - centroid.Z) * scaleFactor;
+                    foreach (var triangle in triangles)
+                    {
+                        foreach (var v in new[] { triangle.Vertex1, triangle.Vertex2, triangle.Vertex3 })
+                        {
+                            if (AxisMode == Axes.U || AxisMode == Axes.X)
+                                v.Object.Position.X = centroid.X + (v.Object.Position.X - centroid.X) * scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Y)
+                                v.Object.Position.Y = centroid.Y + (v.Object.Position.Y - centroid.Y) * scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Z)
+                                v.Object.Position.Z = centroid.Z + (v.Object.Position.Z - centroid.Z) * scaleFactor;
+                        }
+                    }
                 }
+                else
+                {
+                    foreach (var triangle in triangles)
+                    {
+                        foreach (var v in new[] { triangle.Vertex1, triangle.Vertex2, triangle.Vertex3 })
+                        {
+                            if (AxisMode == Axes.U || AxisMode == Axes.X)
+                                v.Object.Position.X *= scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Y)
+                                v.Object.Position.Y *= scaleFactor;
+                            if (AxisMode == Axes.U || AxisMode == Axes.Z)
+                                v.Object.Position.Z *= scaleFactor;
+                        }
+                    }
+                }
+            }
+
+            if (Tabs_Geosets.SelectedIndex == 2) // Vertices
+            {
+                var fvertices = GetSelectedVertices();
+                Calculator.ScaleVerticesBy(AxisMode, fvertices, value, positive);
             }
 
             if (Tabs_Geosets.SelectedIndex == 6) // Nodes
@@ -16303,9 +16248,12 @@ namespace Wa3Tuner
                 var nodes = GetSelectedNodes_NodeEditor();
                 foreach (var node in nodes)
                 {
-                    node.PivotPoint.X *= scaleFactor;
-                    node.PivotPoint.Y *= scaleFactor;
-                    node.PivotPoint.Z *= scaleFactor;
+                    if (AxisMode == Axes.U || AxisMode == Axes.X)
+                        node.PivotPoint.X *= scaleFactor;
+                    if (AxisMode == Axes.U || AxisMode == Axes.Y)
+                        node.PivotPoint.Y *= scaleFactor;
+                    if (AxisMode == Axes.U || AxisMode == Axes.Z)
+                        node.PivotPoint.Z *= scaleFactor;
                 }
             }
         }
@@ -16330,27 +16278,27 @@ namespace Wa3Tuner
             return selectedNodes;
         }
 
-        private void MoveForawrad(object sender, RoutedEventArgs e)
+        private void MoveForawrad(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.X, true);
         }
-        private void MoveLeft(object sender, RoutedEventArgs e)
+        private void MoveLeft(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.Y, false);
         }
-        private void MoveRight(object sender, RoutedEventArgs e)
+        private void MoveRight(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.Y, true);
         }
-        private void MoveDown(object sender, RoutedEventArgs e)
+        private void MoveDown(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.Z, false);
         }
-        private void MoveUp(object sender, RoutedEventArgs e)
+        private void MoveUp(object? sender, RoutedEventArgs? e)
         {
             MoveWithArrows(Axes.Z, true);
         }
-        private void NodeEditor_SelectByGeoset(object sender, RoutedEventArgs e)
+        private void NodeEditor_SelectByGeoset(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Geosets.Count == 0) { MessageBox.Show("There are no geosets"); return; }
             List<string> lst = CurrentModel.Geosets.Select(X => X.ObjectId.ToString()).ToList();
@@ -16385,7 +16333,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        private void ExtractPathFromNow(object sender, RoutedEventArgs e)
+        private void ExtractPathFromNow(object? sender, RoutedEventArgs? e)
         {
             if (ListModelNodes_Paths.SelectedItem == null) { MessageBox.Show("Select a model node"); return; }
             if (ListSequences_Paths.SelectedItem == null) { MessageBox.Show("Select a sequence"); return; }
@@ -16401,7 +16349,7 @@ namespace Wa3Tuner
                 RefreshPathsList();
             }
         }
-        private void Rigging_AttachWholGeoset(object sender, RoutedEventArgs e)
+        private void Rigging_AttachWholGeoset(object? sender, RoutedEventArgs? e)
         {
             if (ListBonesRiggings.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (Listbox_Geosets_Rigging.SelectedItem == null) { MessageBox.Show("Select a geoset"); return; }
@@ -16413,8 +16361,10 @@ namespace Wa3Tuner
             ButtonAddAttach.IsEnabled = true;
             ButtonClearAttach.IsEnabled = true;
             ButtonDetach.IsEnabled = true;
+             
         }
-        private void createOrigin(object sender, RoutedEventArgs e)
+         
+        private void createOrigin(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Any(x => x.Name.ToLower().Trim() == "origin ref" && x is CAttachment))
             {
@@ -16428,11 +16378,9 @@ namespace Wa3Tuner
                 RefreshNodesTree();
             }
         }
-        private CVector3 CopiedTrianglePosition1;
-        private CVector3 CopiedTrianglePosition2;
-        private CVector3 CopiedTrianglePosition3;
+      
 
-        private void CopyTrianglePosition(object sender, RoutedEventArgs e)
+        private void CopyTrianglePosition(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16443,7 +16391,7 @@ namespace Wa3Tuner
 
         }
 
-        private void PasteTrianglePosition(object sender, RoutedEventArgs e)
+        private void PasteTrianglePosition(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16453,7 +16401,7 @@ namespace Wa3Tuner
             triangles[0].Vertex3.Object.Position = new CVector3(CopiedTrianglePosition1);
         }
 
-        private void reorderTriangleVerticesLEft(object sender, RoutedEventArgs e)
+        private void reorderTriangleVerticesLEft(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16469,7 +16417,7 @@ namespace Wa3Tuner
 
         }
 
-        private void reorderTriangleVerticesRight(object sender, RoutedEventArgs e)
+        private void reorderTriangleVerticesRight(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16485,7 +16433,7 @@ namespace Wa3Tuner
         }
         private CVector3[] CopiedNormal = new CVector3[3];
 
-        private void CopyTriangleNormal(object sender, RoutedEventArgs e)
+        private void CopyTriangleNormal(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count != 1) { MessageBox.Show("Select exactly 1 triangle"); return; }
@@ -16494,7 +16442,7 @@ namespace Wa3Tuner
             CopiedNormal[2] = new CVector3(triangles[0].Vertex3.Object.Normal);
         }
 
-        private void PasteTriangleNormal(object sender, RoutedEventArgs e)
+        private void PasteTriangleNormal(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count != 1) { MessageBox.Show("Select exactly 1 triangle"); return; }
@@ -16504,7 +16452,7 @@ namespace Wa3Tuner
             triangles[0].Vertex3.Object.Normal = new CVector3(CopiedNormal[2]);
         }
         private CVector2[] CopiedUV = new CVector2[3];
-        private void CopyTriangleUV(object sender, RoutedEventArgs e)
+        private void CopyTriangleUV(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count != 1) { MessageBox.Show("Select exactly 1 triangle"); return; }
@@ -16513,7 +16461,7 @@ namespace Wa3Tuner
             CopiedUV[2] = new CVector2(triangles[0].Vertex3.Object.TexturePosition);
         }
 
-        private void PasteTriangleUV(object sender, RoutedEventArgs e)
+        private void PasteTriangleUV(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count != 1) { MessageBox.Show("Select exactly 1 triangle"); return; }
@@ -16523,7 +16471,7 @@ namespace Wa3Tuner
             triangles[0].Vertex3.Object.TexturePosition = new CVector2(CopiedUV[2]);
         }
 
-        private void CollapseTriangles(object sender, RoutedEventArgs e)
+        private void CollapseTriangles(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16535,10 +16483,11 @@ namespace Wa3Tuner
                 triangle.Vertex2.Object.Position = new CVector3(centroid);
                 triangle.Vertex3.Object.Position = new CVector3(centroid);
             }
+            RefreshGeosets_Triangles();
 
         }
 
-        private void detachTriangleInsideGeoset(object sender, RoutedEventArgs e)
+        private void detachTriangleInsideGeoset(object? sender, RoutedEventArgs? e)
         {
 
             var triangles = getSelectedTriangles();
@@ -16552,6 +16501,7 @@ namespace Wa3Tuner
                 DetachVerticesOfTriangle(geoset, triangle);
 
             }
+            RefreshGeosets_Triangles();
         }
 
         private void DetachVerticesOfTriangle(CGeoset geoset, CGeosetTriangle triangle, bool up = false)
@@ -16628,7 +16578,7 @@ namespace Wa3Tuner
             return v;
         }
 
-        private CGeoset GetGeosetOfTriangle(CGeosetTriangle triangle)
+        private CGeoset? GetGeosetOfTriangle(CGeosetTriangle triangle)
         {
             foreach (var geoset in CurrentModel.Geosets)
             {
@@ -16637,12 +16587,12 @@ namespace Wa3Tuner
             return null;
         }
 
-        private void DetachTraingleAsNewGeoset(object sender, RoutedEventArgs e)
+        private void DetachTraingleAsNewGeoset(object? sender, RoutedEventArgs? e)
         {
             DuplicateTrianglesAsNewGeoset(true);
         }
 
-        private void DiplicateInsideGeoset(object sender, RoutedEventArgs e)
+        private void DiplicateInsideGeoset(object? sender, RoutedEventArgs? e)
         {
             DuplicateTrianglesInsideGeoset();
         }
@@ -16683,14 +16633,14 @@ namespace Wa3Tuner
             }
             CurrentModel.Geosets.Add(geo);
 
-            RefreshGeosetsList();
+            RefreshGeosetsList(); RefreshGeosets_Triangles();
         }
-        private void DuplicateAsNewGeoset(object sender, RoutedEventArgs e)
+        private void DuplicateAsNewGeoset(object? sender, RoutedEventArgs? e)
         {
             DuplicateTrianglesAsNewGeoset();
         }
 
-        private void SubdivideTriangle(object sender, RoutedEventArgs e)
+        private void SubdivideTriangle(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16733,16 +16683,17 @@ namespace Wa3Tuner
                 }
             }
 
-
+            RefreshGeosets_Triangles();
         }
 
-        private void SimplifyTriangleSelection(object sender, RoutedEventArgs e)
+        private void SimplifyTriangleSelection(object? sender, RoutedEventArgs? e)
         {
             //unfinished
         }
 
-        private void InsetTriangles(object sender, RoutedEventArgs e)
+        private void InsetTriangles(object? sender, RoutedEventArgs? e)
         {
+            Pause = true;
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
             foreach (var triangle in triangles)
@@ -16758,14 +16709,15 @@ namespace Wa3Tuner
 
                 }
             }
+            RefreshRenderData(null,null); RefreshGeosets_Triangles();
         }
 
-        private void Bridge2FlatSurfaces(object sender, RoutedEventArgs e)
+        private void Bridge2FlatSurfaces(object? sender, RoutedEventArgs? e)
         {
             //unfinished
         }
 
-        private void MirrorFromTriangle(object sender, RoutedEventArgs e)
+        private void MirrorFromTriangle(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16774,7 +16726,7 @@ namespace Wa3Tuner
             //unfinished
         }
 
-        private void FlattenTriangles(object sender, RoutedEventArgs e)
+        private void FlattenTriangles(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
             if (triangles.Count < 1) { MessageBox.Show("Select at least 1 triangle"); return; }
@@ -16809,7 +16761,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void InsetTrianglesConnected(object sender, RoutedEventArgs e)
+        private void InsetTrianglesConnected(object? sender, RoutedEventArgs? e)
         {
 
             var triangles = getSelectedTriangles();
@@ -16829,14 +16781,14 @@ namespace Wa3Tuner
             }
         }
 
-        private void ArrangeVertices(object sender, RoutedEventArgs e)
+        private void ArrangeVertices(object? sender, RoutedEventArgs? e)
         {
             //unfinished
             // facing axis, distance from centroid
         }
 
 
-        private void Paste_Merge_Keyframe(object sender, RoutedEventArgs e)
+        private void Paste_Merge_Keyframe(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input("New track");
             if (i.ShowDialog() == true)
@@ -16865,9 +16817,11 @@ namespace Wa3Tuner
                                     if (kf != null)
                                         if (pasted == null)
                                         {
-                                            CAnimatorNode<CVector3> n = new CAnimatorNode<CVector3>();
-                                            n.Time = pastedOn;
-                                            n.Value = new CVector3(kf.Value);
+                                            CAnimatorNode<CVector3> n = new()
+                                            {
+                                                Time = pastedOn,
+                                                Value = new CVector3(kf.Value)
+                                            };
                                         }
 
                                 }
@@ -16879,9 +16833,11 @@ namespace Wa3Tuner
                                     if (kf != null)
                                         if (pasted == null)
                                         {
-                                            CAnimatorNode<CVector4> n = new CAnimatorNode<CVector4>();
-                                            n.Time = pastedOn;
-                                            n.Value = new CVector4(kf.Value);
+                                            CAnimatorNode<CVector4> n = new CAnimatorNode<CVector4>
+                                            {
+                                                Time = pastedOn,
+                                                Value = new CVector4(kf.Value)
+                                            };
                                         }
 
                                 }
@@ -16911,16 +16867,31 @@ namespace Wa3Tuner
             }
         }
 
-        private void EditTrianglesUV(object sender, RoutedEventArgs e)
+        private void EditTrianglesUV(object? sender, RoutedEventArgs? e)
         {
-            // unfinished
+            var triangles = getSelectedTriangles();
+            if (triangles.Count == 0) { MessageBox.Show("Select at least 1 triangle");return; }
+            InitializeMiniUVMapper(triangles, List_Textures, CurrentModel);
+
+
         }
 
-        private void SwapkeyframesData(object sender, RoutedEventArgs e)
+        private void InitializeMiniUVMapper(List<CGeosetTriangle> triangles, ListBox l, CModel m)
+        {
+            if (MiniUVMapper == null) { MiniUVMapper = new MiniUV(triangles, l, m); }
+            else
+            {
+                MiniUVMapper.Update(triangles, l, m);
+                
+            }
+            MiniUVMapper.Show();
+        }
+
+        private void SwapkeyframesData(object? sender, RoutedEventArgs? e)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int inputTrack = GetSelectedKeyframeFromAnimator();
+                int inputTrack = Extractor.GetInt(List_Keyframes_Animator);
                 Input i = new Input("Target Track");
                 if (i.ShowDialog() == true)
                 {
@@ -16947,90 +16918,43 @@ namespace Wa3Tuner
             }
         }
 
-        private void SwapTracksData(int old, int target)
+        private void SwapTracksData(int oldTime, int newTime)
         {
             foreach (INode node in CurrentModel.Nodes)
             {
-                var t1 = node.Translation.FirstOrDefault(x => x.Time == old);
-                var t2 = node.Translation.FirstOrDefault(x => x.Time == target);
+                SwapTrackKeyframes<CVector3>(node.Translation, oldTime, newTime);
+                SwapTrackKeyframes<CVector4>(node.Rotation, oldTime, newTime);
+                SwapTrackKeyframes<CVector3>(node.Scaling, oldTime, newTime);
+            }
+        }
 
-                var r1 = node.Rotation.FirstOrDefault(x => x.Time == old);
-                var r2 = node.Rotation.FirstOrDefault(x => x.Time == target);
+        private void SwapTrackKeyframes<T>(CAnimator<T> animator, int oldTime, int newTime) where T : new()
+        {
+            var oldKey = animator.FirstOrDefault(k => k.Time == oldTime);
+            var newKey = animator.FirstOrDefault(k => k.Time == newTime);
 
-                var s1 = node.Scaling.FirstOrDefault(x => x.Time == old);
-                var s2 = node.Scaling.FirstOrDefault(x => x.Time == target);
-
-                if ((t1 == null && t2 == null) == false)
-                {
-                    if (t1 != null && t2 != null)//both exist
-                    {
-                        var temp = t1.Value;
-                        t1.Value = t2.Value;
-                        t2.Value = temp;
-                    }
-                    else if (t1 != null && t2 == null)
-                    {
-                        t1.Time = target;
-                        node.Translation.NodeList = node.Translation.NodeList.OrderBy(x => x.Time).ToList();
-                    }
-                    else if (t2 != null && t1 == null)
-                    {
-                        t2.Time = old;
-                        node.Translation.NodeList = node.Translation.NodeList.OrderBy(x => x.Time).ToList();
-                    }
-                }
-                if ((r1 == null && t2 == null) == false)
-                {
-                    if (r1 != null && r2 != null)//both exist
-                    {
-                        var temp = r1.Value;
-                        r1.Value = r2.Value;
-                        r2.Value = temp;
-                    }
-                    else if (r1 != null && r2 == null)
-                    {
-                        CAnimatorNode<CVector3> _new = new CAnimatorNode<CVector3>();
-                        r1.Time = target;
-                        node.Rotation.NodeList = node.Rotation.NodeList.OrderBy(x => x.Time).ToList();
-
-                    }
-                    else if (r2 != null && r1 == null)
-                    {
-                        r2.Time = old;
-                        node.Rotation.NodeList = node.Rotation.NodeList.OrderBy(x => x.Time).ToList();
-                    }
-                }
-                if ((s1 == null && s1 == null) == false)
-                {
-                    if (s1 != null && s1 != null)//both exist
-                    {
-                        var temp = s1.Value;
-                        s1.Value = s2.Value;
-                        s2.Value = temp;
-                    }
-                    else if (s1 != null && s2 == null)
-                    {
-                        s2.Time = target;
-                        node.Scaling.NodeList = node.Scaling.NodeList.OrderBy(x => x.Time).ToList();
-                    }
-                    else if (s2 != null && s1 == null)
-                    {
-                        s1.Time = old;
-                        node.Scaling.NodeList = node.Scaling.NodeList.OrderBy(x => x.Time).ToList();
-                    }
-                }
+            if (oldKey != null && newKey != null)
+            {
+                var temp = oldKey.Value;
+                oldKey.Value = newKey.Value;
+                newKey.Value = temp;
+            }
+            else if (oldKey != null)
+            {
+                oldKey.Time = newTime;
+            }
+            else if (newKey != null)
+            {
+                newKey.Time = oldTime;
             }
 
+            animator.NodeList = animator.NodeList.OrderBy(k => k.Time).ToList();
         }
 
-        private int GetSelectedKeyframeFromAnimator()
-        {
-            var item = List_Keyframes_Animator.SelectedItem as ListBoxItem;
-            string i = item.Content.ToString();
-            return int.Parse(i);
-        }
 
-        private void TextureSpecialInfo(object sender, RoutedEventArgs e)
+
+
+        private void TextureSpecialInfo(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -17068,11 +16992,11 @@ namespace Wa3Tuner
 
         }
 
-        private void mergeHB_Selected(object sender, RoutedEventArgs e)
+        private void mergeHB_Selected(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
-                INode node = GetSelectedNode();
+                INode? node = GetSelectedNode(); if (node == null) return;
                 if (node is CHelper h)
                 {
 
@@ -17122,7 +17046,7 @@ namespace Wa3Tuner
             return list;
         }
 
-        private void mergeHB_all(object sender, RoutedEventArgs e)
+        private void mergeHB_all(object? sender, RoutedEventArgs? e)
         {
             MergeHelperBoneOptons mr = new MergeHelperBoneOptons(CurrentModel);
             if (mr.ShowDialog() == true)
@@ -17131,7 +17055,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void duplciateLayer(object sender, RoutedEventArgs e)
+        private void duplciateLayer(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
@@ -17145,16 +17069,18 @@ namespace Wa3Tuner
             }
         }
 
-        private void DuplicateMaterial(object sender, RoutedEventArgs e)
+        private void DuplicateMaterial(object? sender, RoutedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null)
             {
                 var mat = GetSelectedMAterial();
-                CMaterial _new = new CMaterial(CurrentModel);
-                _new.PriorityPlane = mat.PriorityPlane;
-                _new.SortPrimitivesNearZ = mat.SortPrimitivesNearZ;
-                _new.SortPrimitivesFarZ = mat.SortPrimitivesFarZ;
-                _new.ConstantColor = mat.ConstantColor;
+                CMaterial _new = new CMaterial(CurrentModel)
+                {
+                    PriorityPlane = mat.PriorityPlane,
+                    SortPrimitivesNearZ = mat.SortPrimitivesNearZ,
+                    SortPrimitivesFarZ = mat.SortPrimitivesFarZ,
+                    ConstantColor = mat.ConstantColor
+                };
                 foreach (var layer in mat.Layers)
                 {
                     _new.Layers.Add(Duplicator.DuplicateLayer(layer, CurrentModel));
@@ -17165,7 +17091,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void DuplicateTa(object sender, RoutedEventArgs e)
+        private void DuplicateTa(object? sender, RoutedEventArgs? e)
         {
             if (List_TextureAnims.SelectedItem != null)
             {
@@ -17176,11 +17102,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void mergeHB_SelectedN(object sender, RoutedEventArgs e)
+        private void mergeHB_SelectedN(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
             {
-                INode node = GetSelectedNode();
+                INode? node = GetSelectedNode();
                 if (node is CHelper h)
                 {
 
@@ -17210,11 +17136,12 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetAnimatorNodeInterpolation_none(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeInterpolation_none(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator();
+                if (node == null) return;
                 transformation_selector ts = new transformation_selector();
                 if (ts.ShowDialog() == true)
                 {
@@ -17227,11 +17154,11 @@ namespace Wa3Tuner
 
         }
 
-        private void SetAnimatorNodeInterpolation_linear(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeInterpolation_linear(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator(); if (node == null) return;
                 transformation_selector ts = new transformation_selector();
                 if (ts.ShowDialog() == true)
                 {
@@ -17243,11 +17170,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetAnimatorNodeInterpolation_bezier(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeInterpolation_bezier(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator(); if (node == null) return;
                 transformation_selector ts = new transformation_selector();
                 if (ts.ShowDialog() == true)
                 {
@@ -17259,12 +17186,12 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetAnimatorNodeVis_True(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeVis_True(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
                 var node = GetSelectedNodeInanimator();
-                int track = GetSelectedKeyframeFromAnimator();
+                int track = Extractor.GetInt(List_Keyframes_Animator);
                 if (TrackExistsInSEquences(track, null) == false)
                 {
                     MessageBox.Show("The selected track does not exist in any sequence"); return;
@@ -17293,7 +17220,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void ChangeVisibilityOfNodeInTrack(CAnimator<float> visibility, int track, bool v)
+        private static void ChangeVisibilityOfNodeInTrack(CAnimator<float> visibility, int track, bool v)
         {
             var f = visibility.First(x => x.Time == track);
             if (f == null)
@@ -17310,12 +17237,12 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetAnimatorNodeVis_False(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeVis_False(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
                 var node = GetSelectedNodeInanimator();
-                int frame = GetSelectedKeyframeFromAnimator();
+                int frame = Extractor.GetInt(List_Keyframes_Animator);
                 if (TrackExistsInSEquences(frame, null) == false)
                 {
                     MessageBox.Show("The selected track does not exist in any sequence"); return;
@@ -17344,11 +17271,11 @@ namespace Wa3Tuner
             }
         }
 
-        private void SetAnimatorNodeInterpolation_hermite(object sender, RoutedEventArgs e)
+        private void SetAnimatorNodeInterpolation_hermite(object? sender, RoutedEventArgs? e)
         {
             if (List_Nodes_Animator.SelectedItem != null)
             {
-                var node = GetSelectedNodeInanimator();
+                INode? node = GetSelectedNodeInanimator(); if (node == null) { MessageBox.Show("Select a node"); return; }
                 transformation_selector ts = new transformation_selector();
                 if (ts.ShowDialog() == true)
                 {
@@ -17360,7 +17287,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void App_window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void App_window_PreviewMouseDown(object? sender, MouseButtonEventArgs e)
         {
             if (e.OriginalSource is UIElement element && element.Focusable)
             {
@@ -17369,9 +17296,9 @@ namespace Wa3Tuner
             }
         }
 
-        private void createblastFlare(object sender, RoutedEventArgs e)
+        private void createblastFlare(object? sender, RoutedEventArgs? e)
         {
-            INode cloned = NodeCloner.Clone(NodeCollection.BlastFlare, CurrentModel);
+            INode cloned = NodeCloner.Clone(NodeMaker.BlastFlare, CurrentModel);
             HandleRequiredTexture((CParticleEmitter2)cloned);
             cloned.Name = "BlastFlare_" + IDCounter.Next_; ;
             CurrentModel.Nodes.Add(cloned);
@@ -17379,9 +17306,9 @@ namespace Wa3Tuner
             SetSaved(false);
         }
 
-        private void createFire(object sender, RoutedEventArgs e)
+        private void createFire(object? sender, RoutedEventArgs? e)
         {
-            INode cloned = NodeCloner.Clone(NodeCollection.Fire, CurrentModel);
+            INode cloned = NodeCloner.Clone(NodeMaker.Fire, CurrentModel);
             HandleRequiredTexture((CParticleEmitter2)cloned);
             cloned.Name = "Fire_" + IDCounter.Next_; ;
             CurrentModel.Nodes.Add(cloned);
@@ -17389,10 +17316,10 @@ namespace Wa3Tuner
             SetSaved(false);
         }
 
-        private void editNodeVisibilities(object sender, RoutedEventArgs e)
+        private void editNodeVisibilities(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { return; }
-            editvisibilities_window ew = null;
+            editvisibilities_window? ew = null;
             var node = GetSelectedNode();
             if (node is CParticleEmitter emitter)
             {
@@ -17422,14 +17349,14 @@ namespace Wa3Tuner
             }
         }
 
-        private void ImportGeosetm(object sender, RoutedEventArgs e)
+        private void ImportGeosetm(object? sender, RoutedEventArgs? e)
         {
             string openPath = FileSeeker.OpenTGeomFileDialog();
 
             if (openPath.Length > 0)
             {
                 Pause = true;
-                CGeoset imported = GeosetExporter.ReadGeomerge(openPath, CurrentModel);
+                CGeoset? imported = GeosetExporter.ReadGeomerge(openPath, CurrentModel);
                 if (imported == null) return;
                 SetSaved(false);
                 refreshalllists(null, null);
@@ -17438,7 +17365,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void ExportGeosetm(object sender, RoutedEventArgs e)
+        private void ExportGeosetm(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
@@ -17452,7 +17379,7 @@ namespace Wa3Tuner
 
         }
 
-        private void og(object sender, RoutedEventArgs e)
+        private void og(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_Geometry);
 
@@ -17483,86 +17410,86 @@ namespace Wa3Tuner
 
         }
 
-        private void edg(object sender, RoutedEventArgs e)
+        private void edg(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_edges, Menuitem_Geometry);
         }
 
-        private void edg2(object sender, RoutedEventArgs e)
+        private void edg2(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_edges);
         }
 
-        private void verts(object sender, RoutedEventArgs e)
+        private void verts(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_vertices);
         }
 
-        private void verts2(object sender, RoutedEventArgs e)
+        private void verts2(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_vertices, Menuitem_edges);
         }
 
-        private void nds(object sender, RoutedEventArgs e)
+        private void nds(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_Nodes);
         }
 
-        private void nds2(object sender, RoutedEventArgs e)
+        private void nds2(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_Nodes, Menuitem_edges);
         }
 
-        private void ndss(object sender, RoutedEventArgs e)
+        private void ndss(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_Nodes, Menuitem_skeleton);
         }
 
-        private void cols4(object sender, RoutedEventArgs e)
+        private void cols4(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_Cols);
         }
 
-        private void onlyskinning(object sender, RoutedEventArgs e)
+        private void onlyskinning(object? sender, RoutedEventArgs? e)
         {
             EnabbleOnlyRender(Menuitem_skinning);
         }
 
-        private void gridson(object sender, RoutedEventArgs e)
+        private void gridson(object? sender, RoutedEventArgs? e)
         {
             Menuitem_groundGrid.IsChecked = true;
             Menuitem_groundGridX.IsChecked = true;
             Menuitem_groundGridY.IsChecked = true;
         }
 
-        private void gridsoff(object sender, RoutedEventArgs e)
+        private void gridsoff(object? sender, RoutedEventArgs? e)
         {
             Menuitem_groundGrid.IsChecked = false;
             Menuitem_groundGridX.IsChecked = false;
             Menuitem_groundGridY.IsChecked = false;
         }
 
-        private void EditRenderPreferences(object sender, RoutedEventArgs e)
+        private void EditRenderPreferences(object? sender, RoutedEventArgs? e)
         {
             Render_Preferences rs = new Render_Preferences();
             rs.ShowDialog();
             SaveSettings();
         }
 
-        private void ViewBig(object sender, RoutedEventArgs e)
+        private void ViewBig(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
-                ListBoxItem i = List_Textures.SelectedItem as ListBoxItem;
+                ListBoxItem? i = List_Textures.SelectedItem as ListBoxItem; if (i == null) return;
 
-                Image m = i.ToolTip as Image;
-                ImageViewer v = new ImageViewer(m);
+                Image? m = i.ToolTip as Image; if (m == null) return;
+                ImageViewer? v = new ImageViewer(m); if (v == null) return;
                 v.ShowDialog();
 
             }
         }
 
-        private void setColorize(object sender, RoutedEventArgs e)
+        private void setColorize(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
 
@@ -17573,11 +17500,11 @@ namespace Wa3Tuner
             RefreshPathNodesList();
         }
 
-        private void ShowUnAnimatedGeometryInfo(object sender, RoutedEventArgs e)
+        private void ShowUnAnimatedGeometryInfo(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences");
+                MessageBox.Show("There are no sequences", "Nothing to work with");
                 return;
             }
 
@@ -17650,7 +17577,7 @@ namespace Wa3Tuner
         }
 
 
-        private void show_w24(object sender, RoutedEventArgs e)
+        private void show_w24(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Count == 0) { MessageBox.Show("There are no nodes"); return; }
             StringBuilder sb = new StringBuilder();
@@ -17666,7 +17593,7 @@ namespace Wa3Tuner
             TextViewer tw = new TextViewer(sb.ToString()); tw.ShowDialog();
         }
 
-        private void show_w25(object sender, RoutedEventArgs e)
+        private void show_w25(object? sender, RoutedEventArgs? e)
         {
 
             var bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
@@ -17684,14 +17611,14 @@ namespace Wa3Tuner
             TextViewer tw = new TextViewer(sb.ToString()); tw.ShowDialog();
         }
 
-        private void setDrag(object sender, RoutedEventArgs e)
+        private void setDrag(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             CanDrag = Menuitem_allowDrag.IsChecked == true;
             SaveSettings();
         }
         private Vector3 CopiedFields = new Vector3();
-        private void copy(object sender, RoutedEventArgs e)
+        private void copy(object? sender, RoutedEventArgs? e)
         {
             bool t1 = float.TryParse(InputAnimatorX.Text, out float x);
             bool t2 = float.TryParse(InputAnimatorY.Text, out float y);
@@ -17702,12 +17629,12 @@ namespace Wa3Tuner
 
         }
 
-        private void paste1(object sender, RoutedEventArgs e)
+        private void paste1(object? sender, RoutedEventArgs? e)
         {
             PasteButton.ContextMenu.IsOpen = true;
         }
 
-        private void pasteX(object sender, RoutedEventArgs e)
+        private void pasteX(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.None, PasteType.None);
         }
@@ -17724,8 +17651,8 @@ namespace Wa3Tuner
         private void PasteTransformaton(PasteType x, PasteType y, PasteType z)
         {
             GetInitialFields();
-            Vector3 modified = new Vector3();
-            modified = new Vector3(InitialFields.X, InitialFields.Y, InitialFields.Z);
+             
+            Vector3 modified = new Vector3(InitialFields.X, InitialFields.Y, InitialFields.Z);
             if (x == PasteType.Normal) { modified.X = CopiedFields.X; }
             if (y == PasteType.Normal) { modified.Y = CopiedFields.Y; }
             if (z == PasteType.Normal) { modified.Z = CopiedFields.Z; }
@@ -17743,97 +17670,97 @@ namespace Wa3Tuner
 
         }
 
-        private void pasteY(object sender, RoutedEventArgs e)
+        private void pasteY(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.Normal, PasteType.None);
         }
 
-        private void pasteZ(object sender, RoutedEventArgs e)
+        private void pasteZ(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.None, PasteType.Normal);
         }
 
-        private void pasteXY(object sender, RoutedEventArgs e)
+        private void pasteXY(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.Normal, PasteType.None);
         }
 
-        private void pasteZY(object sender, RoutedEventArgs e)
+        private void pasteZY(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.Normal, PasteType.Normal);
         }
 
-        private void pasteXZ(object sender, RoutedEventArgs e)
+        private void pasteXZ(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.None, PasteType.Normal);
         }
 
-        private void pasteAll(object sender, RoutedEventArgs e)
+        private void pasteAll(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.Normal, PasteType.Normal);
         }
 
-        private void pasteXn(object sender, RoutedEventArgs e)
+        private void pasteXn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.None, PasteType.None);
         }
 
-        private void pasteYn(object sender, RoutedEventArgs e)
+        private void pasteYn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.Negated, PasteType.None);
         }
 
-        private void pasteZn(object sender, RoutedEventArgs e)
+        private void pasteZn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.None, PasteType.Negated);
         }
 
-        private void pasteXYn(object sender, RoutedEventArgs e)
+        private void pasteXYn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.Negated, PasteType.None);
         }
 
-        private void pasteZYn(object sender, RoutedEventArgs e)
+        private void pasteZYn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.None, PasteType.Negated, PasteType.Negated);
         }
 
-        private void pasteXZn(object sender, RoutedEventArgs e)
+        private void pasteXZn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.None, PasteType.Negated);
         }
 
-        private void pasteXnn(object sender, RoutedEventArgs e)
+        private void pasteXnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.Normal, PasteType.Normal);
         }
 
-        private void pasteYnn(object sender, RoutedEventArgs e)
+        private void pasteYnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.Negated, PasteType.Normal);
         }
 
-        private void pasteZnn(object sender, RoutedEventArgs e)
+        private void pasteZnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.Normal, PasteType.Negated);
         }
 
-        private void pasteXYnn(object sender, RoutedEventArgs e)
+        private void pasteXYnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.Negated, PasteType.Normal);
         }
 
-        private void pasteZYnn(object sender, RoutedEventArgs e)
+        private void pasteZYnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Normal, PasteType.Negated, PasteType.Negated);
         }
 
-        private void pasteXZnn(object sender, RoutedEventArgs e)
+        private void pasteXZnn(object? sender, RoutedEventArgs? e)
         {
             PasteTransformaton(PasteType.Negated, PasteType.Normal, PasteType.Negated);
         }
-        private CSequence CopiedSequence;
-        private void copySeqTr(object sender, RoutedEventArgs e)
+       
+        private void copySeqTr(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
             {
@@ -17845,7 +17772,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void PasteTransformationsOnSequence(object sender, RoutedEventArgs e)
+        private void PasteTransformationsOnSequence(object? sender, RoutedEventArgs? e)
         {
             if (CopiedSequence == null)
             {
@@ -17924,7 +17851,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void CopySequenceKeyframesToSequence(List<CAnimatorNode<CVector3>> keyframes, List<CAnimatorNode<CVector3>> nodeList, int from, int to, int from2, int to2)
+        private static void CopySequenceKeyframesToSequence(List<CAnimatorNode<CVector3>> keyframes, List<CAnimatorNode<CVector3>> nodeList, int from, int to, int from2, int to2)
         {
             int sourceDuration = to - from;
             int destDuration = to2 - from2;
@@ -17946,7 +17873,7 @@ namespace Wa3Tuner
         }
 
 
-        private void CopySequenceKeyframesToSequence(List<CAnimatorNode<CVector4>> keyframes, List<CAnimatorNode<CVector4>> nodeList, int from, int to, int from2, int to2)
+        private static void CopySequenceKeyframesToSequence(List<CAnimatorNode<CVector4>> keyframes, List<CAnimatorNode<CVector4>> nodeList, int from, int to, int from2, int to2)
         {
             int sourceDuration = to - from;
             int destDuration = to2 - from2;
@@ -17967,20 +17894,20 @@ namespace Wa3Tuner
             }
         }
 
-        private void copyVis(object sender, RoutedEventArgs e)
+        private void copyVis(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences"); return;
+                MessageBox.Show("There are no sequences", "Nothing to work with"); return;
             }
 
             SequenceToSequencesSelector s = new SequenceToSequencesSelector(CurrentModel.Sequences.ObjectList, CurrentModel.GeosetAnimations.ObjectList);
             s.ShowDialog();
         }
 
-        private void DeleteSequencesContainingKeyword(object sender, RoutedEventArgs e)
+        private void DeleteSequencesContainingKeyword(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences"); return; }
+            if (CurrentModel.Sequences.Count == 0) { MessageBox.Show("There are no sequences", "Nothing to work with"); return; }
             Input i = new Input("");
             if (i.ShowDialog() == true)
             {
@@ -18000,10 +17927,10 @@ namespace Wa3Tuner
             }
         }
 
-        private void DelBonesGeometryBone(object sender, RoutedEventArgs e)
+        private void DelBonesGeometryBone(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            var node = GetSelectedNode();
+            INode? node = GetSelectedNode(); if (node==null) { MessageBox.Show("Null node"); return; }
             if (NodeHasChildren(node)) { MessageBox.Show("Cannot delete a node with children"); return; }
             foreach (var geoset in CurrentModel.Geosets)
             {
@@ -18021,7 +17948,7 @@ namespace Wa3Tuner
             RefreshGeosetsList();
         }
 
-        private bool vertexIsAttachedToNode(CGeosetVertex vertex, INode node)
+        private static bool vertexIsAttachedToNode(CGeosetVertex vertex, INode node)
         {
             foreach (var gnode in vertex.Group.Object.Nodes)
             {
@@ -18030,7 +17957,7 @@ namespace Wa3Tuner
             return false;
         }
 
-        private void straghten(object sender, RoutedEventArgs e)
+        private void straghten(object? sender, RoutedEventArgs? e)
         {
             var g = GetSelectedGeosets();
             if (g.Count == 0) { MessageBox.Show("Select at least 1 geoset"); return; }
@@ -18047,7 +17974,7 @@ namespace Wa3Tuner
 
         }
 
-        private void replaceTexture(object sender, RoutedEventArgs e)
+        private void replaceTexture(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
             {
@@ -18058,7 +17985,7 @@ namespace Wa3Tuner
                     textture.FileName = path;
                     textture.ReplaceableId = 0;
                     RefreshTexturesList();
-                    refresh_rData(null, null);
+                    RefreshRenderData(null, null);
                 }
 
             }
@@ -18072,8 +17999,10 @@ namespace Wa3Tuner
                 if (text.Length == 0) { MessageBox.Show("Empty input"); return ""; }
                 if (MPQHelper.FileExists(text))
                 {
-                    CTexture texture = new CTexture(CurrentModel);
-                    texture.FileName = text;
+                    CTexture texture = new CTexture(CurrentModel)
+                    {
+                        FileName = text
+                    };
                     return text;
 
                 }
@@ -18085,7 +18014,7 @@ namespace Wa3Tuner
             return "";
         }
 
-        private void makeGAUseColor(object sender, RoutedEventArgs e)
+        private void makeGAUseColor(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
             {
@@ -18096,16 +18025,16 @@ namespace Wa3Tuner
             }
         }
 
-        private void mcc(object sender, RoutedEventArgs e)
+        private void mcc(object? sender, RoutedEventArgs? e)
         {
             Model_Colors_Changer mc = new Model_Colors_Changer(CurrentModel);
             if (mc.ShowDialog() == true)
             {
                 RefreshTexturesList();
-                refresh_rData(null, null);
+                RefreshRenderData(null, null);
             }
         }
-        string CopyAnimator(CAnimator<CVector3> animator)
+        static string CopyAnimator(CAnimator<CVector3> animator)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var v in animator)
@@ -18115,7 +18044,7 @@ namespace Wa3Tuner
             return sb.ToString();
 
         }
-        string CopyAnimator(CAnimator<CVector4> animator)
+        static   string CopyAnimator(CAnimator<CVector4> animator)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var v in animator)
@@ -18125,41 +18054,42 @@ namespace Wa3Tuner
             return sb.ToString();
 
         }
-        private void ckc_t(object sender, RoutedEventArgs e)
+        private void ckc_t(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            var NODE = GetSelectedNode();
+            INode? NODE = GetSelectedNode(); if (NODE==null) { MessageBox.Show("Null node"); return; }
             Clipboard.SetText(CopyAnimator(NODE.Translation));
         }
 
-        private void ckc_r(object sender, RoutedEventArgs e)
+        private void ckc_r(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            var NODE = GetSelectedNode();
+            INode? NODE = GetSelectedNode(); if (NODE==null) { MessageBox.Show("Select a node"); return; }
             Clipboard.SetText(CopyAnimator(NODE.Rotation));
         }
 
-        private void ckc_s(object sender, RoutedEventArgs e)
+        private void ckc_s(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            var NODE = GetSelectedNode();
+            INode? NODE = GetSelectedNode(); if (NODE == null) { MessageBox.Show("Select a node"); return; }
             Clipboard.SetText(CopyAnimator(NODE.Scaling));
         }
 
-        private void pkc_t(object sender, RoutedEventArgs e)
+        private void pkc_t(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             var NODE = GetSelectedNode();
             PasteKeyframes_InNode(NODE, TransformationType.Translation);
         }
 
-        private void PasteKeyframes_InNode(INode node, TransformationType t)
+        private static void PasteKeyframes_InNode(INode? node, TransformationType t)
         {
+            if (node == null) return;
             string text = Clipboard.GetText();
             if (text.Length == 0) { MessageBox.Show("Nothing in the clipboard"); return; }
             var lines = text.Split('\n').ToArray();
-            CAnimator<CVector3> animator1 = null;
-            CAnimator<CVector4> animator2 = null;
+            CAnimator<CVector3>? animator1 = null;
+            CAnimator<CVector4>? animator2 = null;
             if (t == TransformationType.Translation) { animator1 = node.Translation; }
             if (t == TransformationType.Scaling) { animator1 = node.Scaling; }
             if (t == TransformationType.Rotation) { animator2 = node.Rotation; }
@@ -18168,7 +18098,7 @@ namespace Wa3Tuner
                 animator1.Clear();
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    CAnimatorNode<CVector3> kf = Calculator.ReadLine3(lines[i]);
+                    CAnimatorNode<CVector3>? kf = Calculator.ReadLine3(lines[i]);
                     if (kf != null) { animator1.Add(kf); }
                 }
             }
@@ -18177,7 +18107,7 @@ namespace Wa3Tuner
                 animator2.Clear();
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    CAnimatorNode<CVector4> kf = Calculator.ReadLine4(lines[i]);
+                    CAnimatorNode<CVector4>? kf = Calculator.ReadLine4(lines[i]);
                     if (kf != null) { animator2.Add(kf); }
                 }
 
@@ -18185,21 +18115,21 @@ namespace Wa3Tuner
 
         }
 
-        private void pkc_r(object sender, RoutedEventArgs e)
+        private void pkc_r(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            var NODE = GetSelectedNode();
+            INode? NODE = GetSelectedNode();
             PasteKeyframes_InNode(NODE, TransformationType.Rotation);
         }
 
-        private void pkc_s(object sender, RoutedEventArgs e)
+        private void pkc_s(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             var NODE = GetSelectedNode();
             PasteKeyframes_InNode(NODE, TransformationType.Scaling);
         }
 
-        private void ForceNormalsOutward(object sender, RoutedEventArgs e)
+        private void ForceNormalsOutward(object? sender, RoutedEventArgs? e)
         {
             var geosets = GetSelectedGeosets();
             foreach (var geoset in geosets)
@@ -18211,7 +18141,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void autorig(object sender, RoutedEventArgs e)
+        private void autorig(object? sender, RoutedEventArgs? e)
         {
             var g = GetSelectedGeosets();
             if (g.Count == 0) { MessageBox.Show("Select at least 1 geoset"); return; }
@@ -18222,7 +18152,8 @@ namespace Wa3Tuner
                 geoses.Groups.Clear();
                 foreach (var verex in geoses.Vertices)
                 {
-                    INode closest = Calculator.GetClosestNode(verex.Position, bones);
+                    INode? closest = Calculator.GetClosestNode(verex.Position, bones);
+                    if (closest == null) continue;
                     CGeosetGroup group = new CGeosetGroup(CurrentModel);
                     CGeosetGroupNode gnode = new CGeosetGroupNode(CurrentModel);
                     gnode.Node.Attach(closest);
@@ -18236,15 +18167,15 @@ namespace Wa3Tuner
             Optimizer.MinimizeMatrixGroups_(CurrentModel);
             RefreshGeosetsList();
         }
-        private CGeoset CopiedRigGeoset;
-        private void copyRig(object sender, RoutedEventArgs e)
+        
+        private void copyRig(object? sender, RoutedEventArgs? e)
         {
             var g = GetSelectedGeosets();
             if (g.Count != 1) { MessageBox.Show("Select only 1 geoset"); return; }
             CopiedRigGeoset = g[0];
         }
 
-        private void pRig(object sender, RoutedEventArgs e)
+        private void pRig(object? sender, RoutedEventArgs? e)
         {
             var g = GetSelectedGeosets();
             if (g.Count != 1) { MessageBox.Show("Select only 1 geoset"); return; }
@@ -18264,13 +18195,13 @@ namespace Wa3Tuner
             RefreshGeosetsList();
         }
 
-        private void setModeUVu(object sender, RoutedEventArgs e)
+        private void setModeUVu(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.DragUV_U;
             HightlightMoreButton();
         }
 
-        private void setModeUVv(object sender, RoutedEventArgs e)
+        private void setModeUVv(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.DragUV_V;
             HightlightMoreButton();
@@ -18284,25 +18215,25 @@ namespace Wa3Tuner
             ButtonManual_Move.BorderBrush = Brushes.Gray;
         }
 
-        private void ssetModecaleUV(object sender, RoutedEventArgs e)
+        private void ssetModecaleUV(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.ScaleUV;
             HightlightMoreButton();
         }
 
-        private void ssetModecaleUVu(object sender, RoutedEventArgs e)
+        private void ssetModecaleUVu(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.ScaleUVu;
             HightlightMoreButton();
         }
 
-        private void ssetModecaleUVv(object sender, RoutedEventArgs e)
+        private void ssetModecaleUVv(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.ScaleUVv;
             HightlightMoreButton();
         }
 
-        private void ForceIN(object sender, RoutedEventArgs e)
+        private void ForceIN(object? sender, RoutedEventArgs? e)
         {
             var geosets = GetSelectedGeosets();
             foreach (var geoset in geosets)
@@ -18314,48 +18245,45 @@ namespace Wa3Tuner
             }
         }
 
-        private void seModeRotateNormals(object sender, RoutedEventArgs e)
+        private void seModeRotateNormals(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.RotateNormals;
             HightlightMoreButton();
         }
 
-        private void toggleLghting(object sender, RoutedEventArgs e)
+        private void toggleLghting(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
-            RenderLighing = Menuitem_Lightng.IsChecked == true;
+            RenderSettings.RenderLighing = Menuitem_Lightng.IsChecked == true;
 
             SaveSettings();
         }
 
-        private void seModeRotateEach(object sender, RoutedEventArgs e)
+        private void seModeRotateEach(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.RotateEach;
             HightlightMoreButton();
 
         }
 
-        private void seModeScaleEach(object sender, RoutedEventArgs e)
+        private void seModeScaleEach(object? sender, RoutedEventArgs? e)
         {
             modifyMode_current = ModifyMode.ScaleEach;
             HightlightMoreButton();
 
         }
-        private float GetFloat(TextBox t)
+        private static float GetFloat(TextBox t)
         {
             return float.TryParse(t.Text, out float v) ? v : 0;
         }
-        private float GetFloat(string t)
+        private static float GetFloat(string t)
         {
             return float.TryParse(t, out float v) ? v : 0;
         }
-        private void copyField(object sender, RoutedEventArgs e)
+        private void copyField(object? sender, RoutedEventArgs? e)
         {
-            var parent = GetParentOfInput(sender as MenuItem);
-            if (parent == InputMenuX)
-            {
-                Clipboard.SetText(GetFloat(InputAnimatorX).ToString());
-            }
+            var parent = VisualTreeHelper.GetParent(sender as MenuItem) as ContextMenu;
+            if (parent == InputMenuX)  { Clipboard.SetText(GetFloat(InputAnimatorX).ToString()); }
             else if (parent == InputMenuY) { Clipboard.SetText(GetFloat(InputAnimatorY).ToString()); }
             else if (parent == InputMenuZ) { Clipboard.SetText(GetFloat(InputAnimatorZ).ToString()); }
 
@@ -18363,55 +18291,47 @@ namespace Wa3Tuner
 
 
 
-        private void pasteField(object sender, RoutedEventArgs e)
+        private void pasteField(object? sender, RoutedEventArgs? e)
         {
-            var parent = GetParentOfInput(sender as MenuItem);
-            if (parent == InputMenuX)
-            {
-                InputAnimatorX.Text = GetFloat(Clipboard.GetText()).ToString();
-            }
+            var parent = VisualTreeHelper.GetParent(sender as MenuItem) as ContextMenu; 
+            if (parent == InputMenuX) {   InputAnimatorX.Text = GetFloat(Clipboard.GetText()).ToString(); }
             else if (parent == InputMenuY) { InputAnimatorY.Text = GetFloat(Clipboard.GetText()).ToString(); }
             else if (parent == InputMenuZ) { InputAnimatorZ.Text = GetFloat(Clipboard.GetText()).ToString(); }
 
         }
 
 
-        private void negateField(object sender, RoutedEventArgs e)
+        private void negateField(object? sender, RoutedEventArgs? e)
         {
-            var parent = GetParentOfInput(sender as MenuItem);
-            if (parent == InputMenuX)
+            var parent = sender as MenuItem;
+            if (parent == Menuitem_NegateX)
             {
-                InputAnimatorX.Text = (-GetFloat(Clipboard.GetText())).ToString();
+                InputAnimatorX.Text = (-GetFloat(InputAnimatorX.Text)).ToString();
             }
-            else if (parent == InputMenuY) { InputAnimatorY.Text = (-GetFloat(Clipboard.GetText())).ToString(); }
-            else if (parent == InputMenuZ) { InputAnimatorZ.Text = (-GetFloat(Clipboard.GetText())).ToString(); }
+            else if (parent == Menuitem_NegateY) { InputAnimatorY.Text = (-GetFloat(InputAnimatorY.Text)).ToString(); }
+            else if (parent == Menuitem_NegateZ) { InputAnimatorZ.Text = (-GetFloat(InputAnimatorZ.Text)).ToString(); }
 
         }
 
-        private void CenterField(object sender, RoutedEventArgs e)
+        private void CenterField(object? sender, RoutedEventArgs? e)
         {
-            var parent = GetParentOfInput(sender as MenuItem);
-            if (parent == InputMenuX)
+            var parent =  sender as MenuItem;
+            if (parent == Menuitem_CenterX)
             {
                 InputAnimatorX.Text = "0";
             }
-            else if (parent == InputMenuY) { InputAnimatorY.Text = "0"; }
-            else if (parent == InputMenuZ) { InputAnimatorZ.Text = "0"; }
+            else if (parent == Menuitem_CenterY) { InputAnimatorY.Text = "0"; }
+            else if (parent == Menuitem_CenterZ) { InputAnimatorZ.Text = "0"; }
 
         }
 
-        private void AlignField(object sender, RoutedEventArgs e)
+        private void AlignField(object? sender, RoutedEventArgs? e)
         {
 
         }
-        private ContextMenu GetParentOfInput(UIElement obj)
-        {
+        
 
-            DependencyObject parent = VisualTreeHelper.GetParent(obj);
-            return parent as ContextMenu;
-        }
-
-        private void setAll(object sender, RoutedEventArgs e)
+        private void setAll(object? sender, RoutedEventArgs? e)
         {
 
             float x = GetFloat(InputAnimatorX);
@@ -18422,13 +18342,8 @@ namespace Wa3Tuner
             ModifyByZ(z);
         }
 
-        private void SceneUp(object sender, MouseButtonEventArgs e)
-        {
-            var currentMousePos = e.GetPosition(Scene_ViewportGL);
-            DrawRay(currentMousePos);//tst
-        }
-
-        private void ClearAllAnimationsOfSequence_t(object sender, RoutedEventArgs e)
+       
+        private void ClearAllAnimationsOfSequence_t(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes)
@@ -18441,7 +18356,7 @@ namespace Wa3Tuner
             RefreshSequencesList();
         }
 
-        private void clearsequencetranslations_t(object sender, RoutedEventArgs e)
+        private void clearsequencetranslations_t(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes)
@@ -18452,7 +18367,7 @@ namespace Wa3Tuner
             RefreshSequencesList();
         }
 
-        private void clearsequencescalings_t(object sender, RoutedEventArgs e)
+        private void clearsequencescalings_t(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes)
@@ -18463,7 +18378,7 @@ namespace Wa3Tuner
             RefreshSequencesList();
         }
 
-        private void clearsequencerotations_t(object sender, RoutedEventArgs e)
+        private void clearsequencerotations_t(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
             foreach (var node in CurrentModel.Nodes)
@@ -18474,34 +18389,29 @@ namespace Wa3Tuner
             RefreshSequencesList();
         }
 
-        private void edituv_mini(object sender, RoutedEventArgs e)
+        private void edituv_mini(object? sender, RoutedEventArgs? e)
         {
             var s = GetSelectedGeosets();
+
             if (s.Count == 1)
             {
-                if (MiniUVMapper == null)
-                {
-                    MiniUVMapper = new MiniUV(s[0], List_Textures, CurrentModel);
-                    MiniUVMapper.Show();
-                }
-                else
-                {
-                    MiniUVMapper.Update(s[0], List_Textures, CurrentModel);
-                    MiniUVMapper.Show();
-                }
-
+                InitializeMiniUVMapper(s[0].Triangles.ObjectList, List_Textures, CurrentModel);
+             }
+            else
+            {
+                MessageBox.Show("Select a single geoset");return;
             }
         }
 
-        private void ImportSequence(object sender, RoutedEventArgs e)
+        private void ImportSequence(object? sender, RoutedEventArgs? e)
         {
 
         }
 
-        private void ImportTexturesm(object sender, RoutedEventArgs e)
+        private void ImportTexturesm(object? sender, RoutedEventArgs? e)
         {
 
-            CModel TemporaryModel = GetTemporaryModel();
+            CModel? TemporaryModel = GetTemporaryModel();
             if (TemporaryModel == null) { return; }
 
             Dictionary<int, CTexture> reference = new Dictionary<int, CTexture>();
@@ -18512,11 +18422,13 @@ namespace Wa3Tuner
                     var existing = CurrentModel.Textures.First(x => x.FileName == tx.FileName);
                     if (existing == null)
                     {
-                        CTexture newTexture = new CTexture(CurrentModel);
-                        newTexture.FileName = tx.FileName;
-                        newTexture.WrapWidth = tx.WrapWidth;
-                        newTexture.WrapHeight = tx.WrapHeight;
-                        newTexture.ReplaceableId = tx.ReplaceableId;
+                        CTexture newTexture = new CTexture(CurrentModel)
+                        {
+                            FileName = tx.FileName,
+                            WrapWidth = tx.WrapWidth,
+                            WrapHeight = tx.WrapHeight,
+                            ReplaceableId = tx.ReplaceableId
+                        };
                         CurrentModel.Textures.Add(newTexture);
                         reference.Add(tx.ObjectId, newTexture);
                     }
@@ -18555,7 +18467,7 @@ namespace Wa3Tuner
                 duplicated.PriorityPlane = original.PriorityPlane;
                 foreach (var layer in original.Layers)
                 {
-                    CMaterialLayer l = new CMaterialLayer(CurrentModel);
+                    CMaterialLayer l = new(CurrentModel);
                     l.Unshaded = layer.Unshaded;
                     l.Unfogged = layer.Unfogged;
                     l.TwoSided = layer.TwoSided;
@@ -18569,9 +18481,11 @@ namespace Wa3Tuner
                         l.Alpha.MakeAnimated();
                         foreach (var kf in layer.Alpha)
                         {
-                            CAnimatorNode<float> n = new CAnimatorNode<float>();
-                            n.Time = kf.Time;
-                            n.Value = kf.Value;
+                            CAnimatorNode<float> n = new CAnimatorNode<float>
+                            {
+                                Time = kf.Time,
+                                Value = kf.Value
+                            };
                             l.Alpha.Add(n);
                         }
                         l.Alpha.NodeList = l.Alpha.NodeList.OrderBy(x => x.Time).ToList();
@@ -18608,14 +18522,14 @@ namespace Wa3Tuner
             SetSaved(false);
         }
 
-        private void GeosetAttachmeentInfo(object sender, RoutedEventArgs e)
+        private void GeosetAttachmeentInfo(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count != 1)
             {
                 MessageBox.Show("Select a single geoset"); return;
             }
             var g = GetSelectedGeosets()[0];
-            List<string> names = new List<string>();
+            List<string> names = new();
             foreach (var vertex in g.Vertices)
             {
                 foreach (var gnode in vertex.Group.Object.Nodes)
@@ -18631,62 +18545,29 @@ namespace Wa3Tuner
             MessageBox.Show($"Geoset {g.ObjectId} is attached to:\n" + string.Join("\n", names));
         }
 
-        private void SelectVAttB(object sender, RoutedEventArgs e)
-        {
-            List<INode> bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
-            if (bones.Count == 0) { MessageBox.Show("There are no bones"); return; }
-            var list = bones.Select(x => x.Name).ToList();
-            Multiselector_Window s = new(list, "Which bones?");
-            List<INode> selected = new List<INode>();
+        
 
-            if (s.ShowDialog() == true)
-            {
-                if (s.selectedIndexes.Count > 0)
-                {
-                    foreach (int index in s.selectedIndexes)
-                    {
-                        selected.Add(bones[index]);
-                    }
-                    foreach (var geoet in CurrentModel.Geosets)
-                    {
-                        foreach (var vertex in geoet.Vertices)
-                        {
-
-                            vertex.isSelected = false;
-                            foreach (var gnode in vertex.Group.Object.Nodes)
-                            {
-                                if (selected.Contains(gnode.Node.Node))
-                                {
-                                    vertex.isSelected = true; break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void DetachTrianglesInsideGeoset2(object sender, MouseButtonEventArgs e)
+        private void DetachTrianglesInsideGeoset2(object? sender, MouseButtonEventArgs e)
         {
             DuplicateTrianglesInsideGeoset(true);
 
         }
 
-        private void DupliateTriiangleInsideGeosetUp(object sender, MouseButtonEventArgs e)
+        private void DupliateTriiangleInsideGeosetUp(object? sender, MouseButtonEventArgs e)
         {
             DuplicateTrianglesInsideGeoset(true);
         }
 
-        private void DetachTraingleAsNewGeosetUp(object sender, MouseButtonEventArgs e)
+        private void DetachTraingleAsNewGeosetUp(object? sender, MouseButtonEventArgs e)
         {
             DuplicateTrianglesAsNewGeoset(true, true);
         }
 
-        private void gotoOBJ(object sender, RoutedEventArgs e)
+        private void gotoOBJ(object? sender, RoutedEventArgs? e)
         {
             BrowserOpener.OpenLink("https://en.wikipedia.org/wiki/Wavefront_.obj_file");
         }
-        private void createhs(object sender, RoutedEventArgs e)
+        private void createhs(object? sender, RoutedEventArgs? e)
         {
             // Create bones with updated coordinates (X→Z, Y→X, Z→Y)
             CBone pelvis = new CBone(CurrentModel) { Name = "Pelvis", PivotPoint = new CVector3(0, 0, 90) };
@@ -18788,7 +18669,7 @@ namespace Wa3Tuner
         }
 
 
-        private void ReportGeosetViisibilities(object sender, RoutedEventArgs e)
+        private void ReportGeosetViisibilities(object? sender, RoutedEventArgs? e)
         {
             c = GetSelectedGeosets();
             if (c.Count == 1)
@@ -18828,5 +18709,1835 @@ namespace Wa3Tuner
                 }
             }
         }
+
+        private void EditGeosetViisibilitiesKeyword(object? sender, RoutedEventArgs? e)
+        {
+            if (ListGeosets.SelectedItems.Count != 1)
+            {
+                MessageBox.Show("Select a single geoset");return;
+            }
+            var v  = GetSelectedGeosets()[0];
+          
+            geoVisibilitiesKeyword g = new geoVisibilitiesKeyword(v, CurrentModel);
+            if (!g.Possible) { return; }
+            
+           if (  g.ShowDialog() == true){
+                RefreshGeosetAnimationsList();  
+            }
+
+        }
+
+        private void EditGeosetViisibilitiesKeywordNodes(object? sender, RoutedEventArgs? e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode? node = GetSelectedNode();
+                if (node == null) return;
+                geoVisibilitiesKeyword g = new geoVisibilitiesKeyword(node, CurrentModel);
+                if (!g.Possible) return;
+
+                if (g.ShowDialog() == true)
+                {
+                    SelectedNodeInNodeEditor(null,null);
+                }
+            }
+        }
+
+        private void check_ag(object? sender, RoutedEventArgs? e)
+        {
+            for (int i = 0; i < ListGeosets.Items.Count; i++)
+            {
+                var item = ListGeosets.Items[i] as ListBoxItem;
+                if (item?.Content is StackPanel s && s.Children.Count > 0 && s.Children[0] is CheckBox c)
+                {
+                    c.IsChecked = true;
+                }
+            }
+        }
+
+        private void check_ng(object? sender, RoutedEventArgs? e)
+        {
+            for (int i = 0; i < ListGeosets.Items.Count; i++)
+            {
+                var item = ListGeosets.Items[i] as ListBoxItem;
+                if (item?.Content is StackPanel s && s.Children.Count > 0 && s.Children[0] is CheckBox c)
+                {
+                    c.IsChecked = false;
+                }
+            }
+        }
+
+        private void check_rg(object? sender, RoutedEventArgs? e)
+        {
+            for (int i = 0; i < ListGeosets.Items.Count; i++)
+            {
+                var item = ListGeosets.Items[i] as ListBoxItem;
+                if (item?.Content is StackPanel s && s.Children.Count > 0 && s.Children[0] is CheckBox c)
+                {
+                    c.IsChecked = !(c.IsChecked ?? false);
+                }
+            }
+        }
+
+
+        private void uncoupleVertex(object? sender, RoutedEventArgs? e)
+        {
+            var vertices = GetSelectedVertices();
+            foreach (var geo in CurrentModel.Geosets)
+            {
+                var triangles = geo.Triangles.ToList();
+                foreach (var triangle in triangles)
+                {
+                    if (
+                        vertices.Contains(triangle.Vertex1.Object) ||
+                        vertices.Contains(triangle.Vertex2.Object) ||
+                        vertices.Contains(triangle.Vertex3.Object)  
+
+                        )
+                    {
+                        geo.Triangles.Remove(triangle);
+                    }
+                }
+            }
+        }
+
+        private void SetMousePickRadius(object? sender, TextChangedEventArgs e)
+        {
+            if (Pause) return;
+
+            if (float.TryParse(InputMousePickRaius.Text, out float value))
+            {
+                if (value > 0) { RayCaster.MousePickRadius = value; }else { 
+                    RayCaster.MousePickRadius = 1; }
+            }
+            else
+            {
+                RayCaster.MousePickRadius = 1;
+            }
+            SaveSettings();
+            }
+        private void SetSelectionMode(mSelectionMode mode)
+        {
+            SelectionMode = mode;
+            if (mode == mSelectionMode.Clear) {
+                Pause = true;
+                selectionItemClear.IsChecked = true;
+                selectionItemAdd.IsChecked = false;
+                selectionItemRemove.IsChecked = false;
+                Pause = false;
+            }
+            else if (mode == mSelectionMode.Add)
+            {
+                Pause = true;
+                selectionItemClear.IsChecked = false;
+                selectionItemAdd.IsChecked = true;
+                selectionItemRemove.IsChecked = false;
+                Pause = false;
+            }
+          else  if (mode == mSelectionMode.Remove)
+            {
+                Pause = true;
+                selectionItemClear.IsChecked = false;
+                selectionItemAdd.IsChecked = false;
+                selectionItemRemove.IsChecked = true;
+                Pause = false;
+            }
+        }
+
+        private void SetSelectionMode2(object? sender, RoutedEventArgs? e)
+        {
+            if (Pause) return;
+            SetSelectionMode(mSelectionMode.Add);
+        }
+
+        private void SetSelectionMode3(object? sender, RoutedEventArgs? e)
+        {
+            if (Pause) return;
+            SetSelectionMode(mSelectionMode.Remove);
+        }
+
+        private void SetSelectionMode1(object? sender, RoutedEventArgs? e)
+        {
+            if (Pause) return;
+            if (selectionItemClear == null) return;
+            SetSelectionMode(mSelectionMode.Clear);
+        }
+
+        private void Hotkeys_Up(object? sender, KeyEventArgs e)
+        {
+           
+            SetSelectionMode(mSelectionMode.Clear);
+        }
+
+        private void fitVertexUV(object? sender, RoutedEventArgs? e)
+        {
+            var vertices = GetSelectedVertices();
+            if (vertices.Count == 3)
+            {
+                vertices[0].TexturePosition = new CVector2(0, 0);
+                vertices[1].TexturePosition = new CVector2(1, 0);
+                vertices[2].TexturePosition = new CVector2(0, 1);
+            }
+            else if (vertices.Count == 4)
+            {
+                vertices[0].TexturePosition = new CVector2(0, 0);
+                vertices[1].TexturePosition = new CVector2(1, 0);
+                vertices[2].TexturePosition = new CVector2(0, 1);
+                vertices[3].TexturePosition = new CVector2(1, 1);
+            }
+            else
+            {
+                MessageBox.Show("Select 3 or 4 vertices");
+                return;
+            }
+        }
+
+        private void Rigging_SelectVer(object? sender, RoutedEventArgs? e)
+        {
+            if (ListBonesRiggings.SelectedItem == null) return;
+            var bone = getselectedBoneInRigging();
+            
+            List<INode> selected = new List<INode>();
+
+            
+               
+                    foreach (var geoet in CurrentModel.Geosets)
+                    {
+                        foreach (var vertex in geoet.Vertices)
+                        {
+
+                            vertex.isSelected = false;
+                            foreach (var gnode in vertex.Group.Object.Nodes)
+                            {
+                                if (vertex.Group.Object.Nodes.Any(x=>x.Node.Node == selected))
+                                {
+                                    vertex.isSelected = true; break;
+                                }
+                            }
+                        }
+                    }
+            RefreshrigingAttachedList( );
+
+        }
+        private void RefreshrigingAttachedList( )
+        {
+            var vertices = GetSelectedVertices();
+            if (Tabs_Geosets.SelectedIndex != 3) { return; }
+            if (vertices.Count == 0) { ListAttachedToRiggings.Items.Clear(); return; }
+           
+              if (vertices.Count ==0) { ListAttachedToRiggings.Items.Clear(); return; }
+            CGeosetGroup gr = new CGeosetGroup(CurrentModel);
+            List<INode> nodes = GetNodesOfGroup(vertices[0].Group);
+            if (vertices.Count == 1) { FillRiggingAttachedistWith(nodes); return; }
+            bool same = true; ;
+            for (int g = 0; g < vertices[0].Group.Object.Nodes.Count; g++)
+            {
+                nodes.Add(vertices[0].Group.Object.Nodes[g].Node.Node);
+            }
+            for (int v =0; v< vertices.Count; v++)
+            {
+                for (int g = 0; g < vertices[v].Group.Object.Nodes.Count; g++)
+                {
+                    if (nodes.Contains(vertices[v].Group.Object.Nodes[g].Node.Node) == false)
+                    {
+                        same = false; break;
+                    }
+                    if (!same) { break; }
+                }
+                if (!same) { break; }
+            }
+          
+                
+            if (same)
+            {
+                LabelRiggingAttachedTo.Text = "Selected vertices are attached to: (same)";
+                FillRiggingAttachedistWith(nodes);
+                ButtonAddAttach.IsEnabled = true;
+                ButtonClearAttach.IsEnabled = true;
+                ButtonDetach.IsEnabled = true;
+            }
+            else
+            {
+                LabelRiggingAttachedTo.Text = "Selected vertices are attached to: (not same)";
+                ListAttachedToRiggings.Items.Clear();
+                ButtonAddAttach.IsEnabled = false;
+                ButtonDetach.IsEnabled = false;
+                ButtonClearAttach.IsEnabled = true;
+            }
+        }
+
+        private void FillRiggingAttachedistWith(List<INode> nodes)
+        {
+            ListAttachedToRiggings.Items.Clear();
+            List<string> names = nodes.Select(x => x.Name).ToList();
+            names = names.Distinct().ToList();
+            foreach (string name in names)
+            {
+                ListAttachedToRiggings.Items.Add(new ListBoxItem() { Content = name });
+            }
+        }
+
+        private static List<INode> GetNodesOfGroup(CObjectReference<CGeosetGroup> group)
+        {
+            List<INode> list = new List<INode>();
+            foreach (var gnode in group.Object.Nodes)
+            {
+                if (list.Contains(gnode.Node.Node) == false)  list.Add(gnode.Node.Node);
+            }
+            return list;
+        }
+
+        private void SelectVerticesofBones(object? sender, RoutedEventArgs? e)
+        {
+           // if (ListBonesRiggings.SelectedItem == null) return;
+            var bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
+            var names = bones.Select(x=>x.Name).ToList();
+            if (bones.Count == 0)
+            {
+                MessageBox.Show("There are no bones");
+                return;
+            }
+            Multiselector_Window mw = new Multiselector_Window(names, "Which bones?");
+
+            if (mw.ShowDialog() == true)
+            {
+                
+                foreach (int index in mw.selectedIndexes)
+                {
+                    var bone = bones[index];
+                    foreach (var geoet in CurrentModel.Geosets)
+                    {
+                        foreach (var vertex in geoet.Vertices)
+                        {
+
+                            vertex.isSelected = false;
+                            foreach (var gnode in vertex.Group.Object.Nodes)
+                            {
+                                if (gnode.Node.Node == bone)
+                                {
+                                    vertex.isSelected = true; break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+
+            
+
+
+            
+        }
+
+        private void check_rag(object? sender, RoutedEventArgs? e)
+        {
+            foreach (var y in Listbox_Geosets_Rigging.Items)
+            {
+                ListBoxItem? i = y as ListBoxItem; if (i == null) continue;
+                CheckBox? c = i.Content as CheckBox; if (c == null) continue;
+                c.IsChecked = true;
+            }
+        }
+
+        private void check_rng(object? sender, RoutedEventArgs? e)
+        {
+            foreach (var y in Listbox_Geosets_Rigging.Items)
+            {
+                ListBoxItem? i = y as ListBoxItem; if (i == null) return;
+                CheckBox? c = i.Content as CheckBox; if (c == null) return;
+                c.IsChecked = false;
+            }
+        }
+
+        private void check_rrg(object? sender, RoutedEventArgs? e)
+        {
+            foreach (var y in Listbox_Geosets_Rigging.Items)
+            {
+                ListBoxItem? i = y as ListBoxItem; if (i == null) return;
+                CheckBox? c = i.Content as CheckBox; if (c == null) return;
+                c.IsChecked = !c.IsChecked;
+            }
+        }
+
+        private void selectAall(object? sender, RoutedEventArgs? e)
+        {
+            switch (Tabs_Geosets.SelectedIndex)
+            {
+                case 0: SelectAllGeosets(null,null); break;
+                case 1: 
+                    foreach (var geoset in CurrentModel.Geosets)
+                    {
+                        foreach (var triangle in geoset.Triangles)
+                        {
+                            triangle.isSelected = true;
+                        }
+                    }
+                    break;
+                case 2:
+                case 3:
+                    foreach (var geoset in CurrentModel.Geosets)
+                    {
+                        foreach (var vertex in geoset.Vertices)
+                        {
+                            vertex.isSelected = true;
+                        }
+                    }
+                    break;
+                case 6: NodeList_SelectN(null,null); break;
+                default: break;
+            }
+            
+        }
+
+        private void unselectAll(object? sender, RoutedEventArgs? e)
+        {
+            DeselectAllGeosets(null, null);
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var triangle in geoset.Triangles)  triangle.isSelected = false;
+                 
+                foreach (var vertex in geoset.Vertices)  vertex.isSelected = false;
+                
+            }
+            
+            NodeList_SelectN(null, null);
+            
+        }
+
+        private void selectInverse(object? sender, RoutedEventArgs? e)
+        {
+            switch (Tabs_Geosets.SelectedIndex)
+            {
+                case 0: InvertSelectGeosets(null, null); break;
+                case 1:
+                    foreach (var geoset in CurrentModel.Geosets)
+                    {
+                        foreach (var triangle in geoset.Triangles)
+                        {
+                            triangle.isSelected = !triangle.isSelected;
+                        }
+                    }
+                    break;
+                case 2:
+                case 3:
+                    foreach (var geoset in CurrentModel.Geosets)
+                    {
+                        foreach (var vertex in geoset.Vertices)
+                        {
+                            vertex.isSelected = !vertex.isSelected;
+                        }
+                    }
+                    break;
+                case 6: NodeList_SelectI(null, null); break;
+                default: break;
+            }
+        }
+
+        private void GrowSelection(object? sender, RoutedEventArgs? e)
+        {
+            //unfinished
+        }
+
+        private void ShrinkSelection(object? sender, RoutedEventArgs? e)
+        {
+            //unfinished
+        }
+
+        private void alignx(object? sender, RoutedEventArgs? e)
+        {
+            AlignSelection(Axes.X);
+        }
+
+
+        private void aligny(object? sender, RoutedEventArgs? e)
+        {
+            AlignSelection(Axes.Y);
+            
+        }
+
+      
+
+        private void alignz(object? sender, RoutedEventArgs? e)
+        {
+            AlignSelection(Axes.Z);
+        }
+
+        private void DelNodeAndChildren(object? sender, RoutedEventArgs? e)
+        {
+            if (ListNodes.SelectedItem == null) { return; }
+            INode node = GetSeletedNode();
+
+          GetAllNodesInHierarchy(node);
+            foreach (INode child in TempNodeList)
+            {
+                
+                CurrentModel.Nodes.Remove(child);
+            }
+            CurrentModel.Nodes.Remove(node);
+            TempNodeList.Clear();
+            RefreshNodesTree();
+        }
+        private List<INode> TempNodeList = new List<INode>();
+       
+
+        private void GetAllNodesInHierarchy(INode inputNode)
+        {
+            foreach (var node in CurrentModel.Nodes)
+            {
+                if (node.Parent?.Node == inputNode)
+                {
+                    TempNodeList.Add(node);
+                    GetAllNodesInHierarchy(node); // Recurse only for the child
+                }
+            }
+        }
+
+        private void undo(object? sender, RoutedEventArgs? e)
+        {
+            if (ListOptions.SelectedIndex == 0)
+            {
+               History.Geometry.Undo(CurrentModel, this);
+            }
+            if (ListOptions.SelectedIndex == 1)
+            {
+                History.Sequences.Undo(CurrentModel,this);
+            }
+            if (ListOptions.SelectedIndex == 2)
+            {
+                History.Nodes.Undo(CurrentModel, this);
+            }
+        }
+
+        private void redo(object? sender, RoutedEventArgs? e)
+        {
+            if (ListOptions.SelectedIndex == 0)
+            {
+                 History.Geometry.Redo(CurrentModel, this);
+            }
+            if (ListOptions.SelectedIndex == 1)
+            {
+                History.Sequences.Redo(CurrentModel, this);
+            }
+            if (ListOptions.SelectedIndex == 2)
+            {
+                 History.Nodes.Redo(CurrentModel, this);
+            }
+        }
+
+        private void CenterEachBoneAtItsGeometry(object? sender, RoutedEventArgs? e)
+        {
+            foreach (var selected in CurrentModel.Nodes)
+            {
+                if (selected is CBone == false) continue;
+                List<CGeosetVertex> attached = GetAttachedVerticesToNode(selected);
+                CVector3 centroid = Calculator.GetCentroidOfVertices(attached);
+                selected.PivotPoint = new CVector3(centroid);
+            }
+        }
+
+        private void AverageSharedUV(object? sender, RoutedEventArgs? e)
+        {
+            var vertices = GetSelectedVertices();
+            if (vertices.Count < 2)
+            {
+                Calculator.AverageUV(vertices);
+                //unfinished
+            }
+            else
+            {
+                MessageBox.Show("Select 2 or more vertices");return;
+            }
+        }
+        private void AlignSelection(Axes axis)
+        {
+            int tab = Tabs_Geosets.SelectedIndex;
+
+            if (tab == 0) // Geosets
+            {
+                var geosets = GetSelectedGeosets();
+                if (geosets.Count > 1)
+                {
+                    // Use the first geoset's centroid as target
+                    var targetCentroid = Calculator.GetCentroidOfGeoset(geosets[0]);
+                     
+                    Calculator.AlignGeosets(geosets, axis == Axes.X, axis == Axes.Y, axis == Axes.Z);
+                    
+                }
+            }
+
+
+            else if (tab == 1) // Vertices
+            {
+                var vertices = GetSelectedVertices();
+                if (vertices.Count > 1)
+                {
+                    float target = GetAxisComponent(vertices[0].Position, axis);
+                    for (int i = 1; i < vertices.Count; i++)
+                    {
+                        SetAxisComponent(vertices[i].Position, axis, target);
+                    }
+                }
+            }
+            else if (tab == 2) // Triangles
+            {
+                var triangleVertices = getSelectedTriangles().SelectMany(x => x.Vertices).ToList();
+                if (triangleVertices.Count > 1)
+                {
+                    float target = GetAxisComponent(triangleVertices[0].Position, axis);
+                    for (int i = 1; i < triangleVertices.Count; i++)
+                    {
+                        SetAxisComponent(triangleVertices[i].Position, axis, target);
+                    }
+                }
+            }
+            else if (tab == 6) // Nodes
+            {
+                var nodes = GetSelectedNodes_NodeEditor();
+                if (nodes.Count > 1)
+                {
+                    float target = GetAxisComponent(nodes[0].PivotPoint, axis);
+                    for (int i = 1; i < nodes.Count; i++)
+                    {
+                        SetAxisComponent(nodes[i].PivotPoint, axis, target);
+                    }
+                }
+            }
+        }
+
+        private static float GetAxisComponent(CVector3 vector, Axes axis)
+        {
+            return axis switch
+            {
+                Axes.X => vector.X,
+                Axes.Y => vector.Y,
+                Axes.Z => vector.Z,
+                _ => 0f
+            };
+        }
+
+        private static void SetAxisComponent(CVector3 vector, Axes axis, float value)
+        {
+            switch (axis)
+            {
+                case Axes.X: vector.X = value; break;
+                case Axes.Y: vector.Y = value; break;
+                case Axes.Z: vector.Z = value; break;
+            }
+        }
+
+        private void createLayer(object? sender, RoutedEventArgs? e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Textures.SelectedItem != null)
+            {
+                var texture = GetSElectedTexture();
+                var material = GetSelectedMAterial();
+                CMaterialLayer layer = new CMaterialLayer(CurrentModel);
+                layer.Texture.Attach(texture);
+                material.Layers.Add(layer);
+                RefreshLayersList();
+            }
+        }
+
+        private void flipnormalVertex(object? sender, RoutedEventArgs? e)
+        {
+            var vertices = GetSelectedVertices();
+            foreach (var vertex in vertices)
+            {
+                vertex.Normal.Negate();
+            }
+        }
+        private void SetNewModelName()
+        {
+            CurrentModel.Name = "New Model";
+            if (DefaultAuthor.Length > 0) CurrentModel.Name += $" by {DefaultAuthor}";
+        }
+        private void newm(object? sender, RoutedEventArgs? e)
+        {
+            model_starter ms = new model_starter( );
+            if (ms.ShowDialog() == true)
+            {
+                CurrentModel = ms.NewModel;
+                refreshalllists(null,null);
+                SetNewModelName();
+                RefreshTitle();
+                SetSaved(false);
+            }
+        }
+
+        private void CollapseTrianglesAll(object? sender, RoutedEventArgs? e)
+        {
+            var triangles = getSelectedTriangles();
+            if (triangles.Count > 1) { MessageBox.Show("Select at least 1 triangle"); return; }
+            var centroid = Calculator.GetCentroidOfVertices(new List<CGeosetVertex>() { triangles[0].Vertex1.Object, triangles[0].Vertex2.Object, triangles[0].Vertex3.Object });
+
+            foreach (var triangle in triangles)
+            {
+                triangle.Vertex1.Object.Position = new CVector3(centroid);
+                triangle.Vertex2.Object.Position = new CVector3(centroid);
+                triangle.Vertex3.Object.Position = new CVector3(centroid);
+            }
+            RefreshGeosets_Triangles();
+        }
+
+        private void CollapseVerticesAll(object? sender, RoutedEventArgs? e)
+        {
+            List<CGeosetVertex> vertices = GetSelectedVertices();
+            if (vertices.Count < 2)
+            {
+                MessageBox.Show("Select at least 2 vertices");
+                return;
+            }
+
+            Dictionary<CGeoset, List<CGeosetVertex>> reference = new Dictionary<CGeoset, List<CGeosetVertex>>();
+
+            // Group vertices by geoset
+            List<CGeosetVertex> firsts = new List<CGeosetVertex>();
+            foreach (var vertex in vertices)
+            {
+                foreach (var geoset in CurrentModel.Geosets)
+                {
+                    if (geoset.Vertices.Contains(vertex))
+                    {
+                        if (!reference.ContainsKey(geoset))
+                            reference[geoset] = new List<CGeosetVertex>();
+                        reference[geoset].Add(vertex);
+                        break; // One vertex should belong to only one geoset
+                    }
+                }
+            }
+
+            foreach (var pair in reference)
+            {
+                if (pair.Value.Count <= 1) continue;
+
+                var first = pair.Value.First();
+                firsts.Add(first);
+                var redundantVertices = pair.Value.Skip(1).ToList();
+
+                foreach (var triangle in pair.Key.Triangles)
+                {
+                    if (redundantVertices.Contains(triangle.Vertex1.Object))
+                        triangle.Vertex1.Attach(first);
+                    if (redundantVertices.Contains(triangle.Vertex2.Object))
+                        triangle.Vertex2.Attach(first);
+                    if (redundantVertices.Contains(triangle.Vertex3.Object))
+                        triangle.Vertex3.Attach(first);
+                }
+
+                foreach (var v in redundantVertices)
+                    pair.Key.Vertices.Remove(v);
+            }
+           if (firsts.Count > 1)
+            {
+                for (int i = 1; i < firsts.Count; i++) { firsts[i].Position = new CVector3(firsts[0].Position); }
+
+            }
+            UpdateSelectedVerticesInfo();
+            SetSaved(false);
+            RefreshRenderData(null, null); RefreshGeosets_Vertices();
+        }
+
+        private void SnapVerticestoCentroid(object? sender, RoutedEventArgs? e)
+        {
+            var vertices = GetSelectedVertices();
+            if (vertices.Count > 1)
+            {
+                var c = Calculator.GetCentroidOfVertices(vertices);
+                for (int i = 0; i < vertices.Count; i++) { vertices[i].Position = new CVector3(c); }
+            }
+        }
+
+        private void   CreateIconFromScreenshot(object? sender, RoutedEventArgs? e)
+        {
+            if (File.Exists (CurrentSaveLocation) == false)
+            {
+                MessageBox.Show("Current save file/location does not exist");return;
+            }
+            if (Directory.Exists(CurrentSaveFolder) == false)
+            {
+                MessageBox.Show("Current save folder does not exist"); return;
+            }
+            if (ListOptions.SelectedIndex != 0) { MessageBox.Show("Select the geosets tab");return; }
+            // get paths
+            string? Filename = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocation);
+            string? outputFolder = System.IO.Path.Combine(CurrentSaveFolder, "Icon");
+            string? outputScr    = System.IO.Path.Combine(outputFolder, "scr.png");
+            string? btnBorder = System.IO.Path.Combine(AppHelper.Local, "Tools\\btn.png");
+            string? DiSbtnBorder = System.IO.Path.Combine(AppHelper.Local, "Tools\\disbtn.png");
+            string ?outputBtn = System.IO.Path.Combine(outputFolder, $"BTN_{Filename}.png");
+            string? outputBtnDis = System.IO.Path.Combine(outputFolder, $"DISBTN_{Filename}.png");
+            string? outputBtnBLP = System.IO.Path.Combine(outputFolder, $"BTN_{Filename}.blp");
+            string? outputBtnDisBLP = System.IO.Path.Combine(outputFolder, $"DISBTN_{Filename}.blp");
+            // get screenshot
+            Directory.CreateDirectory(outputFolder);
+            CaptureScreenshot(Scene_ViewportGL, outputScr);
+            // load
+            Bitmap LoadedImage = new Bitmap(outputScr);// ImageHelper.Load(outputScr);
+            
+            Bitmap btn = new Bitmap(btnBorder);  
+            Bitmap disbtn = new Bitmap(DiSbtnBorder);
+            //resize
+            Bitmap resized = ImageHelper.Resize(LoadedImage, 64, 64);
+
+
+            // join
+            resized.SetResolution(72, 72);
+            btn.SetResolution(72, 72);
+            disbtn.SetResolution(72, 72);
+            Bitmap Button = ImageHelper.Join(resized, btn);
+            Bitmap ButtonDisabled = ImageHelper.Join(resized, disbtn);
+            // save
+            Button.Save(outputBtn);
+            ButtonDisabled.Save(outputBtnDis);
+            // convert
+           
+            BLPConverter.Convert(outputBtn, outputBtnBLP,this, outputBtn);
+            BLPConverter.Convert(outputBtnDis, outputBtnDisBLP,this, outputBtnDis);
+            
+            //dispose
+            LoadedImage.Dispose();
+            btn.Dispose();
+            disbtn.Dispose();
+            Button.Dispose();
+            ButtonDisabled.Dispose();
+            File.Delete(outputScr);
+            //  File.Delete(outputBtn);
+            //  File.Delete(outputBtnDis);
+            Process.Start("explorer.exe",outputFolder );
+
+        }
+
+        private void setModelNameF(object? sender, RoutedEventArgs? e)
+        {
+            string? name =System.IO. Path.GetFileNameWithoutExtension(CurrentSaveLocation);
+            if (DefaultAuthor.Length > 0)
+            {
+                name += " by" + DefaultAuthor;
+                RefreshTitle();
+                SetSaved(false);
+            }
+        }
+
+        private void setAuthor(object? sender, RoutedEventArgs? e)
+        {
+            Input i = new Input(DefaultAuthor);
+            i.ShowDialog();
+            if (i.DialogResult == true)
+            {
+                DefaultAuthor= i.Result;
+                SaveSettings();
+            }
+        }
+
+        private void CenterSelectionTogether(object? sender, RoutedEventArgs? e)
+        {
+            axis_selector ax = new axis_selector();
+            ax.ShowDialog();
+            if (ax.DialogResult == true)
+            {
+                bool onX = ax.Check_x.IsChecked == true;
+                bool onY = ax.Check_y.IsChecked == true;
+                bool onZ = ax.Check_z.IsChecked == true;
+
+
+                if (Tabs_Geosets.SelectedIndex == 0) // geosets
+                {
+                    var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
+                    Calculator.CenterVerticesTogether(vertices, onX, onY, onZ);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+                {
+
+                    var vertices = getSelectedTriangles().SelectMany(x=>x.Vertices).ToList();
+                    Calculator.CenterVerticesTogether(vertices, onX, onY, onZ);
+                }
+                else if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) // vertices
+                {
+                    var vertices = GetSelectedVertices();
+                    Calculator.CenterVerticesTogether(vertices, onX, onY, onZ);
+
+                }
+                if (Tabs_Geosets.SelectedIndex == 6) // nodes
+                {
+                    var nodes = GetSelectedNodes_NodeEditor();
+                    Calculator.centerNodesTogether(nodes,onX,onY,onZ);
+                }
+
+                SetSaved(false);
+            }
+            
+           
+        }
+
+        private void SnapSelectionTogether(object? sender, RoutedEventArgs? e)
+        {
+            SnapSettingsWindow sw = new SnapSettingsWindow();
+            if (sw.ShowDialog() == true)
+            {
+                var type = sw.Type;
+                if (Tabs_Geosets.SelectedIndex == 0) //geosets
+                {
+                      var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
+                    
+                        Calculator.SnapVerticesAsGroup(vertices , type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    
+
+
+                }
+                if (Tabs_Geosets.SelectedIndex == 1) //triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+                   
+                        Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                  
+                }
+                if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) //verties
+                {
+                    var vertices = GetSelectedVertices();
+                    Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    
+                }
+                if (Tabs_Geosets.SelectedIndex == 6) //nodes
+                {
+                    var nodes = GetSelectedNodes_NodeEditor();
+                    Calculator.SnapNodesAsGroup(nodes, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                }
+            }
+
+
+        }
+
+        private void SnapSelectionEach(object? sender, RoutedEventArgs? e)
+        {
+            SnapSettingsWindow sw = new SnapSettingsWindow();
+            if (sw.ShowDialog() == true)
+            {
+                var type = sw.Type;
+                if (Tabs_Geosets.SelectedIndex == 0) //geosets
+                {
+                 //   var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
+                    var geosets = GetSelectedGeosets();
+                    foreach (var geoset in geosets)
+                    {
+                        Calculator.SnapVerticesAsGroup(geoset.Vertices.ToList(), type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    }
+                        
+                     
+                }
+                if (Tabs_Geosets.SelectedIndex == 1) //triangles
+                {
+                    var triangles = getSelectedTriangles();
+                    var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
+                    foreach (var vartex in vertices)
+                    {
+                        Calculator.SnapVector(vartex.Position, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    }
+                }
+                if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) //verties
+                {
+                    var vertices = GetSelectedVertices();
+                    foreach (var vartex in vertices)
+                    {
+                        Calculator.SnapVector(  vartex.Position, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    }
+                }
+                if (Tabs_Geosets.SelectedIndex == 6) //nodes
+                {
+                    var nodes = GetSelectedNodes_NodeEditor();
+                    foreach (var node in nodes)
+                    {
+                        Calculator.SnapVector(  node.PivotPoint, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                    }
+                }
+            }
+        }
+
+        private void RenameNodes(object? sender, RoutedEventArgs? e)
+        {
+            Nodes_Renamer nr = new Nodes_Renamer(CurrentModel.Nodes.ToList());
+            if (nr.ShowDialog() == true)
+            {
+                RefreshNodesTree();
+            }
+        }
+
+        private void swapnodenames(object? sender, RoutedEventArgs? e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                INode? node = GetSelectedNode(); if (node == null) return;
+                List<string> list = CurrentModel.Nodes.Select(x=>x.Name).ToList();
+                list.Remove(node.Name);
+                if (list.Count > 0)
+                {
+                    Selector s = new Selector(list);
+                    if (s.ShowDialog() == true)
+                    {
+                        string? selected = Extractor.GetString(s.box);
+                        INode target = CurrentModel.Nodes.First(x=>x.Name ==  selected);
+                        string targetName = target.Name;
+                        string nodeName = node.Name;
+                        target.Name = nodeName;
+                        node.Name = targetName;
+                        RefreshNodesTree();
+                    }
+                }
+            }
+        }
+
+        private void explain_errorCheker(object? sender, RoutedEventArgs? e)
+        {
+            bigTextContainer bc = new bigTextContainer(System.IO.Path.Combine(AppHelper.Local, "errorchecklist.txt"));
+            bc.ShowDialog();
+        }
+
+        private void CheckAll_Geosets_Triangles(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+            foreach (var item in Container_Geosets_Triangles.Children)
+            {
+                ListBoxItem? b = item as ListBoxItem; if (b == null) return;
+                StackPanel? p = b.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
+                c.IsChecked = true;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = true;
+            }
+            Pause = false;
+        }
+
+        private void CheckNone_Geosets_Triangles(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+            foreach (var item in Container_Geosets_Triangles.Children)
+            {
+                CheckBox? c= Extractor.GetCheckBoxOfListItem(item); if (c ==null) return;
+              
+                c.IsChecked = false;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = false;
+            }
+            Pause = false;
+        }
+
+        private void CheckInvert_Geosets_Triangles(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+            foreach (var item in Container_Geosets_Triangles.Children)
+            {
+                ListBoxItem? b = item as ListBoxItem; if (b == null) return;
+                StackPanel? p = b.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
+                c.IsChecked = !c.IsChecked;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = !geoset.isVisible;
+            }
+            Pause = false;
+        }
+
+        private void CheckAll_Geosets_Vertices(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+
+            foreach (var item in Container_Geosets_Vertices.Children)
+            {
+                ListBoxItem? b = item as ListBoxItem; if (b == null) return;
+                StackPanel? p = b.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
+                c.IsChecked = true;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = true;
+            }
+            Pause = false;
+        }
+
+        private void CheckNone_Geosets_Vertices(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+            foreach (var item in Container_Geosets_Vertices.Children)
+            {
+                ListBoxItem? b = item as ListBoxItem; if (b == null) return;
+                StackPanel? p = b.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if ( c== null) return;
+                c.IsChecked = false;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = false;
+            }
+            Pause = false;
+        }
+
+        private void CheckInvert_Geosets_Vertices(object? sender, RoutedEventArgs? e)
+        {
+            Pause = true;
+            foreach (var item in Container_Geosets_Vertices.Children)
+            {
+                ListBoxItem? b = item as ListBoxItem; if (b == null) return;
+                StackPanel? p = b.Content as StackPanel; if (p == null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
+                c.IsChecked = !c.IsChecked;
+
+            }
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                geoset.isVisible = !geoset.isVisible;
+            }
+            Pause = false;
+        }
+        private void RefreshGeosets_Triangles()
+        {
+            Container_Geosets_Triangles.Children.Clear();
+
+            foreach (CGeoset geo in CurrentModel.Geosets)
+            {
+                ListBoxItem Item = new ListBoxItem();
+                int UsedMaterialIndex = CurrentModel.Materials.IndexOf(geo.Material.Object);
+                TextBlock Title = new TextBlock();
+                string TitleName = geo.ObjectId.ToString() + $" ({geo.Name}) ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles) (material {UsedMaterialIndex}) (Groups {geo.Groups.Count})";
+                Title.Text = TitleName;
+                CheckBox CheckPart = new CheckBox();
+                StackPanel Container = new StackPanel();
+                Item.MouseLeave += (object? sender, MouseEventArgs e) =>
+                {
+                    if (Item.ToolTip is ToolTip toolTip)
+                    {
+                        toolTip.IsOpen = false;
+                    }
+                };
+                Container.Orientation = Orientation.Horizontal;
+                Container.Children.Add(CheckPart);
+                Container.Children.Add(Title);
+                CheckPart.IsChecked = true;
+                //GeosetVisible.Add(geo, true);
+                CheckPart.Checked += (object? sender, RoutedEventArgs? e) => geo.isVisible = true; ;
+                CheckPart.Unchecked += (object? sender, RoutedEventArgs? e) => geo.isVisible = false; ;
+                Item.Content = Container;
+                Container_Geosets_Triangles.Children.Add(Item);
+            }
+        }
+        private void RefreshGeosets_Vertices()
+        {
+            Container_Geosets_Vertices.Children.Clear();
+
+            foreach (CGeoset geo in CurrentModel.Geosets)
+            {
+                ListBoxItem Item = new ListBoxItem();
+                int UsedMaterialIndex = CurrentModel.Materials.IndexOf(geo.Material.Object);
+                TextBlock Title = new TextBlock();
+                string TitleName = geo.ObjectId.ToString() + $" ({geo.Name}) ({geo.Vertices.Count} vertices, {geo.Triangles.Count} triangles) (material {UsedMaterialIndex}) (Groups {geo.Groups.Count})";
+                Title.Text = TitleName;
+                CheckBox CheckPart = new CheckBox();
+                StackPanel Container = new StackPanel();
+                Item.MouseLeave += (object? sender, MouseEventArgs e) =>
+                {
+                    if (Item.ToolTip is ToolTip toolTip)
+                    {
+                        toolTip.IsOpen = false;
+                    }
+                };
+                Container.Orientation = Orientation.Horizontal;
+                Container.Children.Add(CheckPart);
+                Container.Children.Add(Title);
+                CheckPart.IsChecked = true;
+                //GeosetVisible.Add(geo, true);
+                CheckPart.Checked += (object? sender, RoutedEventArgs? e) => geo.isVisible = true; ;
+                CheckPart.Unchecked += (object? sender, RoutedEventArgs? e) => geo.isVisible = false; ;
+                Item.Content = Container;
+                Container_Geosets_Vertices.Children.Add(Item);
+            }
+        }
+
+        
+
+      
+
+        // Helper to add a side wall between two front vertices and two back vertices
+
+        
+        
+
+        private void report(object? sender, RoutedEventArgs? e)
+        {
+            MessageBox.Show("If you want to report a bug, suggest new feature or improve existing feature message me on Discord at <stan0033>", "How to report");
+        }
+
+        private void seqn(object? sender, RoutedEventArgs? e)
+        {
+            SequenceNamesHelper.Show();
+        }
+
+        private void createWhite(object? sender, RoutedEventArgs? e)
+        {
+            CTexture texture = new CTexture(CurrentModel);
+            texture.FileName = White;
+            CurrentModel.Textures.Add(texture);
+            RefreshTexturesList();
+
+        }
+
+        private void createBlack(object? sender, RoutedEventArgs? e)
+        {
+            CTexture texture = new CTexture(CurrentModel);
+            texture.FileName = Black;
+            CurrentModel.Textures.Add(texture);
+            RefreshTexturesList();
+        }
+
+        private void rig_SelectVerticesOfGeoset(object? sender, RoutedEventArgs? e)
+        {
+            if (Listbox_Geosets_Rigging.SelectedItem != null)
+            {
+                int index = Listbox_Geosets_Rigging.SelectedIndex;
+                foreach (var vertex in CurrentModel.Geosets[index].Vertices)
+                {
+                    vertex.isSelected = true;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Selectg a geoset");
+            }
+        }
+
+        private void SetHistoryLimit(object? sender, TextChangedEventArgs e)
+        {
+            if (Pause) return;
+            if  (int.TryParse(Textbox_HistoryLimit.Text, out int value)){
+                History.SetLimit(value);
+            }
+            
+        }
+
+        private void negatetTriangles(object? sender, RoutedEventArgs? e)
+        {
+            var triangles = getSelectedTriangles();
+            if (triangles.Count < 0) { MessageBox.Show("Select at least 1 triangle"); return; }
+            axis_picker ap = new axis_picker("Axes?");
+            if (ap.ShowDialog() == true)
+            {
+                var ax = ap.axis;
+                for (int i = 0; i < triangles.Count; i++)
+                {
+                    if (ax == Axes.X)
+                    {
+                        triangles[i].Vertex1.Object.Position.X = -triangles[i].Vertex1.Object.Position.X;
+                        triangles[i].Vertex2.Object.Position.X = -triangles[i].Vertex2.Object.Position.X;
+                        triangles[i].Vertex3.Object.Position.X = -triangles[i].Vertex3.Object.Position.X;
+                    }
+                    if (ax == Axes.Y)
+                    {
+                        triangles[i].Vertex1.Object.Position.Y = -triangles[i].Vertex1.Object.Position.Y;
+                        triangles[i].Vertex2.Object.Position.Y = -triangles[i].Vertex2.Object.Position.Y;
+                        triangles[i].Vertex3.Object.Position.Y = -triangles[i].Vertex3.Object.Position.Y;
+                    }
+                    if (ax == Axes.Z)
+                    {
+                        triangles[i].Vertex1.Object.Position.Z = -triangles[i].Vertex1.Object.Position.Z;
+                        triangles[i].Vertex2.Object.Position.Z = -triangles[i].Vertex2.Object.Position.Z;
+                        triangles[i].Vertex3.Object.Position.Z = -triangles[i].Vertex3.Object.Position.Z;
+                    }
+                }
+                SetSaved(false);
+            }
+        }
+
+       
+
+       
+
+        private void SetSequenceRarity(object sender, TextChangedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+
+                var seqeence = GetSelectedSequence();
+                seqeence.Rarity = Extractor.GetFloat(seqeence.Rarity, InputRarity.Text,0);
+                 History.Sequences.Add(CurrentModel);
+            }
+        }
+
+        private void SetSequenceMoveSpeed(object sender, TextChangedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+              
+                var seqeence = GetSelectedSequence();
+               
+                seqeence.MoveSpeed = Extractor.GetFloat(seqeence.MoveSpeed, InputMovespeed.Text,0);
+                History.Sequences.Add(CurrentModel);
+            }
+        }
+
+        private void setSequenceNonlooping(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            SetSequenceLoop(null, null);
+        }
+
+        private void Selected_TA(object? sender, SelectionChangedEventArgs? e)
+        {
+            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count> List_TextureAnims.SelectedIndex)
+            {
+                int index = List_TextureAnims.SelectedIndex;
+                var ta = CurrentModel.TextureAnimations[index];
+                Button_TA_Translations.Content = $"Translations ({ta.Translation.Count})";
+                Button_TA_Rotations.Content = $"Rotations ({ta.Rotation.Count})";
+                Button_TA_Scalings.Content = $"Scalings ({ta.Scaling.Count})";
+                Button_TA_Translations.IsEnabled = !ta.Translation.Static;
+                Button_TA_Rotations.IsEnabled = !ta.Rotation.Static;
+                Button_TA_Scalings.IsEnabled = !ta.Scaling.Static;
+                Pause = true;
+                Check_TA_Tr.IsChecked = !ta.Translation.Static;
+                Check_TA_Ro.IsChecked = !ta.Rotation.Static;
+                Check_TA_Sc.IsChecked = !ta.Scaling.Static;
+                Pause = false;
+
+            }
+           
+        }
+
+        private void Make_Ta_Tr_Animated(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count > List_TextureAnims.SelectedIndex)
+            {
+                bool animated = Check_TA_Tr.IsChecked == true;
+                int index = List_TextureAnims.SelectedIndex;
+                var ta = CurrentModel.TextureAnimations[index];
+                if (animated)
+                {
+                    ta.Translation.MakeAnimated();
+                }
+                else
+                {
+                    ta.Translation.MakeStatic(new CVector3());
+                }
+                Button_TA_Translations.IsEnabled = !ta.Translation.Static;
+            }
+        }
+
+        private void Make_Ta_Ro_Animated(object sender, RoutedEventArgs e)
+        {
+
+            if (Pause) return;
+            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count > List_TextureAnims.SelectedIndex)
+            {
+                bool animated = Check_TA_Ro.IsChecked == true;
+                int index = List_TextureAnims.SelectedIndex;
+                var ta = CurrentModel.TextureAnimations[index];
+                if (animated)
+                {
+                    ta.Rotation.MakeAnimated();
+                }
+                else
+                {
+                    ta.Rotation.MakeStatic(new CVector4(0,0,0,1));
+                }
+                Button_TA_Rotations.IsEnabled = !ta.Rotation.Static;
+            }
+        }
+
+        private void Make_Ta_Sc_Animated(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count > List_TextureAnims.SelectedIndex)
+            {
+                bool animated = Check_TA_Sc.IsChecked == true;
+                int index = List_TextureAnims.SelectedIndex;
+                var ta = CurrentModel.TextureAnimations[index];
+                if (animated)
+                {
+                    ta.Scaling.MakeAnimated();
+                }
+                else
+                {
+                    ta.Scaling.MakeStatic(new CVector3(1,1,1));
+                }
+                Button_TA_Scalings.IsEnabled = !ta.Scaling.Static;
+            }
+        }
+
+        private void SetLayerAnimatedTextureID(object sender, RoutedEventArgs e)
+        { 
+            if (Pause) return;
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                bool animated = CheckLayerTextureID.IsChecked == true;
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+
+                Combo_LayerUsedTexture.IsEnabled = !animated;
+                ButtonTextureID.IsEnabled = animated;
+                if (animated)
+                {
+                    layer.TextureId.MakeAnimated();
+                }
+                else
+                {
+                    layer.TextureId.MakeStatic(layer.TextureId.GetValue());
+                }
+            }
+           
+          
+        }
+
+        private void SetLayerAnimatedAlpha(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                bool animated = CheckLayerAlpha.IsChecked == true;
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+                
+                InputLayerAlpha.IsEnabled = !animated;
+                ButtonLayerAlpha.IsEnabled = animated;
+              if (animated)
+                {
+                    layer.Alpha.MakeAnimated();
+                }
+                else
+                {
+                    layer.Alpha.MakeStatic(layer.Alpha.GetValue());
+                }
+            }
+        }
+
+        private void SetLayerAlphaStatic(object sender, TextChangedEventArgs e)
+        {
+            if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
+            {
+                CMaterial mat = GetSelectedMAterial();
+                CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
+                if (float.TryParse(InputLayerAlpha.Text, out float value))
+                {
+                    if (value>=0 && value <= 100)
+                    {
+                        float v = value / 100;
+                        layer.Alpha.MakeStatic(v);
+                    }
+                    
+
+                }
+            }
+        }
+
+        private void dmpg(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Geosets.Count < 2)
+            {
+                MessageBox.Show("There are less than 2 geosts present"); return;
+            }
+            if (List_MAterials.SelectedItem != null)
+            {
+                int index = List_MAterials.SelectedIndex;
+                var mat = CurrentModel.Materials[index];
+                List<CGeoset> geosets = GetGeosetsUsingMaterial(mat);
+                if (geosets.Count < 2)
+                {
+                    MessageBox.Show("This material is used by less than 2 geosets");return;
+                }
+                for (int i =1; i< geosets.Count; i++)
+                {
+                    CMaterial generated = Duplicator.DuplicateMaterial(mat,CurrentModel);
+                    CurrentModel.Materials.Add(mat);
+                    geosets[i].Material.Attach(generated);
+                }
+                RefreshMaterialsList();
+            }
+            else
+            {
+                MessageBox.Show("Select a material");
+            }
+              
+        }
+
+        private List<CGeoset> GetGeosetsUsingMaterial(CMaterial mat)
+        {
+            return CurrentModel.Geosets.Where(x => x.Material.Object == mat).ToList();
+        }
+
+        private void edit_gs_Data(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+                var geoset = GetSelectedGeosets()[0];
+                geoset_data_editor gd = new geoset_data_editor(geoset);
+                gd.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Select a single geoset");return;
+            }
+        }
+
+        private void reattachvertex(object sender, RoutedEventArgs e)
+        {
+            // this function will swap the vertices of the triangles 
+            var vertices = GetSelectedVertices();
+            if (vertices.Count != 2)
+            {
+                MessageBox.Show("Select exactly two vertices");
+                return;
+            }
+
+            CGeoset? geoset = VerticesBelongToSameGeoset(vertices);
+            if (geoset == null)
+            {
+                MessageBox.Show("Selected vertices do not belong to the same geoset");
+                return;
+            }
+
+            var vertexA = vertices[0];
+            var vertexB = vertices[1];
+
+            foreach (var triangle in geoset.Triangles)
+            {
+                // Replace A with temp marker if present
+                if (triangle.Vertex1.Object == vertexA) triangle.Vertex1.Attach(null);
+                if (triangle.Vertex2.Object == vertexA) triangle.Vertex2.Attach(null);
+                if (triangle.Vertex3.Object == vertexA) triangle.Vertex3.Attach(null);
+            }
+
+            foreach (var triangle in geoset.Triangles)
+            {
+                // Replace B with A
+                if (triangle.Vertex1.Object == vertexB) triangle.Vertex1.Attach(vertexA);
+                if (triangle.Vertex2.Object == vertexB) triangle.Vertex2.Attach(vertexA);
+                if (triangle.Vertex3.Object == vertexB) triangle.Vertex3.Attach(vertexA);
+            }
+
+            foreach (var triangle in geoset.Triangles)
+            {
+                // Replace null (was A) with B
+                if (triangle.Vertex1.Object == null) triangle.Vertex1.Attach(vertexB);
+                if (triangle.Vertex2.Object == null) triangle.Vertex2.Attach(vertexB);
+                if (triangle.Vertex3.Object == null) triangle.Vertex3.Attach(vertexB);
+            }
+
+            MessageBox.Show("Vertices swapped successfully.");
+        }
+
+        private void Checked_UseColor(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            bool val = CheckUseColorGA.IsChecked == true;
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                var ga = CurrentModel.GeosetAnimations[List_GeosetAnims.SelectedIndex];
+                ga.UseColor = val;
+                RefreshGeosetAnimationsList();
+            }
+        }
+
+        private void Checked_DropShadow(object sender, RoutedEventArgs e)
+        {
+            if (Pause) return;
+            bool val = CheckDropShadow.IsChecked == true;
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                var ga = CurrentModel.GeosetAnimations[List_GeosetAnims.SelectedIndex];
+                ga.DropShadow = val;
+                RefreshGeosetAnimationsList();
+            }
+        }
+
+        private void SelectedGeosetAnim(object sender, SelectionChangedEventArgs e)
+        {
+            if (List_GeosetAnims.SelectedItem != null)
+            {
+                var ga = CurrentModel.GeosetAnimations[List_GeosetAnims.SelectedIndex];
+                 
+                Pause = true;
+                CheckUseColorGA.IsChecked = ga.UseColor;
+                CheckDropShadow.IsChecked = ga.DropShadow;
+                Pause = false;
+            }
+        }
+
+        private void sentence(object sender, RoutedEventArgs e)
+        {
+            if (ListSequenes.SelectedItem != null)
+            {
+                var sequence = CurrentModel.Sequences[ListSequenes.SelectedIndex];
+                sequence.Name = StringHelper.TitleCase(sequence.Name);
+            }
+            RefreshSequencesList();
+            History.Sequences.Add(CurrentModel);
+        }
+
+        private void sentence2(object sender, RoutedEventArgs e)
+        {
+            foreach (var sequence in CurrentModel.Sequences)
+            {
+                sequence.Name = StringHelper.TitleCase(sequence.Name);
+            }
+            RefreshSequencesList();
+            History.Sequences.Add(CurrentModel);
+        }
+
+        private void SwapGeosetAnimationsOfGeosets(object sender, RoutedEventArgs e)
+        {
+            // Swap the geoset animations of two geosets
+            var geosets = GetSelectedGeosets();
+            if (geosets.Count != 2)
+            {
+                MessageBox.Show("Select exactly two geosets");
+                return;
+            }
+
+            // Find the geoset animations of them
+            CGeosetAnimation? first = GetGeosetAnimationOfGeoset(geosets[0]);
+            CGeosetAnimation? second = GetGeosetAnimationOfGeoset(geosets[1]);
+
+            if (first != null && second != null)
+            {
+                // Swap
+                first.Geoset.Attach(geosets[1]);
+                second.Geoset.Attach(geosets[0]);
+            }
+            else
+            {
+                MessageBox.Show("Not all geosets are using a geoset animation");
+                return;
+            }
+        }
+
+
+        private CGeosetAnimation? GetGeosetAnimationOfGeoset(CGeoset cGeoset)
+        {
+            foreach (var ga in CurrentModel.GeosetAnimations)
+            {
+                if (ga.Geoset.Object == cGeoset) { return ga; }
+            }
+            return null;
+        }
+
+        private void swapcolors(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void swapalphasGA(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void SelectGaofG(object sender, RoutedEventArgs e)
+        {
+            var geosets = GetSelectedGeosets();
+            if (geosets.Count != 1)
+            {
+                MessageBox.Show("Select a single geoset");return;
+            }
+            var ga = CurrentModel.GeosetAnimations.FirstOrDefault(x=>x.Geoset.Object== geosets[0]);
+            if (ga != null)
+            {
+                var index = CurrentModel.GeosetAnimations.IndexOf(ga);
+                List_GeosetAnims.SelectedIndex = index;
+            }
+        }
+
+        private void setallextentsfixed(object sender, RoutedEventArgs e)
+        {
+            Edit_Extent ee = new Edit_Extent(true, CurrentModel);
+            ee.ShowDialog();
+            
+        }
+        private CGeosetGroup CopiedMatrixGroupAttachment;
+        private NodeMaker NodeCollection;
+      
+
+        private void copymga(object sender, RoutedEventArgs e)
+        {
+            var vertices = GetSelectedVertices();
+            if (vertices.Count == 0)
+            {
+                MessageBox.Show("Select at least one vertex");return;
+            }
+            else if (vertices.Count == 1){
+                CopiedMatrixGroupAttachment = vertices[0].Group.Object;
+            }
+            else if (vertices.Count  > 1)
+            {
+                var owner = VerticesBelongToSameGeoset(vertices);
+                if (owner == null)
+                {
+                    MessageBox.Show("The selected vertices do not belong to the same geoset. Their matrix groups will never be the same.");
+                    return;
+                }
+                bool same = false;
+                var first = vertices[0].Group.Object;
+                for (int i =1; i < vertices.Count; i++)
+                {
+                    if (first != vertices[i].Group.Object)
+                    {
+                        MessageBox.Show("Not all selected vertiecs use the same group");
+                        same = false;
+                        break;
+                    }
+                }
+                if (same)
+                {
+                    CopiedMatrixGroupAttachment = vertices[0].Group.Object;
+                }
+
+            }
+               
+        }
+
+        private void pastemga(object sender, RoutedEventArgs e)
+        {
+            if (CopiedMatrixGroupAttachment == null)
+            {
+                MessageBox.Show("Nothing was copied");return;
+            }
+            var vertices = GetSelectedVertices();
+            foreach (var vertex in vertices)
+            {
+                vertices[0].Group.Attach(CopiedMatrixGroupAttachment);
+            }
+            RefreshrigingAttachedList();
+        }
+
+        private void debug_console(object sender, RoutedEventArgs e)
+        {
+            Debug_Console.Show();
+             
+        }
+
+        private void tellModelExxtent(object sender, RoutedEventArgs e)
+        {
+            // Report the maximum extent of the model
+            if (CurrentModel.Geosets.Count == 0)
+            {
+                MessageBox.Show("There are no geosets");
+                return;
+            }
+
+            Extent ex = new Extent();
+
+            // Assuming Extent initializes with extreme values:
+            // ex.minX = ex.minY = ex.minZ = float.MaxValue;
+            // ex.maxX = ex.maxY = ex.maxZ = float.MinValue;
+
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var vertex in geoset.Vertices)
+                {
+                    float x = vertex.Position.X;
+                    float y = vertex.Position.Y;
+                    float z = vertex.Position.Z;
+
+                    if (x < ex.minX) ex.minX = x;
+                    if (y < ex.minY) ex.minY = y;
+                    if (z < ex.minZ) ex.minZ = z;
+
+                    if (x > ex.maxX) ex.maxX = x;
+                    if (y > ex.maxY) ex.maxY = y;
+                    if (z > ex.maxZ) ex.maxZ = z;
+                }
+            }
+
+            MessageBox.Show($"The extents are:\n" +
+                $"min X: {ex.minX}\n" +
+                $"min Y: {ex.minY}\n" +
+                $"min Z: {ex.minZ}\n" +
+                $"max X: {ex.maxX}\n" +
+                $"max Y: {ex.maxY}\n" +
+                $"max Z: {ex.maxZ}");
+        }
+
+        private void swapRigging(object sender, RoutedEventArgs e)
+        {
+            var vertices = GetSelectedVertices();
+            if (vertices.Count < 2)
+            {
+                MessageBox.Show("Select two or more vertices");
+                return;
+            }
+
+            Dictionary<CGeosetGroup, List<CGeosetVertex>> attachmentReference = new Dictionary<CGeosetGroup, List<CGeosetVertex>>();
+
+            // Group vertices by their matrix group
+            foreach (var vertex in vertices)
+            {
+                var group = vertex.Group.Object;
+                if (!attachmentReference.TryGetValue(group, out var list))
+                {
+                    list = new List<CGeosetVertex>();
+                    attachmentReference[group] = list;
+                }
+                list.Add(vertex);
+            }
+
+            if (attachmentReference.Count != 2)
+            {
+                MessageBox.Show("There must be exactly two groups of matrix groups in order to swap");
+                return;
+            }
+
+            // Get the two distinct groups
+            var groupA = attachmentReference.Keys.ElementAt(0);
+            var groupB = attachmentReference.Keys.ElementAt(1);
+
+            // Swap: store target groups to avoid interference
+            foreach (var vertex in attachmentReference[groupA])
+            {
+                vertex.Group.Attach(groupB);
+            }
+
+            foreach (var vertex in attachmentReference[groupB])
+            {
+                vertex.Group.Attach(groupA);
+            }
+            RefreshrigingAttachedList();
+        }
+
+        private void viewbig_dc(object sender, MouseButtonEventArgs e)
+        {
+            ViewBig(null, null);
+        }
+
+        private void GenerateReport(object sender, RoutedEventArgs e)
+        {
+            ShowErrors();
+        }
+
+        private void putongroundvertices_half(object sender, RoutedEventArgs e)
+        {
+            if (Tabs_Geosets.SelectedIndex == 0)
+            {
+                var Vertices = GetSelectedGeosets().SelectMany(x => x.Vertices.ObjectList).ToList();
+                Calculator.PutOnGround_Half(Vertices);
+            }
+            else if (Tabs_Geosets.SelectedIndex == 1) // triangles
+            {
+                var Vertices = getSelectedTriangles().SelectMany(x => x.Vertices).Distinct().ToList();
+                Calculator.PutOnGround_Half(Vertices);
+            }
+            else if (Tabs_Geosets.SelectedIndex == 0) // vertices
+            {
+                List<CGeosetVertex> Vertices = GetSelectedVertices();
+                Calculator.PutOnGround_Half(Vertices);
+            }
+        }
     }
+
 }

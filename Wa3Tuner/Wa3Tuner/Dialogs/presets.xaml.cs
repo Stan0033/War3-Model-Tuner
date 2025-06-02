@@ -22,8 +22,8 @@ namespace Wa3Tuner
     public partial class presets : Window
     {
         CModel Model;
-        List<string> availableNames = new List<string>();
-        List<string> SelectedNames = new List<string>();
+        List<string> availableNames = new();
+        List<string> SelectedNames = new();
         public presets(CModel model)
         {
             InitializeComponent();
@@ -33,7 +33,7 @@ namespace Wa3Tuner
         }
         private void InitNames()
         {
-            availableNames = new List<string>()
+            availableNames = new()
             {
                 "Stand",
                  "Stand Hit",
@@ -78,20 +78,25 @@ namespace Wa3Tuner
                 container.Children.Add(c);
             }
         }
-        private void IncludeName(object sender, EventArgs e)
+        private void IncludeName(object? sender, EventArgs e)
         {
-            CheckBox c = (CheckBox)sender;
+            if (sender == null) { return; }
+            CheckBox? c = (CheckBox)sender;
+            if (c == null) { return; }
+          
+            string? content = c.Content.ToString();
+            if (content == null) { return; }
             bool on = c.IsChecked == true;
             if (on)
             {
-                SelectedNames.Add(c.Content.ToString());
+                SelectedNames.Add(content);
             }
             else
             {
-                SelectedNames.Remove(c.Content.ToString());
+                SelectedNames.Remove(content);
             }
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             bool parse = int.TryParse(inputDuration.Text, out int value);
             if (parse) {
@@ -158,7 +163,7 @@ namespace Wa3Tuner
                         }
                     }
                     //tiers
-                    List<string> tierNames = new List<string>()
+                    List<string> tierNames = new()
                     {
                         "","First", "Second", "Third", "Fourth", "Fifth", "Sixth"
                     };
@@ -214,7 +219,7 @@ namespace Wa3Tuner
             }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

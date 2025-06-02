@@ -14,6 +14,6 @@
         <TextBlock Text="External model path:"/>
         <TextBox Name="Path" Padding="5" Margin="5"/>
         <Button Click="EditVis" Content="Edit visibilities" Padding="10" Margin="10"/>
-        <Button Click="ok" Content="OK" Padding="10" Margin="10"/>
+        <Button Click="Ok" Content="OK" Padding="10" Margin="10"/>
     </StackPanel>
 </Window>

@@ -5,6 +5,11 @@ namespace Wa3Tuner
 {
     internal class Duplicator
     {
+        internal static CGeoset DuplicateGeoset(CGeoset sequence, CModel model)
+        {
+            throw new NotImplementedException();
+        }
+
         internal static CMaterialLayer DuplicateLayer(CMaterialLayer original,   CModel owner)
         {
             CMaterialLayer l = new CMaterialLayer(owner);
@@ -46,6 +51,35 @@ namespace Wa3Tuner
             l.Texture.Attach(original.Texture.Object);
 
             return l;
+        }
+
+        internal static CMaterial DuplicateMaterial(CMaterial mat, CModel owner)
+        {
+            CMaterial m = new(owner);
+            m.PriorityPlane = mat.PriorityPlane;
+            m.SortPrimitivesNearZ = mat.SortPrimitivesNearZ;
+            m.SortPrimitivesFarZ = mat.SortPrimitivesFarZ;
+            m.FullResolution = mat.FullResolution;
+            foreach (var layer in mat.Layers)
+            {
+
+                m.Layers.Add(DuplicateLayer(layer,owner));
+
+            }
+            return m;
+        }
+
+        internal static CSequence DuplicateSequence(CSequence sequence, CModel owner)
+        {
+            CSequence copy = new CSequence(owner);
+            copy.Name = sequence.Name;
+            copy.IntervalEnd = sequence.IntervalEnd;
+            copy.IntervalStart = sequence.IntervalStart;
+            copy.MoveSpeed = sequence.MoveSpeed;
+            copy.NonLooping = sequence.NonLooping;
+            copy.Rarity = sequence.Rarity;  
+            copy.Extent = new MdxLib.Primitives.CExtent(sequence.Extent);
+            return copy;
         }
 
         internal static CTextureAnimation DuplicateTextureAnim(CTextureAnimation ta, CModel owner)

@@ -10,7 +10,7 @@ namespace Wa3Tuner
 {
     public static class Optimizer
     {
-        public static CModel Model;
+        public static CModel Model = new CModel();
         public static bool DeleteIsolatedTriangles = false;
         public static bool Delete0LengthSequences = false;
         public static bool Delete0LengthGlobalSequences = false;
@@ -69,6 +69,7 @@ namespace Wa3Tuner
         internal static bool ReducematrixGruops = false;
         internal static bool TimeMiddle = false;
         internal static bool SplitGeosets = false;
+        internal static bool DeduplicateMatrixGroups = false;
 
         public static void Optimize(CModel model_)
         {
@@ -78,7 +79,9 @@ namespace Wa3Tuner
             RemoveEmptyGeosets();
             FixInvalidNodeRelationships();
             CreateLayerForMaterialsWithout();
+            AddTexturesToLayersMissing();
             if (Linearize) { Linearize_(); }
+            if (DeduplicateMatrixGroups) { DeduplicateMatrixGroups_(); }
             if (TimeMiddle) { TimeMiddle_(); }
             if (DeleteIsolatedTriangles) { DeleteIsolatedTriangles_(); }
             if (DeleteIsolatedVertices) { DeleteIsolatedVertices_(); }
@@ -139,6 +142,56 @@ namespace Wa3Tuner
             DeleteEventObjectsWithNoTRacks();
            
         }
+
+        private static void AddTexturesToLayersMissing()
+        {
+            int count = Model.Materials.Count;
+            for (int i = 0; i < count; i++)
+            {
+
+                int lcount = Model.Materials[i].Layers.Count;
+                if (lcount == 0) continue;
+                for (int j = 0; j < lcount; j++)
+                {
+                    var layer = Model.Materials[i].Layers[j];
+                    if (layer.Texture.Object == null || layer.Texture == null || Model.Textures.Contains(layer.Texture.Object) == false)
+                    {
+                        if (Model.Textures.Count > 0)
+                        {
+                            if (layer.Texture == null) continue;
+                            layer.Texture.Attach(Model.Textures[0]);
+                        }
+                    }
+                }
+            }
+            {
+           
+        }
+        }
+
+        private static void DeduplicateMatrixGroups_()
+        {
+            List<INode> nodes = new List<INode>();
+            foreach (var geoset in Model.Geosets)
+            {
+                foreach (var group in geoset.Groups)
+                {
+                    var list = group.Nodes.ToList();
+                    foreach (var node in list)
+                    {
+                        if (nodes.Contains(node.Node.Node)){
+                            group.Nodes.Remove(node);
+                        }
+                        else
+                        {
+                            nodes.Add(node.Node.Node);
+                        }
+                    }
+                    nodes.Clear();
+                }
+            }
+        }
+         
 
         private static void SplitGeosets_()
         {
@@ -1055,7 +1108,7 @@ namespace Wa3Tuner
                 }
             }
         }
-        public static void MinimizeMatrixGroups_(CModel model = null)
+        public static void MinimizeMatrixGroups_(CModel? model = null)
         {
             CModel WhichModel = model == null ? Model : model;
             foreach (CGeoset geo in WhichModel.Geosets)
@@ -1444,6 +1497,7 @@ namespace Wa3Tuner
         {
             foreach (CGeosetAnimation ga in Model.GeosetAnimations.ToList())
             {
+                if (ga.Geoset == null) { continue; }
                 if (Model.Geosets.Contains(ga.Geoset.Object) == false || ga.Geoset == null || ga.Geoset.Object == null)
                 {
                     Model.GeosetAnimations.Remove(ga);
@@ -1824,6 +1878,7 @@ namespace Wa3Tuner
                         }
                         else
                         {
+                            if (vertex.Group == null) continue;
                             vertex.Group.Attach(geo.Groups[0]);
                         }
                     }
@@ -1856,6 +1911,7 @@ namespace Wa3Tuner
         {
             foreach (INode node in Model.Nodes)
             {
+                if (node == null) { continue; }
                 // Fix self-referencing
                 if (node.Parent?.Node == node)
                 {
@@ -1869,9 +1925,12 @@ namespace Wa3Tuner
                     continue;
                 }
                 // Fix mutually referencing nodes
-                INode parent = node.Parent?.Node;
+                INode? parent = node.Parent?.Node;
+                if (parent == null) continue;
+                
                 if (parent?.Parent?.Node == node)
                 {
+                    if (node.Parent==null) continue;
                     node.Parent.Detach();
                     continue;
                 }
@@ -2608,7 +2667,7 @@ namespace Wa3Tuner
                 foreach (var item in animator.ToList())
                 {
                     int time = item.Time;
-                    CSequence sequence = FindSequenceOfTrack(time);
+                    CSequence? sequence = FindSequenceOfTrack(time);
                     if (sequence != null)
                     {
                         if (animator.Any(x => x.Time == sequence.IntervalStart) == false)
@@ -2635,7 +2694,7 @@ namespace Wa3Tuner
                 foreach (var item in animator.ToList())
                 {
                     int time = item.Time;
-                    CSequence sequence = FindSequenceOfTrack(time);
+                    CSequence? sequence = FindSequenceOfTrack(time);
                     if (sequence != null)
                     {
                         if (animator.Any(x => x.Time == sequence.IntervalStart) == false)
@@ -2662,7 +2721,7 @@ namespace Wa3Tuner
                 foreach (var item in animator.ToList())
                 {
                     int time = item.Time;
-                    CSequence sequence = FindSequenceOfTrack(time);
+                    CSequence? sequence = FindSequenceOfTrack(time);
                     if (sequence != null)
                     {
                         if (animator.Any(x => x.Time == sequence.IntervalStart) == false)
@@ -2689,7 +2748,7 @@ namespace Wa3Tuner
                 foreach (var item in animator.ToList())
                 {
                     int time = item.Time;
-                    CSequence sequence = FindSequenceOfTrack(time);
+                    CSequence? sequence = FindSequenceOfTrack(time);
                     if (sequence != null)
                     {
                         if (animator.Any(x => x.Time == sequence.IntervalStart) == false)
@@ -2708,23 +2767,8 @@ namespace Wa3Tuner
                 }
             }
         }
-        private  static int GetIndexOfLastTrackForSequence(int upto, CAnimator<CVector3> animator)
-        {
-            for (int i = animator.Count - 1; i >= 0; i--)
-            {
-                if  (animator[i].Time <= upto){ return i; }
-            }
-            return 0;
-        }
-        private static int GetIndexOfLastTrackForSequence(int upto, CAnimator<CVector4> animator)
-        {
-            for (int i = animator.Count - 1; i >= 0; i--)
-            {
-                if  (animator[i].Time <= upto){ return i; }
-            }
-            return 0;
-        }
-        private static CSequence FindSequenceOfTrack(int time)
+       
+        private static CSequence? FindSequenceOfTrack(int time)
         {
             foreach (CSequence sequence in Model.Sequences)
             {
@@ -2732,21 +2776,8 @@ namespace Wa3Tuner
             }
             return null;
         }
-        private static bool hasOpening(int track)
-        {
-            return false;
-        }
-        private static CSequence BelongsToWhichSequence(int track)
-        {
-            foreach (CSequence sequence in Model.Sequences)
-            {
-                if (track >= sequence.IntervalStart && track <= sequence.IntervalEnd)
-                {
-                    return sequence;
-                }
-            }
-            return null;
-        }
+       
+      
         private static void DeleteIdenticalAdjascentKEyframes_()
         {
             foreach (INode node in Model.Nodes)
@@ -4203,7 +4234,7 @@ namespace Wa3Tuner
             }
             return false;
         }
-        public static void RemoveEmptyGeosets(CModel model = null)
+        public static void RemoveEmptyGeosets(CModel? model = null)
         {
             if (model == null)
             {
@@ -4334,7 +4365,7 @@ namespace Wa3Tuner
         }
         private static void EnumerateSequences_()
         {
-            List<string> names = new List<string>();
+            List<string> names = new();
             for (int i = 0; i < Model.Sequences.Count; i++)
             {
                 if (names.Contains(Model.Sequences[i].Name))
@@ -4678,10 +4709,13 @@ namespace Wa3Tuner
                 // emitter2 without texture
                 if (node is CParticleEmitter2 emitter)
                 {
+                  
+                    
                     if (emitter.Texture == null || emitter.Texture.Object == null ||
                         Model.Textures.Contains(emitter.Texture.Object) == false)
                     {
                         CreateWhiteTextureifNo();
+                        if (emitter.Texture == null) return;
                         emitter.Texture.Attach(Model.Textures[0]);
                     }
                 }
@@ -4692,6 +4726,7 @@ namespace Wa3Tuner
                         Model.Materials.Contains(ribbon.Material.Object) == false)
                     {
                         CreateMAterialIfNo();
+                        if (ribbon.Material == null) return;
                         ribbon.Material.Attach(Model.Materials[0]);
                     }
                 }
@@ -4703,6 +4738,7 @@ namespace Wa3Tuner
                     Model.Materials.Contains(geoset.Material.Object) == false)
                 {
                     CreateMAterialIfNo();
+                    if (geoset.Material == null) continue;
                     geoset.Material.Attach(Model.Materials[0]);
                 }
             }
@@ -4970,6 +5006,22 @@ namespace Wa3Tuner
         {
             Model = model;
             CalculateExtents_(indexes);
+        }
+
+        internal static void MinimizeMatrixGroups_Geoset(CGeoset geo)
+        {
+            repeat:
+            if (geo.Groups.Count <= 1) return;
+            for (int i = 0; i < geo.Groups.Count; i++)
+            {
+                if (i + 1 >= geo.Groups.Count) continue;
+                if (MatrixGroupsAreSame(geo.Groups[i], geo.Groups[i + 1]))
+                {
+                    ReassignGroup(geo, geo.Groups[i], geo.Groups[i + 1]);
+                    geo.Groups.Remove(geo.Groups[i + 1]);
+                    goto repeat;
+                }
+            }
         }
     }
 }

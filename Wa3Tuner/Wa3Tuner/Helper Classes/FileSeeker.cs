@@ -11,7 +11,7 @@ namespace Wa3Tuner.Helper_Classes
 {
     public static class FileSeeker
     {
-        public static string OpenPathFile()
+        public static string? OpenPathFile()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -61,7 +61,7 @@ namespace Wa3Tuner.Helper_Classes
             }
             return string.Empty;
         }
-        public static string OpenModelFileDialog()
+        public static string? OpenModelFileDialog()
         {
             // Create an OpenFileDialog
             OpenFileDialog openFileDialog = new OpenFileDialog
@@ -234,7 +234,7 @@ namespace Wa3Tuner.Helper_Classes
 
             bool? result = openFileDialog.ShowDialog();
 
-            return result == true ? new List<string>(openFileDialog.FileNames) : new List<string>();
+            return result == true ? new(openFileDialog.FileNames) : new();
         }
         public static   List<string> openBLPs()
         {
@@ -247,7 +247,7 @@ namespace Wa3Tuner.Helper_Classes
 
             bool? result = openFileDialog.ShowDialog();
 
-            return result == true ? new List<string>(openFileDialog.FileNames) : new List<string>();
+            return result == true ? new(openFileDialog.FileNames) : new();
         }
         public static string GetSavePathOBJ()
         {
@@ -357,9 +357,9 @@ namespace Wa3Tuner.Helper_Classes
 
             bool? result = openFileDialog.ShowDialog();
 
-            return result == true ? new List<string>(openFileDialog.FileNames) : new List<string>();
+            return result == true ? new(openFileDialog.FileNames) : new();
         }
-        public static string SaveModelFile()
+        public static string? SaveModelFile()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -376,7 +376,7 @@ namespace Wa3Tuner.Helper_Classes
 
             return null;
         }
-        public static string OpenModelFile()
+        public static string? OpenModelFile()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {

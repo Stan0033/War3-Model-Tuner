@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using W3_Texture_Finder;
+using Wa3Tuner.Helper_Classes;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -20,17 +21,17 @@ namespace Wa3Tuner
     /// </summary>
     public partial class ModelBrowser : Window
     {
-        public string Selected = "";
+        public string? Selected = "";
         public ModelBrowser()
         {
             InitializeComponent();
             RefillList();
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void Ok(object? sender, RoutedEventArgs? e)
         {
             if (Data.SelectedItem != null)
             {
-                Selected = (Data.SelectedItem as ListBoxItem).Content.ToString();
+                Selected =Extractor.GetString(Data.SelectedItem);
                 DialogResult = true;
             }
         }
@@ -41,7 +42,7 @@ namespace Wa3Tuner
                 Data.Items.Add(new ListBoxItem() { Content = item});
             }
         }
-        private void Input_KeyDown(object sender, KeyEventArgs e)
+        private void Input_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -64,10 +65,10 @@ namespace Wa3Tuner
             }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
-            if (e.Key == Key.Enter) ok(null, null);
+            if (e.Key == Key.Enter) Ok(null, null);
         }
     }
 }

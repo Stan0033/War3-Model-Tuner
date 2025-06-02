@@ -10,10 +10,10 @@ namespace obj2mdl_batch_converter
     public class RawObject
     {
         public string Name = string.Empty;
-        public List<string> Vertices { get; private set; } = new List<string>();
-        public List<string> Normals { get; private set; } = new List<string>();
-        public List<string> TextureCoordinates { get; private set; } = new List<string>();
-        public List<string> Faces { get; private set; } = new List<string>();
+        public List<string> Vertices { get; private set; } = new();
+        public List<string> Normals { get; private set; } = new();
+        public List<string> TextureCoordinates { get; private set; } = new();
+        public List<string> Faces { get; private set; } = new();
         public List<int> TriangleVertexIndices { get; set; } = new List<int>();
         public RawObject(string name) { Name = name; }
         public RawObject Clone()
@@ -82,7 +82,7 @@ namespace obj2mdl_batch_converter
             RawObject temp = new RawObject("");
             using (StreamReader reader = new StreamReader(filename))
             {
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     line = line.Trim();

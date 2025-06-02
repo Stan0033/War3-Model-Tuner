@@ -57,7 +57,7 @@ Cameras are used to define specific viewpoints:
     Sometimes used for campaign loading screens.
 ";
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
         }

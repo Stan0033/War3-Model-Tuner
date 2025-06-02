@@ -239,7 +239,9 @@ namespace Wa3Tuner.Helper_Classes
         //----------------------------------------------------------------------------
         internal static void ComputeGeosetVisibilities(CModel currentModel, int track)
         {
-            CSequence seq = GetSequenceOfTrack(track, currentModel);
+            CSequence? seq = GetSequenceOfTrack(track, currentModel);
+            if (seq == null) return;
+           
             foreach (var geoset in currentModel.Geosets)
             {
                 geoset.isVisibleAnimated = true;
@@ -275,7 +277,7 @@ namespace Wa3Tuner.Helper_Classes
             }
         }
 
-        private static CSequence GetSequenceOfTrack(int track, CModel m)
+        private static CSequence? GetSequenceOfTrack(int track, CModel m)
         {
             return m.Sequences.FirstOrDefault(x => track >= x.IntervalStart && track <= x.IntervalEnd);
         }

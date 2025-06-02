@@ -2,51 +2,73 @@
 using MdxLib.Model;
 using MdxLib.Primitives;
 using System;
-using System.Collections;
+ 
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows;
-using System.Windows.Documents;
-using System.Xml.Linq;
-using Wa3Tuner.Dialogs;
-using Wa3Tuner.Helper_Classes;
+ 
 namespace Wa3Tuner
 {
     internal static class ErrorChecker
     {
-        public static CModel CurrentModel;
+        public static CModel  CurrentModel = new CModel();
         private static bool TextureUsed(CTexture texture)
         {
-            foreach (CMaterial mat in CurrentModel.Materials)
+            if (CurrentModel == null) { throw new Exception("null model"); }
+            var materials = CurrentModel.Materials;
+            int materialCount = materials.Count;
+            for (int i = 0; i < materialCount; i++)
             {
-                foreach (CMaterialLayer layer in mat.Layers)
+                var layers = materials[i].Layers;
+                int layerCount = layers.Count;
+                for (int j = 0; j < layerCount; j++)
                 {
-                    if (layer.Texture.Object == texture) { return true; }
+                    if (layers[j].Texture.Object == texture)
+                    {
+                        return true;
+                    }
                 }
             }
-            foreach (INode node in CurrentModel.Nodes)
+
+            var nodes = CurrentModel.Nodes;
+            int nodeCount = nodes.Count;
+            for (int i = 0; i < nodeCount; i++)
             {
+                var node = nodes[i];
                 if (node is CParticleEmitter2 emitter)
                 {
-                    if (emitter.Texture.Object == texture) { return true; }
+                    if (emitter.Texture.Object == texture)
+                    {
+                        return true;
+                    }
                 }
-                if (node is CParticleEmitter emitter1)
+                else if (node is CParticleEmitter emitter1)
                 {
-                    if (emitter1.FileName == texture.FileName) { return true; }
+                    if (emitter1.FileName == texture.FileName)
+                    {
+                        return true;
+                    }
                 }
             }
+
             return false;
         }
-        
-        internal static string Inspect(CModel currentModel)
+
+
+        internal static string[] InspectAndReport(CModel currentModel)
         {
+            if (currentModel == null) { return new string[] {"null model" }; }
             // lists with categorized errors
             StringBuilder all = new StringBuilder();
             StringBuilder unused = new StringBuilder();
             StringBuilder warnings = new StringBuilder();
             StringBuilder severe = new StringBuilder();
             StringBuilder errors = new StringBuilder();
+            // store values
+            int NodeCount = currentModel.Nodes.Count;
+            int geosetCount = currentModel.Geosets.Count;
+            int materialsCount = currentModel.Materials.Count;
+            //-----------------
             //BEGIN
             //----------------------------------------
             //check unused textures
@@ -59,8 +81,27 @@ namespace Wa3Tuner
                     unused.AppendLine($"Textures[{i}] ({name}) is unused");
                 }
             }
+            for (int i = 0; i < NodeCount; i++)
+            {
+                var node = currentModel.Nodes[i];
+                if (node.Scaling == null || node.Scaling.Count == 0)
+                    continue;
+
+                for (int j = 0; j < node.Scaling.Count; j++)
+                {
+                    var keyframe = node.Scaling[j];
+                    if (keyframe.Value.isZero())
+                    {
+                        if (KeyframeIsLone(currentModel.Sequences.ObjectList, node.Scaling, keyframe.Time))
+                        {
+                            warnings.AppendLine($"Node '{node.Name}': You should use visibility instead of zero scaling.");
+                        }
+                    }
+                }
+            }
+
             // check for triangle who use the same vertices
-            for (int g = 0; g < currentModel.Geosets.Count; g++)
+            for (int g = 0; g < geosetCount; g++)
             {
                 CGeoset geoset = currentModel.Geosets[g];
                 for (int i = 0; i < geoset.Triangles.Count; i++)
@@ -83,15 +124,15 @@ namespace Wa3Tuner
                     }
                 }
             }
-            for (int i = 0; i < currentModel.Materials.Count; i++)
+            for (int i = 0; i < materialsCount; i++)
             {
-                if (Optimizer. MaterialUsed(currentModel.Materials[i], currentModel) == false)
+                if (Optimizer.MaterialUsed(currentModel.Materials[i], currentModel) == false)
                 {
-                    
+
                     unused.AppendLine($"Materials[{i}] is unused");
                     if (currentModel.Materials[i] == null) { throw new Exception("null material"); }
                     if (currentModel.Materials[i].Layers == null) { throw new Exception("null layer container"); }
-                   for (int j = 0; j < currentModel.Materials[i].Layers.Count; j++)
+                    for (int j = 0; j < currentModel.Materials[i].Layers.Count; j++)
                     {
                         var lr = currentModel.Materials[i].Layers[j];
                         if (AllTransformationValuesSame(lr.Alpha))
@@ -150,7 +191,7 @@ namespace Wa3Tuner
                     unused.AppendLine($"TextureAnimation[{i}]: scaling: all keyframes are the same in sequence {item.Name}");
                 }
             }
-            for (int i = 0; i < currentModel.Geosets.Count; i++)
+            for (int i = 0; i < geosetCount; i++)
             {
                 if (currentModel.Geosets[i].Triangles.Count >= 20000)
                 {
@@ -159,15 +200,15 @@ namespace Wa3Tuner
             }
             // unused.AppendLine($"");
             if (currentModel.Textures.Count == 0) warnings.AppendLine("No textures");
-            if (currentModel.Materials.Count == 0) warnings.AppendLine("No Materials");
+            if (materialsCount == 0) warnings.AppendLine("No Materials");
             if (currentModel.Sequences.Count == 0) warnings.AppendLine("No sequences");
             if (currentModel.Nodes.Any(x => x.Name.ToLower().Trim() == "origin ref") == false) warnings.AppendLine("Missing the origin attachment point");
-            for (int i = 0; i < currentModel.Geosets.Count; i++)
+            for (int i = 0; i < geosetCount; i++)
             {
                 CGeoset geo = currentModel.Geosets[i];
                 if (geo.Triangles.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no faces"); }
                 if (geo.Vertices.Count == 0) { warnings.AppendLine($"Geosets[{i}]: no vertices"); }
-                if (geo.Extents.Count != currentModel.Sequences.Count) { warnings.AppendLine($"Geosets[{i}]: number of extents not equal to number of sequences"); }
+                if (geo.Extents.Count != currentModel.Sequences.Count) { warnings.AppendLine($"Geosets[{i}]: number of extents {geo.Extents.Count} not equal to number of sequences ({currentModel.Sequences.Count})"); }
                 if (ExtentsNegative(geo.Extent)) { warnings.AppendLine($"Geosets[{i}]: negative extents"); }
                 if (geo.Groups.Count > 255) { warnings.AppendLine($"Geosets[{i}]: More than 255 matrix groups. Consider minimizing the wth the optmizer."); }
             }
@@ -179,7 +220,7 @@ namespace Wa3Tuner
                     warnings.AppendLine($"Sequence '{cSequence.Name}': Zero length");
                 }
             }
-            for (int i = 0;i < currentModel.GlobalSequences.Count; i++)
+            for (int i = 0; i < currentModel.GlobalSequences.Count; i++)
             {
                 var gs = currentModel.GlobalSequences[i];
                 if (Calculator.GlobalSequenceIsUsed(currentModel, gs) == false)
@@ -187,9 +228,10 @@ namespace Wa3Tuner
                     unused.AppendLine($"GlobalSequences[{i}] is unused");
                 }
             }
-            
-            if (currentModel.Geosets.Count != currentModel.GeosetAnimations.Count) {
-                warnings.AppendLine("Number of geoset animations not equal to the number of geosets");
+
+            if (geosetCount != currentModel.GeosetAnimations.Count)
+            {
+                warnings.AppendLine($"Number of geoset animations ({currentModel.GeosetAnimations.Count}) not equal to the number of geosets ({currentModel.Geosets.Count})");
             }
             // check tracks - repeating times, repeating frames, inconsistent frames, missing opening, closing
             List<string> ik = CheckInsonsistentKeyframes();
@@ -203,6 +245,10 @@ namespace Wa3Tuner
             // check interpolation for visibilities
             foreach (INode node in currentModel.Nodes)
             {
+                if (TransformationLacksStand(node.Translation, CurrentModel))  warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Translation: lacking track for stand sequence'");
+                if (TransformationLacksStand(node.Rotation, CurrentModel))  warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Translation: lacking track for stand sequence'");
+                if (TransformationLacksStand(node.Scaling, CurrentModel))  warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Translation: lacking track for stand sequence'");
+                
                 if (node is CLight light)
                 {
                     if (light.Visibility.Type != MdxLib.Animator.EInterpolationType.None)
@@ -216,6 +262,13 @@ namespace Wa3Tuner
                     AppendSameKeyframes($"Light '{node.Name}': AttenuationStart: ", light.AttenuationStart, unused, currentModel);
                     AppendSameKeyframes($"Light '{node.Name}': Intensity: ", light.Intensity, unused, currentModel);
                     AppendSameKeyframes($"Light '{node.Name}': AmbientIntensity: ", light.AmbientIntensity, unused, currentModel);
+                    if (TransformationLacksStand(light.Visibility, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Visibility: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.Color, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Color: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.AmbientColor, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: AmbientColor: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.AttenuationEnd, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: AttenuationEnd: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.AttenuationStart, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: AttenuationStart: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.Intensity, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Intensity: lacking track for stand sequence'");
+                    if (TransformationLacksStand(light.AmbientIntensity, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: AmbientIntensity: lacking track for stand sequence'");
 
                 }
                 if (node is CAttachment attachment)
@@ -223,8 +276,10 @@ namespace Wa3Tuner
                     if (attachment.Visibility.Type != MdxLib.Animator.EInterpolationType.None)
                     {
                         warnings.AppendLine($"Attachment '{node.Name}': Interpolation not set to none");
-                   }
+                    }
                     AppendSameKeyframes($"Attachment '{node.Name}': visibility: ", attachment.Visibility, unused, currentModel);
+                    if (TransformationLacksStand(attachment.Visibility, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Visibility: lacking track for stand sequence'");
+
 
                 }
                 if (node is CParticleEmitter emitter)
@@ -233,15 +288,21 @@ namespace Wa3Tuner
                     {
                         warnings.AppendLine($"Emitter1 '{node.Name}': Interpolation not set to none");
                     }
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': visibility: ", emitter.Visibility, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': Longitude: ", emitter.Longitude, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': Latitude: ", emitter.Latitude, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': EmissionRate: ", emitter.EmissionRate, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': LifeSpan: ", emitter.LifeSpan, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': Gravity: ", emitter.Gravity, unused, currentModel);
-                        AppendSameKeyframes($"Emitter1 '{node.Name}': InitialVelocity: ", emitter.InitialVelocity, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': visibility: ", emitter.Visibility, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': Longitude: ", emitter.Longitude, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': Latitude: ", emitter.Latitude, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': EmissionRate: ", emitter.EmissionRate, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': LifeSpan: ", emitter.LifeSpan, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': Gravity: ", emitter.Gravity, unused, currentModel);
+                    AppendSameKeyframes($"Emitter1 '{node.Name}': InitialVelocity: ", emitter.InitialVelocity, unused, currentModel);
 
-                     
+                    if (TransformationLacksStand(emitter.Visibility, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Visibility: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter.Longitude, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Longitude: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter.Latitude, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Latitude: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter.EmissionRate, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: EmissionRate: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter.Gravity, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Gravity: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter.InitialVelocity, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: InitialVelocity: lacking track for stand sequence'");
+
                 }
                 if (node is CParticleEmitter2 emitter2)
                 {
@@ -249,22 +310,31 @@ namespace Wa3Tuner
                     {
                         warnings.AppendLine($"Emitter2 '{node.Name}': Interpolation not set to none");
                     }
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': visibility: ", emitter2.Visibility, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Width: ", emitter2.Width, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Length: ", emitter2.Length, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Gravity: ", emitter2.Gravity, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Speed: ", emitter2.Speed, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Latitude: ", emitter2.Latitude, unused, currentModel);
-                        AppendSameKeyframes($"Emitter2 '{node.Name}': Variation: ", emitter2.Variation, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': visibility: ", emitter2.Visibility, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Width: ", emitter2.Width, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Length: ", emitter2.Length, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Gravity: ", emitter2.Gravity, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Speed: ", emitter2.Speed, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Latitude: ", emitter2.Latitude, unused, currentModel);
+                    AppendSameKeyframes($"Emitter2 '{node.Name}': Variation: ", emitter2.Variation, unused, currentModel);
                     if (
-                        emitter2.Segment1.Alpha <= 10 && 
-                        emitter2.Segment2.Alpha <= 10 && 
-                        emitter2.Segment3.Alpha <= 10 
-                        ) 
+                        emitter2.Segment1.Alpha <= 10 &&
+                        emitter2.Segment2.Alpha <= 10 &&
+                        emitter2.Segment3.Alpha <= 10
+                        )
                     {
                         warnings.AppendLine($"Emitter2 '{node.Name}': all segments have low visibility");
 
                     }
+
+                    if (TransformationLacksStand(emitter2.Visibility, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Visibility: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Width, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Width: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Length, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Length: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Gravity, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Gravity: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Speed, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Speed: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Latitude, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Latitude: lacking track for stand sequence'");
+                    if (TransformationLacksStand(emitter2.Variation, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Variation: lacking track for stand sequence'");
+
                 }
                 if (node is CRibbonEmitter ribbon)
                 {
@@ -278,6 +348,14 @@ namespace Wa3Tuner
                     AppendSameKeyframes($"Ribbon '{node.Name}': HeightAbove: ", ribbon.HeightAbove, unused, currentModel);
                     AppendSameKeyframes($"Ribbon '{node.Name}': HeightBelow: ", ribbon.HeightBelow, unused, currentModel);
                     AppendSameKeyframes($"Ribbon '{node.Name}': TextureSlot: ", ribbon.TextureSlot, unused, currentModel);
+
+                    if (TransformationLacksStand(ribbon.Visibility, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Visibility: lacking track for stand sequence'");
+                    if (TransformationLacksStand(ribbon.Color, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Color: lacking track for stand sequence'");
+                    if (TransformationLacksStand(ribbon.Alpha, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: Alpha: lacking track for stand sequence'");
+                    if (TransformationLacksStand(ribbon.HeightAbove, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: HeightAbove: lacking track for stand sequence'");
+                    if (TransformationLacksStand(ribbon.HeightBelow, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: HeightBelow: lacking track for stand sequence'");
+                    if (TransformationLacksStand(ribbon.TextureSlot, CurrentModel)) warnings.AppendLine($"{node.GetType().Name}'{node.Name}: TextureSlot: lacking track for stand sequence'");
+
                 }
             }
             List<INode> Particles = currentModel.Nodes.Where(x => x is CParticleEmitter || x is CParticleEmitter2 || x is CRibbonEmitter).ToList();
@@ -286,7 +364,7 @@ namespace Wa3Tuner
                 errors.AppendLine("There are particle emitters, but no sequences");
             }
             // check non-bone attachment
-            for (int i = 0; i < currentModel.Geosets.Count; i++)
+            for (int i = 0; i < geosetCount; i++)
             {
                 CGeoset gep = currentModel.Geosets[i];
                 if (gep.Groups.Count == 0)
@@ -325,11 +403,11 @@ namespace Wa3Tuner
                     if (ev.Tracks.Count == 0) errors.AppendLine($"Event object {ev.Name}: no tracks");
                 }
             }
-            
+
             // repeating geoset animations
-            if (currentModel.Geosets.Count > 0)
+            if (geosetCount > 0)
             {
-                for (int i = 0; i < currentModel.Geosets.Count; i++)
+                for (int i = 0; i < geosetCount; i++)
                 {
                     CGeoset ge = currentModel.Geosets[i];
                     if (currentModel.GeosetAnimations.Count(x => x.Geoset.Object == ge) > 1)
@@ -338,63 +416,63 @@ namespace Wa3Tuner
                     }
                 }
             }
-                // inconsistent sequences
-                if (currentModel.Sequences.Count > 1)
+            // inconsistent sequences
+            if (currentModel.Sequences.Count > 1)
+            {
+                for (int i = 0; i < currentModel.Sequences.Count; i++)
                 {
-                    for (int i = 0; i < currentModel.Sequences.Count; i++)
+                    if (i - 1 != -1)
                     {
-                        if (i - 1 != -1)
+                        CSequence prev = currentModel.Sequences[i - 1];
+                        CSequence current = currentModel.Sequences[i];
+                        if (current.IntervalStart < prev.IntervalStart)
                         {
-                            CSequence prev = currentModel.Sequences[i - 1];
-                            CSequence current = currentModel.Sequences[i];
-                            if (current.IntervalStart < prev.IntervalStart)
-                            {
-                                severe.AppendLine($"Sequence '{current.Name}' starts before the sequence before it");
-                            }
+                            severe.AppendLine($"Sequence '{current.Name}' starts before the sequence before it");
                         }
                     }
                 }
-                // not attached to anything
-                for (int g = 0; g < currentModel.Geosets.Count; g++)
+            }
+            // not attached to anything
+            for (int g = 0; g < geosetCount; g++)
+            {
+                CGeoset geo = currentModel.Geosets[g];
+                for (int i = 0; i < geo.Vertices.Count; i++)
                 {
-                    CGeoset geo = currentModel.Geosets[g];
-                    for (int i = 0; i < geo.Vertices.Count; i++)
+                    if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null)
                     {
-                        if (geo.Vertices[i].Group == null || geo.Vertices[i].Group.Object == null)
-                        {
-                            errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
-                        }
-                        if (geo.Vertices[i].Group.Object.Nodes.Count == 0)
-                        {
-                            errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
-                        }
+                        errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
                     }
-                    if (geo.Material.Object == null)
+                    if (geo.Vertices[i].Group.Object.Nodes.Count == 0)
                     {
-                        severe.AppendLine($"Geoset {g}: no material. The geoset will be invisible"); continue;
-                    }
-                    else
-                    {
-                        if (CurrentModel.Materials.Contains(geo.Material.Object) == false)
-                        {
-                            severe.AppendLine($"Geoset {g}: invalid material. The geoset will be invisible"); continue;
-                        }
+                        errors.AppendLine($"Geoset {g}: vertex {i} is not attached to anything"); continue;
                     }
                 }
-                for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
+                if (geo.Material.Object == null)
                 {
-                    CGeosetAnimation anim = currentModel.GeosetAnimations[i];
+                    severe.AppendLine($"Geoset {g}: no material. The geoset will be invisible"); continue;
+                }
+                else
+                {
+                    if (CurrentModel.Materials.Contains(geo.Material.Object) == false)
+                    {
+                        severe.AppendLine($"Geoset {g}: invalid material. The geoset will be invisible"); continue;
+                    }
+                }
+            }
+            for (int i = 0; i < currentModel.GeosetAnimations.Count; i++)
+            {
+                CGeosetAnimation anim = currentModel.GeosetAnimations[i];
 
                 if (anim.Alpha.Animated == true)
                 {
                     foreach (var sequence in currentModel.Sequences)
                     {
-                        if (anim.Alpha.Any(x=> x.Time >= sequence.IntervalStart &&  x.Time <= sequence.IntervalEnd) == false)
+                        if (anim.Alpha.Any(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd) == false)
                         {
                             warnings.AppendLine($"GeosetAnim {i}: Animated Alpha: missing entry for sequence {sequence.Name}"); continue;
                         }
-                             
-                }
+
+                    }
                 }
                 if (anim.Color.Animated == true && anim.UseColor)
                 {
@@ -407,7 +485,7 @@ namespace Wa3Tuner
 
                     }
                 }
-               
+
 
                 // invisible?
                 CGeosetAnimation ga = currentModel.GeosetAnimations[i];
@@ -452,7 +530,7 @@ namespace Wa3Tuner
                         unused.AppendLine($"GeosetAnimations[{i}] all keyframes' values for color are the same");
                     }
 
-                  
+
                 }
 
                 var list1 = SequencesInWhichTracksAreTheSame(currentModel, anim.Alpha);
@@ -468,33 +546,84 @@ namespace Wa3Tuner
 
 
             }
-                // check for overlapping triangles
-                if (currentModel.Geosets.Count > 0)
+            // check for overlapping triangles
+            if (geosetCount > 0)
+            {
+                for (int one = 0; one < geosetCount; one++)
                 {
-                    for (int one = 0; one < currentModel.Geosets.Count; one++)
+                    CGeoset geoset1 = currentModel.Geosets[one];
+                    for (int face1Index = 0; face1Index < geoset1.Triangles.Count; face1Index++)
                     {
-                        CGeoset geoset1 = currentModel.Geosets[one];
-                        for (int face1Index = 0; face1Index < geoset1.Triangles.Count; face1Index++)
+                        // Compare with other geosets (or the same geoset but without redundant checks)
+                        for (int two = one; two < geosetCount; two++)
                         {
-                            // Compare with other geosets (or the same geoset but without redundant checks)
-                            for (int two = one; two < currentModel.Geosets.Count; two++)
+                            CGeoset geoset2 = currentModel.Geosets[two];
+                            // Avoid duplicate checks when comparing the same geoset
+                            int startIndex = (one == two) ? face1Index + 1 : 0;
+                            for (int face2Index = startIndex; face2Index < geoset2.Triangles.Count; face2Index++)
                             {
-                                CGeoset geoset2 = currentModel.Geosets[two];
-                                // Avoid duplicate checks when comparing the same geoset
-                                int startIndex = (one == two) ? face1Index + 1 : 0;
-                                for (int face2Index = startIndex; face2Index < geoset2.Triangles.Count; face2Index++)
+                                // Check for overlap
+                                if (OverlapChecker.TrianglesIntersect(geoset1.Triangles[face1Index], geoset2.Triangles[face2Index]))
                                 {
-                                    // Check for overlap
-                                    if (OverlapChecker.TrianglesIntersect(geoset1.Triangles[face1Index], geoset2.Triangles[face2Index]))
-                                    {
-                                        warnings.AppendLine(
-                                            $"geosets[{one}].triangles[{face1Index}] is overlapping with geosets[{two}].triangles[{face2Index}]");
-                                    }
+                                    warnings.AppendLine(
+                                        $"geosets[{one}].triangles[{face1Index}] is overlapping with geosets[{two}].triangles[{face2Index}]");
                                 }
                             }
                         }
                     }
+
                 }
+                for (int i = 0; i < CurrentModel.Geosets.Count; i++)
+                {
+                    var g = CurrentModel.Geosets[i];
+                    for (int b = 0; i < g.Vertices.Count; i++)
+                    {
+                        var v = g.Vertices[i];
+                        if (VertexIsIsolated(v, g))
+                        {
+                            unused.AppendLine($"Geosets[{i}]: Vertex {b} is unused");
+                        }
+
+                    }
+                    for (int b = 0; i < g.Triangles.Count; i++)
+                    {
+                        var v = g.Triangles[i];
+                        if (TriangleIsIsolated(v, g))
+                        {
+                            unused.AppendLine($"Geosets[{i}]: Triangle {b} is isolated");
+                        }
+                    }
+                }
+                for (int i = 0; i < CurrentModel.Cameras.Count; i++)
+                {
+                    var cam = CurrentModel.Cameras[i];
+                    if (
+     float.IsNaN(cam.TargetPosition.X) ||
+     float.IsNaN(cam.TargetPosition.Y) ||
+     float.IsNaN(cam.TargetPosition.Z) ||
+     float.IsNaN(cam.Position.X) ||
+     float.IsNaN(cam.Position.Y) ||
+     float.IsNaN(cam.Position.Z)
+ )
+
+                    {
+                        warnings.AppendLine($"Camera {i}: one or more NaN values"); continue;
+                    }
+                    if (CameraIsNotPointingTowardGeometry(currentModel.Geosets.ObjectList))
+                    {
+                        warnings.AppendLine($"Camera {i} exists but there is no geometry");
+                    }
+                    if (CameraLineOfSightTooShort(cam))
+                    {
+                        warnings.AppendLine($"Camera {i}: line of sight is too short");
+                    }
+                    if (CameLineOfSightTooLong(cam))
+                    {
+                        warnings.AppendLine($"Camera {i}: line of sight is too long");
+                    }
+                }
+            }
+                /*
                 if (unused.Length == 0 && warnings.Length == 0 &&
                     severe.Length == 0 && errors.Length == 0) { all.AppendLine("All ok"); }
                 else
@@ -508,8 +637,123 @@ namespace Wa3Tuner
                     all.AppendLine("----------Errors:");
                     all.AppendLine(errors.ToString());
                 }
-            return all.ToString();
+               
+            }
+            return all.ToString();*/
+                return new string[] {unused.ToString(), warnings.ToString(),severe.ToString(), errors.ToString() };
         }
+
+        private static bool TransformationLacksStand(CAnimator<CVector3> animator, CModel currentModel)
+        {
+            if (animator == null) { return false; }
+            if (animator.Count == 0) { return false; }
+            var stand = currentModel.Sequences.FirstOrDefault(x=>x.Name.ToLower().StartsWith("stand"));
+            if (stand == null) {return false;}
+            int from = stand.IntervalStart;
+            int to = stand.IntervalEnd;
+            return animator.Any(x => x.Time >= from && x.Time <= to) == false;
+        }
+        private static bool TransformationLacksStand(CAnimator<CVector4> animator, CModel currentModel)
+        {
+            if (animator == null) { return false; }
+            if (animator.Count == 0) { return false; }
+            var stand = currentModel.Sequences.FirstOrDefault(x => x.Name.ToLower().StartsWith("stand"));
+            if (stand == null) { return false; }
+            int from = stand.IntervalStart;
+            int to = stand.IntervalEnd;
+            return animator.Any(x => x.Time >= from && x.Time <= to) == false;
+        }
+        private static bool TransformationLacksStand(CAnimator<float> animator, CModel currentModel)
+        {
+            if (animator == null) { return false; }
+            if (animator.Count==0) { return false; }
+            var stand = currentModel.Sequences.FirstOrDefault(x => x.Name.ToLower().StartsWith("stand"));
+            if (stand == null) { return false; }
+            int from = stand.IntervalStart;
+            int to = stand.IntervalEnd;
+            return animator.Any(x => x.Time >= from && x.Time <= to) == false;
+        }
+        private static bool TransformationLacksStand(CAnimator<int> animator, CModel currentModel)
+        {
+            if (animator == null) { return false; }
+            if (animator.Count == 0) { return false; }
+            var stand = currentModel.Sequences.FirstOrDefault(x => x.Name.ToLower().StartsWith("stand"));
+            if (stand == null) { return false; }
+            int from = stand.IntervalStart;
+            int to = stand.IntervalEnd;
+            return animator.Any(x => x.Time >= from && x.Time <= to) == false;
+        }
+        private static bool CameraLineOfSightTooShort(CCamera cam)
+        {
+            float distance = Vector3Distance(cam.Position, cam.TargetPosition);
+            return distance < 32f; // Shorter than a Warcraft 3 tile
+        }
+
+        private static bool CameLineOfSightTooLong(CCamera cam)
+        {
+            float distance = Vector3Distance(cam.Position, cam.TargetPosition);
+            return distance > 8192f; // Arbitrarily long, adjust based on your scene scale
+        }
+
+        private static float Vector3Distance(CVector3 a, CVector3 b)
+        {
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            float dz = a.Z - b.Z;
+            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+
+        private static bool CameraIsNotPointingTowardGeometry(List<CGeoset> geosets)
+        {
+            if (geosets.Count == 0) return true;
+
+
+            return false;
+        }
+
+        private static bool TriangleIsIsolated(CGeosetTriangle v, CGeoset g)
+        {
+            foreach (var t in g.Triangles)
+            {
+                if (t == v) continue;
+
+                if (t.Vertex1.Object == v.Vertex1.Object || t.Vertex1.Object == v.Vertex2.Object || t.Vertex1.Object == v.Vertex3.Object ||
+                    t.Vertex2.Object == v.Vertex1.Object || t.Vertex2.Object == v.Vertex2.Object || t.Vertex2.Object == v.Vertex3.Object ||
+                    t.Vertex3.Object == v.Vertex1.Object || t.Vertex3.Object == v.Vertex2.Object || t.Vertex3.Object == v.Vertex3.Object)
+                {
+                    return false; // shared vertex found
+                }
+            }
+            return true; // no shared vertices
+        }
+
+        private static bool VertexIsIsolated(CGeosetVertex v, CGeoset g)
+        {
+            foreach (var t in g.Triangles)
+            {
+                if (t.Vertex1.Object == v || t.Vertex2.Object == v || t.Vertex3.Object == v)
+                {
+                    return false; // vertex is used
+                }
+            }
+            return true; // vertex is not used
+        }
+
+
+        private static bool KeyframeIsLone(List<CSequence> sequences, CAnimator<CVector3> scaling, int time)
+        {
+            var sequence = sequences.FirstOrDefault(seq =>
+                time >= seq.IntervalStart && time <= seq.IntervalEnd);
+
+            if (sequence == null) return false;
+
+            int count = scaling.Count(kf =>
+                kf.Time >= sequence.IntervalStart && kf.Time <= sequence.IntervalEnd);
+
+            return count < 2;
+        }
+
 
         private static void AppendSameKeyframes(string v, CAnimator<int> textureSlot, StringBuilder unused, CModel currentModel)
         {
@@ -596,7 +840,7 @@ namespace Wa3Tuner
         }
         private static List<string> CheckDuplicatingKeyframes()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (INode node in CurrentModel.Nodes)
             {
                 ReportDuplicatingKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
@@ -652,6 +896,7 @@ namespace Wa3Tuner
                     ReportDuplicatingKeyframes(element.AttenuationStart, $"At {node.GetType().Name} '{node.Name}': attentuation start: ");
                 }
             }
+          
             for (int i = 0; i < CurrentModel.GeosetAnimations.Count; i++)
             {
                 CGeosetAnimation ga = CurrentModel.GeosetAnimations[i];
@@ -668,7 +913,8 @@ namespace Wa3Tuner
                 ReportDuplicatingKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
                 ReportDuplicatingKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
             }
-            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            int materialsCount = CurrentModel.Materials.Count;
+            for (int i = 0; i < materialsCount; i++)
             {
                 for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
                 {
@@ -680,9 +926,12 @@ namespace Wa3Tuner
             for (int i = 0; i < CurrentModel.Cameras.Count; i++)
             {
                 var cam = CurrentModel.Cameras[i];
+                 
                 ReportDuplicatingKeyframes(cam.Rotation, $"At cameras[{i}]: rotation: ");
+
             }
-            list.AddRange(TemporaryList);
+           
+                list.AddRange(TemporaryList);
             TemporaryList.Clear();
             return list;
         }
@@ -748,6 +997,7 @@ namespace Wa3Tuner
         }
         private static bool TripletBelongsToSameSequence(int time1, int time2, int time3)
         {
+            if (CurrentModel == null) return false;
             foreach (CSequence sequence in CurrentModel.Sequences)
             {
                 if (
@@ -777,7 +1027,7 @@ namespace Wa3Tuner
         }
         private static List<string> ChekMissingOpeningKeyframes()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (INode node in CurrentModel.Nodes)
             {
                 ReportMissingOpeningKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
@@ -849,7 +1099,8 @@ namespace Wa3Tuner
                 ReportMissingOpeningKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
                 ReportMissingOpeningKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
             }
-            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            int materialsCount = CurrentModel.Materials.Count;
+            for (int i = 0; i < materialsCount; i++)
             {
                 for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
                 {
@@ -935,10 +1186,11 @@ namespace Wa3Tuner
                 }
             }
         }
-        private static List<string> TemporaryList = new List<string>();
+        private static List<string> TemporaryList = new();
         private static List<string> ChekRepeatingTimes()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
+            if (CurrentModel == null) { return  list; }
             foreach (INode node in CurrentModel.Nodes)
             {
                 ReportRepeatingTimes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
@@ -1010,7 +1262,8 @@ namespace Wa3Tuner
                 ReportRepeatingTimes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
                 ReportRepeatingTimes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
             }
-            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            int materialsCount = CurrentModel.Materials.Count;
+            for (int i = 0; i < materialsCount; i++)
             {
                 for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
                 {
@@ -1056,37 +1309,50 @@ namespace Wa3Tuner
                 }
             }
         }
-        private static void ReportRepeatingTimes(CAnimator<int> animator, string prefix)
+        private static void ReportRepeatingTimes (CAnimator<float> animator, string prefix)
         {
-            if (animator.Static) { return; }
-            for (int i = 0; i < animator.Count; i++)
+            if (animator.Static) return;
+
+            int count = animator.Count;
+            for (int i = 0; i < count - 1; i++)
             {
-                if (i + 1 < animator.Count)
+                if (animator[i].Time == animator[i + 1].Time)
                 {
-                    if (animator[i].Time == animator[i + 1].Time)
-                    {
-                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
-                    }
+                    TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
                 }
             }
         }
-        private static void ReportRepeatingTimes(CAnimator<float> animator, string prefix)
+        private static void ReportRepeatingTimes (CAnimator<int> animator, string prefix)
         {
-            if (animator.Static) { return; }
-            for (int i = 0; i < animator.Count; i++)
+            if (animator.Static) return;
+
+            int count = animator.Count;
+            for (int i = 0; i < count - 1; i++)
             {
-                if (i + 1 < animator.Count)
+                if (animator[i].Time == animator[i + 1].Time)
                 {
-                    if (animator[i].Time == animator[i + 1].Time)
-                    {
-                        TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
-                    }
+                    TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
                 }
             }
         }
+
+        private static void ReportRepeatingTimes<T>(CAnimator<int> animator, string prefix)
+        {
+            if (animator.Static) return;
+
+            int count = animator.Count;
+            for (int i = 0; i < count - 1; i++)
+            {
+                if (animator[i].Time == animator[i + 1].Time)
+                {
+                    TemporaryList.Add($"{prefix}: Track {i} has the same time as the track after it");
+                }
+            }
+        }
+
         private static List<string> CheckInsonsistentKeyframes()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             foreach (INode node in CurrentModel.Nodes)
             {
                 ReportInconsistentKeyframes(node.Translation, $"At {node.GetType().Name} '{node.Name}': translation: ");
@@ -1158,7 +1424,8 @@ namespace Wa3Tuner
                 ReportInconsistentKeyframes(taa.Rotation, $"At texture_animation[{i}]: rotation: ");
                 ReportInconsistentKeyframes(taa.Scaling, $"At texture_animation[{i}]: scaling: ");
             }
-            for (int i = 0; i < CurrentModel.Materials.Count; i++)
+            int materialsCount = CurrentModel.Materials.Count;
+            for (int i = 0; i < materialsCount; i++)
             {
                 for (int x = 0; x < CurrentModel.Materials[i].Layers.Count; x++)
                 {
@@ -1178,11 +1445,14 @@ namespace Wa3Tuner
         }
         private static void ReportInconsistentKeyframes(CAnimator<float> heightAbove, string v)
         {
-            if (heightAbove.Count > 1)
+            int count = heightAbove.Count;
+            if (count > 1)
             {
-                for (int i = 0; i < heightAbove.Count - 1; i++)
+                for (int i = 0; i < count - 1; i++)
                 {
-                    if (heightAbove[i].Time > heightAbove[i + 1].Time)
+                    var current = heightAbove[i];
+                    var next = heightAbove[i + 1];
+                    if (current.Time > next.Time)
                     {
                         TemporaryList.Add($"{v}: Inconsistent order of keyframes");
                         return;
@@ -1190,6 +1460,7 @@ namespace Wa3Tuner
                 }
             }
         }
+
         private static void ReportInconsistentKeyframes(CAnimator<CVector4> heightAbove, string v)
         {
             if (heightAbove.Count > 1)
@@ -1234,13 +1505,21 @@ namespace Wa3Tuner
         }
         private static bool NothingAttachedToBone(INode target)
         {
-            foreach (CGeoset geo in CurrentModel.Geosets)
+            int count = CurrentModel.Geosets.Count;
+            for (int i = 0; i< count; i++)
             {
+                var geo = CurrentModel.Geosets[i];
+            
                 if (geo.Groups.Count == 0) continue;
-                foreach (CGeosetGroup group in geo.Groups)
+                int gcount = geo.Groups.Count;
+                for (int j = 0; j < gcount; j++)
                 {
-                    foreach (var node in group.Nodes)
+                    var group = geo.Groups[j];
+                    int nCount = group.Nodes.Count;
+                    for (int k = 0; k < nCount; k++)
                     {
+                        var node = group.Nodes[k];  
+                    
                         if (node.Node.Node == target) { return false; }
                     }
                 }
@@ -1256,7 +1535,8 @@ namespace Wa3Tuner
         }
         private static List<CSequence> SequencesInWhichTracksAreTheSame(CModel owner, CAnimator<float> animator)
         {
-            // If all tracks in a sequence have the same value, add the sequence to the list.
+            // buggy
+            return new List<CSequence>();
             var list = new List<CSequence>();
 
             if (animator.Static || animator.Count <= 1)
@@ -1264,25 +1544,39 @@ namespace Wa3Tuner
 
             foreach (var sequence in owner.Sequences)
             {
-                var ofSequences = animator.NodeList
-                    .Where(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd)
-                    .ToList();
+                bool same = true;
+                CAnimatorNode<float>? firstNode = null;
 
-                if (ofSequences.Count <= 1)
-                    continue;
+                foreach (var node in animator.NodeList)
+                {
+                    if (node.Time >= sequence.IntervalStart && node.Time <= sequence.IntervalEnd)
+                    {
+                        if (firstNode == null)
+                        {
+                            firstNode = node;
+                        }
+                        else if (Math.Abs(node.Value - firstNode.Value) > 0.0001f)
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
 
-                bool same = ofSequences.All(x => x.Value == ofSequences[0].Value);
-
-                if (same)
+                if (same && firstNode != null)
+                {
                     list.Add(sequence);
+                }
             }
 
             return list;
         }
 
+
+
         private static List<CSequence> SequencesInWhichTracksAreTheSame(CModel owner, CAnimator<int> animator)
-        {
-            // If all tracks in a sequence have the same value, add the sequence to the list.
+        { // buggy
+            return new List<CSequence>();
             var list = new List<CSequence>();
 
             if (animator.Static || animator.Count <= 1)
@@ -1290,25 +1584,37 @@ namespace Wa3Tuner
 
             foreach (var sequence in owner.Sequences)
             {
-                var ofSequences = animator.NodeList
-                    .Where(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd)
-                    .ToList();
+                bool same = true;
+                CAnimatorNode<int>? firstNode = null;
 
-                if (ofSequences.Count <= 1)
-                    continue;
+                foreach (var node in animator.NodeList)
+                {
+                    if (node.Time >= sequence.IntervalStart && node.Time <= sequence.IntervalEnd)
+                    {
+                        if (firstNode == null)
+                        {
+                            firstNode = node;
+                        }
+                        else if (Math.Abs(node.Value - firstNode.Value) > 0.0001f)
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
 
-                bool same = ofSequences.All(x => x.Value == ofSequences[0].Value);
-
-                if (same)
+                if (same && firstNode != null)
+                {
                     list.Add(sequence);
+                }
             }
 
             return list;
         }
 
         private static List<CSequence> SequencesInWhichTracksAreTheSame(CModel owner, CAnimator<CVector3> animator)
-        {
-            // If all tracks in a sequence have the same value, add the sequence to the list.
+        { // buggy
+            return new List<CSequence>();
             var list = new List<CSequence>();
 
             if (animator.Static || animator.Count <= 1)
@@ -1316,24 +1622,36 @@ namespace Wa3Tuner
 
             foreach (var sequence in owner.Sequences)
             {
-                var ofSequences = animator.NodeList
-                    .Where(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd)
-                    .ToList();
+                bool same = true;
+                CAnimatorNode<CVector3>? firstNode = null;
 
-                if (ofSequences.Count <= 1)
-                    continue;
+                foreach (var node in animator.NodeList)
+                {
+                    if (node.Time >= sequence.IntervalStart && node.Time <= sequence.IntervalEnd)
+                    {
+                        if (firstNode == null)
+                        {
+                            firstNode = node;
+                        }
+                        else if (!AreEqual(node.Value, firstNode.Value))
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
 
-                bool same = ofSequences.All(x => x.Value == ofSequences[0].Value);
-
-                if (same)
+                if (same && firstNode != null)
+                {
                     list.Add(sequence);
+                }
             }
 
             return list;
         }
         private static List<CSequence> SequencesInWhichTracksAreTheSame(CModel owner, CAnimator<CVector4> animator)
-        {
-            // If all tracks in a sequence have the same value, add the sequence to the list.
+        { // buggy
+            return new List<CSequence>();
             var list = new List<CSequence>();
 
             if (animator.Static || animator.Count <= 1)
@@ -1341,34 +1659,67 @@ namespace Wa3Tuner
 
             foreach (var sequence in owner.Sequences)
             {
-                var ofSequences = animator.NodeList
-                    .Where(x => x.Time >= sequence.IntervalStart && x.Time <= sequence.IntervalEnd)
-                    .ToList();
+                bool same = true;
+                CAnimatorNode<CVector4>? firstNode = null;
 
-                if (ofSequences.Count <= 1)
-                    continue;
+                foreach (var node in animator.NodeList)
+                {
+                    if (node.Time >= sequence.IntervalStart && node.Time <= sequence.IntervalEnd)
+                    {
+                        if (firstNode == null)
+                        {
+                            firstNode = node;
+                        }
+                        else if (!AreEqual(node.Value, firstNode.Value))
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
 
-                bool same = ofSequences.All(x => x.Value == ofSequences[0].Value);
-
-                if (same)
+                if (same && firstNode != null)
+                {
                     list.Add(sequence);
+                }
             }
 
             return list;
         }
+        private static bool AreEqual(CVector3 a, CVector3 b, float epsilon = 0.0001f)
+        {
+            return Math.Abs(a.X - b.X) < epsilon &&
+                   Math.Abs(a.Y - b.Y) < epsilon &&
+                   Math.Abs(a.Z - b.Z) < epsilon;
+        }
 
+        private static bool AreEqual(CVector4 a, CVector4 b, float epsilon = 0.0001f)
+        {
+            return Math.Abs(a.X - b.X) < epsilon &&
+                   Math.Abs(a.Y - b.Y) < epsilon &&
+                   Math.Abs(a.Z - b.Z) < epsilon &&
+                   Math.Abs(a.W - b.W) < epsilon;
+        }
 
 
         private static bool TAIsUsed(CTextureAnimation cTextureAnimation)
         {
-            foreach (CMaterial mat in CurrentModel.Materials)
+            var materials = CurrentModel.Materials;
+            int materialCount = materials.Count;
+            for (int i = 0; i < materialCount; i++)
             {
-                foreach (CMaterialLayer layer in mat.Layers)
+                var layers = materials[i].Layers;
+                int layerCount = layers.Count;
+                for (int j = 0; j < layerCount; j++)
                 {
-                    if (layer.TextureAnimation.Object == cTextureAnimation) { return true; }
+                    if (layers[j].TextureAnimation.Object == cTextureAnimation)
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
         }
+
     }
 }

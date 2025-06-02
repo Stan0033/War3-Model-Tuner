@@ -1,4 +1,5 @@
 ﻿using MdxLib.Model;
+using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,11 @@ namespace Wa3Tuner
    public   class NodeMaker
     {
         private static  CModel Dummy= new CModel();
-        public   CParticleEmitter2 ItemPixie = new CParticleEmitter2(Dummy);
-        public   CParticleEmitter2 Dust = new CParticleEmitter2(Dummy);
-        public   CParticleEmitter2 Smoke = new CParticleEmitter2(Dummy);
-        public   CParticleEmitter2 BlastFlare = new CParticleEmitter2(Dummy);
-        public   CParticleEmitter2 Fire = new CParticleEmitter2(Dummy);
+        public static CParticleEmitter2 ItemPixie = new CParticleEmitter2(Dummy);
+        public static CParticleEmitter2 Dust = new CParticleEmitter2(Dummy);
+        public static CParticleEmitter2 Smoke = new CParticleEmitter2(Dummy);
+        public static CParticleEmitter2 BlastFlare = new CParticleEmitter2(Dummy);
+        public static CParticleEmitter2 Fire = new CParticleEmitter2(Dummy);
         public NodeMaker()
         {
 
@@ -56,25 +57,19 @@ namespace Wa3Tuner
             ItemPixie.TailLength = 0.5f;
             ItemPixie.LifeSpan = 0.7f;
             ItemPixie.Rows = 1;
+            ItemPixie.ReplaceableId = 0;
             ItemPixie.Columns = 1;
             ItemPixie.EmissionRate.MakeStatic(18);
-            ItemPixie.Segment1.Alpha = 22;
-            ItemPixie.Segment2.Alpha = 255;
-            ItemPixie.Segment3.Alpha = 0;
-            ItemPixie.Segment1.Scaling = 0.1f;
-            ItemPixie.Segment3.Scaling = 0.1f;
-            ItemPixie.Segment2.Scaling = 14.6f;
+           
+            ItemPixie.Segment1 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255,255,255), 22, 0.1f);
+            ItemPixie.Segment2 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255, 255, 255), 255, 0.1f);
+            ItemPixie.Segment3 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255, 255, 255), 0, 14.6f);
             ItemPixie.RequiredTexturePath = @"Textures\Yellow_Star_Dim.blp";
             //----------------------------------------------------------------
-            Smoke.Segment1.Scaling = 13.8f;
-            Smoke.Segment2.Scaling = 20.7f;
-            Smoke.Segment3.Scaling = 34.2f;
-            Smoke.Segment1.Alpha = 70;
-            Smoke.Segment2.Alpha = 168;
-            Smoke.Segment3.Alpha = 0;
-            Smoke.Segment1.Color = new MdxLib.Primitives.CVector3(102,102,102);
-            Smoke.Segment2.Color = new MdxLib.Primitives.CVector3(102,102,102);
-            Smoke.Segment3.Color = new MdxLib.Primitives.CVector3(63,63,63);
+             Smoke.Segment1 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(102, 102, 102), 70, 13.8f);
+            Smoke.Segment2 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(102, 102, 102), 168, 20.7f);
+            Smoke.Segment3 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(63, 63, 63), 0, 34.2f);
+
             Smoke.RequiredTexturePath = @"Textures\Dust5A.blp";
             Smoke.FilterMode = EParticleEmitter2FilterMode.Additive;
             Smoke.Unshaded = true;
@@ -89,6 +84,7 @@ namespace Wa3Tuner
             Smoke.Rows = 1;
             Smoke.Columns = 1;
             Smoke.TailLength = 1;
+            Smoke.ReplaceableId = 0;
             //----------------------------------------------------------------
             Dust.RequiredTexturePath = @"Textures\Dust5A.blp";
             Dust.FilterMode = EParticleEmitter2FilterMode.Blend;
@@ -103,16 +99,10 @@ namespace Wa3Tuner
             Dust.Rows = 1;
             Dust.Columns = 1;
             Dust.TailLength = 1;
-            Dust.Time = 0.5f;
-            Dust.Segment1.Color = new MdxLib.Primitives.CVector3(181,107,10);
-            Dust.Segment2.Color = new MdxLib.Primitives.CVector3(154,133,68);
-            Dust.Segment3.Color = new MdxLib.Primitives.CVector3(233,228,212);
-            Dust.Segment1.Alpha = 139;
-            Dust.Segment1.Scaling = 19.8f;
-            Dust.Segment2.Alpha = 225;
-            Dust.Segment2.Scaling = 27.8f;
-            Dust.Segment3.Alpha = 0;
-            Dust.Segment3.Scaling = 48;
+            Dust.Time = 0.5f;  
+             Dust.Segment1 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(10, 107, 181), 139, 19.8f);
+            Dust.Segment2 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(68, 133, 154), 225, 27.8f);
+            Dust.Segment3 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(212, 228, 233), 0, 27.8f);
             //----------------------------------------------------------------
             BlastFlare.RequiredTexturePath = @"ReplaceableTextures\Weather\Clouds8x8.blp";
             BlastFlare.EmissionRate.MakeStatic(25);
@@ -123,17 +113,13 @@ namespace Wa3Tuner
             BlastFlare.FilterMode = EParticleEmitter2FilterMode.Additive;
             BlastFlare.Unshaded = true;
             BlastFlare.Head = true;
-            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(1,1,0);
-            BlastFlare.Segment1.Alpha = 255f;
-            BlastFlare.Segment1. Scaling = 25;
+ 
 
-            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(0.24705882352f, 0.5f,1);
-            BlastFlare.Segment1.Alpha = 143f;
-            BlastFlare.Segment1.Scaling = 75;
+            BlastFlare.Segment1 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255,0,0), 255, 19.8f);
+            BlastFlare.Segment2 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255,128, 62), 143f, 0.75f);
+            BlastFlare.Segment3 = new MdxLib.Primitives.CSegment(Calculator.RGB2NRRGB(255, 0, 0), 0,1.25f);
 
-            BlastFlare.Segment1.Color = new MdxLib.Primitives.CVector3(0, 0, 1);
-            BlastFlare.Segment1.Alpha = 0f;
-            BlastFlare.Segment1.Scaling = 125;
+
             BlastFlare.Rows = 8;
             BlastFlare.Columns = 8;
             BlastFlare.LifeSpan = 0.9f;

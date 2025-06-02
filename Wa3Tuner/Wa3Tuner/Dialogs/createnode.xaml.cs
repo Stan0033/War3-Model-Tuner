@@ -19,14 +19,14 @@ namespace Wa3Tuner
     public partial class createnode : Window
     {
         CModel model;
-        public string ResultName;
+        public string ResultName = string.Empty;
         public NodeType Result;
         public createnode(CModel m)
         {
             InitializeComponent();
             model = m;
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             if (box.Text.Trim().Length == 0) { return; }
             string input = box.Text.Trim();
@@ -38,7 +38,7 @@ namespace Wa3Tuner
             Result = (NodeType)List_Type.SelectedIndex;
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
             if (e.Key == Key.Enter) ok(null, null);

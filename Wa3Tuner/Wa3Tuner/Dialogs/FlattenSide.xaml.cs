@@ -28,7 +28,7 @@ namespace Wa3Tuner
         {
             InitializeComponent();
         }
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private void OkButton_Click(object? sender, RoutedEventArgs? e)
         {
             for (int i = 0; i < Options.Children.Count; i++)
             {
@@ -42,7 +42,7 @@ namespace Wa3Tuner
             }
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) OkButton_Click(null, null);

@@ -20,12 +20,12 @@ namespace Wa3Tuner
         internal static CGeoset Read(string openPath, CModel model)
         {
             CGeoset geoset = new CGeoset(model);
-            bool Mode_Vertices = false;
+          
             ModelReadMode readMode = ModelReadMode.Nothing;
            
             using (StreamReader reader = new StreamReader(openPath))
             {
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line == "[vertices]") { readMode = ModelReadMode.Vertices; continue; }
@@ -70,9 +70,9 @@ namespace Wa3Tuner
             sb.AppendLine("[triangles]");
             foreach (var triangle in geoset.Triangles)
             {
-                string f = geoset.Vertices.IndexOf(triangle.Vertex1.Object).ToString();
-                string s  = geoset.Vertices.IndexOf(triangle.Vertex2.Object).ToString();
-                string t = geoset.Vertices.IndexOf(triangle.Vertex3.Object).ToString();
+                string? f = geoset.Vertices.IndexOf(triangle.Vertex1.Object).ToString();
+                string? s  = geoset.Vertices.IndexOf(triangle.Vertex2.Object).ToString();
+                string? t = geoset.Vertices.IndexOf(triangle.Vertex3.Object).ToString();
             sb.AppendLine($"{f} {s} {t}");
             }
            return sb.ToString();
@@ -83,7 +83,7 @@ namespace Wa3Tuner
             return  $"{vertex.Position.X} {vertex.Position.Y} {vertex.Position.Z} {vertex.Normal.X} {vertex.Normal.Y} {vertex.Normal.Z} {vertex.TexturePosition.X} {vertex.TexturePosition.Y}";
         }
 
-        internal static CGeoset ReadGeomerge(string openPath, CModel currentModel)
+        internal static CGeoset? ReadGeomerge(string openPath, CModel currentModel)
         {
             CGeoset g = new CGeoset(currentModel);
           try
@@ -149,14 +149,14 @@ namespace Wa3Tuner
           
             CTextureAnimation x = new CTextureAnimation(model);
             CMaterialLayer CurrentLayer = new CMaterialLayer(model);
-            bool Mode_Vertices = false;
+            
             bool Alpha_Animated = false;
             ModelReadMode readMode = ModelReadMode.Nothing;
             ModelReadMode txReadMode = ModelReadMode.Nothing;
 
             using (StreamReader reader = new StreamReader(openPath))
             {
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (readMode == ModelReadMode.Nothing)
@@ -333,7 +333,7 @@ namespace Wa3Tuner
 
         private static MdxLib.Primitives.CVector3 ExtractVector(string v)
         {
-            string dummy = v.Replace("{", "").ToString() .Replace("}", "").ToString() .Replace(" ", "").ToString();
+            string? dummy = v.Replace("{", "").ToString() .Replace("}", "").ToString() .Replace(" ", "").ToString();
 
             string[] data = dummy.Split(",");
             float x = float.Parse(data[0]);
@@ -343,7 +343,7 @@ namespace Wa3Tuner
         }
         private static MdxLib.Primitives.CVector4 ExtractVector4(string v)
         {
-            string dummy = v.Replace("{", "").ToString().Replace("}", "").ToString().Replace(" ", "").ToString();
+            string? dummy = v.Replace("{", "").ToString().Replace("}", "").ToString().Replace(" ", "").ToString();
 
             string[] data = dummy.Split(",");
             float x = float.Parse(data[0]);
@@ -355,9 +355,9 @@ namespace Wa3Tuner
 
         internal static void ExportGeomerge(CModel currentModel, CGeoset geoset)
         {
-            string path = FileSeeker.SaveTGeomFileDialog();
+            string? path = FileSeeker.SaveTGeomFileDialog();
             if (path .Length==0) {  return; }
-            string data = GenerateGeomergeDaa(geoset);
+            string? data = GenerateGeomergeDaa(geoset);
             File.WriteAllText(path, data);
 
          }
@@ -376,9 +376,9 @@ namespace Wa3Tuner
             sb.AppendLine("[triangles]");
             foreach (var triangle in geoset.Triangles)
             {
-                string f = geoset.Vertices.IndexOf(triangle.Vertex1.Object).ToString();
-                string s = geoset.Vertices.IndexOf(triangle.Vertex2.Object).ToString();
-                string t = geoset.Vertices.IndexOf(triangle.Vertex3.Object).ToString();
+                string? f = geoset.Vertices.IndexOf(triangle.Vertex1.Object).ToString();
+                string? s = geoset.Vertices.IndexOf(triangle.Vertex2.Object).ToString();
+                string? t = geoset.Vertices.IndexOf(triangle.Vertex3.Object).ToString();
                 sb.AppendLine($"{f} {s} {t}");
             }
             sb.AppendLine("[End]");

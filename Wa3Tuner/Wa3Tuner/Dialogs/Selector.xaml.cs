@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -17,8 +18,8 @@ namespace Wa3Tuner
     /// </summary>
     public partial class Selector : Window
     {
-        internal string Selected;
-        internal List<string> SelectedList;
+        internal string? Selected;
+        internal List<string> SelectedList = new List<string>();
         public Selector(List<string> ids, string title = "Selector", bool Multiselect = false)
         {
             InitializeComponent();
@@ -32,25 +33,45 @@ namespace Wa3Tuner
                 box.SelectionMode = SelectionMode.Multiple;
             }
             }
-        private void ok(object sender, RoutedEventArgs e)
+        private void Ok(object? sender, RoutedEventArgs? e)
         {
-            if (box.SelectedItem != null)
+            if (box == null || box.SelectedItem == null)
+                return;
+
+            if (box.SelectedItem is ListBoxItem selectedItem && selectedItem.Content != null)
             {
-                Selected = (box.SelectedItem as ListBoxItem).Content.ToString();
-                DialogResult = true;
-                if (box.SelectionMode == SelectionMode.Multiple)
+                Selected = selectedItem.Content.ToString();
+            }
+            else
+            {
+                return; // Cannot proceed safely
+            }
+
+            DialogResult = true;
+
+            if (box.SelectionMode == SelectionMode.Multiple && box.SelectedItems != null)
+            {
+                SelectedList.Clear();
+
+                foreach (object? item in box.SelectedItems)
                 {
-                    foreach (object id in box.SelectedItems)
+                    if (item is ListBoxItem listItem && listItem.Content != null)
                     {
-                        SelectedList.Add((id as ListBoxItem).Content.ToString());
+                      string? x=  Extractor.GetString(listItem);
+                        if (x != null)
+                        {
+                            SelectedList.Add(x);
+                        }
                     }
                 }
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+
+
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
-            if (e.Key == Key.Enter) ok(null,null);
+            if (e.Key == Key.Enter) Ok(null,null);
         }
     }
 }

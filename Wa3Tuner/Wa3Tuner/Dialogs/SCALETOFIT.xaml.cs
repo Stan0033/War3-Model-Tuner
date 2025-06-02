@@ -18,13 +18,13 @@ namespace Wa3Tuner
     /// </summary>
     public partial class SCALETOFIT : Window
     {
-        internal CExtent Extent;
-        public bool Each;
+        internal CExtent Extent = new CExtent();
+        public bool Each = false;
         public SCALETOFIT()
         {
             InitializeComponent();
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             Each = SelectedGeosetsEach.IsChecked == true;
             bool parseminx = float.TryParse(MinXInput.Text, out float minx);
@@ -39,7 +39,7 @@ namespace Wa3Tuner
                 DialogResult = true;
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

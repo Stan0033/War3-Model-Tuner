@@ -4,6 +4,33 @@ namespace Wa3Tuner.Helper_Classes
 {
     internal class RenderSettings
     {
+
+
+        public static bool RenderGroundPlane = false;
+        public static bool RenderTextures = true;
+        public static bool RenderShading = true;
+        public static bool RenderCollisionShapes = false;
+        public static bool RenderSkinning = false;
+        public static bool RenderTriangles = true;
+        public static bool RenderGeosetExtents = false;
+        public static bool RenderGeosetExtentSphere = false;
+        public static bool RenderNodes = false;
+        public static bool RenderGeometry = false;
+        public static float LineSpacing = 1;
+        public static bool RenderGroundGrid = false;
+        public static bool RenderGridX = false;
+        public static bool RenderGridY = false;
+        public static bool RenderSkeleton = false;
+
+        public static bool RenderNormals = false;
+        public static bool RenderAxis = true;
+        public static int ViewportGridSizeOverlay = 0;
+        public static int ViewportGridSize = 0;
+        public static bool RenderEnabled = true;
+        public static bool RenderEdges = false;
+        public static bool RenderVertices = false;
+        public static bool RenderFPS = true;
+        public static bool RenderLighing = true;
         //----------------------------------------------------------
         //---- colors
         //----------------------------------------------------------

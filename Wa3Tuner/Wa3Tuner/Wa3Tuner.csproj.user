@@ -37,6 +37,9 @@
     <Compile Update="Dialogs\createextrudedpolygon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\debug_console_w.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\DistanceSelector.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -44,6 +47,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\GeosetGroupViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\geoset_data_editor.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Geoset_Selection.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\geoVisibilitiesKeyword.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Gradual Keyframe Maker.xaml.cs">
@@ -56,6 +68,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Model Colors Changer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\model_starter.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Nodes_Renamer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\SequenceToSequencesSelector.xaml.cs">
@@ -116,6 +134,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Shatter animation maker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\Snap Selector 2d.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\SnapSettingsWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\SpreadVerticesIWindow.xaml.cs">

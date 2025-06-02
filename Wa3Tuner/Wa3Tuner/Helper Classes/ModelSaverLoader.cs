@@ -12,7 +12,7 @@ namespace Wa3Tuner.Helper_Classes
     static class ModelSaverLoader
     {
        
-        public static CModel Load(string FromFileName)
+        public static CModel? Load(string FromFileName)
         {
             CModel TemporaryModel = new CModel();
             string extension = System.IO.Path.GetExtension(FromFileName).ToLower();

@@ -1,0 +1,20 @@
+House|Buildings\Human\Farm\House.blp
+castle building|Buildings\Human\TownHall\TownHallCastleKeep.blp
+brainiac|UI\Glues\SinglePlayer\NightElf_Exp\Coral_Surfaces.blp
+night elf armor|UI\Glues\SinglePlayer\NightElf_Exp\NightElfArmor.blp
+fur|UI\Glues\SinglePlayer\Undead3D_Exp\furboots2.blp
+mail pad|UI\Glues\SinglePlayer\Undead3D_Exp\Mail_CPads.blp
+thunder lizard man|Abilities\Spells\Other\Stampede\ThunderLizard.blp
+Ancient Tiger|Buildings\NightElf\AncientofWar\AncientOfWar1.blp
+Blade Robot|Doodads\Cinematic\ArthasIllidanFight\IllidanBlade.blp
+Pharaoh|Objects\Spawnmodels\Undead\UndeadBlood\Destroyer.blp
+concrete|UI\Widgets\EscMenu\Human\quest-failed-background.blp
+shoulderpad|UI\Glues\SinglePlayer\HumanCampaign3D\HumanCampaignFootman.blp
+belt|UI\Glues\SinglePlayer\HumanCampaign3D\HumanCampaignlionhead.blp
+axe handle|UI\Glues\SinglePlayer\NightElfCampaign3D\Bow.blp
+purple body|UI\Glues\SinglePlayer\NightElfCampaign3D\NightElfArcher.blp
+purple shoulderpad|UI\Glues\SinglePlayer\NightElfCampaign3D\NightElfArmor.blp
+ring|UI\Widgets\EscMenu\Human\radiobutton-background.blp
+star|ReplaceableTextures\CommandButtons\BTNStarWand.blp
+naga circle|Doodads\Ruins\Props\Ruins_NagaCircle\Ruins_BrickCircleGreen.blp
+GREAT HALL SKIN - FOR SHELTER|Buildings\Orc\GreatHall\GreatHall.blp

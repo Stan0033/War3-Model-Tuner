@@ -437,7 +437,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.7;component/node%20dialogs/edit_emitter2.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.2.8;component/node%20dialogs/edit_emitter2.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Node Dialogs\edit_emitter2.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -25,8 +25,8 @@ namespace Wa3Tuner.Dialogs
     {
         CModel Model;
         List<CBone> Bones = new List<CBone>();
-        public CMaterial SelectedMaterial;
-        public CBone SelectedNode;
+        public CMaterial? SelectedMaterial;
+        public CBone? SelectedNode;
         public ImportGeosetDialog(CModel model)
         {
             InitializeComponent();
@@ -81,7 +81,7 @@ namespace Wa3Tuner.Dialogs
 
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             SelectedMaterial = Model.Materials[ComboMaterial.SelectedIndex];
             if (Check_NewBone.IsChecked == true)
@@ -99,13 +99,13 @@ namespace Wa3Tuner.Dialogs
             DialogResult = true;
         }
 
-        private void CheckedNB(object sender, RoutedEventArgs e)
+        private void CheckedNB(object? sender, RoutedEventArgs? e)
         {
             bool nb = Check_NewBone.IsChecked == true;
             ComboAttachTo.IsEnabled = !nb;
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

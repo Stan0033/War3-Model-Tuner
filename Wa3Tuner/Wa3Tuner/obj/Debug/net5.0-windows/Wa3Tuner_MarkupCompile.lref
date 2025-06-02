@@ -13,6 +13,7 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\copy
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Create Sphere.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createextrudedpolygon.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createnode.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\debug_console_w.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\DistanceSelector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\DrawShape.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\editvisibilities_window.xaml;;
@@ -24,6 +25,9 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Flat
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Generate Keyframe in Range.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\GeosetExtents.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\GeosetGroupViewer.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\geoset_data_editor.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Geoset_Selection.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\geoVisibilitiesKeyword.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Gradual Keyframe Maker.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\howmodel.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ImageViewer.xaml;;
@@ -40,9 +44,11 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Mini
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Model Colors Changer.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ModelBrowser.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\modelstructure.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\model_starter.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\MPQBrowser.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Multiselector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\newsequence.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Nodes_Renamer.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\NoKeyframesActions.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ObjImporter.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\PivoPointOffsetWkndow.xaml;;
@@ -58,6 +64,8 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Sele
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\select_Transformations.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SequenceToSequencesSelector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Shatter animation maker.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Snap Selector 2d.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SnapSettingsWindow.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SpreadVerticesIWindow.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextColorizer_Window.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextureBrowser.xaml;;

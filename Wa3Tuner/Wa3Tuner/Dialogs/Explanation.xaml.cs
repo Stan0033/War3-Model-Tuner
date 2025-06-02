@@ -24,7 +24,7 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { DialogResult = false; }
         }

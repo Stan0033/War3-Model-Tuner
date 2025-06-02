@@ -17,26 +17,28 @@ namespace Wa3Tuner
     /// </summary>
     public partial class Input : Window
     {
-        public string Result;
+        public string Result = string.Empty;
         public Input(string original)
         {
             InitializeComponent();
             box.Text = original;
+            Result = original;
         }
         public Input(string original, string title)
         {
             InitializeComponent();
             box.Text = original;
             Title = title;
+            Result = original;
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             string name = box.Text.Trim();
             if (name.Length == 0 ) { return; }
             Result = name;
             DialogResult = true;
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null,null);

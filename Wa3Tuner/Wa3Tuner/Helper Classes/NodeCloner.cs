@@ -12,7 +12,7 @@ namespace Wa3Tuner
     {
         public static INode Clone(INode node, CModel model)
         {
-            INode Clone = null;
+            INode? Clone = null;
             if ( node is CBone bone)
             {
                 Clone = new CBone(model);
@@ -221,6 +221,7 @@ namespace Wa3Tuner
                 }
                 Clone = ribobnClone;
             }
+            if (Clone == null) { throw new Exception("Cloned node is nuill"); }
                 Clone.Billboarded = node.Billboarded;
             Clone.BillboardedLockX = node.BillboardedLockX;
             Clone.BillboardedLockY = node.BillboardedLockY;

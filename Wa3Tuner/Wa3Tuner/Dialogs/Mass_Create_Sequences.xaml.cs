@@ -25,7 +25,7 @@ namespace Wa3Tuner
             InitializeComponent();
             Model = model;
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             List<string> lines = Input.Text.Split('\n').ToList();
             // check
@@ -86,7 +86,7 @@ namespace Wa3Tuner
             TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
             return textInfo.ToTitleCase(input.ToLower());
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

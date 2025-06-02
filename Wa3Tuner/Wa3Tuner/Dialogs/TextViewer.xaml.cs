@@ -25,9 +25,14 @@ namespace Wa3Tuner.Dialogs
             lst.Text = text;
         }
 
-        private void cop(object sender, RoutedEventArgs e)
+        private void cop(object? sender, RoutedEventArgs? e)
         {
             Clipboard.SetText(lst.Text);
+        }
+
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { Close(); }
         }
     }
 }

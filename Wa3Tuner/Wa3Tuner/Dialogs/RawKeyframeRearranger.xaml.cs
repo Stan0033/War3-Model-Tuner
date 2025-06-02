@@ -27,9 +27,10 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
         }
 
-        private void rearrange(object sender, RoutedEventArgs e)
+        private void rearrange(object? sender, RoutedEventArgs? e)
         {
-            string text = MainTextBox.Text;
+            string text = MainTextBox.Text.Trim();
+            if (text.Length == 0) { return; }
             StringBuilder updated = new StringBuilder();
             MainTextBox.Text = updated.ToString();
             var list = ExtractNumbers(text);
@@ -215,7 +216,7 @@ namespace Wa3Tuner.Dialogs
             return result;
         }
 
-        private void copy(object sender, RoutedEventArgs e)
+        private void copy(object? sender, RoutedEventArgs? e)
         {
             Clipboard.SetText(MainTextBox.Text);
         }

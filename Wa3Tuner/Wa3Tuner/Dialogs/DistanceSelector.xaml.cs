@@ -37,7 +37,7 @@ namespace Wa3Tuner.Dialogs
             InitializeComponent();
         }
 
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             bool h_x = float.TryParse(InputX.Text, out float x);
             bool h_y = float.TryParse(InputY.Text, out float y);
@@ -59,7 +59,7 @@ namespace Wa3Tuner.Dialogs
             }
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
             if (e.Key == Key.Enter) ok(null, null);

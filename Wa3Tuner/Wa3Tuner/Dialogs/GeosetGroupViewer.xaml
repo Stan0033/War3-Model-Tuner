@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
         mc:Ignorable="d"
         Background="LightGray"
-        ResizeMode="NoResize"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Title="GeosetGroupViewer" Height="250" Width="400">
     <Grid>

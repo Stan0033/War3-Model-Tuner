@@ -1,22 +1,36 @@
 ﻿using SharpGL;
 using System.Drawing.Imaging;
 using System.Drawing;
-using Wa3Tuner.Helper_Classes;
+ 
 using System;
 using MdxLib.Model;
 using MdxLib.Primitives;
 using System.Collections.Generic;
 using SharpGL.SceneGraph.Assets;
-using SharpGL.SceneGraph;
-using System.Windows;
+ 
 using System.Linq;
 using System.Numerics;
+using Whim_GEometry_Editor.Misc;
 namespace Wa3Tuner.Helper_Classes
 {
+
   
     public static class Renderer
     {
-       public static void RendertestPoints(OpenGL gl)
+        public static void EnableAntialiasing(OpenGL gl)
+        {
+            // Enable multisampling (if supported)
+            gl.Enable(OpenGL.GL_MULTISAMPLE);
+
+            // Optional: smoother lines
+            gl.Enable(OpenGL.GL_LINE_SMOOTH);
+            gl.Hint(OpenGL.GL_LINE_SMOOTH_HINT, OpenGL.GL_NICEST);
+
+            // Optional: smoother polygons
+            gl.Enable(OpenGL.GL_POLYGON_SMOOTH);
+            gl.Hint(OpenGL.GL_POLYGON_SMOOTH_HINT, OpenGL.GL_NICEST);
+        }
+        public static void RendertestPoints(OpenGL gl) //test
         {
             float nodeSize = 10; // Point size in pixels
 
@@ -27,11 +41,11 @@ namespace Wa3Tuner.Helper_Classes
 
             gl.Begin(OpenGL.GL_POINTS);
 
-            foreach (xLine line in RayCaster.Lines)
+            foreach (Ray line in RayCaster.Lines)
             {
                 gl.Color(1,1,1);
 
-                gl.Vertex(line.one.X, line.one.Y, line.one.Z);
+                gl.Vertex(line.From.X, line.From.Y, line.From.Z);
             }
               
             gl.End();
@@ -52,8 +66,12 @@ namespace Wa3Tuner.Helper_Classes
 
 
                     // Draw points
-                    foreach (var node in PathManager.Selected.List)
+                    int count = PathManager.Selected.Count;
+                    for (int i = 0; i < count; i++)
                     {
+                        var node = PathManager.Selected.List[i];
+
+                    
                         if (node.IsSelected)
                             gl.Color(RenderSettings.Path_Node_Selected[0], RenderSettings.Path_Node_Selected[1], RenderSettings.Path_Node_Selected[2]);
                         else
@@ -84,15 +102,15 @@ namespace Wa3Tuner.Helper_Classes
             }
         }
 
-        public static void RenderTestLines(OpenGL gl)
+        public static void RenderTestLines(OpenGL gl) //test
         {
             gl.Begin(OpenGL.GL_LINES); // Start drawing lines
 
-            foreach (xLine line in RayCaster.Lines)
+            foreach (Ray line in RayCaster.Lines)
             {
                 // Draw the line between `one` and `two`
-                gl.Vertex(line.one.X, line.one.Y, line.one.Z); // First point
-                gl.Vertex(line.two.X, line.two.Y, line.two.Z); // Second point
+                gl.Vertex(line.From.X, line.From.Y, line.From.Z); // First point
+                gl.Vertex(line.To.X, line.To.Y, line.To.Z); // Second point
             }
 
             gl.End(); // End the drawing
@@ -174,8 +192,10 @@ namespace Wa3Tuner.Helper_Classes
             gl.Color(RenderSettings.Color_Extent[0], RenderSettings.Color_Extent[1], RenderSettings.Color_Extent[1]);
             // Begin drawing lines
             gl.Begin(OpenGL.GL_LINES);
-            foreach (cLine line in model.GeosetLines)
-            {
+            int count = model.GeosetLines.Count;
+            for (int i = 0; i < count; i++) {
+                var line = model.GeosetLines[i];
+            
                 // Specify the start point of the line
                 gl.Vertex(line.From.X, line.From.Y, line.From.Z);
                 // Specify the end point of the line
@@ -194,8 +214,12 @@ namespace Wa3Tuner.Helper_Classes
 
                 // Begin drawing lines
                 gl.Begin(OpenGL.GL_LINES);
-                foreach (cLine line in model.CollisionShapeLines)
+                int count = model.CollisionShapeLines.Count;
+                for (int i = 0; i < count; i++)
                 {
+                    var line = model.CollisionShapeLines[i];
+               
+                
                     // Specify the start point of the line
                     gl.Vertex(line.From.X, line.From.Y, line.From.Z);
                     // Specify the end point of the line
@@ -209,8 +233,10 @@ namespace Wa3Tuner.Helper_Classes
         {
             if (!Render && !geo.isSelected) { return; }
             gl.Begin(OpenGL.GL_LINES); // Start drawing lines once for all edges
-            foreach (var edge in geo.Edges)
-            {
+            int count = geo.Edges.Count;
+            for (int i = 0; i < count; i++) {
+                var edge = geo.Edges[i];
+            
                 if (edge.isSelected || geo.isSelected)
                 {
                     gl.Color(RenderSettings.Color_Edge_Selected[0],
@@ -233,8 +259,10 @@ namespace Wa3Tuner.Helper_Classes
         }
         public static void RenderEdges(OpenGL gl, CModel currentModel, bool DoRender)
         {
-           foreach (CGeoset geo in currentModel.Geosets)
-            {
+            int count = currentModel.Geosets.Count;
+            for (int i = 0; i < count; i++) {
+                var geo = currentModel.Geosets[i];
+            
                 if (!geo.isVisible) continue;
                
                 RenderEdgesOf(gl, geo, DoRender);
@@ -276,11 +304,13 @@ namespace Wa3Tuner.Helper_Classes
             bitmap.UnlockBits(data); // Unlock the bitmap
             return textureId[0]; // Return the generated texture ID
         }
-        public static void RenderTriangles(OpenGL gl, CModel model, bool RenderTextures, List<Texture> textures, bool animated , bool RenderShading)
+        public static void RenderTriangles(OpenGL gl, CModel model, bool RenderTextures, List<Texture> textures, 
+            bool animated , bool RenderShading)
         {
             List<CGeoset> Geosets = model.Geosets.ObjectList;
 
-            for (int i = 0; i < model.Geosets.Count; i++)
+            int gCount = Geosets.Count;
+            for (int i = 0; i < gCount; i++)
             {
                 CGeoset geo = model.Geosets[i];
 
@@ -291,7 +321,7 @@ namespace Wa3Tuner.Helper_Classes
                 if (animated && !geo.isVisibleAnimated) { continue; }
 
                 var geoAnim = model.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == geo);
-                Vector3 GeosetColor = new Vector3(1, 1, 1);
+                Vector3 GeosetColor = new  (1, 1, 1);
 
                 if (geoAnim != null && geoAnim.UseColor && geoAnim.Color.Static)
                 {
@@ -343,9 +373,10 @@ namespace Wa3Tuner.Helper_Classes
                         gl.Enable(OpenGL.GL_CULL_FACE);
 
                     gl.Begin(OpenGL.GL_TRIANGLES);
-
-                    foreach (var triangle in geo.Triangles)
-                    {
+                    int  count = geo.Triangles.Count;
+                    for (int j=0; j<count; j++) {
+                        var triangle = geo.Triangles[j];
+                   
                         var v1 = triangle.Vertex1;
                         var v2 = triangle.Vertex2;
                         var v3 = triangle.Vertex3;
@@ -364,8 +395,8 @@ namespace Wa3Tuner.Helper_Classes
                         }
                         else
                         {
-                            CVector3 edge1 = new CVector3(pos2.X - pos1.X, pos2.Y - pos1.Y, pos2.Z - pos1.Z);
-                            CVector3 edge2 = new CVector3(pos3.X - pos1.X, pos3.Y - pos1.Y, pos3.Z - pos1.Z);
+                            CVector3 edge1 = new  (pos2.X - pos1.X, pos2.Y - pos1.Y, pos2.Z - pos1.Z);
+                            CVector3 edge2 = new  (pos3.X - pos1.X, pos3.Y - pos1.Y, pos3.Z - pos1.Z);
                             CVector3 normal = Cross(edge1, edge2);
                             normal1 = normal2 = normal3 = normal;
                         }
@@ -432,47 +463,7 @@ namespace Wa3Tuner.Helper_Classes
 
 
 
-        private static void RenderSelectionCube(OpenGL gl, CGeoset geoset)
-        {
-            // Get the bounding box extents
-            var radius = geoset.Extent.Radius;
-
-            var center = Calculator.GetCentroidOfGeoset(geoset);
-
-            // Define the 8 cube vertices using the center and radius
-            float minX = center.X - radius, maxX = center.X + radius;
-            float minY = center.Y - radius, maxY = center.Y + radius;
-            float minZ = center.Z - radius, maxZ = center.Z + radius;
-
-            // Cube vertices
-            float[,] vertices = {
-        { minX, minY, minZ }, { maxX, minY, minZ }, { maxX, maxY, minZ }, { minX, maxY, minZ }, // Front
-        { minX, minY, maxZ }, { maxX, minY, maxZ }, { maxX, maxY, maxZ }, { minX, maxY, maxZ }  // Back
-    };
-
-            // Define cube edges (pairs of vertex indices)
-            int[,] edges = {
-        { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 }, // Front face
-        { 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 }, // Back face
-        { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }  // Connect front and back faces
-    };
-
-            // Set color for the lines
-            gl.Color(RenderSettings.Color_SelectedGeoset[0],
-                     RenderSettings.Color_SelectedGeoset[1],
-                     RenderSettings.Color_SelectedGeoset[2],
-                     1.0f); // Full opacity
-
-            // Render the cube as lines
-            gl.Begin(OpenGL.GL_LINES);
-            for (int i = 0; i < edges.GetLength(0); i++)
-            {
-                int v1 = edges[i, 0], v2 = edges[i, 1];
-                gl.Vertex(vertices[v1, 0], vertices[v1, 1], vertices[v1, 2]);
-                gl.Vertex(vertices[v2, 0], vertices[v2, 1], vertices[v2, 2]);
-            }
-            gl.End();
-        }
+       
         public static void RenderNormals(OpenGL gl, CModel model)
         {
             float normalLength = 0.5f; // Adjust length of the normal visualization
@@ -498,8 +489,9 @@ namespace Wa3Tuner.Helper_Classes
                 }
             }
         }
-        public static void RenderGroundTexture(OpenGL gl, Texture t, int size)
+        public static void RenderGroundTexture(OpenGL gl, Texture? t, int size)
         {
+            if (t == null) return;
           //  MessageBox.Show("grd");
             gl.Enable(OpenGL.GL_TEXTURE_2D);
 
@@ -536,10 +528,16 @@ namespace Wa3Tuner.Helper_Classes
 
         public static void RenderRigging(OpenGL gl, CModel model)
         {
-            foreach (CGeoset geo in model.Geosets)
+            int gcount = model.Geosets.Count;
+            for (int i = 0; i < gcount; i++)
             {
-                foreach (CGeosetVertex v in geo.Vertices)
+                var geo = model.Geosets[i];
+
+            int vcount = geo.Vertices.Count;
+                for (int j = 0; j < vcount; j++)
                 {
+                    var v = geo.Vertices[j];
+                
                     CVector3 From = v.Position;
                     foreach (var gnode in v.Group.Object.Nodes)
                     {
@@ -574,10 +572,13 @@ namespace Wa3Tuner.Helper_Classes
             // End drawing lines
             gl.End();
         }
+      
         public static void RenderSkeleton(OpenGL gl, CModel model)
         {
-            foreach (var node in model.Nodes)
+            int count = model.Nodes.Count; ;
+            for (int i = 0; i < count; i++)
             {
+                var node = model.Nodes[i];
                 if (node.Parent != null && node.Parent.Node != null)
                 {
                     CVector3 From = node.PivotPoint;
@@ -585,6 +586,7 @@ namespace Wa3Tuner.Helper_Classes
                     DrawLineBetweenNodes(gl, From, To);
                 }
             }
+            
         }
         internal static void RenderNodes(OpenGL gl, CModel currentModel, bool animated = false)
         {
@@ -597,8 +599,10 @@ namespace Wa3Tuner.Helper_Classes
 
             gl.Begin(OpenGL.GL_POINTS);
 
-            foreach (INode node in currentModel.Nodes)
+            int count = currentModel.Nodes.Count;
+            for (int i = 0; i < count; i++)
             {
+                var node = currentModel.Nodes[i];
                 if (animated && node.IsVisibleAnimated == false) { continue; }
                 var position = node.PivotPoint;
 
@@ -610,6 +614,7 @@ namespace Wa3Tuner.Helper_Classes
 
                 gl.Vertex(position.X, position.Y, position.Z);
             }
+            
             gl.End();
 
             gl.Disable(OpenGL.GL_POINT_SMOOTH);
@@ -625,12 +630,18 @@ namespace Wa3Tuner.Helper_Classes
             List<CGeoset> geosets = model.Geosets.ObjectList;
 
             gl.Begin(OpenGL.GL_POINTS);
-            foreach (CGeoset geo in geosets)
+            int gCount = geosets.Count;
+            for (int i = 0; i < gCount; i++)
             {
+                var geo = geosets[i];
+            
                 if (!geo.isVisible) continue;
 
-                foreach (var vertex in geo.Vertices)
+                int count = geo.Vertices.Count;
+                for (int j = 0; j < count; j++)
                 {
+                    var vertex = geo.Vertices[j];
+               
                     var position = UseAnimatedPositions ? vertex.AnimatedPosition : vertex.Position;
 
                     if (vertex.isSelected)
@@ -667,42 +678,7 @@ namespace Wa3Tuner.Helper_Classes
             gl.Disable(OpenGL.GL_POINT_SMOOTH);
         }
 
-        internal static float[][] CalculateEquilateralTriangle(CVector3 pos, float edgeLength, float[] cameraPos, float[] upVector)
-        {
-            // Calculate the forward vector from the camera to the position
-            float[] forwardVector = { pos.X - cameraPos[0], pos.Y - cameraPos[1], pos.Z - cameraPos[2] };
-            NormalizeVector(forwardVector);
-            // Calculate the right vector as a cross product of the forward vector and up vector
-            float[] rightVector = CrossProduct(forwardVector, upVector);
-            NormalizeVector(rightVector);
-            // Normalize the up vector to ensure consistency
-            NormalizeVector(upVector);
-            // Calculate the base of the triangle using the right vector
-            float[][] triangleVertices = new float[3][];
-            // Bottom-left vertex
-            triangleVertices[0] = new float[]
-            {
-        pos.X - rightVector[0] * (edgeLength / 2),
-        pos.Y - rightVector[1] * (edgeLength / 2),
-        pos.Z - rightVector[2] * (edgeLength / 2)
-            };
-            // Bottom-right vertex
-            triangleVertices[1] = new float[]
-            {
-        pos.X + rightVector[0] * (edgeLength / 2),
-        pos.Y + rightVector[1] * (edgeLength / 2),
-        pos.Z + rightVector[2] * (edgeLength / 2)
-            };
-            // Top vertex: at 60 degrees relative to the base to form an equilateral triangle
-            float height = (float)(Math.Sqrt(3) / 2.0f * edgeLength);
-            triangleVertices[2] = new float[]
-            {
-        pos.X + upVector[0] * height - forwardVector[0] * height * 0.1f, // Adding slight forward bias to avoid "stretch"
-        pos.Y + upVector[1] * height - forwardVector[1] * height * 0.1f,
-        pos.Z + upVector[2] * height - forwardVector[2] * height * 0.1f
-            };
-            return triangleVertices;
-        }
+        
         internal static void NormalizeVector(float[] vector)
         {
             float length = (float)Math.Sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
@@ -722,42 +698,7 @@ namespace Wa3Tuner.Helper_Classes
         vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0]
             };
         }
-        internal static float[][] CalculateBillboardedSquare(
-    CVector3 pos, float squareSize, float[] cameraPos, float[] upVector)
-        {
-            // Get the vector from the camera to the vertex position
-            float[] lookVector = new float[3];
-            lookVector[0] = pos.X - cameraPos[0];
-            lookVector[1] = pos.Y - cameraPos[1];
-            lookVector[2] = pos.Z - cameraPos[2];
-            // Normalize the look vector
-            float length = (float)Math.Sqrt(lookVector[0] * lookVector[0] + lookVector[1] * lookVector[1] + lookVector[2] * lookVector[2]);
-            lookVector[0] /= length;
-            lookVector[1] /= length;
-            lookVector[2] /= length;
-            // Calculate the right vector (cross product of look vector and up vector)
-            float[] rightVector = new float[3];
-            rightVector[0] = upVector[1] * lookVector[2] - upVector[2] * lookVector[1];
-            rightVector[1] = upVector[2] * lookVector[0] - upVector[0] * lookVector[2];
-            rightVector[2] = upVector[0] * lookVector[1] - upVector[1] * lookVector[0];
-            // Normalize and scale the right vector by half the square size
-            length = (float)Math.Sqrt(rightVector[0] * rightVector[0] + rightVector[1] * rightVector[1] + rightVector[2] * rightVector[2]);
-            rightVector[0] = (rightVector[0] / length) * (squareSize / 2);
-            rightVector[1] = (rightVector[1] / length) * (squareSize / 2);
-            rightVector[2] = (rightVector[2] / length) * (squareSize / 2);
-            // Normalize and scale the up vector by half the square size
-            length = (float)Math.Sqrt(upVector[0] * upVector[0] + upVector[1] * upVector[1] + upVector[2] * upVector[2]);
-            upVector[0] = (upVector[0] / length) * (squareSize / 2);
-            upVector[1] = (upVector[1] / length) * (squareSize / 2);
-            upVector[2] = (upVector[2] / length) * (squareSize / 2);
-            // Calculate the positions of the four corners of the square
-            float[][] squareVertices = new float[4][];
-            squareVertices[0] = new float[] { pos.X - rightVector[0] - upVector[0], pos.Y - rightVector[1] - upVector[1], pos.Z - rightVector[2] - upVector[2] }; // Bottom-left
-            squareVertices[1] = new float[] { pos.X + rightVector[0] - upVector[0], pos.Y + rightVector[1] - upVector[1], pos.Z + rightVector[2] - upVector[2] }; // Bottom-right
-            squareVertices[2] = new float[] { pos.X + rightVector[0] + upVector[0], pos.Y + rightVector[1] + upVector[1], pos.Z + rightVector[2] + upVector[2] }; // Top-right
-            squareVertices[3] = new float[] { pos.X - rightVector[0] + upVector[0], pos.Y - rightVector[1] + upVector[1], pos.Z - rightVector[2] + upVector[2] }; // Top-left
-            return squareVertices;
-        }
+       
         internal static void ApplySSAA(OpenGL gl)
         {
             return;
@@ -830,5 +771,42 @@ namespace Wa3Tuner.Helper_Classes
                 }
             }
         }
+
+        internal static void RenderTestExtents(OpenGL gl) //test
+        {
+            // Set the color to blue (R, G, B)
+            gl.Color(RenderSettings.Color_Extent[0], RenderSettings.Color_Extent[1], RenderSettings.Color_Extent[2]);
+
+            gl.Begin(OpenGL.GL_LINES);
+
+            foreach (Extent ex in RayCaster.Extents)
+            {
+                float x1 = ex.minX, x2 = ex.maxX;
+                float y1 = ex.minY, y2 = ex.maxY;
+                float z1 = ex.minZ, z2 = ex.maxZ;
+
+                // 12 lines of a box (edges)
+                // Bottom face
+                gl.Vertex(x1, y1, z1); gl.Vertex(x2, y1, z1);
+                gl.Vertex(x2, y1, z1); gl.Vertex(x2, y2, z1);
+                gl.Vertex(x2, y2, z1); gl.Vertex(x1, y2, z1);
+                gl.Vertex(x1, y2, z1); gl.Vertex(x1, y1, z1);
+
+                // Top face
+                gl.Vertex(x1, y1, z2); gl.Vertex(x2, y1, z2);
+                gl.Vertex(x2, y1, z2); gl.Vertex(x2, y2, z2);
+                gl.Vertex(x2, y2, z2); gl.Vertex(x1, y2, z2);
+                gl.Vertex(x1, y2, z2); gl.Vertex(x1, y1, z2);
+
+                // Vertical edges
+                gl.Vertex(x1, y1, z1); gl.Vertex(x1, y1, z2);
+                gl.Vertex(x2, y1, z1); gl.Vertex(x2, y1, z2);
+                gl.Vertex(x2, y2, z1); gl.Vertex(x2, y2, z2);
+                gl.Vertex(x1, y2, z1); gl.Vertex(x1, y2, z2);
+            }
+
+            gl.End();
+        }
+
     }
 }

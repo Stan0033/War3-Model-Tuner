@@ -18,8 +18,8 @@ namespace Wa3Tuner
     public partial class axis_selector : Window
     {
         public bool x, y, z;
-        private void Window_KeyDown(object sender, KeyEventArgs e)
-        {
+        private void Window_KeyDown(object? sender, KeyEventArgs? e)
+        {if (e == null) return;
             if (e.Key == Key.Escape) { DialogResult = false; }
             if (e.Key == Key.Enter) ok(null, null);
         }
@@ -27,7 +27,7 @@ namespace Wa3Tuner
         {
             InitializeComponent();
         }
-        private void ok(object sender, RoutedEventArgs e)
+        private void ok(object? sender, RoutedEventArgs? e)
         {
             x = Check_x.IsChecked == true;
             y = Check_y.IsChecked == true;

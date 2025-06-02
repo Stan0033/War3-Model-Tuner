@@ -1,0 +1,3 @@
+C:\Users\stan0\Desktop\READY\Item Spawner\Item_Spawner.mdx
+C:\Users\stan0\Desktop\house\house.mdl
+C:\Users\stan0\Desktop\Data\models\house\house_opt.mdx

@@ -8,6 +8,10 @@ namespace Wa3Tuner
     using System.Drawing;
     using System.Drawing.Drawing2D;
     using System.IO;
+    using System.Windows.Media.Imaging;
+    using System.Windows.Media;
+    using Pen = Pen;
+    using Color = Color;
 
     internal class ImageLoader
     {
@@ -124,13 +128,30 @@ namespace Wa3Tuner
                 throw new IOException("Failed to load the image from the specified path.", ex);
             }
         }
+ 
 
-        /// <summary>
-        /// Checks if the provided file stream contains a valid PNG file signature.
-        /// </summary>
-        /// <param name="stream">The file stream to check.</param>
-        /// <returns>True if the file is a PNG; otherwise, false.</returns>
-        private static bool IsPngFile(FileStream stream)
+internal static ImageSource? LoadPNGImageSource(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return null;
+
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.UriSource = new Uri(path, UriKind.Absolute);
+        bitmap.EndInit();
+        bitmap.Freeze(); // Freeze to make it cross-thread accessible
+
+        return bitmap;
+    }
+
+
+    /// <summary>
+    /// Checks if the provided file stream contains a valid PNG file signature.
+    /// </summary>
+    /// <param name="stream">The file stream to check.</param>
+    /// <returns>True if the file is a PNG; otherwise, false.</returns>
+    private static bool IsPngFile(FileStream stream)
         {
             // PNG files start with an 8-byte signature: 89 50 4E 47 0D 0A 1A 0A
             byte[] pngSignature = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
