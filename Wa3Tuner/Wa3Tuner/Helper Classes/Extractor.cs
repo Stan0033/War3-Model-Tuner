@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MdxLib.Primitives;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -83,5 +84,25 @@ namespace Wa3Tuner.Helper_Classes
             }
             else { return def; }
         }
+
+        internal static CVector3 GetVertex(string rawString)
+        {
+            string trimmed = rawString.Trim();
+            trimmed = trimmed.Replace(" ", "");
+            trimmed = trimmed.Replace("{", "").Replace("}", "");
+
+            string[] parts = trimmed.Split(',');
+
+            if (parts.Length != 3)
+                throw new FormatException("Vertex string must contain exactly 3 components.");
+
+            float x = float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture);
+            float y = float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+            float z = float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+
+            return new CVector3(x, y, z);
+        }
+
+
     }
 }

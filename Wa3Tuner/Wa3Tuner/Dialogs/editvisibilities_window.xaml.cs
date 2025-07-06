@@ -1,5 +1,7 @@
 ﻿using MdxLib.Animator;
+using MdxLib.Animator.Animatable;
 using MdxLib.Model;
+using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,40 +10,53 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Wa3Tuner.Helper_Classes;
+using CVector3 = MdxLib.Primitives.CVector3;
 
 namespace Wa3Tuner
 {
     /// <summary>
     /// Interaction logic for editvisibilities_window.xaml
     /// </summary>
+    enum ComponentType_Visibility { 
+    Geoset, Scaling, Visibility, Tracks, None, EventObject
+    }
     public partial class editvisibilities_window : Window
     {
+        
         CModel? Model;
         CGeoset? Geoset;
-        CGeosetAnimation? GeosetAnim;
+        CEvent EventObject;
         List<Ttrack> Tracks = new List<Ttrack>();
         bool NotGeosetAnimation = false;
         private bool EditingVisibility = false;
         Dictionary<CSequence, bool> Visibilities = new Dictionary<CSequence, bool>();
-     
+        ComponentType_Visibility EditType = ComponentType_Visibility.None;
+        private CGeosetAnimation GeosetAnim;
         private CAnimator<float> AnimatorFloat;
+        INode EditedNode;
 
+        // which geoset
         public editvisibilities_window(CModel model, CGeoset geoset)
         {
             InitializeComponent();
             Model = model;
             Geoset = geoset;
             Title = $"Edit alpha visibilites of geoset with ID {geoset.ObjectId}";
+            EditType = ComponentType_Visibility.Geoset;
             GeosetAnim = new CGeosetAnimation(Model);
+            AnimatorFloat = GeosetAnim.Alpha;
+            GeosetAnim.Alpha.MakeAnimated();
             GenerateUI();
             
         }
+        //tracks from transformation editor
         public editvisibilities_window(CModel model, List<Ttrack> tracks)
         {
             InitializeComponent();
             NotGeosetAnimation = true;
             Model = model;
-            Tracks = tracks;    
+            Tracks = tracks;
+            EditType = ComponentType_Visibility.Tracks; ;
             foreach (CSequence sequence in model.Sequences)
             {
                 CheckBox c = new CheckBox();
@@ -55,15 +70,37 @@ namespace Wa3Tuner
             }
         }
 
-        public editvisibilities_window(CModel currentModel, CAnimator<float> animator)
+        // node visibility
+        public editvisibilities_window(CModel m, CAnimator<float> animator)
         {
             InitializeComponent();
-            this.Model = currentModel;
+            this.Model = m;
              AnimatorFloat = animator;
-            EditingVisibility = true;
+             
+            EditType = ComponentType_Visibility.Visibility;
             GenerateUI_ForVisibilities();
         }
-      
+        // node scaling
+        public editvisibilities_window(CModel m, INode node)
+        {
+            InitializeComponent();
+            this.Model = m;
+
+            EditedNode = node;
+            EditType = ComponentType_Visibility.Scaling;
+
+            GenerateUI_ForScalings();
+        }
+        public editvisibilities_window(CModel m, CEvent node)
+        {
+            InitializeComponent();
+            this.Model = m;
+            EventObject = node;
+            
+            EditType = ComponentType_Visibility.EventObject;
+
+            GenerateUI_ForScalings();
+        }
         private void CheckSequence(object? sender, EventArgs e)
         {
             if (Model == null) { return; }
@@ -136,8 +173,19 @@ namespace Wa3Tuner
 
             CreateCheckBoxes();
         }
-       
-        
+        private void GenerateUI_ForScalings()
+        {
+            if (Model == null) return;
+            foreach (var sequence in Model.Sequences)
+            {
+                 bool IsVisible = false;
+                Visibilities.Add(sequence, IsVisible);
+            }
+
+
+            CreateCheckBoxes();
+        }
+
         private void SetVisibility(object? sender, EventArgs? e)
         {
             if (Model == null) return;  
@@ -161,10 +209,10 @@ namespace Wa3Tuner
             GeosetAnim.Alpha.MakeAnimated();
             GeosetAnim.Geoset.Attach(Geoset);
         }
-        private void ok(object? sender, RoutedEventArgs? e)
+        private void FinalizeAndClose(object? sender, RoutedEventArgs? e)
         {
             if (Model == null){ MessageBox.Show("null model"); return; }
-            if ( EditingVisibility)
+            if (EditType == ComponentType_Visibility.Visibility)
             {
 
                 DialogResult = true;
@@ -175,9 +223,9 @@ namespace Wa3Tuner
                     AnimatorFloat.Add(new CAnimatorNode<float>() { Time = item.Key.IntervalStart, Value = item.Value ? 1 : 0 });
                 }
 
-                }
+            }
 
-            else if (NotGeosetAnimation)
+            else if (EditType == ComponentType_Visibility.Tracks)
             {
                 Tracks.Clear();
                 foreach (var item in Visibilities)
@@ -187,7 +235,7 @@ namespace Wa3Tuner
                 }
                 DialogResult = true;
             }
-            else
+            else if (EditType == ComponentType_Visibility.Geoset)
             {
                 FinalizeGeosetAnim();
                 if (Model.GeosetAnimations.Any(x => x.Geoset.Object == Geoset))
@@ -198,11 +246,38 @@ namespace Wa3Tuner
                 Model.GeosetAnimations.Add(GeosetAnim);
                 DialogResult = true;
             }
+            else if (EditType == ComponentType_Visibility.Scaling)
+            {
+                EditedNode.Scaling.Clear();     
+                foreach (var item in Visibilities)
+                {
+                   int track = item.Key.IntervalStart;
+                    CVector3 data = item.Value == true ? new CVector3(1, 1, 1) : new CVector3(0,0,0);
+                    EditedNode.Scaling.Add(new CAnimatorNode<CVector3>() { Time = track, Value = data });
+                    ;
+                }
+                DialogResult = true;
+            }
+            else if (EditType == ComponentType_Visibility.EventObject)
+            {
+                EventObject.Tracks.Clear();
+                foreach (var item in Visibilities)
+                {
+                    int track = item.Key.IntervalStart;
+                    if (item.Value == true)
+                    {
+                        EventObject.Tracks.Add(new CEventTrack(Model) { Time = track });
+                    }
+
+
+                }
+                DialogResult = true;
+            }
         }
         private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) DialogResult = false;
-            if (e.Key == Key.Enter) ok(null, null);
+            if (e.Key == Key.Enter) FinalizeAndClose(null, null);
         }
 
         private void s1(object? sender, RoutedEventArgs? e)

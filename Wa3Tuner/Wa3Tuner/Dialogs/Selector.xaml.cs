@@ -22,6 +22,7 @@ namespace Wa3Tuner
         internal List<string> SelectedList = new List<string>();
         public Selector(List<string> ids, string title = "Selector", bool Multiselect = false)
         {
+            
             InitializeComponent();
             foreach (string id in ids)
             {

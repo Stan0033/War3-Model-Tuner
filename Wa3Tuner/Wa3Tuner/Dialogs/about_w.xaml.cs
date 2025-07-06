@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿ 
 using System.Text;
-using System.Threading.Tasks;
+ 
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+ 
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+ 
 
 namespace Wa3Tuner.Dialogs
 {
@@ -22,7 +16,7 @@ namespace Wa3Tuner.Dialogs
         public about_w()
         {
             InitializeComponent();
-            StringBuilder sb = new StringBuilder("War3ModelTuner v1.2.9 (01/June/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.");
+            StringBuilder sb = new StringBuilder("War3ModelTuner v1.3.2 (04/July/2025) by stan0033 built using C#, .NET 5.0, Visual Studio 2022.");
             sb.AppendLine("Credits:");
             sb.AppendLine("Magos' MDXLib - read/write MDL/MDX, format 800");
             sb.AppendLine("War3NET libraries by Drake53 - read/write MPQ/BLP");

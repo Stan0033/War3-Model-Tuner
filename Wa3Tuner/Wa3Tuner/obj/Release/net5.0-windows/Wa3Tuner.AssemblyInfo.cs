@@ -13,11 +13,11 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("Wa3Tuner")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.2.3.5")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3d2c5f22df3aa2e0d01ea7f06443c07742fc7c4b")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.3.1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddce68dde9f957eb7cb30d079f1e9457610ead8c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Wa3Tuner")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Wa3Tuner")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.2.3.5")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.3.1")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 

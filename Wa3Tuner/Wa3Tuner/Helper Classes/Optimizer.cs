@@ -4,6 +4,7 @@ using MdxLib.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Wa3Tuner.Helper_Classes;
 
 namespace Wa3Tuner
@@ -116,7 +117,7 @@ namespace Wa3Tuner
             if (_DetachFromNonBone) { _DetachFromNonBone_(); }
             if (ReducematrixGruops) { ReducematrixGruops_(); }
             if (DleteOverlapping1) DeleteIdenticalFaces();
-            if (DleteOverlapping2) DeleteFullyOverLappingFaces();
+            if (DleteOverlapping2) DeleteFullyOverlappingFaces();
             if (InvalidTriangleUses) InvalidTriangleUses_();
             if (ClampNormals) ClampNormals_();
             if (DeleteTrianglesWithNoArea) DeleteTrianglesWithNoArea_();
@@ -142,7 +143,37 @@ namespace Wa3Tuner
             DeleteEventObjectsWithNoTRacks();
            
         }
+        private static void DeleteFullyOverlappingFaces()
+        {
+            foreach (CGeoset geoset in Model.Geosets)
+            {
+                var triangles = geoset.Triangles.ToList();  // Copy list to avoid modification during iteration
+                var newTriangles = new List<CGeosetTriangle>();
 
+                for (int i = 0; i < triangles.Count; i++)
+                {
+                    var current = triangles[i];
+                    bool isDuplicate = false;
+
+                    // Check only previous triangles to keep first occurrence
+                    for (int j = 0; j < i; j++)
+                    {
+                        if (FacesFullyOverlapping(current, triangles[j]))
+                        {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    if (!isDuplicate)
+                    {
+                        newTriangles.Add(current);
+                    }
+                }
+
+                geoset.Triangles.ObjectList = newTriangles;
+            }
+        }
         private static void AddTexturesToLayersMissing()
         {
             int count = Model.Materials.Count;
@@ -1677,62 +1708,41 @@ namespace Wa3Tuner
                     }
                 }
             }
-        private static void DeleteFullyOverLappingFaces()
-        {
-            foreach (CGeoset geoset in Model.Geosets)
-            {
-                // Use ToList() to avoid modifying the collection while iterating
-                foreach (CGeosetTriangle face1 in geoset.Triangles.ToList())
-                {
-                    foreach (CGeosetTriangle face2 in geoset.Triangles.ToList())
-                    {
-                        // Skip comparison with itself
-                        if (face1 == face2) { continue; }
-                        // If faces are fully overlapping, remove the second one
-                        if (FacesFullyOverlapping(face1, face2))
-                        {
-                            geoset.Triangles.Remove(face2);
-                        }
-                    }
-                }
-            }
-        }
         public static bool FacesFullyOverlapping(CGeosetTriangle face1, CGeosetTriangle face2)
         {
-            // Combination 1: All conditions combined with AND
-            if (face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex2 &&
-                face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1)
-            {
-                return true;
-            }
-            // Combination 2: All conditions combined with OR
-            if (face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex2 ||
-                face1.Vertex1 == face2.Vertex2 || face1.Vertex2 == face2.Vertex1)
-            {
-                return true;
-            }
-            // Combination 3: Mixed AND and OR (example: first two AND, rest OR)
-            if ((face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex2) ||
-                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1))
-            {
-                return true;
-            }
-            // Combination 4: Mixed AND and OR (example: first two OR, rest AND)
-            if ((face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex2) &&
-                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex1))
-            {
-                return true;
-            }
-            // Combination 5: Another variation of mixed AND and OR
-            if ((face1.Vertex1 == face2.Vertex1 && face1.Vertex2 == face2.Vertex1) ||
-                (face1.Vertex1 == face2.Vertex2 && face1.Vertex2 == face2.Vertex2))
-            {
-                return true;
-            }
-            // Add more combinations as needed...
-            // Default case
-            return false;
+            var verts1 = new[] { face1.Vertex1.Object.Position, face1.Vertex2.Object.Position, face1.Vertex3.Object.Position };
+            var verts2 = new[] { face2.Vertex1.Object.Position, face2.Vertex2.Object.Position, face2.Vertex3.Object.Position };
+
+            // Check if verts2 contains exactly the same points as verts1 (order-independent)
+            return ArePointSetsEqual(verts1, verts2);
         }
+
+        private static bool ArePointSetsEqual(CVector3[] set1, CVector3[] set2)
+        {
+            // Quick fail if count mismatch (should be 3 for triangles)
+            if (set1.Length != set2.Length) return false;
+
+            // For each point in set1, check if there is a close enough point in set2
+            foreach (var p1 in set1)
+            {
+                bool foundMatch = false;
+                foreach (var p2 in set2)
+                {
+                    if (p1.IsApproximatelyEqual(p2))
+                    {
+                        foundMatch = true;
+                        break;
+                    }
+                }
+                if (!foundMatch) return false;
+            }
+            return true;
+        }
+        public static bool IsApproximatelyEqual(this CVector3 a, CVector3 b, float epsilon = 0.0001f)
+        {
+            return (a - b).Length() < epsilon;
+        }
+
         private static bool VerticesAreInSamePosition(CGeosetVertex vertex1, CGeosetVertex vertex2)
         {
             // Check if the vertices are in the exact same position in 3D space
@@ -1744,33 +1754,39 @@ namespace Wa3Tuner
         {
             foreach (CGeoset geoset in Model.Geosets)
             {
-                // Use ToList() to avoid modifying the collection while iterating
-                foreach (CGeosetTriangle face1 in geoset.Triangles.ToList())
+                var newTriangles = new List<CGeosetTriangle>();
+
+                for (int i = 0; i < geoset.Triangles.Count; i++)
                 {
-                    foreach (CGeosetTriangle face2 in geoset.Triangles.ToList())
+                    var current = geoset.Triangles[i];
+                    bool isDuplicate = false;
+
+                    // Only check triangles before current one
+                    for (int j = 0; j < i; j++)
                     {
-                        // Skip comparison with itself
-                        if (face1 == face2) { continue; }
-                        // Check if the faces share any vertices
-                        if (ShareSameVertices(face1, face2))
+                        if (ShareSameVertices(current, geoset.Triangles[j]))
                         {
-                            // If they share vertices, remove the second face
-                            geoset.Triangles.Remove(face2);
+                            isDuplicate = true;
+                            break;
                         }
                     }
+
+                    if (!isDuplicate)
+                    {
+                        newTriangles.Add(current);
+                    }
                 }
+
+                geoset.Triangles.ObjectList = newTriangles;
             }
         }
+
+
         private static bool ShareSameVertices(CGeosetTriangle face1, CGeosetTriangle face2)
         {
-            // Compare all three vertices
-            if (face1.Vertex1 == face2.Vertex1 || face1.Vertex2 == face2.Vertex1 || face1.Vertex3 == face2.Vertex1 ||
-                face1.Vertex1 == face2.Vertex2 || face1.Vertex2 == face2.Vertex2 || face1.Vertex3 == face2.Vertex2 ||
-                face1.Vertex1 == face2.Vertex3 || face1.Vertex2 == face2.Vertex3 || face1.Vertex3 == face2.Vertex3)
-            {
-                return true;
-            }
-            return false;
+            return (face1.Vertex1.Object == face2.Vertex1.Object || face1.Vertex1.Object == face2.Vertex2.Object || face1.Vertex1.Object == face2.Vertex3.Object) &&
+                      (face1.Vertex2.Object == face2.Vertex1.Object || face1.Vertex2.Object == face2.Vertex2.Object || face1.Vertex2.Object == face2.Vertex3.Object) &&
+                      (face1.Vertex3.Object == face2.Vertex1.Object || face1.Vertex3.Object == face2.Vertex2.Object || face1.Vertex3.Object == face2.Vertex3.Object);
         }
         private static void Check_DeleteIdenticalAdjascentKEyframes_times_()
         {
@@ -5023,5 +5039,46 @@ namespace Wa3Tuner
                 }
             }
         }
+
+        internal static void ArrangeGEosetAnimations(CModel currentModel)
+        {
+            if (currentModel == null || currentModel.Geosets.Count == 0) return;
+
+            GiveGeosetsToNullGeosetAnimations(currentModel);
+            currentModel.Geosets.ObjectList = currentModel.Geosets.ObjectList.OrderBy(x => x.ObjectId).ToList();
+
+            var matchedGeosetAnimations = new List<CGeosetAnimation>();
+            for (int i = 0; i < currentModel.Geosets.Count; i++)
+            {
+                var geo = currentModel.Geosets[i];
+                for (int j = 0; j < currentModel.GeosetAnimations.Count; j++)
+                {
+                    var geosetAnim = currentModel.GeosetAnimations[j];
+                    if (geosetAnim.Geoset.Object == geo)
+                    {
+                        matchedGeosetAnimations.Add(geosetAnim);
+                        break;
+                    }
+                }
+            }
+
+            currentModel.GeosetAnimations.Clear();
+            foreach (var ga in matchedGeosetAnimations)
+                currentModel.GeosetAnimations.Add(ga);
+        }
+        private static void GiveGeosetsToNullGeosetAnimations(CModel m)
+        {
+            if (m == null || m.Geosets.Count == 0) return;
+            var defaultGeoset = m.Geosets[0];
+            foreach (var ga in m.GeosetAnimations)
+            {
+                if (ga.Geoset.Object == null)
+                {
+                    ga.Geoset.Attach(defaultGeoset);
+                }
+            }
+        }
+
+
     }
 }

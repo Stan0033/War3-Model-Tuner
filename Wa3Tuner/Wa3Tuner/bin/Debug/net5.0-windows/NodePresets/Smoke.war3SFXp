@@ -1,0 +1,46 @@
+[emitter2]
+EmissionRate: 25
+Speed: 25
+Variation: 25
+Latitude: 12.5
+Width: 0
+Length: 25
+Gravity: 0
+Texture: Textures\Dust5A.blp
+Filtermode: Additive
+Unshaded: True
+Unfogged: False
+LineEmitter: False
+SortPrimitivesFarZ: False
+ModelSpace: False
+Head: False
+Tail: False
+Squirt: False
+Rows: 1
+Columns: 1
+LifeSpan: 1.635
+TailLength: 1
+PriorityPlane: 0
+ReplaceableId: 0
+Time: 0.5
+HeadLife.Start: 0
+HeadLife.End: 0
+HeadLife.Repeat: 0
+HeadDecay.Start: 0
+HeadDecay.End: 0
+HeadDecay.Repeat: 0
+TailLife.Start: 0
+TailLife.End: 0
+TailLife.Repeat: 0
+TailDecay.Start: 0
+TailDecay.End: 0
+TailDecay.Repeat: 0
+Segment1.Alpha: 70
+Segment1.Color: { 0.4, 0.4, 0.4 }
+Segment1.Scaling: 13.8
+Segment2.Alpha: 168
+Segment2.Color: { 0.4, 0.4, 0.4 }
+Segment2.Scaling: 13.8
+Segment3.Alpha: 0
+Segment3.Color: { 0.24705882, 0.24705882, 0.24705882 }
+Segment3.Scaling: 34.2

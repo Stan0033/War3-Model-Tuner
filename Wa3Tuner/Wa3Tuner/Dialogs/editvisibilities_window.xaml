@@ -23,6 +23,6 @@
         </StackPanel>
        
         <ListBox Name="Box" Background="LightGray"  Grid.Row="1"/>
-        <Button Click="ok" Content="Finish" Grid.Row="2"/>
+        <Button Click="FinalizeAndClose" Content="Finish" Grid.Row="2"/>
     </Grid>
 </Window>

@@ -1,0 +1,45 @@
+[emitter2]
+EmissionRate: 42
+EmissionRate: 42
+EmissionRate: 42
+EmissionRate: 0
+EmissionRate: 0
+EmissionRate: 42
+Texture: Textures\Yellow_Star_Dim.blp
+Filtermode: Additive
+Unshaded: True
+Unfogged: False
+LineEmitter: False
+SortPrimitivesFarZ: False
+ModelSpace: True
+Head: False
+Tail: False
+Squirt: False
+Rows: 1
+Columns: 1
+LifeSpan: 0.7
+TailLength: 0.5
+PriorityPlane: 0
+ReplaceableId: 0
+Time: 0.5
+HeadLife.Start: 0
+HeadLife.End: 0
+HeadLife.Repeat: 0
+HeadDecay.Start: 0
+HeadDecay.End: 0
+HeadDecay.Repeat: 0
+TailLife.Start: 0
+TailLife.End: 0
+TailLife.Repeat: 0
+TailDecay.Start: 0
+TailDecay.End: 0
+TailDecay.Repeat: 0
+Segment1.Alpha: 22
+Segment1.Color: { 1, 1, 1 }
+Segment1.Scaling: 0.1
+Segment2.Alpha: 255
+Segment2.Color: { 1, 1, 1 }
+Segment2.Scaling: 0.1
+Segment3.Alpha: 0
+Segment3.Color: { 1, 1, 1 }
+Segment3.Scaling: 14.6

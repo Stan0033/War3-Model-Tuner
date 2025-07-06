@@ -9,5 +9,16 @@
         KeyDown="Window_KeyDown"
         WindowStartupLocation="CenterScreen"
         Title="Geoset sequence extents" Height="250" Width="300">
-    <ListBox Name="ListExtents" MouseDoubleClick="ListExtents_MouseDoubleClick" Background="LightGray"/>
+
+    <ListBox Name="ListExtents" MouseDoubleClick="ListExtents_MouseDoubleClick" Background="LightGray">
+        <ListBox.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Edit" Click="clikc_Editextent"/>
+                <MenuItem Header="Move up" Click="Moveup"/>
+                <MenuItem Header="Move down" Click="Movedown"/>
+                <MenuItem Header="Duplicate" Click="Duplicate"/>
+                <MenuItem Header="Delete" Click="del"/>
+            </ContextMenu>
+        </ListBox.ContextMenu>
+    </ListBox>
 </Window>

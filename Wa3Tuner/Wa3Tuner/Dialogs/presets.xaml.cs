@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using static Wa3Tuner.Helper_Classes.History;
 namespace Wa3Tuner
 {
     /// <summary>
@@ -150,41 +151,39 @@ namespace Wa3Tuner
                         }
                     }
                     //update
-                    if (upgrade)
+                    if (upgrade && tiers>0)
                     {
-                        foreach (CSequence name in Model.Sequences.ToList())
-                        {
-                            CSequence sequence = new CSequence(Model);
-                            sequence.IntervalStart = CurrentLocation;
-                            sequence.IntervalEnd = CurrentLocation + Duration;
-                            sequence.Name = name + " " + "Upgrade";
-                            CurrentLocation += Duration + 1;
-                            Model.Sequences.Add(sequence);
-                        }
-                    }
-                    //tiers
-                    List<string> tierNames = new()
+                        List<string> tierNames = new()
                     {
                         "","First", "Second", "Third", "Fourth", "Fifth", "Sixth"
                     };
-                    if (tiers > 0)
-                    {
-                        for (int i = 1; i < tiers; i++)
+
+                        var sequences = Model.Sequences.ToList();
+                        foreach (CSequence existingSequence in sequences)
                         {
-                            foreach (CSequence name in Model.Sequences)
+                            for (int i = 1; i < tiers; i++)
                             {
                                 CSequence sequence = new CSequence(Model);
                                 sequence.IntervalStart = CurrentLocation;
                                 sequence.IntervalEnd = CurrentLocation + Duration;
-                                sequence.Name = name + " " + tierNames[i];
+                                sequence.Name = existingSequence.Name + " " + "Upgrade " + tierNames[i];
                                 CurrentLocation += Duration + 1;
                                 Model.Sequences.Add(sequence);
                             }
+                              
+                           
+
+                           
+                              
+                             
                         }
                     }
+                  
+                   
                     if (alternate)
                     {
-                        foreach (CSequence name in Model.Sequences.ToList())
+                        var sequences = Model.Sequences.ToList();
+                        foreach (CSequence name in sequences)
                         {
                             CSequence sequence = new CSequence(Model);
                             sequence.IntervalStart = CurrentLocation;

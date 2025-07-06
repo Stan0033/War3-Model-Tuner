@@ -76,6 +76,7 @@ namespace Wa3Tuner
                     _new.IntervalStart = from;
                     _new.IntervalEnd = to;
                     model.Sequences.Add(_new);
+                    CreatedSequence = _new;
                     DialogResult = true;
                 }
                 else

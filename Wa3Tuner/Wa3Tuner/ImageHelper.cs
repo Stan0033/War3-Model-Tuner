@@ -1,13 +1,36 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Wa3Tuner
 {
     internal class ImageHelper
     {
-
+        public static ImageSource LoadImageSource(string filePath)
+        {
+            if (filePath.Length == 0)
+                throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("The specified file was not found.", filePath);
+            try
+            {
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.UriSource = new Uri(filePath, UriKind.Absolute);
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze(); // Ensure thread safety
+                return bitmapImage;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to load image.", ex);
+            }
+        }
 
         internal static Bitmap Join(Bitmap first, Bitmap second)
         {

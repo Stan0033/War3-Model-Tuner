@@ -383,7 +383,12 @@ namespace Wa3Tuner
             if (!parseTime) { return false; }
             if (time < 0) { MessageBox.Show("Negative track", "Error"); return false; }
             if (TimeExists(time) == false) { MessageBox.Show("This track does not exist in any sequence", "Error"); return false; }
-            if (input_.Length == 0) { return false; }
+              if (Type == TransformationType.Color)
+            {
+
+                return true;
+            }
+                if (input_.Length == 0) { return false; }
             string[] parts = input_.Split(',').Select(x => x.Trim()).ToArray();
             if (Type == TransformationType.Int)
             {
@@ -432,8 +437,8 @@ namespace Wa3Tuner
                     }
                 }
             }
-            else if (Type == TransformationType.Color)
-            {
+           
+                /*
                 bool parsed1 = float.TryParse(parts[0], out float x);
                 bool parsed2 = float.TryParse(parts[1], out float y);
                 bool parsed3 = float.TryParse(parts[2], out float z);
@@ -446,8 +451,8 @@ namespace Wa3Tuner
                     {
                         return true;
                     }
-                }
-            }
+                }*/
+            
             else if (Type == TransformationType.Alpha)
             {
                 bool parsed1 = float.TryParse(parts[0], out float x);
@@ -475,7 +480,7 @@ namespace Wa3Tuner
         {
             string time = TrackInput.Text.Trim();
             string input = ValueInput.Text.Trim();
-
+             
             bool parsedTime = int.TryParse(time, out int time_);
             if (!parsedTime) { MessageBox.Show("Expected integer for time"); return; }
             if (Tracks.Any(x => x.Time == time_))
@@ -547,15 +552,32 @@ namespace Wa3Tuner
                 }
             }
         }
-        private static float[] ExtractValues(string item)
+        private   float[] ExtractValues(string item)
         {
-            List<float> vals = new List<float>();
-            string[] i = item.Split(',').Select(x => x.Trim()).ToArray();
-            foreach (string s in i)
+            if (Type == TransformationType.Color)
             {
-                vals.Add(float.Parse(s));
+               return ExtractColorInput();
+               
             }
-            return vals.ToArray();
+            else
+            {
+                List<float> vals = new List<float>();
+                string[] i = item.Split(',').Select(x => x.Trim()).ToArray();
+                foreach (string s in i)
+                {
+                    vals.Add(float.Parse(s));
+                }
+                return vals.ToArray();
+            }
+              
+        }
+        private float[]  ExtractColorInput()
+        {
+
+            var color = Calculator.BrushToColor(ButtonColor.Background);
+
+            return new float[] { color.R, color.G, color.B};
+
         }
         private void SelectedTrack(object? sender, SelectionChangedEventArgs e)
         {
@@ -1045,6 +1067,11 @@ namespace Wa3Tuner
                     Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
                     Tracks.Add(new Ttrack(sequence.IntervalEnd, 1));
                 }
+                else if (Type == TransformationType.Color)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 255,255,255));
+                    Tracks.Add(new Ttrack(sequence.IntervalEnd, 255,255,255));
+                }
                 RefreshTracks();
             }
         }
@@ -1080,6 +1107,10 @@ namespace Wa3Tuner
                 else if (Type == TransformationType.Visibility)
                 {
                     Tracks.Add(new Ttrack(sequence.IntervalStart, 1));
+                }
+                else if (Type == TransformationType.Color)
+                {
+                    Tracks.Add(new Ttrack(sequence.IntervalStart, 255,255,255));
                 }
                 RefreshTracks();
             }

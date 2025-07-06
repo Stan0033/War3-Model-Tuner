@@ -102,7 +102,10 @@ namespace Wa3Tuner
             g.Groups.Add(group);
             currentModel.Geosets.Add(g);
             currentModel.Materials.Add(g.Material.Object);
-            
+            foreach (var vertex in g.Vertices)
+            {
+                vertex.Group.Attach(group);
+            }
             foreach (var layer in g.Material.Object.Layers)
             {
                 var texture = layer.Texture.Object;
@@ -138,7 +141,7 @@ namespace Wa3Tuner
                
             }
             bone.PivotPoint = Calculator.GetCentroidOfGeoset(g);
-
+            currentModel.Nodes.Add(bone);
             return g;
         }
         private static CGeoset ReadGeomerge_(string openPath, CModel model)
@@ -462,6 +465,18 @@ namespace Wa3Tuner
             }
            
             return sb.ToString();   
+        }
+
+        internal static void ExportGeomergeCustom(CModel currentModel, CGeoset geoset, string path)
+        {
+            
+            string? data = GenerateGeomergeDaa(geoset);
+            File.WriteAllText(path, data);
+
+        }
+        internal static void ImportGeomergeCustom(CModel model, string path)
+        {
+
         }
     }
 }

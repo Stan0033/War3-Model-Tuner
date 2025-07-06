@@ -37,6 +37,9 @@
     <Compile Update="Dialogs\createextrudedpolygon.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\CreateSkeleton_window.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\debug_console_w.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -44,6 +47,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\DrawShape.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\gadeduplicator.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\geoset import manager.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\GeosetGroupViewer.xaml.cs">
@@ -61,6 +70,9 @@
     <Compile Update="Dialogs\Gradual Keyframe Maker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Gradual Visibility Maker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\ImageViewer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -71,6 +83,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\model_starter.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\NodePresets.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\Nodes_Renamer.xaml.cs">

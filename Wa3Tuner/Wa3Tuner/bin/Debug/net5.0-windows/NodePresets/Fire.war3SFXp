@@ -1,0 +1,46 @@
+[emitter2]
+EmissionRate: 50
+Speed: 50
+Variation: 50
+Latitude: 0
+Width: 0
+Length: 50
+Gravity: 0
+Texture: Textures\Flame4.blp
+Filtermode: Additive
+Unshaded: False
+Unfogged: False
+LineEmitter: False
+SortPrimitivesFarZ: False
+ModelSpace: False
+Head: True
+Tail: False
+Squirt: False
+Rows: 1
+Columns: 1
+LifeSpan: 1
+TailLength: 0
+PriorityPlane: 0
+ReplaceableId: 0
+Time: 1
+HeadLife.Start: 0
+HeadLife.End: 0
+HeadLife.Repeat: 0
+HeadDecay.Start: 0
+HeadDecay.End: 0
+HeadDecay.Repeat: 0
+TailLife.Start: 0
+TailLife.End: 0
+TailLife.Repeat: 0
+TailDecay.Start: 0
+TailDecay.End: 0
+TailDecay.Repeat: 0
+Segment1.Alpha: 255
+Segment1.Color: { 1, 1, 1 }
+Segment1.Scaling: 12
+Segment2.Alpha: 255
+Segment2.Color: { 1, 1, 1 }
+Segment2.Scaling: 12
+Segment3.Alpha: 255
+Segment3.Color: { 1, 1, 1 }
+Segment3.Scaling: 12

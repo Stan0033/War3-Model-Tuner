@@ -1,0 +1,39 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.CreateSkeleton_window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        Background="LightGray"
+        mc:Ignorable="d"
+        Title="Create or load skeleton" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"  />
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Create" HorizontalAlignment="Center" />
+        <TextBlock Text="Load" Grid.Column="1" HorizontalAlignment="Center"/>
+        <TextBlock Text="Preview" Grid.Column="2" HorizontalAlignment="Center"/>
+        <StackPanel Grid.Row="1">
+            <Button Click="showFormat" Content="Format?"/>
+            <TextBox Name="InputCreate" Height="200"   AcceptsReturn="True" 
+    TextWrapping="Wrap" 
+    VerticalScrollBarVisibility="Auto" />
+            <TextBlock Text="Name:"/>
+            <TextBox Name="InputCreateName" Padding="5" Margin="5"/>
+            <Button Click="create" Content="Create" Padding="5"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Grid.Row="1">
+            <ListBox Name="ListLoaded" Height="200" SelectionChanged="Preview"/>
+            <Button Click="load" Content="Create" Padding="10"/>
+        </StackPanel>
+        <TreeView Name="tree_preview" Grid.Column="2" Grid.Row="1"  />
+    </Grid>
+</Window>

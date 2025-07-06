@@ -69,7 +69,7 @@ private float ImageWidth, ImageHeight;
             History.Clear();
             foreach (var vertex in  Vertices)
             {
-
+                if (History.ContainsKey(vertex)) continue;
                 History.Add(vertex, new List<CVector2>());
                 History[vertex].Add(new CVector2(vertex.TexturePosition));
             }

@@ -1,0 +1,46 @@
+[emitter2]
+EmissionRate: 100
+Speed: 100
+Variation: 100
+Latitude: 21
+Width: 0
+Length: 100
+Gravity: 0
+Texture: ReplaceableTextures\Weather\Clouds8x8.blp
+Filtermode: Additive
+Unshaded: True
+Unfogged: False
+LineEmitter: False
+SortPrimitivesFarZ: False
+ModelSpace: False
+Head: True
+Tail: False
+Squirt: False
+Rows: 8
+Columns: 8
+LifeSpan: 0.9
+TailLength: 0.1
+PriorityPlane: 0
+ReplaceableId: 0
+Time: 0.5
+HeadLife.Start: 0
+HeadLife.End: 0
+HeadLife.Repeat: 0
+HeadDecay.Start: 0
+HeadDecay.End: 0
+HeadDecay.Repeat: 0
+TailLife.Start: 0
+TailLife.End: 0
+TailLife.Repeat: 0
+TailDecay.Start: 0
+TailDecay.End: 0
+TailDecay.Repeat: 0
+Segment1.Alpha: 255
+Segment1.Color: { 0, 0, 1 }
+Segment1.Scaling: 19.8
+Segment2.Alpha: 143
+Segment2.Color: { 0.24313726, 0.5019608, 1 }
+Segment2.Scaling: 19.8
+Segment3.Alpha: 0
+Segment3.Color: { 0, 0, 1 }
+Segment3.Scaling: 1.25

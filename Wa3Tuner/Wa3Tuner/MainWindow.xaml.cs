@@ -2,38 +2,38 @@
 using MdxLib.Model;
 using MdxLib.Primitives;
 using SharpGL;
- 
+
 using SharpGL.SceneGraph.Assets;
- 
+
 using SharpGL.WPF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
- 
+
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
- 
+
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
- 
+
 using System.Windows.Input;
 using System.Windows.Media;
- 
+
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
- 
+
 using W3_Texture_Finder;
 using Wa3Tuner.Dialogs;
 using Wa3Tuner.Helper_Classes;
 using Wa3Tuner.Helper_Classes.Parsers;
- 
+
 using static Wa3Tuner.Helper_Classes.PathManager;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -42,10 +42,10 @@ using ColorConverter = System.Windows.Media.ColorConverter;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
- 
+
 using Ray = Wa3Tuner.Helper_Classes.Ray;
- 
- 
+
+
 using System.Globalization;
 using System.Xml.Linq;
 using Path = System.IO.Path;
@@ -54,9 +54,10 @@ using System.Windows.Controls.Primitives;
 using System.Collections;
 using SharpGL.SceneGraph.Primitives;
 using Whim_GEometry_Editor.Misc;
+using System.Windows.Documents;
 namespace Wa3Tuner
 {
-  
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -74,34 +75,35 @@ namespace Wa3Tuner
         private bool ColorizeTransformations = false;
         private string DefaultAuthor = "";
         MiniUV? MiniUVMapper;
-        public string   CurrentSaveLocation = string.Empty;
-        public string  CurrentSaveFolder = string.Empty;
+        public string CurrentSaveLocation = string.Empty;
+        public string CurrentSaveFolder = string.Empty;
         public CModel CurrentModel = new CModel();
         private string AppPath = AppDomain.CurrentDomain.BaseDirectory;
         private string IconsPath = "";
-        List<string> TeamColorPaths = new  ();
-        List<string> TeamGlows = new ();
+        List<string> TeamColorPaths = new();
+        List<string> TeamGlows = new();
         private ModifyMode modifyMode_current = ModifyMode.Translate;
         private CGeosetAnimation? CopiedAnimation;
         private double LastClickPositionX = 0;
         private double LastClickPositionY = 0;
         private CSequence? CurrentlySelectedSequenceInAnimator;
         private debug_console_w Debug_Console = new debug_console_w();
+        private Gradual_Visibility_Maker GradualVisibilityMaker;
         //UVMapper mapper = new UVMapper();
         private Axes axisMode = Axes.X;
         Dictionary<MenuItem, int> TeamReference = new();
         int CurrentTeamColor = 0;
         public TextureBrowser? TextureFinder;
         System.Timers.Timer? PlayTimer;
-        
+
         private INode? CopiedNode;
         Dictionary<string, string> IconPaths = new Dictionary<string, string>();
         List<string> Recents = new();
-        Texture ? GroundTexture;
-          mSelectionMode SelectionMode = mSelectionMode.Clear;
+        Texture? GroundTexture;
+        mSelectionMode SelectionMode = mSelectionMode.Clear;
         private INode? SelectedNodeInAnimator;
         private CVector3? CopiedPathNodePosition;
-        
+
         private bool ViewingPaths = false;
         private INode? Animator_CopiedNode;
         public static CSequence? DuplicatingFromSequence;
@@ -117,7 +119,7 @@ namespace Wa3Tuner
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
-        public MainWindow(debug_console_w debug_Console, string file = "" )
+        public MainWindow(debug_console_w debug_Console, string file = "")
         {
             Pause = true;
             InitializeComponent();
@@ -131,7 +133,7 @@ namespace Wa3Tuner
         {
             if (CalledInitialize) return;
             CalledInitialize = true;
-         
+
             IconsPath = System.IO.Path.Combine(AppPath, "Icons"); ;
             InitIcons();
             LoadRecents();
@@ -140,9 +142,10 @@ namespace Wa3Tuner
             MPQHelper.Initialize();
             TextureFinder = new TextureBrowser(this, MPQHelper.Listfile_All);
             InitializeTeamColorPaths();
-               NodeCollection = new NodeMaker();
+            NodeCollection = new NodeMaker();
             InitializePlayTimer();
             FillRenderItemsCollection();
+            GradualVisibilityMaker = new(CurrentModel, this);
         }
         private void InitializePlayTimer()
         {
@@ -151,8 +154,8 @@ namespace Wa3Tuner
             PlayTimer.Enabled = false;
             PlayTimer.Elapsed += PlayTimer_Cycle;
         }
-        
-       
+
+
         private void PlayTimer_Cycle(object? sender, ElapsedEventArgs e)
         {
             Dispatcher.Invoke(() =>
@@ -215,9 +218,9 @@ namespace Wa3Tuner
             CurrentTeamColor = TeamReference[item];
             CollectTexturesOpenGL();
         }
-       
-       
-     
+
+
+
         private void LoadRecents()
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
@@ -256,14 +259,14 @@ namespace Wa3Tuner
         }
         private void OpenRecent(object? sender, EventArgs e)
         {
-            MenuItem? item =  sender as MenuItem; if (item == null) return;
+            MenuItem? item = sender as MenuItem; if (item == null) return;
             string? name = item.Header.ToString();
             if (name == null) { MessageBox.Show("Null string"); return; }
             LoadModel(name);
         }
         private void InitIcons()
         {
-            
+
             IconPaths.Add(nameof(CBone), System.IO.Path.Combine(IconsPath, "bone.png"));
             IconPaths.Add(nameof(CAttachment), System.IO.Path.Combine(IconsPath, "attach.png"));
             IconPaths.Add(nameof(CCollisionShape), System.IO.Path.Combine(IconsPath, "cols.png"));
@@ -321,7 +324,7 @@ namespace Wa3Tuner
             brush.Stretch = Stretch.UniformToFill; // Ensures the image fills the button properly
             button.Background = brush;
         }
-        private void LoadModel(string ?FromFileName)
+        private void LoadModel(string? FromFileName)
         {
             if (FromFileName == null) return;
             if (!File.Exists(FromFileName))
@@ -379,13 +382,15 @@ namespace Wa3Tuner
             RenameAllNodes();
             Optimizer.RemoveInvalidGeosetAnimations(CurrentModel);
             Optimizer.HandleInvalidTextures(CurrentModel);
+            Optimizer.ArrangeGEosetAnimations(CurrentModel);
+
             Box_Errors.Document.Blocks.Clear();
             LabelDisplayInfo.Text = "";
             CurrentSaveLocation = FromFileName;
             string? folder = Path.GetDirectoryName(CurrentSaveLocation);
-            CurrentSaveFolder = folder == null? string.Empty : folder;
+            CurrentSaveFolder = folder == null ? string.Empty : folder;
             MPQHelper.LocalModelFolder = CurrentSaveFolder;
-           
+
             RefreshRenderData(null, null);
             RefreshAll();
             CParticleEmitter2? emitter = CurrentModel.Nodes[0] as CParticleEmitter2;
@@ -437,7 +442,7 @@ namespace Wa3Tuner
                 }
             }
         }
-       private void RefreshTitle()
+        private void RefreshTitle()
         {
             if (Saved) Title = "War3 Model Tuner - " + CurrentSaveLocation + $" ({CurrentModel.Name})";
             else Title = "War3 Model Tuner - " + CurrentSaveLocation + $" ({CurrentModel.Name}) [Unsaved]";
@@ -457,7 +462,7 @@ namespace Wa3Tuner
             RefreshGeosetAnimationsList();
             RefreshLayersTextureList();
             RefreshLayersTextureAnimList();
-           
+
             RefreshPath_ModelNodes_List();
             RefreshSequencesList_Paths();
             //   RenderGeosets(Viewport_Main);
@@ -477,8 +482,8 @@ namespace Wa3Tuner
                     {
                         name = texture.FileName;
                         string extension = System.IO.Path.GetExtension(texture.FileName).ToLower();
-                       
-                        if (extension== ".blp")
+
+                        if (extension == ".blp")
                         {
                             image.Source = MPQHelper.GetImageSource(texture.FileName);
                             if (image.Source == null)
@@ -689,7 +694,7 @@ namespace Wa3Tuner
             if (CheckedBox == null) return;
             for (int i = 0; i < ListGeosets.Items.Count; i++)
             {
-               
+
                 ListBoxItem? box = ListGeosets.Items[i] as ListBoxItem; if (box == null) return;
                 StackPanel? p = box.Content as StackPanel; if (p == null) return;
                 CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
@@ -699,9 +704,9 @@ namespace Wa3Tuner
             bool visible = CheckedBox.IsChecked == true;
             CGeoset geoset = CurrentModel.Geosets[index];
             GeosetVisible[geoset] = visible;
-           
+
         }
-       public void RefreshNodesTree()
+        public void RefreshNodesTree()
         {
             ListNodes.Items.Clear();
             Report_Nodes.Text = $"{CurrentModel.Nodes.Count} nodes";
@@ -915,7 +920,7 @@ namespace Wa3Tuner
             // Add the model to the viewport
             viewport.Children.Add(modelVisual);
         }
-       
+
         private void delcameras(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.Cameras.Clear();
@@ -2031,7 +2036,7 @@ namespace Wa3Tuner
         {
             if (CurrentModel.Sequences.Count == 0)
             {
-                MessageBox.Show("There are no sequences",  "Nothing to work with"); return;
+                MessageBox.Show("There are no sequences", "Nothing to work with"); return;
             }
             List<Interval> intervals = new List<Interval>();
             foreach (CSequence s in CurrentModel.Sequences) { intervals.Add(new Interval(s.IntervalStart, s.IntervalEnd)); }
@@ -2116,7 +2121,7 @@ namespace Wa3Tuner
             foreach (var g in CurrentModel.Geosets) edges += g.CountEdges();
             sb.AppendLine($"Edges: {edges}");
             LabelDisplayInfo.Text = sb.ToString();
-           
+
         }
         private int GetLongestGS()
         {
@@ -2159,7 +2164,7 @@ namespace Wa3Tuner
             int nodes = 0;
             int datas = 0;
             int others = 0;
-           
+
             int[] result = new int[4];
             //nodes
             foreach (INode node in CurrentModel.Nodes)
@@ -2173,7 +2178,7 @@ namespace Wa3Tuner
             {
                 if (node is CAttachment)
                 {
-                    CAttachment? item = node as CAttachment;  if (item == null) continue;
+                    CAttachment? item = node as CAttachment; if (item == null) continue;
                     datas += item.Visibility.Count;
                 }
                 if (node is CParticleEmitter)
@@ -2406,7 +2411,7 @@ namespace Wa3Tuner
             //Scene_Viewport3D.Children.Clear();
             CollectOptimizationSettings();
             Optimizer.Optimize(CurrentModel);
-           
+
             CollectTexturesOpenGL();
             RefreshAll();
             MessageBox.Show("Done optimizing");
@@ -2932,7 +2937,7 @@ namespace Wa3Tuner
                 }
                 RefreshTexturesList();
                 RefreshLayersTextureList();
-               
+
                 CollectTexturesOpenGL();
                 SetSaved(false);
             }
@@ -2999,7 +3004,7 @@ namespace Wa3Tuner
             }
             return false;
         }
-      
+
         private CTexture GetSElectedTexture()
         {
             return CurrentModel.Textures[List_Textures.SelectedIndex];
@@ -3019,7 +3024,7 @@ namespace Wa3Tuner
             }
             RefreshGeosetsList();
             RefreshGeosetAnimationsList();
-           
+
             SetSaved(false);
         }
         private void creatematerialfortargettexture(object? sender, RoutedEventArgs? e)
@@ -3032,7 +3037,7 @@ namespace Wa3Tuner
             material.Layers.Add(layer);
             CurrentModel.Materials.Add(material);
             RefreshMaterialsList();
-          
+
             CollectTexturesOpenGL();
         }
         private CMaterial GetSelectedMAterial()
@@ -3110,7 +3115,7 @@ namespace Wa3Tuner
                 CurrentModel.Materials.Add(material);
             }
             RefreshMaterialsList();
-          
+
             CollectTexturesOpenGL();
         }
         internal void ReapplyMaterialsToEmptyGeosets()
@@ -3129,16 +3134,19 @@ namespace Wa3Tuner
         }
         private void movetargetnodeundernode(object? sender, RoutedEventArgs? e)
         {
+
             if (ListNodes.SelectedItem != null)
             {
+
                 INode node = GetSeletedNode();
                 List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
                 nodes.Remove(node.Name);
                 if (nodes.Count > 0)
                 {
                     Selector s = new Selector(nodes);
-                    if (s.Selected == null) return;
                     s.ShowDialog();
+                    if (s.Selected == null) return;
+
                     if (s.DialogResult == true)
                     {
                         INode selected = GetNode(s.Selected);
@@ -3156,6 +3164,7 @@ namespace Wa3Tuner
                 }
                 else { MessageBox.Show("At least one other node must be present"); return; }
             }
+            else { MessageBox.Show("Select a node"); return; }
         }
         private void SelectAllGeosets(object? sender, RoutedEventArgs? e)
         {
@@ -3165,7 +3174,7 @@ namespace Wa3Tuner
                 ListGeosets.SelectedItems.Add(item);
             }
             Pause = false;
-           
+
         }
         private void DeselectAllGeosets(object? sender, RoutedEventArgs? e)
         {
@@ -3333,15 +3342,15 @@ namespace Wa3Tuner
                     CurrentModel.Nodes.Add(node);
                 }
                 RefreshNodesTree();
-               
+
             }
         }
-       
+
         private void MergeGeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 1)
             {
-                
+
                 Pause = true;
                 List<CGeoset> SelectedGeosets = GetSelectedGeosets();
                 if (SelectedGeosets.Count <= 1) { return; }
@@ -3360,7 +3369,7 @@ namespace Wa3Tuner
                 Pause = false;
                 RefreshGeosetsList();
                 RefreshGeosetAnimationsList();
-                
+
             }
             else
             {
@@ -3466,8 +3475,8 @@ namespace Wa3Tuner
                     bool onX = ax.Check_x.IsChecked == true;
                     bool onY = ax.Check_y.IsChecked == true;
                     bool onZ = ax.Check_z.IsChecked == true;
-                    
-                    
+
+
                     var triangles = getSelectedTriangles();
                     var vertices = triangles.SelectMany(x => x.Vertices).ToList();
                     if (triangles.Count == 1)
@@ -3484,8 +3493,8 @@ namespace Wa3Tuner
                         Calculator.CenterVertices(vertices, axes);
                     }
                 }
-                     
-                }
+
+            }
             else if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) // vertices
             {
                 axis_selector ax = new axis_selector();
@@ -3528,7 +3537,7 @@ namespace Wa3Tuner
                         nodes[0].PivotPoint.Y = onY ? 0 : nodes[0].PivotPoint.Y;
                         nodes[0].PivotPoint.Z = onZ ? 0 : nodes[0].PivotPoint.Z;
                     }
-                    else if (nodes.Count >1)
+                    else if (nodes.Count > 1)
                     {
                         Axes axes = Axes.X;
                         if (onY) axes = Axes.Y;
@@ -3539,7 +3548,7 @@ namespace Wa3Tuner
                 }
 
 
-                   
+
             }
         }
         private void scaleToFit(object? sender, RoutedEventArgs? e)
@@ -3736,9 +3745,9 @@ namespace Wa3Tuner
                         return;
                     }
                     seq.Name = CapitalizeWords(n);
-                    RefreshSequencesList(); 
+                    RefreshSequencesList();
                     SetSaved(false);
-                   History.Sequences.Add(CurrentModel);
+                    History.Sequences.Add(CurrentModel);
                 }
             }
         }
@@ -4205,7 +4214,7 @@ namespace Wa3Tuner
                 {
                     int id = 0;
                     if (s.Selected != null) { id = int.Parse(s.Selected); }
-                   
+
                     CGeosetAnimation source = CurrentModel.GeosetAnimations.First(x => x.ObjectId == id);
                     foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)
                     {
@@ -4306,10 +4315,13 @@ namespace Wa3Tuner
             if (ListGeosets.SelectedItems.Count > 0)
             {
                 List<CGeoset> geosts = GetSelectedGeosets();
+                Pause = true;
                 foreach (CGeoset ge in geosts)
                 {
                     CurrentModel.Geosets.Add(DuplicateGeogeset(ge, CurrentModel));
                 }
+                RefreshRenderData(null,null);
+                Pause = false;
             }
             RefreshGeosetsList();
             SetSaved(false);
@@ -4332,7 +4344,7 @@ namespace Wa3Tuner
                 tv.ShowDialog();
             }
         }
-       
+
         private void CreateHeroGlow(object? sender, RoutedEventArgs? e)
         {
             string local = AppDomain.CurrentDomain.BaseDirectory;
@@ -4346,7 +4358,7 @@ namespace Wa3Tuner
                 RefreshGeosetsList();
                 RefreshNodesTree();
             }
-          
+
             CollectTexturesOpenGL();
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
@@ -4393,7 +4405,7 @@ namespace Wa3Tuner
             }
             return null;
         }
-         
+
         private CGeoset? GetImportedGeoset(string file)
         {
             CGeoset? geo = null;
@@ -4444,7 +4456,7 @@ namespace Wa3Tuner
                 RefreshGeosetsList();
                 RefreshNodesTree();
             }
-            
+
             CollectTexturesOpenGL();
             RefreshSequencesList_Paths();
             RefreshPath_ModelNodes_List();
@@ -4565,8 +4577,8 @@ namespace Wa3Tuner
             {
                 sb.AppendLine(GetVisibilitySequences(ribbon.Visibility));
 
-              
-                
+
+
             }
             if (node is CEvent eventObj)
             {
@@ -4574,15 +4586,15 @@ namespace Wa3Tuner
             }
             Report_Node_data.Text = sb.ToString();
         }
-private string? GetEvent_tracks(CEvent eventObj)
+        private string? GetEvent_tracks(CEvent eventObj)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var track in eventObj.Tracks.ObjectList)
             {
                 CSequence? sq = GetSequenceFromTrack(track.Time);
-               
-                if (sq== null) { sb.AppendLine($"{track.Time} [null sequence]"); continue; }
-                string  s = sq.Name;
+
+                if (sq == null) { sb.AppendLine($"{track.Time} [null sequence]"); continue; }
+                string s = sq.Name;
                 sb.AppendLine($"{track.Time} [{s}]");
             }
             return sb.ToString();
@@ -4746,14 +4758,14 @@ private string? GetEvent_tracks(CEvent eventObj)
                 List_Layers.Items.Add(new ListBoxItem() { Content = i + info });
             }
         }
-        
+
         private float minimumZoom = 5;
         private float distance = CameraControl.eyeX; // Camera's initial distance from the center
         private void Scene_MouseWheelGL(object? sender, MouseWheelEventArgs e)
         {
             if (CurrentSceneInteraction == SceneInteractionState.Modify)
             {
-               
+
                 ModifySelectionByDragging(modifyMode_current, axisMode, e.Delta > 0);
                 return;
             }
@@ -4778,7 +4790,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             CheckForNaNCamera();
             RefreshViewportCameraDEbugInfo();
         }
-      
+
         private void ModifySelectionByDragging(ModifyMode modifyMode_current, Axes axisMode, bool positive)
         {
             ModelInfoLabel.Text = modifyMode_current.ToString();
@@ -4786,6 +4798,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 ScaleSelection(positive, axisMode, false);
             }
+
             if (modifyMode_current == ModifyMode.ScaleEach)
             {
                 ScaleSelection(positive, axisMode, true);
@@ -4859,6 +4872,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
+        private void Sculpt(bool push)
+        {
+            throw new NotImplementedException();
+        }
+        private void SculptPersonal(bool push)
+        {
+            throw new NotImplementedException();
+        }
         private void ScaleEach(Axes axisMode, bool positive)
         {
 
@@ -4939,7 +4960,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             var geosets = GetSelectedGeosets();
             float change = positive ? 0.00277777777f : -0.00277777777f; // 1%
-            
+
             foreach (var geose in geosets)
             {
                 foreach (var vertex in geose.Vertices)
@@ -5023,7 +5044,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (Tabs_Geosets.SelectedIndex == 0)
             {
                 var geosets = GetSelectedGeosets();
-               
+
                 foreach (var geose in geosets)
                 {
                     foreach (var vertex in geose.Vertices)
@@ -5081,20 +5102,20 @@ private string? GetEvent_tracks(CEvent eventObj)
         private string TeamGlow = "ReplaceableTextures\\TeamGlow\\TeamGlow00.blp";
         private string White = "Textures\\white.blp";
         private string Black = "UI\\Glues\\SinglePlayer\\HumanCampaign3D\\Black32.blp";
-       
+
         private void refreshalllists(object? sender, RoutedEventArgs? e)
         {
             RefreshAll();
         }
-      
-       
+
+
         //----------------------------------------------------
-      
-      
+
+
         //----------------------------------------------------
-       
-       
-        
+
+
+
         private void setModelName(object? sender, RoutedEventArgs? e)
         {
             Input i = new Input(CurrentModel.Name);
@@ -5105,20 +5126,26 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshTitle();
             }
         }
-        private List<CGeoset> c = new List<CGeoset>();
+        private List<CGeoset> SelectedGeosetsList = new List<CGeoset>();
         private void SelectedGeosets(object? sender, SelectionChangedEventArgs? e)
         {
-            c = GetSelectedGeosets();
-            foreach (var geoset in CurrentModel.Geosets) geoset.isSelected = c.Contains(geoset);
+            SelectedGeosetsList = GetSelectedGeosets();
+            foreach (var geoset in CurrentModel.Geosets) geoset.isSelected = SelectedGeosetsList.Contains(geoset);
             //RefreshViewPort();
-            if (c.Count == 1)
+            if (ListGeosets.SelectedItems.Count == 1)
             {
-
+                int index = ListGeosets.SelectedIndex;
+                var geoset = CurrentModel.Geosets[index];
+                var ga = CurrentModel.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == geoset);
+                if (ga != null)
+                {
+                    List_GeosetAnims.SelectedIndex = CurrentModel.GeosetAnimations.IndexOf(ga);
+                }
             }
             FillManualValuesForSelectedGeosts();
         }
 
-       
+
 
         private void FillManualValuesForSelectedGeosts()
         {
@@ -5157,14 +5184,14 @@ private string? GetEvent_tracks(CEvent eventObj)
                 ButtonTextureID.IsEnabled = layer.TextureId.Animated;
                 CheckLayerAlpha.IsChecked = layer.Alpha.Animated;
                 ButtonLayerAlpha.IsEnabled = layer.Alpha.Animated; ;
-                InputLayerAlpha.Text = layer.Alpha.Static ? ( layer.Alpha.GetValue() * 100f).ToString() : "";
+                InputLayerAlpha.Text = layer.Alpha.Static ? (layer.Alpha.GetValue() * 100f).ToString() : "";
                 InputLayerAlpha.IsEnabled = layer.Alpha.Static;
                 Pause = false;
                 Combo_LayerUsedTexture.SelectedIndex = CurrentModel.Textures.IndexOf(layer.Texture.Object);
                 Combo_LayerUsedTexture.IsEnabled = layer.TextureId.Static;
                 InputLayerAlpha.IsEnabled = layer.Alpha.Static;
-                    ButtonLayerAlpha.Content = $"Edit ({layer.Alpha.Count})";
-               ButtonTextureID.Content = $"Edit ({layer.TextureId.Count})";
+                ButtonLayerAlpha.Content = $"Edit ({layer.Alpha.Count})";
+                ButtonTextureID.Content = $"Edit ({layer.TextureId.Count})";
                 Combo_LayerUsedTextureAnim.SelectedIndex = 0;
                 if (layer.TextureAnimation != null)
                 {
@@ -5305,7 +5332,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 tv.ShowDialog();
             }
         }
-      
+
         private void copyNodeTranslations(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
@@ -5936,7 +5963,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     geo.Material.Attach(CurrentModel.Materials[index]);
                 }
-              
+
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 Pause = false;
@@ -6038,7 +6065,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                         }
                     }
                 }
-               
+
             }
         }
         private CSequence? AskSequenceName(CSequence except)
@@ -6063,7 +6090,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     (target.Name, selected.Name) = (selected.Name, target.Name);
                     RefreshSequencesList();
-                      History.Sequences.Add(CurrentModel);
+                    History.Sequences.Add(CurrentModel);
                 }
             }
         }
@@ -6074,7 +6101,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (ns.DialogResult == true)
             {
                 if (ns.CreatedSequence == null) { return; }
-              
+
                 RefreshPath_ModelNodes_List();
                 AddNewMissingVisibilities(ns.CreatedSequence);
                 History.Sequences.Add(CurrentModel);
@@ -6123,9 +6150,9 @@ private string? GetEvent_tracks(CEvent eventObj)
                 layer.Texture.Attach(CurrentModel.Textures[indx]);
                 //  MessageBox.Show($"attaching {CurrentModel.Textures[indx].FileName}");
                 if (layer.Texture.Object == null) { MessageBox.Show("Failed"); }
-             
+
                 CollectTexturesOpenGL();
-               
+
             }
         }
         private List<INode> GetNodes(List<string> list)
@@ -6373,11 +6400,12 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             if (TC_Inspector.SelectedIndex == 1)
             {
-               // ShowErrors();
+                // ShowErrors();
             }
         }
         private async void ChangedTabEvent(object? sender, SelectionChangedEventArgs? e)
-        {if (e == null) return;
+        {
+            if (e == null) return;
             if (e.OriginalSource is TabControl tc && tc == ListOptions)
             {
                 if (ListOptions.SelectedIndex == 5)
@@ -6420,13 +6448,13 @@ private string? GetEvent_tracks(CEvent eventObj)
             foreach (var geoset in CurrentModel.Geosets)
             {
                 geoset.isVisible = true;
-               
+
                 CheckBox c = new CheckBox();
                 c.IsChecked = true;
                 c.Content = GetGeosetName(geoset);
                 c.Checked += (sender, e) => { geoset.isVisible = true; };
                 c.Unchecked += (sender, e) => { geoset.isVisible = false; };
-                Listbox_Geosets_Rigging.Items.Add(new ListBoxItem() { Content = c , Width=250, HorizontalAlignment= HorizontalAlignment.Left});
+                Listbox_Geosets_Rigging.Items.Add(new ListBoxItem() { Content = c, Width = 250, HorizontalAlignment = HorizontalAlignment.Left });
             }
         }
         private static string GetGeosetName(CGeoset geo)
@@ -6450,7 +6478,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
             // Now back on UI thread: update the TextBox
             ErrorPopulator.ReportErrorsWithText(Box_Errors, report[0], report[1], report[2], report[3]);
-             
+
         }
 
         private void EditGeosetViisibilities(object? sender, RoutedEventArgs? e)
@@ -6501,7 +6529,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
                 mat.Layers.ObjectList = tempList;
 
-                
+
                 List_Layers.SelectedIndex = index - 1;
 
                 CollectTexturesOpenGL();
@@ -6789,7 +6817,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
                 if (node is CParticleEmitter2 emitter2)
                 {
-                     edit_emitter2 e2 = new edit_emitter2(emitter2, CurrentModel);
+                    edit_emitter2 e2 = new edit_emitter2(emitter2, CurrentModel);
                     e2.ShowDialog();
                     ListNodes_SelectedItemChanged(null, null);
                     return;
@@ -6937,8 +6965,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             RefreshLayersTextureAnimList();
             SetSaved(false);
         }
-      
-       
+
+
         private void SetLayerFilterMode(object? sender, SelectionChangedEventArgs? e)
         {
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
@@ -6981,7 +7009,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 encoder.Save(fileStream);
             }
-          
+
         }
         private void scr2(object? sender, RoutedEventArgs? e)
         {
@@ -7005,7 +7033,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (Pause) return;
 
             RenderSettings.RenderTextures = !RenderSettings.RenderTextures;
-            
+
             SaveSettings();
         }
         private void createcube(object? sender, RoutedEventArgs? e)
@@ -7017,11 +7045,11 @@ private string? GetEvent_tracks(CEvent eventObj)
             CreateBoneForGeoset(cube);
             CurrentModel.Geosets.Add(cube);
             RefreshGeosetsList();
-         
+
             CollectTexturesOpenGL();
             RefreshGeosetsList();
             RefreshNodesTree();
-           
+
             RefreshRenderData(null, null);
             Pause = false;
             RefreshSequencesList_Paths();
@@ -7058,11 +7086,11 @@ private string? GetEvent_tracks(CEvent eventObj)
                 CreateBoneForGeoset(cyllinder);
                 CurrentModel.Geosets.Add(cyllinder);
                 cyllinder.Material.Attach(CurrentModel.Materials[0]);
-              
+
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
-               
+
                 RefreshRenderData(null, null);
                 Pause = false;
                 RefreshSequencesList_Paths();
@@ -7080,7 +7108,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 CreateBoneForGeoset(sphere);
                 sphere.Material.Attach(CurrentModel.Materials[0]);
                 CurrentModel.Geosets.Add(sphere);
-                
+
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
@@ -7107,7 +7135,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 CreateBoneForGeoset(cone);
                 cone.Material.Attach(CurrentModel.Materials[0]);
                 CurrentModel.Geosets.Add(cone);
-               
+
                 CollectTexturesOpenGL();
                 RefreshGeosetsList();
                 RefreshNodesTree();
@@ -7451,10 +7479,10 @@ private string? GetEvent_tracks(CEvent eventObj)
                         break;
                     }
                 }
-                
+
                 if (same)
                 {
-                    string name = AttachedToBone ==null? string.Empty : AttachedToBone.Name;
+                    string name = AttachedToBone == null ? string.Empty : AttachedToBone.Name;
                     SelectNodeByName(name);
                     ListOptions.SelectedIndex = 2;
                 }
@@ -7478,7 +7506,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             // Ensure the node's header is correctly structured
             if (node.Header is StackPanel container)
             {
-                TextBlock ?nameContainer = container.Children.OfType<TextBlock>().FirstOrDefault();
+                TextBlock? nameContainer = container.Children.OfType<TextBlock>().FirstOrDefault();
                 if (nameContainer != null && nameContainer.Text == name)
                 {
                     node.IsSelected = true;
@@ -7560,7 +7588,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private void ImportSequences(object? sender, RoutedEventArgs? e)
         {
-            CModel ?TemporaryModel = GetTemporaryModel();
+            CModel? TemporaryModel = GetTemporaryModel();
             if (TemporaryModel == null) { return; }
             CurrentModel.Sequences.Clear();
             List<CSequence> importedSequences = new List<CSequence>();
@@ -7583,7 +7611,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             RefreshSequencesList();
             SetSaved(false);
         }
-        
+
         private void Checked_WW(object? sender, RoutedEventArgs? e)
         {
             if (List_Textures.SelectedItem != null)
@@ -7646,7 +7674,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
             //================================================================
             if (e.Key == Key.Delete) { DeleteBasedOnFocus(); return; }
-            else if (e.Key == Key.Space) { unselectAll(null, null);  return; }
+            else if (e.Key == Key.Space) { unselectAll(null, null); return; }
             else if (e.Key == Key.Up) { CameraControl.CenterZ += 1; return; }
             else if (e.Key == Key.Down) { CameraControl.CenterZ -= 1; return; }
             else if (e.Key == Key.M) { SetWorkModeMove(null, null); }
@@ -7891,7 +7919,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             RefreshNodesTree();
             SetSaved(false);
         }
-      
+
         private void cameras(object? sender, RoutedEventArgs? e)
         {
             cameraManager cm = new cameraManager(CurrentModel);
@@ -7919,7 +7947,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 material.SortPrimitivesNearZ = Check_MatSort2.IsChecked == true;
             }
         }
-        
+
         private void delallgas(object? sender, RoutedEventArgs? e)
         {
             CurrentModel.GeosetAnimations.Clear();
@@ -7939,6 +7967,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     CurrentModel.GeosetAnimations.Add(_new);
                 }
             }
+            Optimizer.ArrangeGEosetAnimations(CurrentModel);
             RefreshGeosetAnimationsList();
             SetSaved(false);
         }
@@ -8014,7 +8043,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (CurrentModel.Textures.Count == 0)
             {
-                MessageBox.Show("There are no textures");return;
+                MessageBox.Show("There are no textures"); return;
             }
             if (CurrentModel.Materials.Count == 0)
             {
@@ -8029,7 +8058,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 RefreshGeosetsList();
                 SetSaved(false);
-                RefreshRenderData(null,null);
+                RefreshRenderData(null, null);
             }
         }
         private void extrudedpolygon(object? sender, RoutedEventArgs? e)
@@ -8046,7 +8075,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshGeosetsList();
 
                 CollectTexturesOpenGL();
-                RefreshRenderData(null,null);
+                RefreshRenderData(null, null);
                 RefreshNodesTree();
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
@@ -8143,7 +8172,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (Pause) return;
             RenderSettings.RenderShading = Menuitem_Shading.IsChecked == true;
-           
+
             SaveSettings();
         }
         private void ToggleCols(object? sender, RoutedEventArgs? e)
@@ -8194,7 +8223,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
         }
         #region Animator
-   
+
         private void SelectedSEquenceInAnimator(object? sender, SelectionChangedEventArgs? e)
         {
             Animator_RefreshKeyframesList();
@@ -8206,18 +8235,18 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (Tabs_Geosets.TabIndex != 4) return;
             float ctrack = Animator_GetTrack();
             INode? node = animator_GetNode();
-            if (node == null) {  return; }
+            if (node == null) { return; }
             float x = 0;
             float y = 0;
             float z = 0;
             if (ctrack != -1 && node != null)
-            { 
-                var t = node.Translation.FirstOrDefault(x => x.Time == ctrack); 
-                var r = node.Rotation.FirstOrDefault(x => x.Time == ctrack);  
-                var s = node.Scaling.FirstOrDefault(x => x.Time == ctrack);  
+            {
+                var t = node.Translation.FirstOrDefault(x => x.Time == ctrack);
+                var r = node.Rotation.FirstOrDefault(x => x.Time == ctrack);
+                var s = node.Scaling.FirstOrDefault(x => x.Time == ctrack);
                 if (modifyMode_current == ModifyMode.Translate && t != null)
                 {
-                 
+
                     x = t.Value.X;
                     y = t.Value.Y;
                     z = t.Value.Z;
@@ -8306,7 +8335,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (List_Keyframes_Animator.SelectedItem != null)
             {
-                int  track = Extractor.GetInt((List_Keyframes_Animator));
+                int track = Extractor.GetInt((List_Keyframes_Animator));
                 ResetKeyframe(track, TransformationType.Scaling);
                 RefreshAnimatedVertexAndNodePositionsForRendering();
                 SetSaved(false);
@@ -8394,7 +8423,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
-       
+
         private void RefreshBonesInAnimator()
         {
             if (List_Nodes_Animator == null) { return; }
@@ -8531,7 +8560,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             return un ? $"{tr} (Unanimated)" : $"{tr} {t}{r}{s}";
         }
 
-       
+
         #endregion
         private void DetachBoneFromSelectedVertices(object? sender, RoutedEventArgs? e)
         {
@@ -8550,10 +8579,10 @@ private string? GetEvent_tracks(CEvent eventObj)
                 // DetachBoneFromVertices(vertices, node);
             }
         }
-       
+
         private INode GetSelectedAttachedNode()
         {
-            string? name = Extractor.GetString(ListAttachedToRiggings);  
+            string? name = Extractor.GetString(ListAttachedToRiggings);
             return CurrentModel.Nodes.First(x => x.Name == name);
         }
         private void ClearAndATtach(object? sender, RoutedEventArgs? e)
@@ -8564,7 +8593,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             else
             {
-                INode? node = GetSelectedNode_Rigging(); 
+                INode? node = GetSelectedNode_Rigging();
                 if (node == null) { return; }
                 List<CGeosetVertex> vertices = GetSelectedVertices();
                 if (vertices.Count == 0) { MessageBox.Show("Select vertices in the viewport"); return; }
@@ -8578,14 +8607,14 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private INode? GetSelectedNode_Rigging()
         {
-            ListBoxItem? item = ListBonesRiggings.SelectedItem as ListBoxItem;  if (item == null) return null;
+            ListBoxItem? item = ListBonesRiggings.SelectedItem as ListBoxItem; if (item == null) return null;
             string? name = item.Content as string;
             return CurrentModel.Nodes.First(x => x.Name == name);
-            
+
         }
 
-       
-       
+
+
         private List<CGeosetVertex> GetSelectedVertices()
         {
             List<CGeosetVertex> list = new List<CGeosetVertex>();
@@ -8627,9 +8656,9 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private bool NodeExistsInRiggingList(string name)
         {
-           foreach (var item in ListAttachedToRiggings.Items)
+            foreach (var item in ListAttachedToRiggings.Items)
             {
-                if (Extractor.GetString(item)   == name) { return true; }
+                if (Extractor.GetString(item) == name) { return true; }
             }
             return false;
         }
@@ -8740,7 +8769,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
 
 
-       
+
 
         private void makeallGAUseColor(object? sender, RoutedEventArgs? e)
         {
@@ -8939,15 +8968,15 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshAnimatedVertexAndNodePositionsForRendering();
             }
         }
-        
+
         private void ToggleGround(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
             RenderSettings.RenderGroundPlane = Menuitem_ground.IsChecked == true;
             SaveSettings();
         }
-      
-        
+
+
         private void createCols2ForTargetGeo(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
@@ -8966,7 +8995,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     cs.PivotPoint = centroid;
                     CurrentModel.Nodes.Add(cs);
                     RefreshNodesTree();
-                     
+
                 }
             }
             //--------------------------------------------------
@@ -9003,8 +9032,8 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         public static string AppendTimestampToFilePath(string filePath)
         {
-            string ?directory = System.IO.Path.GetDirectoryName(filePath);
-            string ?fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            string? directory = System.IO.Path.GetDirectoryName(filePath);
+            string? fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(filePath);
             string? extension = System.IO.Path.GetExtension(filePath);
             // Get current date and time
             DateTime now = DateTime.Now;
@@ -9052,7 +9081,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     texture.FileName = text;
                     CurrentModel.Textures.Add(texture);
                     RefreshTexturesList();
-                      RefreshLayersTextureList();
+                    RefreshLayersTextureList();
                 }
                 else
                 {
@@ -9072,7 +9101,7 @@ private string? GetEvent_tracks(CEvent eventObj)
              { NodeType.Attachment, true},
              { NodeType.Light, true},
          };
-        
+
         private TransformationType Animator_CopiedNodeData;
         private void Animator_CopyNodeTranslation(object? sender, RoutedEventArgs? e)
         {
@@ -9236,7 +9265,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 CGeosetGroupNode node = new CGeosetGroupNode(CurrentModel);
                 group.Nodes.Add(node);
                 node.Node.Attach(gnode.Node.Node);
-               
+
             }
             return group;
         }
@@ -9266,7 +9295,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             settings.AppendLine($"{nameof(RenderSettings.RenderGeometry)}={RenderSettings.RenderGeometry}");
             settings.AppendLine($"{nameof(RenderSettings.RenderGroundGrid)}={RenderSettings.RenderGroundGrid}");
             settings.AppendLine($"{nameof(RenderSettings.RenderGridX)}={RenderSettings.RenderGridX}");
-            
+
             settings.AppendLine($"{nameof(RenderSettings.RenderGridY)}={RenderSettings.RenderGridY}");
             settings.AppendLine($"{nameof(RenderSettings.RenderVertices)}={RenderSettings.RenderVertices}");
             settings.AppendLine($"{nameof(RenderSettings.RenderEdges)}={RenderSettings.RenderEdges}");
@@ -9275,14 +9304,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             settings.AppendLine($"{nameof(RenderSettings.LineSpacing)}={RenderSettings.LineSpacing}");
             settings.AppendLine($"{nameof(RenderSettings.RenderAxis)}={RenderSettings.RenderAxis}");
             settings.AppendLine($"{nameof(RenderSettings.ViewportGridSizeOverlay)}={RenderSettings.ViewportGridSizeOverlay}");
-            settings.AppendLine($"{nameof(RenderSettings.ViewportGridSize)}={RenderSettings.ViewportGridSize  }");
+            settings.AppendLine($"{nameof(RenderSettings.ViewportGridSize)}={RenderSettings.ViewportGridSize}");
             settings.AppendLine($"{nameof(ZoomIncrement)}={ZoomIncrement}");
             settings.AppendLine($"{nameof(RenderSettings.RenderFPS)}={RenderSettings.RenderFPS}");
             settings.AppendLine($"{nameof(DefaultAuthor)}={DefaultAuthor}");
             settings.AppendLine($"{nameof(MaximizeOnStart)}={MaximizeOnStart}");
             settings.AppendLine($"{nameof(ColorizeTransformations)}={ColorizeTransformations}");
             settings.AppendLine($"{nameof(RayCaster.MousePickRadius)}={RayCaster.MousePickRadius}");
-            
+
             // render settingsload
 
             settings.AppendLine($"{nameof(RenderSettings.Color_Skinning)}={Array2S(RenderSettings.Color_Skinning)}");
@@ -9325,7 +9354,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 string[] parts = line.Split("=");
                 if (parts[0] == nameof(RenderSettings.RenderSkinning)) RenderSettings.RenderSkinning = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(RenderSettings. RenderEnabled)) RenderSettings.RenderEnabled = bool.Parse(parts[1]);
+                else if (parts[0] == nameof(RenderSettings.RenderEnabled)) RenderSettings.RenderEnabled = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderTextures)) RenderSettings.RenderTextures = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderShading)) RenderSettings.RenderShading = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderCollisionShapes)) RenderSettings.RenderCollisionShapes = bool.Parse(parts[1]);
@@ -9340,7 +9369,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 else if (parts[0] == nameof(RenderSettings.RenderVertices)) RenderSettings.RenderVertices = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderEdges)) RenderSettings.RenderEdges = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(OptimizeOnSave)) OptimizeOnSave = bool.Parse(parts[1]);
-                
+
                 else if (parts[0] == nameof(RenderSettings.RenderNormals)) RenderSettings.RenderNormals = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderAxis)) RenderSettings.RenderAxis = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.LineSpacing)) RenderSettings.LineSpacing = int.Parse(parts[1]);
@@ -9348,13 +9377,13 @@ private string? GetEvent_tracks(CEvent eventObj)
                 else if (parts[0] == nameof(ZoomIncrement)) ZoomIncrement = float.Parse(parts[1]);
                 else if (parts[0] == nameof(MaximizeOnStart)) MaximizeOnStart = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderLighing)) RenderSettings.RenderLighing = bool.Parse(parts[1]);
-                else if (parts[0] == nameof(DefaultAuthor)) DefaultAuthor =   parts[1] ;
+                else if (parts[0] == nameof(DefaultAuthor)) DefaultAuthor = parts[1];
                 else if (parts[0] == nameof(History.HistoryLimit))
                 {
-                    
+
                     Textbox_HistoryLimit.Text = parts[1];
                 }
-                  
+
                 else if (parts[0] == nameof(RayCaster.MousePickRadius)) RayCaster.MousePickRadius = float.Parse(parts[1]);
                 else if (parts[0] == nameof(CanDrag))
 
@@ -9411,14 +9440,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             Menuitem_Lightng.IsChecked = RenderSettings.RenderLighing;
             Menuitem_colorize.IsChecked = ColorizeTransformations;
             Menuitem_Maximize.IsChecked = MaximizeOnStart;
-            Menuitem_Enabled.IsChecked =RenderSettings. RenderEnabled;
+            Menuitem_Enabled.IsChecked = RenderSettings.RenderEnabled;
             Menuitem_vertices.IsChecked = RenderSettings.RenderVertices;
             Menuitem_skinning.IsChecked = RenderSettings.RenderSkinning;
             Menuitem_Textured.IsChecked = RenderSettings.RenderTextures;
             Menuitem_Shading.IsChecked = RenderSettings.RenderShading;
             Menuitem_Cols.IsChecked = RenderSettings.RenderCollisionShapes;
             Menuitem_GAE.IsChecked = RenderSettings.RenderGeosetExtents;
-             
+
             Menuitem_Nodes.IsChecked = RenderSettings.RenderNodes;
             Menuitem_ground.IsChecked = RenderSettings.RenderGroundPlane;
             Menuitem_groundGrid.IsChecked = RenderSettings.RenderGroundGrid;
@@ -9428,7 +9457,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             InputZoomIncrement.Text = ZoomIncrement.ToString(); ;
             Menuitem_Geometry.IsChecked = RenderSettings.RenderGeometry;
             Menuitem_edges.IsChecked = RenderSettings.RenderEdges;
-           
+
             Menuitem_axis.IsChecked = RenderSettings.RenderAxis;
             ViewPortLineSpacing.Text = RenderSettings.LineSpacing.ToString();
             ViewPortGrid.Text = RenderSettings.ViewportGridSize.ToString();
@@ -9475,7 +9504,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
         private List<CBone> ListBones_Rigging = new List<CBone>();
-      
+
         private void SelectedBoneInRigging(object? sender, SelectionChangedEventArgs? e)
         {
             if (ListBonesRiggings.SelectedItem == null) return;
@@ -9548,7 +9577,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                         vertex.Position.Z * (z / 100f)
                     );
                 }
-               
+
             }
         }
         private static List<CGeosetVertex> GetVerticesOfGeosets(List<CGeoset> geosets)
@@ -9575,7 +9604,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     Calculator.RotateGeoset(geoset, x, y, z);
                 }
-               
+
             }
         }
         private static bool RotationInRange(float x, float y, float z)
@@ -9617,7 +9646,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
                 }
                 if (Tabs_Geosets.SelectedIndex == 1) // triangles
-                { 
+                {
                     Menuitem_Geometry.IsChecked = true;
                     Menuitem_Cols.IsChecked = false;
                     Menuitem_skinning.IsChecked = false;
@@ -9642,7 +9671,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     Menuitem_vertices.IsChecked = true;
                     Menuitem_Nodes.IsChecked = true;
                     Menuitem_skinning.IsChecked = true;
-                   
+
                     RefreshGeosetsListRigging();
                     RefreshBonesInRigging();
                     ListAttachedToRiggings.Items.Clear();
@@ -9668,7 +9697,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                         }
                         if (CurrentModel.Sequences.Count == 0)
                         {
-                            MessageBox.Show("There are no sequences",   "Nothing to animate"); return;
+                            MessageBox.Show("There are no sequences", "Nothing to animate"); return;
                         }
                         bool b = int.TryParse(InputCurrentFrame.Text, out int track);
                         if (b)
@@ -9731,8 +9760,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             ButtonManual_More.BorderBrush = Brushes.Gray;
 
             UpdaManualTranslationInput();
-           
-              
+
+
         }
 
         private void UpdaManualTranslationInput()
@@ -9773,7 +9802,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             else if (Tabs_Geosets.SelectedIndex == 3) //rigging
             {
-                
+
             }
 
             else if (Tabs_Geosets.SelectedIndex == 4) //animator
@@ -9781,7 +9810,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 UpdateManualInputForAnimator();
             }
             else if (Tabs_Geosets.SelectedIndex == 5) //cols
-            { 
+            {
 
             }
             else if (Tabs_Geosets.SelectedIndex == 6) //nodes
@@ -9819,7 +9848,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             UpdateManualInputForAnimator();
         }
 
-        
+
         private void GoToTrackWithChange(int change, bool plus, bool percent = false)
         {
             bool b = int.TryParse(InputCurrentFrame.Text, out int track);
@@ -9911,7 +9940,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private void MenuItemZeroPercent_Click(object? sender, RoutedEventArgs? e)
         {
-            if (CurrentlySelectedSequenceInAnimator == null) { MessageBox.Show("Select a sequence");return; }
+            if (CurrentlySelectedSequenceInAnimator == null) { MessageBox.Show("Select a sequence"); return; }
             InputCurrentFrame.Text = CurrentlySelectedSequenceInAnimator.IntervalStart.ToString();
             gototrack(null, null);
         }
@@ -9958,7 +9987,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     imported.Material.Attach(finalize.SelectedMaterial);
                     CurrentModel.Geosets.Add(imported);
                     RefreshGeosetsList();
-                   
+
                     RefreshRenderData(null, null);
                     Pause = false;
                     SetSaved(false);
@@ -10075,7 +10104,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             CheckLooping.IsChecked = sequence.NonLooping;
             Pause = false;
             RefreshSequencesList();
-           History.Sequences.Add(CurrentModel);
+            History.Sequences.Add(CurrentModel);
         }
         private void ToggleGAE(object? sender, RoutedEventArgs? e)
         {
@@ -10083,7 +10112,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             RenderSettings.RenderGeosetExtents = Menuitem_GAE.IsChecked == true;
             SaveSettings();
         }
-       
+
         private void ToggleNodes(object? sender, RoutedEventArgs? e)
         {
             if (Pause) return;
@@ -10097,8 +10126,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             SaveSettings();
         }
         private CVector3 CopiedPivotPoint = new CVector3();
-        
-       
+
+
         private void CopyPivot(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem != null)
@@ -10380,7 +10409,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private void setGeosetSelection(object? sender, RoutedEventArgs? e)
         {
-            if (ListGeosets.SelectedItems.Count != 1) { MessageBox.Show("Select a single geoset");return; }
+            if (ListGeosets.SelectedItems.Count != 1) { MessageBox.Show("Select a single geoset"); return; }
             var geoet = GetSelectedGeosets()[0];
             Geoset_Selection s = new Geoset_Selection(geoet);
             s.ShowDialog();
@@ -10460,7 +10489,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 List<CGeoset> geosets = GetSelectedGeosets();
                 if (geosets[0].Extents.Count == 0) { MessageBox.Show("The target geoset has no geoset extents"); return; }
-                GeosetExtents gx = new GeosetExtents(geosets[0], CurrentModel.Sequences.Select(x => x).ToList());
+                GeosetExtents gx = new GeosetExtents(
+                    geosets[0], CurrentModel.Sequences.Select(x => x).ToList(), CurrentModel);
                 gx.ShowDialog();
                 SetSaved(false);
             }
@@ -10475,10 +10505,10 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 var sequence = GetSelectedSequence();
                 Edit_Extent ee = new Edit_Extent(sequence.Extent);
-                ee.ShowDialog(); 
+                ee.ShowDialog();
                 if (ee.DialogResult == true) History.Sequences.Add(CurrentModel);
                 SetSaved(false);
-                 
+
             }
         }
         private void setRarity(object? sender, RoutedEventArgs? e)
@@ -10511,7 +10541,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (Pause) return;
             RenderSettings.RenderEnabled = Menuitem_Enabled.IsChecked == true;
-           
+
             SaveSettings(); SetSaved(false);
         }
         private void leavesequenceatframe(object? sender, RoutedEventArgs? e)
@@ -10530,7 +10560,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                         {
                             selected = int.Parse(s.Selected);
                         }
-                        
+
                         LeaveSequenceAtFrame_Finalize(sequence, selected); SetSaved(false);
                     }
                 }
@@ -11053,7 +11083,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     break;
             }
         }
-       private void view_top(object? sender, RoutedEventArgs? e)
+        private void view_top(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Top);
         }
@@ -11064,17 +11094,17 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void view_left(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Left);
-           
+
         }
         private void view_right(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Right);
-         
+
         }
         private void view_back(object? sender, RoutedEventArgs? e)
         {
             SetCameraView(CameraView.Back);
-           
+
         }
         private void atmtag(object? sender, RoutedEventArgs? e)
         {
@@ -11146,7 +11176,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListNodes.SelectedItem != null && CurrentModel.Nodes.Count > 1)
             {
-                INode? node = GetSelectedNode(); if (node == null) { MessageBox.Show("Null node");return; }
+                INode? node = GetSelectedNode(); if (node == null) { MessageBox.Show("Null node"); return; }
                 List<string> nodes = CurrentModel.Nodes.Select(x => x.Name).ToList();
                 nodes.Remove(node.Name);
                 Selector s = new Selector(nodes);
@@ -11246,7 +11276,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     {
                         Calculator.MirrorGeoset(geoset, onX, onY, onZ);
                     }
-                   
+
                 }
             }
         }
@@ -11263,7 +11293,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     Calculator.DistanceGeosetFromPoint(geoset, ds.X, ds.Y, ds.Z, ds.Distance, ds.Method);
                 }
             }
-           
+
         }
         private void copycentroid(object? sender, RoutedEventArgs? e)
         {
@@ -11487,7 +11517,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 return null;
             }
         }
-       
+
         List<Texture> Textures_GL = new List<Texture>();
 
         private void LoadGroundTextureImage()
@@ -11564,13 +11594,13 @@ private string? GetEvent_tracks(CEvent eventObj)
             //culling
             Renderer.HandleCulling(gl);
             // anti anti aliasing
-          
+
             gl.Enable(OpenGL.GL_LINE_SMOOTH);  // Enable line smoothing
             gl.Hint(OpenGL.GL_LINE_SMOOTH_HINT, OpenGL.GL_NICEST);  // Use the nicest option for smoothing
                                                                     //----------------------------------------------------
                                                                     // rendering
                                                                     //----------------------------------------------------
-          
+
             if (RenderSettings.RenderGroundPlane) Renderer.RenderGroundTexture(gl, GroundTexture, 100);
             if (RenderSettings.RenderAxis) { Renderer.RenderAxis(gl, RenderSettings.ViewportGridSize); }
             if (RenderSettings.RenderGeosetExtents) { Renderer.RenderExtents(gl, CurrentModel); }
@@ -11588,12 +11618,12 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (RenderSettings.RenderNormals) Renderer.RenderNormals(gl, Model);
             if (ViewingPaths) Renderer.RenderSelectedPath(gl);
             // test
-           // Renderer.RenderTestLines(gl);
-           //  Renderer.RendertestPoints(gl);
-           //  Renderer.RenderTestExtents(gl);
+            // Renderer.RenderTestLines(gl);
+            //  Renderer.RendertestPoints(gl);
+            //  Renderer.RenderTestExtents(gl);
             Renderer.HandleLighting(gl, RenderSettings.RenderLighing);
 
-  
+
             //-----------------------------------------------------------
 
             // Renderer.HandeShading(gl, RenderShading);
@@ -11803,7 +11833,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private void import3DS(object? sender, RoutedEventArgs? e)
         {
-            
+
         }
         private void exportply1(object? sender, RoutedEventArgs? e)
         {
@@ -11906,16 +11936,16 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshGeosetsList();
             }
         }
-       
+
         private void batch_images(object? sender, RoutedEventArgs? e)
         {
             List<string> images = FileSeeker.OpenImages();
-           if (images.Count > 0)
+            if (images.Count > 0)
             {
                 foreach (string image in images)
                 {
                     string blp = System.IO.Path.ChangeExtension(image, ".blp");
-                  
+
                     BLPConverter.Convert(image, blp, this, "");
                 }
             }
@@ -12037,7 +12067,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 if (node == null)
                 {
                     MessageBox.Show("Null node"); return;
-                    
+
                 }
                 if (node.Parent == null || node.Parent.Node == null)
                 {
@@ -12118,7 +12148,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     if (geoset.Material == null) { continue; }
                     geoset.Material.Attach(CurrentModel.Materials[0]);
                 }
-            } 
+            }
         }
         private bool AllMaterialsUseTexture(CTexture t)
         {
@@ -12193,7 +12223,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
             INode? node = GetSelectedNode();
-            if (node==null)return;
+            if (node == null) return;
             if (node.Rotation.Count == 0 && node.Scaling.Count == 0)
             {
                 MessageBox.Show("This node has no scaling keyframes"); return;
@@ -12274,7 +12304,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
             if (CurrentModel.Sequences.Count <= 1) { MessageBox.Show("At least two sequences must be present"); return; }
             if (CurrentModel.Nodes.Count <= 1) { MessageBox.Show("At least two nodes must be present"); return; }
-            INode? node = GetSelectedNode();  if (node == null) return;
+            INode? node = GetSelectedNode(); if (node == null) return;
             if (node.Rotation.Count == 0 && node.Scaling.Count == 0)
             {
                 MessageBox.Show("This node has no scaling keyframes"); return;
@@ -12300,7 +12330,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (CopiedKeyframesData.Sequence != null && CopiedKeyframesData.CopiedNode != null)
             {
-                INode? pastedOn = GetSelectedNode(); 
+                INode? pastedOn = GetSelectedNode();
                 if (CopiedKeyframesData.CopiedNode == null) return;
                 if (pastedOn == null) return;
                 if (CopiedKeyframesData.CopiedNode == pastedOn)
@@ -12426,7 +12456,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private Point selectionStart; // Starting point for selection rectangle
         private System.Windows.Shapes.Rectangle? selectionRectangle = new System.Windows.Shapes.Rectangle(); // Fully qualified path to avoid ambiguity
         private bool isRotating = false; // Flag for camera rotation
-         
+
         private void Scene_MouseDown(object? sender, MouseButtonEventArgs e)
         {
             var Canvas_Selection = Scene_Selection_Overlay;
@@ -12458,7 +12488,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 if (CurrentSceneInteraction == SceneInteractionState.RotatingView) return;
                 // Start selection only if no other interaction is active
-                if (CurrentSceneInteraction == SceneInteractionState.None)
+                else if (CurrentSceneInteraction == SceneInteractionState.None)
                 {
                     CurrentSceneInteraction = SceneInteractionState.DrawRectangle;
                     selectionStart = e.GetPosition(Canvas_Selection);
@@ -12472,12 +12502,32 @@ private string? GetEvent_tracks(CEvent eventObj)
                     Canvas.SetTop(selectionRectangle, selectionStart.Y);
                     Canvas_Selection.Children.Add(selectionRectangle);
                 }
+                if (modifyMode_current == ModifyMode.Sculpt)
+                {
+                    Sculpt(false);
+                }
+                if (modifyMode_current == ModifyMode.SculptPersonal)
+                {
+                    SculptPersonal(false);
+                }
             }
             else if (e.RightButton == MouseButtonState.Pressed)
             {
                 CurrentSceneInteraction = SceneInteractionState.Modify;
+
+                if (modifyMode_current == ModifyMode.Sculpt)
+                {
+                    Sculpt(true);
+                }
+                if (modifyMode_current == ModifyMode.SculptPersonal)
+                {
+                    SculptPersonal(true);
+                }
             }
         }
+
+
+
         public static Vector2[] GetCorners(System.Windows.Shapes.Rectangle rect)
         {
             double left = Canvas.GetLeft(rect);
@@ -12494,10 +12544,10 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
 
 
-         
+
         private void DrawRay(Point currentMousePos)
         {
-          
+
             if (Tabs_Geosets.SelectedIndex > 3) return;
             var ray = RayCaster.GetRay((float)currentMousePos.X, (float)currentMousePos.Y, (float)Scene_ViewportGL.ActualWidth, (float)Scene_ViewportGL.ActualHeight, Scene_ViewportGL.OpenGL);
 
@@ -12505,10 +12555,10 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (Tabs_Geosets.SelectedIndex == 0)
             {
                 if (CurrentModel.Geosets.Count == 0) return;
-               
+
                 for (int i = 0; i < CurrentModel.Geosets.Count; i++)
                 {
-              
+
                     bool inside = RayCaster.GeosetInsideRay(CurrentModel.Geosets[i], ray);
                     CurrentModel.Geosets[i].isSelected = inside;
                     if (inside)
@@ -12522,10 +12572,10 @@ private string? GetEvent_tracks(CEvent eventObj)
 
                 }
             }
-           
+
             else if (Tabs_Geosets.SelectedIndex == 1) // triangles
             {
-               List<CGeosetTriangle> selected = new List<CGeosetTriangle>();
+                List<CGeosetTriangle> selected = new List<CGeosetTriangle>();
                 foreach (var g in CurrentModel.Geosets)
                 {
                     foreach (var triangle in g.Triangles)
@@ -12553,14 +12603,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             else if (Tabs_Geosets.SelectedIndex >= 2) //vertices, rigging
             {
-                
+
                 List<CGeosetVertex> SelectionGroup = new List<CGeosetVertex>();
                 foreach (var g in CurrentModel.Geosets)
                 {
                     foreach (var vertex in g.Vertices)
                     {
                         if (g.isVisible == false) { vertex.isSelected = false; continue; }
-                        bool inside =  RayCaster.VertexInsideRayRadius(ray, vertex);
+                        bool inside = RayCaster.VertexInsideRayRadius(ray, vertex);
                         if (SelectionMode == mSelectionMode.Clear)
                         {
                             vertex.isSelected = false;
@@ -12573,37 +12623,37 @@ private string? GetEvent_tracks(CEvent eventObj)
                         }
                         else if (SelectionMode == mSelectionMode.Add && inside)
                         {
-                             
+
                             SelectionGroup.Add(vertex);
                             vertex.isSelected = true;
                         }
                         // 
                     }
-                    UpdateSelectedVerticesInfo( );
+                    UpdateSelectedVerticesInfo();
                 }
-               // if (SelectionGroup.Count == 0) return;
-              //  CGeosetVertex closest = GetClosestVertex(SelectionGroup, ray.From);
-                
-               // closest.isSelected = true;
-                RefreshrigingAttachedList( );
+                // if (SelectionGroup.Count == 0) return;
+                //  CGeosetVertex closest = GetClosestVertex(SelectionGroup, ray.From);
+
+                // closest.isSelected = true;
+                RefreshrigingAttachedList();
 
 
 
 
             }
-           // RayCaster.Lines.Add(line);
+            // RayCaster.Lines.Add(line);
 
 
-          
-            
-           // SelectAffectedGeosets(lne);
-            
+
+
+            // SelectAffectedGeosets(lne);
+
         }
 
         private void ListSelectedTriangles()
         {
-            
-           int count = CurrentModel.Geosets.SelectMany(x => x.Triangles).Where(x => x.isSelected).Count();
+
+            int count = CurrentModel.Geosets.SelectMany(x => x.Triangles).Where(x => x.isSelected).Count();
             Label_SelectedTriangles.Text = $"Selected Triangles: {count}";
         }
 
@@ -12611,20 +12661,20 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (selected.Count == 0) return;
             List<Vector3> centroids = new();
-             foreach (var triangle in selected)
+            foreach (var triangle in selected)
             {
                 centroids.Add(Calculator.GetCentroidofTriangleC(triangle));
             }
-            var closest =Calculator.FindClosestVector(ray.From, centroids);
-           
-            for (int i = 0; i < selected.Count; i++) 
+            var closest = Calculator.FindClosestVector(ray.From, centroids);
+
+            for (int i = 0; i < selected.Count; i++)
             {
                 if (
                     closest.X == centroids[i].X &&
                     closest.Y == centroids[i].Y &&
                     closest.Z == centroids[i].Z
 
-                    ) 
+                    )
                 {
                     selected[i].isSelected = true;
                     return;
@@ -12632,7 +12682,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
-        public static CGeosetVertex? GetClosestVertex(List<CGeosetVertex> vertices,  Vector3 target)
+        public static CGeosetVertex? GetClosestVertex(List<CGeosetVertex> vertices, Vector3 target)
         {
             if (vertices == null || vertices.Count == 0)
                 return null;
@@ -12657,7 +12707,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             return closest;
         }
 
-        private void UpdateSelectedVerticesInfo( )
+        private void UpdateSelectedVerticesInfo()
         {
             int count = 0;
             foreach (var geoset in CurrentModel.Geosets)
@@ -12736,8 +12786,8 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void DrawRay(double x1, double x2, double y1, double y2)
         {
-           if (Tabs_Geosets.SelectedIndex > 3) return;
-          var SelectionExtent =  RayCaster.ExtentFromMouseSelectionRectangle(x1, x2, y1, y2, (float)Scene_ViewportGL.ActualWidth, (float)Scene_ViewportGL.ActualHeight, Scene_ViewportGL.OpenGL);
+            if (Tabs_Geosets.SelectedIndex > 3) return;
+            var SelectionExtent = RayCaster.ExtentFromMouseSelectionRectangle(x1, x2, y1, y2, (float)Scene_ViewportGL.ActualWidth, (float)Scene_ViewportGL.ActualHeight, Scene_ViewportGL.OpenGL);
             if (Tabs_Geosets.SelectedIndex == 0)
             {
                 if (CurrentModel.Geosets.Count == 0) return;
@@ -12745,7 +12795,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     bool selected = RayCaster.GeosetInsideExtent(CurrentModel.Geosets[i], SelectionExtent);
                     CurrentModel.Geosets[i].isSelected = selected;
-                   switch (SelectionMode)
+                    switch (SelectionMode)
                     {
                         case mSelectionMode.Clear:
                             if (selected)
@@ -12758,18 +12808,18 @@ private string? GetEvent_tracks(CEvent eventObj)
                             }
                             break;
                         case mSelectionMode.Remove:
-                            
-                              ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
-                             
+
+                            ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
+
                             break;
                         case mSelectionMode.Add:
-                            
-                                ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
-                            
-                           
+
+                            ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
+
+
                             break;
                     }
-                    
+
 
                 }
             }
@@ -12803,9 +12853,9 @@ private string? GetEvent_tracks(CEvent eventObj)
                         // 
                     }
                 }
-                RefreshrigingAttachedList( );
+                RefreshrigingAttachedList();
             }
-            
+
         }
 
         double previousY = 0;
@@ -12826,7 +12876,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 Canvas.SetLeft(selectionRectangle, x);
                 Canvas.SetTop(selectionRectangle, y);
             }
-             
+
             else if (CurrentSceneInteraction == SceneInteractionState.RotatingView && isRotating)
             {
                 float angle = 0.5f;
@@ -13031,7 +13081,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 MessageBox.Show("Copied node is not part of the model");
                 if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-                INode? node = GetSelectedNode(); 
+                INode? node = GetSelectedNode();
                 if (node == null) return;
                 if (CopiedKeyframesData.CopiedNode == null) return;
                 if (CopiedKeyframesData.CopiedNode == node) { MessageBox.Show("Copied cannot be the as pasted on"); return; }
@@ -13065,7 +13115,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void PaseNodeSpecificKeyframesSEquenceMultiple(object? sender, RoutedEventArgs? e)
         {
             if (CopiedKeyframesData.CopiedNode == null) { MessageBox.Show("Copied node does not exist"); return; }
-            
+
             if (CurrentModel.Nodes.Contains(CopiedKeyframesData.CopiedNode) == false)
             {
                 MessageBox.Show("Copied node is not part of the model");
@@ -13115,13 +13165,13 @@ private string? GetEvent_tracks(CEvent eventObj)
             foreach (var g in CurrentModel.Geosets) g.RecalculateEdges();
             Pause = false;
         }
-      
+
         private void renameModelFile(object? sender, RoutedEventArgs? e)
         {
             if (File.Exists(CurrentSaveLocation))
             {
                 string? name = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocation);
-                Input s = new  (name);
+                Input s = new(name);
                 if (s.ShowDialog() == true)
                 {
                     string i = s.Result;
@@ -13167,8 +13217,8 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
-              //  mapper.Show();
-              //  mapper.SetData(CurrentModel, ListGeosets.Items.IndexOf(ListGeosets.SelectedItems[0]));
+                //  mapper.Show();
+                //  mapper.SetData(CurrentModel, ListGeosets.Items.IndexOf(ListGeosets.SelectedItems[0]));
             }
             else
             {
@@ -13280,7 +13330,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshGeosetAnimationsList();
             }
         }
-       
+
         private void copyga(object? sender, RoutedEventArgs? e)
         {
             if (List_GeosetAnims.SelectedItem != null)
@@ -13568,8 +13618,8 @@ private string? GetEvent_tracks(CEvent eventObj)
                 else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
                 {
                     var verices = GetSelectedVertices();
-                    Calculator.translateVertices(Axes.X, verices,value);
-                    
+                    Calculator.translateVertices(Axes.X, verices, value);
+
                 }
                 else if (modifyMode_current == ModifyMode.Rotate)
                 {
@@ -13598,7 +13648,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                         var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
 
                         Calculator.RotateVertices(Axes.X, GetSelectedVertices(), value);
-                        
+
                     }
                     else if (Tabs_Geosets.SelectedIndex == 2) //   verticess
                     {
@@ -14050,7 +14100,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 if (Tabs_Geosets.SelectedIndex == 3) // rigging
                 {
-                    if (ListBonesRiggings.SelectedItem == null) return; 
+                    if (ListBonesRiggings.SelectedItem == null) return;
                     CBone? bone = getselectedBoneInRigging();
                     if (bone == null) return;
                     bone.PivotPoint.Z = value;
@@ -14254,7 +14304,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
             }
         }
-         
+
         private List<string> GetMergeableBones()
         {
             List<string> list = new();
@@ -14489,7 +14539,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             RefreshNodesTree();
         }
-       
+
         private static List<List<INode>> CollectIdenticalBoneGroups(List<INode> bones)
         {
             var Copy = bones;
@@ -14629,7 +14679,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         /// <param name="WhichKeyframe"></param>
         public void RefreshAnimatedVertexAndNodePositionsForRendering(int WhichKeyframe = -1)
         {
-            
+
             int value = WhichKeyframe == -1 ? GetCurrentnpuTrack() : WhichKeyframe;
             if (value < 0) return;
             foreach (var node in CurrentModel.Nodes)
@@ -14932,7 +14982,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 List<CGeosetVertex> Vertices = GetSelectedVertices();
                 Calculator.PutOnGround(Vertices);
             }
-           
+
         }
         private void cernterverticesAtNode(object? sender, RoutedEventArgs? e)
         {
@@ -15014,11 +15064,11 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private CGeoset? VerticesBelongToSameGeoset(List<CGeosetVertex> vertices)
         {
-            
+
             foreach (var geoset in CurrentModel.Geosets)
             {
 
-              foreach (var vertex in vertices)
+                foreach (var vertex in vertices)
                 {
                     if (geoset.Vertices.Contains(vertex) == false) return null;
 
@@ -15036,7 +15086,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 return;
             }
 
-            CGeoset ? owner = VerticesBelongToSameGeoset(Vertices);
+            CGeoset? owner = VerticesBelongToSameGeoset(Vertices);
             if (owner == null)
             {
                 MessageBox.Show("All selected vertices must belong to the same geoset");
@@ -15275,7 +15325,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
             }
         }
-      
+
         private void Animator_CopySequenceTranslation(object? sender, RoutedEventArgs? e)
         {
             if (List_Sequences_Animator.SelectedItem == null) return;
@@ -15519,7 +15569,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
             }
         }
-      
+
         private void SelectedPathNode(object? sender, SelectionChangedEventArgs? e)
         {
         }
@@ -15747,7 +15797,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             SetSaved(false);
             RefreshPathNodesList();
         }
-    
+
         private void CopyPathNodePos(object? sender, RoutedEventArgs? e)
         {
             if (ListPaths.SelectedItem == null) { MessageBox.Show("Select a path"); return; }
@@ -15811,7 +15861,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             SwapElements(path.List, one, two);
             RefreshPathNodesList();
         }
-       
+
         private void Tab_Animator_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
             if (PlayTimer == null) return;
@@ -15864,7 +15914,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
             }
         }
-       
+
         private void Play(object? sender, RoutedEventArgs? e)
         {
             if (PlayTimer == null) return;
@@ -16068,7 +16118,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
             }
             if (Tabs_Geosets.SelectedIndex == 2) // vertuces
-            { 
+            {
                 var vertices = GetSelectedVertices();
                 foreach (var v in vertices)
                 {
@@ -16087,7 +16137,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     }
                 }
             }
-                if (Tabs_Geosets.SelectedIndex == 4) // animator
+            if (Tabs_Geosets.SelectedIndex == 4) // animator
             {
                 if (Tab_Animator.SelectedIndex == 0) // paths
                 {
@@ -16361,9 +16411,9 @@ private string? GetEvent_tracks(CEvent eventObj)
             ButtonAddAttach.IsEnabled = true;
             ButtonClearAttach.IsEnabled = true;
             ButtonDetach.IsEnabled = true;
-             
+
         }
-         
+
         private void createOrigin(object? sender, RoutedEventArgs? e)
         {
             if (CurrentModel.Nodes.Any(x => x.Name.ToLower().Trim() == "origin ref" && x is CAttachment))
@@ -16378,7 +16428,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 RefreshNodesTree();
             }
         }
-      
+
 
         private void CopyTrianglePosition(object? sender, RoutedEventArgs? e)
         {
@@ -16709,7 +16759,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
                 }
             }
-            RefreshRenderData(null,null); RefreshGeosets_Triangles();
+            RefreshRenderData(null, null); RefreshGeosets_Triangles();
         }
 
         private void Bridge2FlatSurfaces(object? sender, RoutedEventArgs? e)
@@ -16870,7 +16920,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void EditTrianglesUV(object? sender, RoutedEventArgs? e)
         {
             var triangles = getSelectedTriangles();
-            if (triangles.Count == 0) { MessageBox.Show("Select at least 1 triangle");return; }
+            if (triangles.Count == 0) { MessageBox.Show("Select at least 1 triangle"); return; }
             InitializeMiniUVMapper(triangles, List_Textures, CurrentModel);
 
 
@@ -16882,7 +16932,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             else
             {
                 MiniUVMapper.Update(triangles, l, m);
-                
+
             }
             MiniUVMapper.Show();
         }
@@ -17316,38 +17366,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             SetSaved(false);
         }
 
-        private void editNodeVisibilities(object? sender, RoutedEventArgs? e)
-        {
-            if (ListNodes.SelectedItem == null) { return; }
-            editvisibilities_window? ew = null;
-            var node = GetSelectedNode();
-            if (node is CParticleEmitter emitter)
-            {
-                ew = new editvisibilities_window(CurrentModel, emitter.Visibility);
-            }
-            else if (node is CParticleEmitter2 emitter2)
-            {
-                ew = new editvisibilities_window(CurrentModel, emitter2.Visibility);
-            }
-            else if (node is CRibbonEmitter ribbon)
-            {
-                ew = new editvisibilities_window(CurrentModel, ribbon.Visibility);
-            }
-            else if (node is CLight light)
-            {
-                ew = new editvisibilities_window(CurrentModel, light.Visibility);
-            }
-            else if (node is CAttachment att)
-            {
-                ew = new editvisibilities_window(CurrentModel, att.Visibility);
-            }
-            else { MessageBox.Show("This node does not support visibility"); return; }
 
-            if (ew.ShowDialog() == true)
-            {
-                SelectedNodeInNodeEditor(null, null);
-            }
-        }
 
         private void ImportGeosetm(object? sender, RoutedEventArgs? e)
         {
@@ -17651,7 +17670,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void PasteTransformaton(PasteType x, PasteType y, PasteType z)
         {
             GetInitialFields();
-             
+
             Vector3 modified = new Vector3(InitialFields.X, InitialFields.Y, InitialFields.Z);
             if (x == PasteType.Normal) { modified.X = CopiedFields.X; }
             if (y == PasteType.Normal) { modified.Y = CopiedFields.Y; }
@@ -17759,7 +17778,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             PasteTransformaton(PasteType.Negated, PasteType.Normal, PasteType.Negated);
         }
-       
+
         private void copySeqTr(object? sender, RoutedEventArgs? e)
         {
             if (ListSequenes.SelectedItem != null)
@@ -17930,7 +17949,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void DelBonesGeometryBone(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            INode? node = GetSelectedNode(); if (node==null) { MessageBox.Show("Null node"); return; }
+            INode? node = GetSelectedNode(); if (node == null) { MessageBox.Show("Null node"); return; }
             if (NodeHasChildren(node)) { MessageBox.Show("Cannot delete a node with children"); return; }
             foreach (var geoset in CurrentModel.Geosets)
             {
@@ -18044,7 +18063,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             return sb.ToString();
 
         }
-        static   string CopyAnimator(CAnimator<CVector4> animator)
+        static string CopyAnimator(CAnimator<CVector4> animator)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var v in animator)
@@ -18057,14 +18076,14 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void ckc_t(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            INode? NODE = GetSelectedNode(); if (NODE==null) { MessageBox.Show("Null node"); return; }
+            INode? NODE = GetSelectedNode(); if (NODE == null) { MessageBox.Show("Null node"); return; }
             Clipboard.SetText(CopyAnimator(NODE.Translation));
         }
 
         private void ckc_r(object? sender, RoutedEventArgs? e)
         {
             if (ListNodes.SelectedItem == null) { MessageBox.Show("Select a node"); return; }
-            INode? NODE = GetSelectedNode(); if (NODE==null) { MessageBox.Show("Select a node"); return; }
+            INode? NODE = GetSelectedNode(); if (NODE == null) { MessageBox.Show("Select a node"); return; }
             Clipboard.SetText(CopyAnimator(NODE.Rotation));
         }
 
@@ -18167,7 +18186,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             Optimizer.MinimizeMatrixGroups_(CurrentModel);
             RefreshGeosetsList();
         }
-        
+
         private void copyRig(object? sender, RoutedEventArgs? e)
         {
             var g = GetSelectedGeosets();
@@ -18283,7 +18302,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void copyField(object? sender, RoutedEventArgs? e)
         {
             var parent = VisualTreeHelper.GetParent(sender as MenuItem) as ContextMenu;
-            if (parent == InputMenuX)  { Clipboard.SetText(GetFloat(InputAnimatorX).ToString()); }
+            if (parent == InputMenuX) { Clipboard.SetText(GetFloat(InputAnimatorX).ToString()); }
             else if (parent == InputMenuY) { Clipboard.SetText(GetFloat(InputAnimatorY).ToString()); }
             else if (parent == InputMenuZ) { Clipboard.SetText(GetFloat(InputAnimatorZ).ToString()); }
 
@@ -18293,8 +18312,8 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void pasteField(object? sender, RoutedEventArgs? e)
         {
-            var parent = VisualTreeHelper.GetParent(sender as MenuItem) as ContextMenu; 
-            if (parent == InputMenuX) {   InputAnimatorX.Text = GetFloat(Clipboard.GetText()).ToString(); }
+            var parent = VisualTreeHelper.GetParent(sender as MenuItem) as ContextMenu;
+            if (parent == InputMenuX) { InputAnimatorX.Text = GetFloat(Clipboard.GetText()).ToString(); }
             else if (parent == InputMenuY) { InputAnimatorY.Text = GetFloat(Clipboard.GetText()).ToString(); }
             else if (parent == InputMenuZ) { InputAnimatorZ.Text = GetFloat(Clipboard.GetText()).ToString(); }
 
@@ -18315,7 +18334,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void CenterField(object? sender, RoutedEventArgs? e)
         {
-            var parent =  sender as MenuItem;
+            var parent = sender as MenuItem;
             if (parent == Menuitem_CenterX)
             {
                 InputAnimatorX.Text = "0";
@@ -18329,7 +18348,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
 
         }
-        
+
 
         private void setAll(object? sender, RoutedEventArgs? e)
         {
@@ -18342,7 +18361,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             ModifyByZ(z);
         }
 
-       
+
         private void ClearAllAnimationsOfSequence_t(object? sender, RoutedEventArgs? e)
         {
             var sequence = GetSelectedSequence();
@@ -18396,10 +18415,10 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (s.Count == 1)
             {
                 InitializeMiniUVMapper(s[0].Triangles.ObjectList, List_Textures, CurrentModel);
-             }
+            }
             else
             {
-                MessageBox.Show("Select a single geoset");return;
+                MessageBox.Show("Select a single geoset"); return;
             }
         }
 
@@ -18545,7 +18564,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             MessageBox.Show($"Geoset {g.ObjectId} is attached to:\n" + string.Join("\n", names));
         }
 
-        
+
 
         private void DetachTrianglesInsideGeoset2(object? sender, MouseButtonEventArgs e)
         {
@@ -18671,10 +18690,10 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void ReportGeosetViisibilities(object? sender, RoutedEventArgs? e)
         {
-            c = GetSelectedGeosets();
-            if (c.Count == 1)
+            SelectedGeosetsList = GetSelectedGeosets();
+            if (SelectedGeosetsList.Count == 1)
             {
-                var first = CurrentModel.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == c[0]);
+                var first = CurrentModel.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == SelectedGeosetsList[0]);
                 if (first != null)
                 {
                     StringBuilder sb = new StringBuilder();
@@ -18706,6 +18725,11 @@ private string? GetEvent_tracks(CEvent eventObj)
                         tv.ShowDialog();
 
                     }
+
+                }
+                else
+                {
+                    MessageBox.Show("This geoset is not used by a geoset animation");
                 }
             }
         }
@@ -18714,15 +18738,16 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListGeosets.SelectedItems.Count != 1)
             {
-                MessageBox.Show("Select a single geoset");return;
+                MessageBox.Show("Select a single geoset"); return;
             }
-            var v  = GetSelectedGeosets()[0];
-          
+            var v = GetSelectedGeosets()[0];
+
             geoVisibilitiesKeyword g = new geoVisibilitiesKeyword(v, CurrentModel);
             if (!g.Possible) { return; }
-            
-           if (  g.ShowDialog() == true){
-                RefreshGeosetAnimationsList();  
+
+            if (g.ShowDialog() == true)
+            {
+                RefreshGeosetAnimationsList();
             }
 
         }
@@ -18738,7 +18763,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
                 if (g.ShowDialog() == true)
                 {
-                    SelectedNodeInNodeEditor(null,null);
+                    SelectedNodeInNodeEditor(null, null);
                 }
             }
         }
@@ -18791,7 +18816,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     if (
                         vertices.Contains(triangle.Vertex1.Object) ||
                         vertices.Contains(triangle.Vertex2.Object) ||
-                        vertices.Contains(triangle.Vertex3.Object)  
+                        vertices.Contains(triangle.Vertex3.Object)
 
                         )
                     {
@@ -18807,19 +18832,23 @@ private string? GetEvent_tracks(CEvent eventObj)
 
             if (float.TryParse(InputMousePickRaius.Text, out float value))
             {
-                if (value > 0) { RayCaster.MousePickRadius = value; }else { 
-                    RayCaster.MousePickRadius = 1; }
+                if (value > 0) { RayCaster.MousePickRadius = value; }
+                else
+                {
+                    RayCaster.MousePickRadius = 1;
+                }
             }
             else
             {
                 RayCaster.MousePickRadius = 1;
             }
             SaveSettings();
-            }
+        }
         private void SetSelectionMode(mSelectionMode mode)
         {
             SelectionMode = mode;
-            if (mode == mSelectionMode.Clear) {
+            if (mode == mSelectionMode.Clear)
+            {
                 Pause = true;
                 selectionItemClear.IsChecked = true;
                 selectionItemAdd.IsChecked = false;
@@ -18834,7 +18863,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 selectionItemRemove.IsChecked = false;
                 Pause = false;
             }
-          else  if (mode == mSelectionMode.Remove)
+            else if (mode == mSelectionMode.Remove)
             {
                 Pause = true;
                 selectionItemClear.IsChecked = false;
@@ -18865,7 +18894,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void Hotkeys_Up(object? sender, KeyEventArgs e)
         {
-           
+
             SetSelectionMode(mSelectionMode.Clear);
         }
 
@@ -18896,36 +18925,36 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListBonesRiggings.SelectedItem == null) return;
             var bone = getselectedBoneInRigging();
-            
+
             List<INode> selected = new List<INode>();
 
-            
-               
-                    foreach (var geoet in CurrentModel.Geosets)
-                    {
-                        foreach (var vertex in geoet.Vertices)
-                        {
 
-                            vertex.isSelected = false;
-                            foreach (var gnode in vertex.Group.Object.Nodes)
-                            {
-                                if (vertex.Group.Object.Nodes.Any(x=>x.Node.Node == selected))
-                                {
-                                    vertex.isSelected = true; break;
-                                }
-                            }
+
+            foreach (var geoet in CurrentModel.Geosets)
+            {
+                foreach (var vertex in geoet.Vertices)
+                {
+
+                    vertex.isSelected = false;
+                    foreach (var gnode in vertex.Group.Object.Nodes)
+                    {
+                        if (vertex.Group.Object.Nodes.Any(x => x.Node.Node == selected))
+                        {
+                            vertex.isSelected = true; break;
                         }
                     }
-            RefreshrigingAttachedList( );
+                }
+            }
+            RefreshrigingAttachedList();
 
         }
-        private void RefreshrigingAttachedList( )
+        private void RefreshrigingAttachedList()
         {
             var vertices = GetSelectedVertices();
             if (Tabs_Geosets.SelectedIndex != 3) { return; }
             if (vertices.Count == 0) { ListAttachedToRiggings.Items.Clear(); return; }
-           
-              if (vertices.Count ==0) { ListAttachedToRiggings.Items.Clear(); return; }
+
+            if (vertices.Count == 0) { ListAttachedToRiggings.Items.Clear(); return; }
             CGeosetGroup gr = new CGeosetGroup(CurrentModel);
             List<INode> nodes = GetNodesOfGroup(vertices[0].Group);
             if (vertices.Count == 1) { FillRiggingAttachedistWith(nodes); return; }
@@ -18934,7 +18963,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 nodes.Add(vertices[0].Group.Object.Nodes[g].Node.Node);
             }
-            for (int v =0; v< vertices.Count; v++)
+            for (int v = 0; v < vertices.Count; v++)
             {
                 for (int g = 0; g < vertices[v].Group.Object.Nodes.Count; g++)
                 {
@@ -18946,8 +18975,8 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
                 if (!same) { break; }
             }
-          
-                
+
+
             if (same)
             {
                 LabelRiggingAttachedTo.Text = "Selected vertices are attached to: (same)";
@@ -18982,16 +19011,16 @@ private string? GetEvent_tracks(CEvent eventObj)
             List<INode> list = new List<INode>();
             foreach (var gnode in group.Object.Nodes)
             {
-                if (list.Contains(gnode.Node.Node) == false)  list.Add(gnode.Node.Node);
+                if (list.Contains(gnode.Node.Node) == false) list.Add(gnode.Node.Node);
             }
             return list;
         }
 
         private void SelectVerticesofBones(object? sender, RoutedEventArgs? e)
         {
-           // if (ListBonesRiggings.SelectedItem == null) return;
+            // if (ListBonesRiggings.SelectedItem == null) return;
             var bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
-            var names = bones.Select(x=>x.Name).ToList();
+            var names = bones.Select(x => x.Name).ToList();
             if (bones.Count == 0)
             {
                 MessageBox.Show("There are no bones");
@@ -19001,7 +19030,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
             if (mw.ShowDialog() == true)
             {
-                
+
                 foreach (int index in mw.selectedIndexes)
                 {
                     var bone = bones[index];
@@ -19022,12 +19051,12 @@ private string? GetEvent_tracks(CEvent eventObj)
                     }
                 }
             }
-            
-
-            
 
 
-            
+
+
+
+
         }
 
         private void check_rag(object? sender, RoutedEventArgs? e)
@@ -19064,8 +19093,8 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             switch (Tabs_Geosets.SelectedIndex)
             {
-                case 0: SelectAllGeosets(null,null); break;
-                case 1: 
+                case 0: SelectAllGeosets(null, null); break;
+                case 1:
                     foreach (var geoset in CurrentModel.Geosets)
                     {
                         foreach (var triangle in geoset.Triangles)
@@ -19084,10 +19113,10 @@ private string? GetEvent_tracks(CEvent eventObj)
                         }
                     }
                     break;
-                case 6: NodeList_SelectN(null,null); break;
+                case 6: NodeList_SelectN(null, null); break;
                 default: break;
             }
-            
+
         }
 
         private void unselectAll(object? sender, RoutedEventArgs? e)
@@ -19095,14 +19124,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             DeselectAllGeosets(null, null);
             foreach (var geoset in CurrentModel.Geosets)
             {
-                foreach (var triangle in geoset.Triangles)  triangle.isSelected = false;
-                 
-                foreach (var vertex in geoset.Vertices)  vertex.isSelected = false;
-                
+                foreach (var triangle in geoset.Triangles) triangle.isSelected = false;
+
+                foreach (var vertex in geoset.Vertices) vertex.isSelected = false;
+
             }
-            
+
             NodeList_SelectN(null, null);
-            
+
         }
 
         private void selectInverse(object? sender, RoutedEventArgs? e)
@@ -19153,10 +19182,10 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void aligny(object? sender, RoutedEventArgs? e)
         {
             AlignSelection(Axes.Y);
-            
+
         }
 
-      
+
 
         private void alignz(object? sender, RoutedEventArgs? e)
         {
@@ -19168,10 +19197,10 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (ListNodes.SelectedItem == null) { return; }
             INode node = GetSeletedNode();
 
-          GetAllNodesInHierarchy(node);
+            GetAllNodesInHierarchy(node);
             foreach (INode child in TempNodeList)
             {
-                
+
                 CurrentModel.Nodes.Remove(child);
             }
             CurrentModel.Nodes.Remove(node);
@@ -19179,7 +19208,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             RefreshNodesTree();
         }
         private List<INode> TempNodeList = new List<INode>();
-       
+
 
         private void GetAllNodesInHierarchy(INode inputNode)
         {
@@ -19197,11 +19226,11 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListOptions.SelectedIndex == 0)
             {
-               History.Geometry.Undo(CurrentModel, this);
+                History.Geometry.Undo(CurrentModel, this);
             }
             if (ListOptions.SelectedIndex == 1)
             {
-                History.Sequences.Undo(CurrentModel,this);
+                History.Sequences.Undo(CurrentModel, this);
             }
             if (ListOptions.SelectedIndex == 2)
             {
@@ -19213,7 +19242,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListOptions.SelectedIndex == 0)
             {
-                 History.Geometry.Redo(CurrentModel, this);
+                History.Geometry.Redo(CurrentModel, this);
             }
             if (ListOptions.SelectedIndex == 1)
             {
@@ -19221,7 +19250,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             if (ListOptions.SelectedIndex == 2)
             {
-                 History.Nodes.Redo(CurrentModel, this);
+                History.Nodes.Redo(CurrentModel, this);
             }
         }
 
@@ -19246,7 +19275,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             else
             {
-                MessageBox.Show("Select 2 or more vertices");return;
+                MessageBox.Show("Select 2 or more vertices"); return;
             }
         }
         private void AlignSelection(Axes axis)
@@ -19260,9 +19289,9 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     // Use the first geoset's centroid as target
                     var targetCentroid = Calculator.GetCentroidOfGeoset(geosets[0]);
-                     
+
                     Calculator.AlignGeosets(geosets, axis == Axes.X, axis == Axes.Y, axis == Axes.Z);
-                    
+
                 }
             }
 
@@ -19354,11 +19383,11 @@ private string? GetEvent_tracks(CEvent eventObj)
         }
         private void newm(object? sender, RoutedEventArgs? e)
         {
-            model_starter ms = new model_starter( );
+            model_starter ms = new model_starter();
             if (ms.ShowDialog() == true)
             {
                 CurrentModel = ms.NewModel;
-                refreshalllists(null,null);
+                refreshalllists(null, null);
                 SetNewModelName();
                 RefreshTitle();
                 SetSaved(false);
@@ -19428,7 +19457,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 foreach (var v in redundantVertices)
                     pair.Key.Vertices.Remove(v);
             }
-           if (firsts.Count > 1)
+            if (firsts.Count > 1)
             {
                 for (int i = 1; i < firsts.Count; i++) { firsts[i].Position = new CVector3(firsts[0].Position); }
 
@@ -19448,24 +19477,24 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
-        private void   CreateIconFromScreenshot(object? sender, RoutedEventArgs? e)
+        private void CreateIconFromScreenshot(object? sender, RoutedEventArgs? e)
         {
-            if (File.Exists (CurrentSaveLocation) == false)
+            if (File.Exists(CurrentSaveLocation) == false)
             {
-                MessageBox.Show("Current save file/location does not exist");return;
+                MessageBox.Show("Current save file/location does not exist"); return;
             }
             if (Directory.Exists(CurrentSaveFolder) == false)
             {
                 MessageBox.Show("Current save folder does not exist"); return;
             }
-            if (ListOptions.SelectedIndex != 0) { MessageBox.Show("Select the geosets tab");return; }
+            if (ListOptions.SelectedIndex != 0) { MessageBox.Show("Select the geosets tab"); return; }
             // get paths
             string? Filename = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocation);
             string? outputFolder = System.IO.Path.Combine(CurrentSaveFolder, "Icon");
-            string? outputScr    = System.IO.Path.Combine(outputFolder, "scr.png");
+            string? outputScr = System.IO.Path.Combine(outputFolder, "scr.png");
             string? btnBorder = System.IO.Path.Combine(AppHelper.Local, "Tools\\btn.png");
             string? DiSbtnBorder = System.IO.Path.Combine(AppHelper.Local, "Tools\\disbtn.png");
-            string ?outputBtn = System.IO.Path.Combine(outputFolder, $"BTN_{Filename}.png");
+            string? outputBtn = System.IO.Path.Combine(outputFolder, $"BTN_{Filename}.png");
             string? outputBtnDis = System.IO.Path.Combine(outputFolder, $"DISBTN_{Filename}.png");
             string? outputBtnBLP = System.IO.Path.Combine(outputFolder, $"BTN_{Filename}.blp");
             string? outputBtnDisBLP = System.IO.Path.Combine(outputFolder, $"DISBTN_{Filename}.blp");
@@ -19474,8 +19503,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             CaptureScreenshot(Scene_ViewportGL, outputScr);
             // load
             Bitmap LoadedImage = new Bitmap(outputScr);// ImageHelper.Load(outputScr);
-            
-            Bitmap btn = new Bitmap(btnBorder);  
+
+            Bitmap btn = new Bitmap(btnBorder);
             Bitmap disbtn = new Bitmap(DiSbtnBorder);
             //resize
             Bitmap resized = ImageHelper.Resize(LoadedImage, 64, 64);
@@ -19491,10 +19520,10 @@ private string? GetEvent_tracks(CEvent eventObj)
             Button.Save(outputBtn);
             ButtonDisabled.Save(outputBtnDis);
             // convert
-           
-            BLPConverter.Convert(outputBtn, outputBtnBLP,this, outputBtn);
-            BLPConverter.Convert(outputBtnDis, outputBtnDisBLP,this, outputBtnDis);
-            
+
+            BLPConverter.Convert(outputBtn, outputBtnBLP, this, outputBtn);
+            BLPConverter.Convert(outputBtnDis, outputBtnDisBLP, this, outputBtnDis);
+
             //dispose
             LoadedImage.Dispose();
             btn.Dispose();
@@ -19504,13 +19533,13 @@ private string? GetEvent_tracks(CEvent eventObj)
             File.Delete(outputScr);
             //  File.Delete(outputBtn);
             //  File.Delete(outputBtnDis);
-            Process.Start("explorer.exe",outputFolder );
+            Process.Start("explorer.exe", outputFolder);
 
         }
 
         private void setModelNameF(object? sender, RoutedEventArgs? e)
         {
-            string? name =System.IO. Path.GetFileNameWithoutExtension(CurrentSaveLocation);
+            string? name = System.IO.Path.GetFileNameWithoutExtension(CurrentSaveLocation);
             if (DefaultAuthor.Length > 0)
             {
                 name += " by" + DefaultAuthor;
@@ -19525,7 +19554,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             i.ShowDialog();
             if (i.DialogResult == true)
             {
-                DefaultAuthor= i.Result;
+                DefaultAuthor = i.Result;
                 SaveSettings();
             }
         }
@@ -19549,7 +19578,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 else if (Tabs_Geosets.SelectedIndex == 1) // triangles
                 {
 
-                    var vertices = getSelectedTriangles().SelectMany(x=>x.Vertices).ToList();
+                    var vertices = getSelectedTriangles().SelectMany(x => x.Vertices).ToList();
                     Calculator.CenterVerticesTogether(vertices, onX, onY, onZ);
                 }
                 else if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) // vertices
@@ -19561,13 +19590,13 @@ private string? GetEvent_tracks(CEvent eventObj)
                 if (Tabs_Geosets.SelectedIndex == 6) // nodes
                 {
                     var nodes = GetSelectedNodes_NodeEditor();
-                    Calculator.centerNodesTogether(nodes,onX,onY,onZ);
+                    Calculator.centerNodesTogether(nodes, onX, onY, onZ);
                 }
 
                 SetSaved(false);
             }
-            
-           
+
+
         }
 
         private void SnapSelectionTogether(object? sender, RoutedEventArgs? e)
@@ -19578,10 +19607,10 @@ private string? GetEvent_tracks(CEvent eventObj)
                 var type = sw.Type;
                 if (Tabs_Geosets.SelectedIndex == 0) //geosets
                 {
-                      var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
-                    
-                        Calculator.SnapVerticesAsGroup(vertices , type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
-                    
+                    var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
+
+                    Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+
 
 
                 }
@@ -19589,15 +19618,15 @@ private string? GetEvent_tracks(CEvent eventObj)
                 {
                     var triangles = getSelectedTriangles();
                     var vertices = triangles.SelectMany(x => x.Vertices).Distinct().ToList();
-                   
-                        Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
-                  
+
+                    Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+
                 }
                 if (Tabs_Geosets.SelectedIndex == 2 || Tabs_Geosets.SelectedIndex == 3) //verties
                 {
                     var vertices = GetSelectedVertices();
                     Calculator.SnapVerticesAsGroup(vertices, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
-                    
+
                 }
                 if (Tabs_Geosets.SelectedIndex == 6) //nodes
                 {
@@ -19617,14 +19646,14 @@ private string? GetEvent_tracks(CEvent eventObj)
                 var type = sw.Type;
                 if (Tabs_Geosets.SelectedIndex == 0) //geosets
                 {
-                 //   var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
+                    //   var vertices = GetSelectedGeosets().SelectMany(x => x.Vertices).ToList();
                     var geosets = GetSelectedGeosets();
                     foreach (var geoset in geosets)
                     {
                         Calculator.SnapVerticesAsGroup(geoset.Vertices.ToList(), type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
                     }
-                        
-                     
+
+
                 }
                 if (Tabs_Geosets.SelectedIndex == 1) //triangles
                 {
@@ -19640,7 +19669,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     var vertices = GetSelectedVertices();
                     foreach (var vartex in vertices)
                     {
-                        Calculator.SnapVector(  vartex.Position, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                        Calculator.SnapVector(vartex.Position, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
                     }
                 }
                 if (Tabs_Geosets.SelectedIndex == 6) //nodes
@@ -19648,7 +19677,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     var nodes = GetSelectedNodes_NodeEditor();
                     foreach (var node in nodes)
                     {
-                        Calculator.SnapVector(  node.PivotPoint, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
+                        Calculator.SnapVector(node.PivotPoint, type, RenderSettings.ViewportGridSize, RenderSettings.LineSpacing);
                     }
                 }
             }
@@ -19668,7 +19697,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (ListNodes.SelectedItem != null)
             {
                 INode? node = GetSelectedNode(); if (node == null) return;
-                List<string> list = CurrentModel.Nodes.Select(x=>x.Name).ToList();
+                List<string> list = CurrentModel.Nodes.Select(x => x.Name).ToList();
                 list.Remove(node.Name);
                 if (list.Count > 0)
                 {
@@ -19676,7 +19705,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                     if (s.ShowDialog() == true)
                     {
                         string? selected = Extractor.GetString(s.box);
-                        INode target = CurrentModel.Nodes.First(x=>x.Name ==  selected);
+                        INode target = CurrentModel.Nodes.First(x => x.Name == selected);
                         string targetName = target.Name;
                         string nodeName = node.Name;
                         target.Name = nodeName;
@@ -19716,8 +19745,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             Pause = true;
             foreach (var item in Container_Geosets_Triangles.Children)
             {
-                CheckBox? c= Extractor.GetCheckBoxOfListItem(item); if (c ==null) return;
-              
+                CheckBox? c = Extractor.GetCheckBoxOfListItem(item); if (c == null) return;
+
                 c.IsChecked = false;
 
             }
@@ -19772,7 +19801,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 ListBoxItem? b = item as ListBoxItem; if (b == null) return;
                 StackPanel? p = b.Content as StackPanel; if (p == null) return;
-                CheckBox? c = p.Children[0] as CheckBox; if ( c== null) return;
+                CheckBox? c = p.Children[0] as CheckBox; if (c == null) return;
                 c.IsChecked = false;
 
             }
@@ -19863,14 +19892,14 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
-        
 
-      
+
+
 
         // Helper to add a side wall between two front vertices and two back vertices
 
-        
-        
+
+
 
         private void report(object? sender, RoutedEventArgs? e)
         {
@@ -19918,10 +19947,11 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void SetHistoryLimit(object? sender, TextChangedEventArgs e)
         {
             if (Pause) return;
-            if  (int.TryParse(Textbox_HistoryLimit.Text, out int value)){
+            if (int.TryParse(Textbox_HistoryLimit.Text, out int value))
+            {
                 History.SetLimit(value);
             }
-            
+
         }
 
         private void negatetTriangles(object? sender, RoutedEventArgs? e)
@@ -19957,9 +19987,9 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
         }
 
-       
 
-       
+
+
 
         private void SetSequenceRarity(object sender, TextChangedEventArgs e)
         {
@@ -19967,8 +19997,8 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
 
                 var seqeence = GetSelectedSequence();
-                seqeence.Rarity = Extractor.GetFloat(seqeence.Rarity, InputRarity.Text,0);
-                 History.Sequences.Add(CurrentModel);
+                seqeence.Rarity = Extractor.GetFloat(seqeence.Rarity, InputRarity.Text, 0);
+                History.Sequences.Add(CurrentModel);
             }
         }
 
@@ -19976,10 +20006,10 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             if (ListSequenes.SelectedItem != null)
             {
-              
+
                 var seqeence = GetSelectedSequence();
-               
-                seqeence.MoveSpeed = Extractor.GetFloat(seqeence.MoveSpeed, InputMovespeed.Text,0);
+
+                seqeence.MoveSpeed = Extractor.GetFloat(seqeence.MoveSpeed, InputMovespeed.Text, 0);
                 History.Sequences.Add(CurrentModel);
             }
         }
@@ -19992,7 +20022,7 @@ private string? GetEvent_tracks(CEvent eventObj)
 
         private void Selected_TA(object? sender, SelectionChangedEventArgs? e)
         {
-            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count> List_TextureAnims.SelectedIndex)
+            if (List_TextureAnims.SelectedItem != null && CurrentModel.TextureAnimations.Count > List_TextureAnims.SelectedIndex)
             {
                 int index = List_TextureAnims.SelectedIndex;
                 var ta = CurrentModel.TextureAnimations[index];
@@ -20009,7 +20039,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 Pause = false;
 
             }
-           
+
         }
 
         private void Make_Ta_Tr_Animated(object sender, RoutedEventArgs e)
@@ -20047,7 +20077,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
                 else
                 {
-                    ta.Rotation.MakeStatic(new CVector4(0,0,0,1));
+                    ta.Rotation.MakeStatic(new CVector4(0, 0, 0, 1));
                 }
                 Button_TA_Rotations.IsEnabled = !ta.Rotation.Static;
             }
@@ -20067,14 +20097,14 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
                 else
                 {
-                    ta.Scaling.MakeStatic(new CVector3(1,1,1));
+                    ta.Scaling.MakeStatic(new CVector3(1, 1, 1));
                 }
                 Button_TA_Scalings.IsEnabled = !ta.Scaling.Static;
             }
         }
 
         private void SetLayerAnimatedTextureID(object sender, RoutedEventArgs e)
-        { 
+        {
             if (Pause) return;
             if (List_MAterials.SelectedItem != null && List_Layers.SelectedItem != null)
             {
@@ -20093,8 +20123,8 @@ private string? GetEvent_tracks(CEvent eventObj)
                     layer.TextureId.MakeStatic(layer.TextureId.GetValue());
                 }
             }
-           
-          
+
+
         }
 
         private void SetLayerAnimatedAlpha(object sender, RoutedEventArgs e)
@@ -20105,10 +20135,10 @@ private string? GetEvent_tracks(CEvent eventObj)
                 bool animated = CheckLayerAlpha.IsChecked == true;
                 CMaterial mat = GetSelectedMAterial();
                 CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
-                
+
                 InputLayerAlpha.IsEnabled = !animated;
                 ButtonLayerAlpha.IsEnabled = animated;
-              if (animated)
+                if (animated)
                 {
                     layer.Alpha.MakeAnimated();
                 }
@@ -20127,12 +20157,12 @@ private string? GetEvent_tracks(CEvent eventObj)
                 CMaterialLayer layer = mat.Layers[List_Layers.SelectedIndex];
                 if (float.TryParse(InputLayerAlpha.Text, out float value))
                 {
-                    if (value>=0 && value <= 100)
+                    if (value >= 0 && value <= 100)
                     {
                         float v = value / 100;
                         layer.Alpha.MakeStatic(v);
                     }
-                    
+
 
                 }
             }
@@ -20151,11 +20181,11 @@ private string? GetEvent_tracks(CEvent eventObj)
                 List<CGeoset> geosets = GetGeosetsUsingMaterial(mat);
                 if (geosets.Count < 2)
                 {
-                    MessageBox.Show("This material is used by less than 2 geosets");return;
+                    MessageBox.Show("This material is used by less than 2 geosets"); return;
                 }
-                for (int i =1; i< geosets.Count; i++)
+                for (int i = 1; i < geosets.Count; i++)
                 {
-                    CMaterial generated = Duplicator.DuplicateMaterial(mat,CurrentModel);
+                    CMaterial generated = Duplicator.DuplicateMaterial(mat, CurrentModel);
                     CurrentModel.Materials.Add(mat);
                     geosets[i].Material.Attach(generated);
                 }
@@ -20165,7 +20195,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             {
                 MessageBox.Show("Select a material");
             }
-              
+
         }
 
         private List<CGeoset> GetGeosetsUsingMaterial(CMaterial mat)
@@ -20183,7 +20213,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             }
             else
             {
-                MessageBox.Show("Select a single geoset");return;
+                MessageBox.Show("Select a single geoset"); return;
             }
         }
 
@@ -20263,7 +20293,7 @@ private string? GetEvent_tracks(CEvent eventObj)
             if (List_GeosetAnims.SelectedItem != null)
             {
                 var ga = CurrentModel.GeosetAnimations[List_GeosetAnims.SelectedIndex];
-                 
+
                 Pause = true;
                 CheckUseColorGA.IsChecked = ga.UseColor;
                 CheckDropShadow.IsChecked = ga.DropShadow;
@@ -20344,9 +20374,9 @@ private string? GetEvent_tracks(CEvent eventObj)
             var geosets = GetSelectedGeosets();
             if (geosets.Count != 1)
             {
-                MessageBox.Show("Select a single geoset");return;
+                MessageBox.Show("Select a single geoset"); return;
             }
-            var ga = CurrentModel.GeosetAnimations.FirstOrDefault(x=>x.Geoset.Object== geosets[0]);
+            var ga = CurrentModel.GeosetAnimations.FirstOrDefault(x => x.Geoset.Object == geosets[0]);
             if (ga != null)
             {
                 var index = CurrentModel.GeosetAnimations.IndexOf(ga);
@@ -20358,23 +20388,24 @@ private string? GetEvent_tracks(CEvent eventObj)
         {
             Edit_Extent ee = new Edit_Extent(true, CurrentModel);
             ee.ShowDialog();
-            
+
         }
         private CGeosetGroup CopiedMatrixGroupAttachment;
         private NodeMaker NodeCollection;
-      
+
 
         private void copymga(object sender, RoutedEventArgs e)
         {
             var vertices = GetSelectedVertices();
             if (vertices.Count == 0)
             {
-                MessageBox.Show("Select at least one vertex");return;
+                MessageBox.Show("Select at least one vertex"); return;
             }
-            else if (vertices.Count == 1){
+            else if (vertices.Count == 1)
+            {
                 CopiedMatrixGroupAttachment = vertices[0].Group.Object;
             }
-            else if (vertices.Count  > 1)
+            else if (vertices.Count > 1)
             {
                 var owner = VerticesBelongToSameGeoset(vertices);
                 if (owner == null)
@@ -20384,7 +20415,7 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
                 bool same = false;
                 var first = vertices[0].Group.Object;
-                for (int i =1; i < vertices.Count; i++)
+                for (int i = 1; i < vertices.Count; i++)
                 {
                     if (first != vertices[i].Group.Object)
                     {
@@ -20399,14 +20430,14 @@ private string? GetEvent_tracks(CEvent eventObj)
                 }
 
             }
-               
+
         }
 
         private void pastemga(object sender, RoutedEventArgs e)
         {
             if (CopiedMatrixGroupAttachment == null)
             {
-                MessageBox.Show("Nothing was copied");return;
+                MessageBox.Show("Nothing was copied"); return;
             }
             var vertices = GetSelectedVertices();
             foreach (var vertex in vertices)
@@ -20419,7 +20450,7 @@ private string? GetEvent_tracks(CEvent eventObj)
         private void debug_console(object sender, RoutedEventArgs e)
         {
             Debug_Console.Show();
-             
+
         }
 
         private void tellModelExxtent(object sender, RoutedEventArgs e)
@@ -20538,6 +20569,806 @@ private string? GetEvent_tracks(CEvent eventObj)
                 Calculator.PutOnGround_Half(Vertices);
             }
         }
-    }
 
+        private void gadeduplicator_click(object sender, RoutedEventArgs e)
+        {
+            gadeduplicator g = new gadeduplicator(CurrentModel);
+            try
+            {
+                g.ShowDialog();
+            }
+            catch { return; }
+            RefreshGeosetAnimationsList();
+        }
+
+        private void Scene_Selection_Overlay_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 0) return;
+                string file = files[0];
+                if
+                   (Path.GetExtension(file).ToLower() == ".mdx"
+                   ||
+                   Path.GetExtension(file).ToLower() == ".mdl"
+                   )
+                {
+
+                    LoadModel(file);
+                }
+
+            }
+        }
+
+        private void Scene_Selection_Overlay_DragOver(object sender, DragEventArgs e)
+        {
+            // Allow file drop only
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+
+            e.Handled = true;
+        }
+
+        private void seModeSculpt(object sender, RoutedEventArgs e)
+        {
+            modifyMode_current = ModifyMode.Sculpt;
+            HightlightMoreButton();
+        }
+
+        private void seModeSculpt2(object sender, RoutedEventArgs e)
+        {
+            modifyMode_current = ModifyMode.SculptPersonal;
+            HightlightMoreButton();
+        }
+
+        private void askwgmv(object sender, RoutedEventArgs e)
+        {
+            var l = CurrentModel.Geosets.Where(x => CurrentModel.GeosetAnimations.Any(y => y.Geoset.Object == x) == false);
+            if (l.Count() == 0)
+            {
+                MessageBox.Show("All geosets are used by geoset animations"); return;
+            }
+            var d = string.Join(", ", l.Select(x => x.ObjectId.ToString()));
+            MessageBox.Show(d);
+        }
+
+        private void EditNodeScalings(object sender, MouseButtonEventArgs e)
+        {
+            var node = GetSelectedNode();
+            if (node == null)
+            {
+                MessageBox.Show("Select a node"); return;
+            }
+            else
+            {
+                editvisibilities_window v = new editvisibilities_window(CurrentModel, node);
+                v.ShowDialog();
+                SelectedNodeInNodeEditor(null, null);
+            }
+        }
+
+        private void MakeParticlesDisappearAtTheEndOfTheirSequences(object sender, RoutedEventArgs e)
+        {
+            foreach (INode node in CurrentModel.Nodes)
+            {
+                if (node is CParticleEmitter2 e2 && e2.Visibility != null)
+                    MakeParticleVisibilityDisappearAtEnds(e2.Visibility);
+
+                if (node is CParticleEmitter e1 && e1.Visibility != null)
+                    MakeParticleVisibilityDisappearAtEnds(e1.Visibility);
+
+                if (node is CRibbonEmitter r && r.Visibility != null)
+                    MakeParticleVisibilityDisappearAtEnds(r.Visibility);
+            }
+        }
+
+        private void MakeParticleVisibilityDisappearAtEnds(CAnimator<float> visibility)
+        {
+            if (visibility.Animated == false)
+            {
+                visibility.MakeAnimated();
+                foreach (var sequence in CurrentModel.Sequences)
+                {
+                    visibility.NodeList.Add(
+                        new CAnimatorNode<float>()
+                        {
+                            Time = sequence.IntervalStart,
+                            Value = 1
+                        });
+                    visibility.NodeList.Add(
+                       new CAnimatorNode<float>()
+                       {
+                           Time = sequence.IntervalEnd,
+                           Value = 0
+                       });
+                }
+            }
+            else
+            {
+                var existingTimes = visibility.NodeList.Select(x => x.Time).ToHashSet();
+                var handledSequences = new HashSet<CSequence>();
+                var newKeyframes = new List<CAnimatorNode<float>>();
+
+                foreach (var kf in visibility.NodeList)
+                {
+                    var sequence = GetSequenceFromTrack(kf.Time);
+                    if (sequence == null || handledSequences.Contains(sequence)) continue;
+
+                    if (!existingTimes.Contains(sequence.IntervalEnd))
+                    {
+                        newKeyframes.Add(new CAnimatorNode<float>
+                        {
+                            Time = sequence.IntervalEnd,
+                            Value = 0
+                        });
+                    }
+
+                    handledSequences.Add(sequence);
+                }
+                visibility.NodeList.AddRange(newKeyframes);
+            }
+
+
+
+            visibility.NodeList = visibility.NodeList.OrderBy(x => x.Time).ToList();
+        }
+
+
+        private void editNodeVisibilities(object sender, MouseButtonEventArgs e)
+        {
+            if (ListNodes.SelectedItem == null) { return; }
+            editvisibilities_window? ew = null;
+            var node = GetSelectedNode();
+            if (node is CParticleEmitter emitter)
+            {
+                ew = new editvisibilities_window(CurrentModel, emitter.Visibility);
+            }
+            else if (node is CParticleEmitter2 emitter2)
+            {
+                ew = new editvisibilities_window(CurrentModel, emitter2.Visibility);
+            }
+            else if (node is CRibbonEmitter ribbon)
+            {
+                ew = new editvisibilities_window(CurrentModel, ribbon.Visibility);
+            }
+            else if (node is CLight light)
+            {
+                ew = new editvisibilities_window(CurrentModel, light.Visibility);
+            }
+            else if (node is CAttachment att)
+            {
+                ew = new editvisibilities_window(CurrentModel, att.Visibility);
+            }
+            else if (node is CEvent ev)
+            {
+                ew = new editvisibilities_window(CurrentModel, ev);
+            }
+            else { MessageBox.Show("This node does not support visibility"); return; }
+
+            if (ew.ShowDialog() == true)
+            {
+                SelectedNodeInNodeEditor(null, null);
+            }
+        }
+
+        private void MakeGeosetAnimationsDisappearAtTheEndOfDeathSequence(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Sequences.Count == 0)
+            {
+                MessageBox.Show("There are no sequences");
+                return;
+            }
+
+            List<string> names = CurrentModel.Sequences.Select(x => x.Name).ToList();
+            Selector s = new Selector(names, "Which sequence?");
+
+            s.ShowDialog();
+            if (s.DialogResult == true)
+            {
+                int index = s.box.SelectedIndex;
+                var sequence = CurrentModel.Sequences[index];
+                foreach (var ga in CurrentModel.GeosetAnimations)
+                {
+                    if (ga.Alpha.Animated)
+                    {
+
+                        if (ga.Alpha.Any(x => x.Time >= sequence.IntervalStart && x.Time < sequence.IntervalEnd))
+                        {
+                            ga.Alpha.NodeList.Add(new CAnimatorNode<float>
+                            {
+                                Time = sequence.IntervalEnd,
+                                Value = 0
+                            });
+                        }
+
+                    }
+                    else
+                    {
+                        ga.Alpha.MakeAnimated();
+                        foreach (var loopedSequence in CurrentModel.Sequences)
+                        {
+                            if (loopedSequence == sequence)
+                            {
+                                ga.Alpha.NodeList.Add(new CAnimatorNode<float> { Time = loopedSequence.IntervalStart, Value = 1 });
+                                ga.Alpha.NodeList.Add(new CAnimatorNode<float> { Time = loopedSequence.IntervalEnd, Value = 0 });
+                            }
+                            else
+                            {
+                                ga.Alpha.NodeList.Add(new CAnimatorNode<float> { Time = loopedSequence.IntervalStart, Value = 1 });
+                            }
+                        }
+                    }
+
+                    ga.Alpha.NodeList = ga.Alpha.NodeList.OrderBy(x => x.Time).ToList();
+                }
+            }
+
+
+
+        }
+
+        private void DetachSelectedBoneFromGeoset(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Geosets.Count == 9)
+            {
+                MessageBox.Show("There are no geosets"); return;
+            }
+            if (ListNodes.SelectedItem == null)
+            {
+                MessageBox.Show("Select a node");
+            }
+            else
+            {
+                var node = GetSelectedNode();
+                List<string> geosets = CurrentModel.Geosets.Select(x => x.ObjectId.ToString()).ToList();
+                Selector s = new Selector(geosets, "Geoset");
+                s.ShowDialog();
+                if (s.DialogResult == true)
+                {
+                    int index = s.box.SelectedIndex;
+                    CGeoset geoset = CurrentModel.Geosets[index];
+                    if (geoset.Groups.Count == 0) { MessageBox.Show("This geoset has no matrix groups"); return; }
+                    if (GeosetUsesNode(geoset, node))
+                    {
+                        List<int> skipped = new List<int>();
+                        int removed = 0;
+
+                        for (int i = 0; i < geoset.Groups.Count; i++)
+                        {
+                            var group = geoset.Groups[i];
+
+                            if (group.Nodes.Count == 1)
+                            {
+                                if (group.Nodes[0].Node.Node == node) skipped.Add(i);
+                            }
+                            else
+                            {
+                                int at = -1;
+                                for (int j = 0; j < group.Nodes.Count; j++)
+                                {
+                                    if (group.Nodes[j].Node.Node == node) at = j; break;
+                                }
+                                if (at >= 0) { group.Nodes.RemoveAt(at); removed++; }
+                            }
+                        }
+
+
+                        MessageBox.Show($"Removed {removed} instanced of node '{node.Name}' from geoset {geoset.ObjectId}");
+                        if (skipped.Count > 0)
+                        {
+                            MessageBox.Show($"Skipped {skipped} instances of  node '{node.Name}' from geoset {geoset.ObjectId}, because some matrix groups contain only one node - this node");
+                        }
+
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Geoset {geoset.ObjectId} is not attached to node '{node.Name}'"); return;
+                    }
+
+
+
+
+                }
+
+            }
+        }
+        private bool GeosetUsesNode(CGeoset g, INode node)
+        {
+            foreach (var group in g.Groups)
+            {
+                foreach (var gnode in group.Nodes)
+                {
+                    if (gnode.Node.Node == node) return true;
+                }
+            }
+            return false;
+        }
+
+        private void convertH2B(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem == null)
+            {
+                MessageBox.Show("Select a node"); return;
+            }
+            else
+            {
+                var node = GetSelectedNode();
+                if (node is CHelper helper)
+                {
+
+                    CBone bone = NodeCloner.HelperToBone(helper, CurrentModel);
+                    var parent = helper.Parent.Node;
+                    var children = getChildrenOfNode(node);
+                    CurrentModel.Nodes.Remove(node);
+                    CurrentModel.Nodes.Add(bone);
+                    AddParentToNodes(children, bone);
+                    if (parent != null) bone.Parent.Attach(parent);
+                    RefreshNodesTree();
+                }
+                else
+                {
+                    MessageBox.Show("Selected node is not helper"); return;
+                }
+            }
+        }
+
+        private void AddParentToNodes(List<INode> children, INode bone)
+        {
+            foreach (var child in children)
+            {
+                child.Parent.Attach(bone);
+            }
+        }
+
+        private object GetMatrixGroupsWhoUseNode(INode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        private List<INode> getChildrenOfNode(INode node)
+        {
+            List<INode> list = new();
+            foreach (INode n in CurrentModel.Nodes)
+            {
+                if (n.Parent.Node == node)
+                {
+                    if (n == node) continue;
+                    list.Add(n);
+                }
+
+            }
+            return list;
+        }
+
+        private void convertB2H(object sender, RoutedEventArgs e)
+        {
+
+            if (ListNodes.SelectedItem == null)
+            {
+                MessageBox.Show("Select a node"); return;
+            }
+            else
+            {
+                var node = GetSelectedNode();
+                if (node is CBone bone)
+                {
+                    if (BoneHasAttachedVertices(bone))
+                    {
+                        MessageBox.Show("This bone has attached vertices. Reeattach them to another bone first");return;
+                    }
+                    var children = getChildrenOfNode(node);
+                    CHelper h = NodeCloner.BoneToHelper(bone, CurrentModel);
+                    var parent = bone.Parent.Node;
+                    CurrentModel.Nodes.Remove(node);
+                    CurrentModel.Nodes.Add(h);
+                    AddParentToNodes(children, h);
+                    if (parent!=null)  h.Parent.Attach(parent);
+                    RefreshNodesTree();
+                }
+                else
+                {
+                    MessageBox.Show("Selected node is not bone"); return;
+                }
+            }
+        }
+
+        private bool BoneHasAttachedVertices(CBone bone)
+        {
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var group in geoset.Groups)
+                {
+                    foreach (var node in group.Nodes)
+                    {
+                        if (node.Node.Node == bone) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void createOverhead(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Nodes.Any(x => x.Name.ToLower().Trim() == "overhead ref" && x is CAttachment))
+            {
+                MessageBox.Show("There is already an overhead attachment point");
+            }
+            else
+            {
+                CAttachment att = new CAttachment(CurrentModel);
+                att.Name = "Overhead Ref";
+                att.PivotPoint = new CVector3(0,0,200);
+                CurrentModel.Nodes.Add(att);
+                RefreshNodesTree();
+            }
+        }
+
+        private void importcustomgeosetmanager(object sender, RoutedEventArgs e)
+        {
+            geoset_import_manager gm = new geoset_import_manager(CurrentModel);
+         
+
+            if (gm.Closed == true) return;
+            Pause = true;
+            gm.ShowDialog();
+            if (gm.DialogResult == true)
+            {
+              
+                SetSaved(false);
+                refreshalllists(null, null);
+                CollectTexturesOpenGL();
+                
+            }
+            Pause = false;
+        }
+
+        private void saveGeomerge(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+                string path = Path.Combine(AppHelper.Local, "Geosets");
+                Input i = new Input("", "Name?");
+                if (i.ShowDialog() == true)
+                {
+                    string given = i.Result;
+                    if (given.Length==0)
+                    { MessageBox.Show("Empty input");return; }
+                    string newPath = Path.Combine(path, given + ".tgeom");
+                    if (File.Exists(newPath))
+                    {
+                        { MessageBox.Show("A file with that name already exists"); return; }
+                    }
+
+                    var g = GetSelectedGeosets();
+                    GeosetExporter.ExportGeomergeCustom(CurrentModel, g[0], newPath);
+                     
+                }
+            }
+            else
+            {
+                MessageBox.Show("Select a single geoset");return;
+            }
+                
+        }
+
+        private void gradualgvm(object sender, RoutedEventArgs e)
+        {
+            GradualVisibilityMaker.Work(CurrentModel);
+        }
+
+        private void createNodePreset(object sender, RoutedEventArgs e)
+        {
+            INode node = null;
+            if (ListNodes.SelectedItem != null) { node = GetSelectedNode(); }
+            NodePresets n = new NodePresets(CurrentModel, node);
+            n.ShowDialog();
+            if (n.DialogResult == true)
+            {
+                RefreshNodesTree();
+                RefreshTexturesList();
+            }
+        }
+
+        private void SaveNodeAsPReset(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                var node = GetSelectedNode();
+               string SourceDirectory= Path.Combine(AppHelper.Local, "NodePresets");
+                string givenName = string.Empty;
+                Input i = new Input("", "Name?");
+                i.ShowDialog();
+                if (i.DialogResult == true)
+                {
+                    givenName = i.Result;
+                    if (PresetNameExists(givenName, SourceDirectory  ))
+                    {
+                        MessageBox.Show(" preset with that name exists");return;
+                    }
+                }
+                if (node != null)
+                {
+                    NodePresetHandler.Save(node, givenName, SourceDirectory);
+                }
+               
+            }
+        }
+
+        private bool PresetNameExists(string givenName, string folder)
+        {
+            if (string.IsNullOrWhiteSpace(givenName)) return true;
+
+            try
+            {
+                string[] files = Directory.GetFiles(folder, "*.war3SFXp");
+
+                foreach (var file in files)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(file);
+                    if (string.Equals(fileName, givenName, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception)
+            {
+                // Optionally log or handle exception (e.g., Directory not found or no permission)
+                return false;
+            }
+        }
+
+        private void mmgcc(object sender, RoutedEventArgs e)
+        {
+            ModelColorVariantGenerator.Generate();
+        }
+
+        private void maesatcs(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem != null)
+            {
+                var node = GetSelectedNode();
+                if (node is CCollisionShape cs)
+                {
+                    CExtent ex = new CExtent();
+                    ex.Max = new CVector3(cs.Vertex2);
+                    ex.Min = new CVector3(cs.Vertex1);
+                    ex.Radius = cs.Radius;
+                    foreach (var geoset in CurrentModel.Geosets)
+                    {
+                        geoset.Extent = new CExtent(ex);
+                        foreach (var sextent in geoset.Extents)
+                        {
+                            sextent.Extent = new CExtent(ex);
+                        }
+                    }
+                    foreach (var sequence in CurrentModel.Sequences)
+                    {
+                        sequence.Extent = new CExtent(ex);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("THe selected node is not a collision shape");
+                }
+            }
+        }
+
+        private void swapattachmentsBONE(object sender, RoutedEventArgs e)
+        {
+            if (ListNodes.SelectedItem == null)
+            {
+                MessageBox.Show("Select a node");return;
+
+            }
+            var node = GetSelectedNode();
+                if (node is CBone bone)
+            {
+                var bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
+                    if (bones.Count <= 1)
+                {
+                    MessageBox.Show("at least two bones must be present");return;
+                }
+                bones.Remove(bone);
+                List<string> names = bones.Select(x => x.Name).ToList();
+                Selector s = new Selector(names, "swap with which bone?");
+                s.ShowDialog();
+                    if (s.DialogResult == true){
+
+                    string? name = s.Selected;
+                    if (name == null) { MessageBox.Show("null selected string");return; }
+
+                    CBone selected = CurrentModel.Nodes.FirstOrDefault(x => x.Name == name) as CBone;
+                    if (selected == null) { MessageBox.Show("null bone"); return; }
+                    SwapAttachmentsOfTwoBones(bone, selected);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Selected node is not a bone");
+            }
+        }
+
+        private void SwapAttachmentsOfTwoBones(CBone first, CBone second)
+        {
+            var tempBone = new CBone(CurrentModel);
+
+            // Temporarily reassign nodes attached to 'first' to 'temp'
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var group in geoset.Groups)
+                {
+                    foreach (var gnode in group.Nodes)
+                    {
+                        if (gnode.Node.Node == first)
+                        {
+                            gnode.Node.Attach(tempBone);
+                        }
+                    }
+                }
+            }
+
+            // Reassign nodes attached to 'second' to 'first'
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var group in geoset.Groups)
+                {
+                    foreach (var gnode in group.Nodes)
+                    {
+                        if (gnode.Node.Node == second)
+                        {
+                            gnode.Node.Attach(first);
+                        }
+                    }
+                }
+            }
+
+            // Reassign nodes attached to 'temp' (originally 'first') to 'second'
+            foreach (var geoset in CurrentModel.Geosets)
+            {
+                foreach (var group in geoset.Groups)
+                {
+                    foreach (var gnode in group.Nodes)
+                    {
+                        if (gnode.Node.Node == tempBone)
+                        {
+                            gnode.Node.Attach(second);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void swapgeosetatt(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count != 2)
+            {
+                var geosets = GetSelectedGeosets();
+                if (GeosetsHAveONEGROup(geosets))
+                {
+                    SwapGeosetAttachments(geosets);
+                }
+                else
+                {
+                    MessageBox.Show("EaCh selected geoset msut have only one matrix group for this command to work");return;                }
+            }
+            {
+                MessageBox.Show("Select exactly 2 geosets");return;
+            }
+        }
+
+        private void SwapGeosetAttachments(List<CGeoset> geosets)
+        {
+            List<INode> nodes1 = new List<INode>();
+            List<INode> nodes2 = new List<INode>();
+             foreach (var node in geosets[0].Groups[0].Nodes)   nodes1.Add(node.Node.Node);
+               foreach (var node in geosets[1].Groups[0].Nodes)   nodes2.Add(node.Node.Node);
+
+            geosets[0].Groups[0].Nodes.Clear();
+            geosets[1].Groups[0].Nodes.Clear();
+
+
+            foreach (var node in nodes1)
+            {
+                CGeosetGroupNode gnode = new CGeosetGroupNode(CurrentModel);
+                gnode.Node.Attach(node);
+                geosets[1].Groups[0].Nodes.Add(gnode);
+            }
+            foreach (var node in nodes2)
+            {
+                CGeosetGroupNode gnode = new CGeosetGroupNode(CurrentModel);
+                gnode.Node.Attach(node);
+                geosets[0].Groups[0].Nodes.Add(gnode);
+            }
+
+          
+        }
+
+        private bool GeosetsHAveONEGROup(List<CGeoset> geosets)
+        {
+            foreach (var geoset in geosets)
+            {
+                if (geoset.Groups.Count != 1) return false;
+                if (geoset.Groups[0] == null) return false;
+                if (geoset.Groups[0].Nodes == null) return false;
+                if (geoset.Groups[0].Nodes.ObjectList == null) return false;
+            }
+
+
+
+            return true;
+        }
+
+        private void improvisesprites(object sender, RoutedEventArgs e)
+        {
+            if (ListGeosets.SelectedItems.Count == 1)
+            {
+              INode[] nodes=  HandleSpriteAttachments();
+                var g = GetSelectedGeosets()[0];
+               var extent= Calculator.GetExtent(g);
+                CVector3[] positions = Calculator.GetCeilingBurningPoints(extent);
+                nodes[0].PivotPoint = new CVector3(positions[0]);
+                nodes[1].PivotPoint = new CVector3(positions[1]);
+                nodes[2].PivotPoint = new CVector3(positions[2]);
+                nodes[3].PivotPoint = new CVector3(positions[3]);
+                RefreshNodesTree();
+            }
+            else
+            {
+                MessageBox.Show("Select a single geoset");
+            }
+        }
+
+        private INode[] HandleSpriteAttachments(bool ignoreCase = false)
+        {
+            StringComparison comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+            INode? first = CurrentModel.Nodes.FirstOrDefault(x => x is CAttachment && string.Equals(x.Name, "Sprite First Ref", comparison));
+            INode? second = CurrentModel.Nodes.FirstOrDefault(x => x is CAttachment && string.Equals(x.Name, "Sprite Second Ref", comparison));
+            INode? third = CurrentModel.Nodes.FirstOrDefault(x => x is CAttachment && string.Equals(x.Name, "Sprite Third Ref", comparison));
+            INode? fourth = CurrentModel.Nodes.FirstOrDefault(x => x is CAttachment && string.Equals(x.Name, "Sprite Fourth Ref", comparison));
+
+            if (first == null)
+            {
+                first = new CAttachment(CurrentModel) { Name = "Sprite First Ref" };
+                CurrentModel.Nodes.Add(first);
+            }
+            if (second == null)
+            {
+                second = new CAttachment(CurrentModel) { Name = "Sprite Second Ref" };
+                CurrentModel.Nodes.Add(second);
+            }
+            if (third == null)
+            {
+                third = new CAttachment(CurrentModel) { Name = "Sprite Third Ref" };
+                CurrentModel.Nodes.Add(third);
+            }
+            if (fourth == null)
+            {
+                fourth = new CAttachment(CurrentModel) { Name = "Sprite Fourth Ref" };
+                CurrentModel.Nodes.Add(fourth);
+            }
+
+            return new INode[] { first, second, third, fourth };
+        }
+
+        private void createSkeleton(object sender, RoutedEventArgs e)
+        {
+            CreateSkeleton_window c = new CreateSkeleton_window(CurrentModel);
+            c.ShowDialog();
+            if (c.DialogResult == true)
+            {
+                RefreshNodesTree();
+            }
+        }
+    }
 }
+
+ 

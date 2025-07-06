@@ -17,11 +17,11 @@ namespace Wa3Tuner
             {
                 Clone = new CBone(model);
             }
-            if (node is CHelper helper)
+            else if (node is CHelper helper)
             {
                 Clone = new CHelper(model);
             }
-            if (node is CCollisionShape cs)
+            else if (node is CCollisionShape cs)
             {
                 CCollisionShape cols = new CCollisionShape(model);
                 cols.Type = cs.Type;
@@ -30,7 +30,7 @@ namespace Wa3Tuner
                 cols.Vertex2 = new MdxLib.Primitives.CVector3(cs.Vertex2);
                 Clone = cols;
                      }
-            if (node is CLight light)
+            else if (node is CLight light)
             {
                 CLight LightClone = new CLight(model);
                 LightClone.Type = light.Type;
@@ -71,7 +71,7 @@ namespace Wa3Tuner
                 }
                 Clone = LightClone; 
             }
-            if (node is CParticleEmitter emitter1)
+            else if (node is CParticleEmitter emitter1)
             {
                 CParticleEmitter emitterClone = (CParticleEmitter) node;
                 emitterClone.FileName = emitter1.FileName;
@@ -109,7 +109,7 @@ namespace Wa3Tuner
                 }
                 Clone = emitterClone;
             }
-            if (node is CParticleEmitter2 emitter2)
+            else if (node is CParticleEmitter2 emitter2)
             {
                 CParticleEmitter2 CloneEmitter2 = new CParticleEmitter2(model);
                 CloneEmitter2.RequiredTexturePath = emitter2.RequiredTexturePath;
@@ -180,7 +180,7 @@ namespace Wa3Tuner
                 }
                 Clone = CloneEmitter2;
             }
-            if (node is CRibbonEmitter ribbon)
+            else if (node is CRibbonEmitter ribbon)
             {
                 CRibbonEmitter ribobnClone = new CRibbonEmitter(model);
                 ribobnClone.Rows = ribbon.Rows;
@@ -221,7 +221,18 @@ namespace Wa3Tuner
                 }
                 Clone = ribobnClone;
             }
-            if (Clone == null) { throw new Exception("Cloned node is nuill"); }
+
+            else if (node is CEvent ev)
+            { CEvent copy = new CEvent(model);
+                foreach (var track in ev.Tracks)
+                {
+                    copy.Tracks.Add(new CEventTrack(model) { Time = track.Time});
+                }
+                 
+                Clone = copy;
+                
+            }
+              if (Clone == null) { throw new Exception("Cloned node is nuill"); }
                 Clone.Billboarded = node.Billboarded;
             Clone.BillboardedLockX = node.BillboardedLockX;
             Clone.BillboardedLockY = node.BillboardedLockY;
@@ -237,5 +248,93 @@ namespace Wa3Tuner
             return Clone;
             
         }
+
+        internal static CHelper BoneToHelper(CBone bone, CModel currentModel)
+        {
+            CHelper h = new CHelper(currentModel);
+            h.Name = bone.Name;
+            h.DontInheritRotation = bone.DontInheritRotation;
+            h.DontInheritScaling = bone.DontInheritScaling;
+            h.DontInheritTranslation = bone.DontInheritTranslation;
+            h.CameraAnchored = bone.CameraAnchored;
+            h.BillboardedLockX = bone.BillboardedLockX;
+            h.BillboardedLockY = bone.BillboardedLockY;
+            h.BillboardedLockZ = bone.BillboardedLockZ;
+            h.CameraAnchored = bone.CameraAnchored;
+
+            for (int i = 0; i < bone.Translation.Count; i++)
+            {
+                CAnimatorNode<CVector3> copy = new CAnimatorNode<CVector3>();
+                copy.Time = bone.Translation[i].Time;
+                copy.Value = new CVector3(bone.Translation[i].Value);
+                copy.OutTangent = new CVector3(bone.Translation[i].OutTangent);
+                copy.InTangent = new CVector3(bone.Translation[i].InTangent);
+               h.Translation.Add(copy);
+            }
+            for (int i = 0; i < bone.Rotation.Count; i++)
+            {
+                CAnimatorNode<CVector4> copy = new CAnimatorNode<CVector4>();
+                copy.Time = bone.Translation[i].Time;
+                copy.Value = new CVector4(bone.Rotation[i].Value);
+                copy.OutTangent = new CVector4(bone.Rotation[i].OutTangent);
+                copy.InTangent = new CVector4(bone.Rotation[i].InTangent);
+                h.Rotation.Add(copy);
+            }
+            for (int i = 0; i < bone.Scaling.Count; i++)
+            {
+                CAnimatorNode<CVector3> copy = new CAnimatorNode<CVector3>();
+                copy.Time = bone.Scaling[i].Time;
+                copy.Value = new CVector3(bone.Scaling[i].Value);
+                copy.OutTangent = new CVector3(bone.Scaling[i].OutTangent);
+                copy.InTangent = new CVector3(bone.Scaling[i].InTangent);
+                h.Scaling.Add(copy);
+            }
+
+            return h;
+        }
+
+        internal static CBone HelperToBone(CHelper helper, CModel model)
+        {
+            CBone b = new CBone(model);
+            b.Name = helper.Name;
+            b.DontInheritRotation = helper.DontInheritRotation;
+            b.DontInheritScaling = helper.DontInheritScaling;
+            b.DontInheritTranslation = helper.DontInheritTranslation;
+            b.CameraAnchored = helper.CameraAnchored;
+            b.BillboardedLockX = helper.BillboardedLockX;
+            b.BillboardedLockY = helper.BillboardedLockY;
+            b.BillboardedLockZ = helper.BillboardedLockZ;
+            b.CameraAnchored = helper.CameraAnchored;
+
+            b.PivotPoint = new CVector3(helper.PivotPoint);
+            for (int i = 0; i < helper.Translation.Count; i++)
+            {
+                CAnimatorNode<CVector3> copy = new CAnimatorNode<CVector3>();
+                copy.Time = helper.Translation[i].Time;
+                copy.Value = new CVector3(helper.Translation[i].Value);
+                copy.OutTangent = new CVector3(helper.Translation[i].OutTangent);
+                copy.InTangent = new CVector3(helper.Translation[i].InTangent);
+                b.Translation.Add(copy);
+            }
+            for (int i = 0; i < helper.Rotation.Count; i++)
+            {
+                CAnimatorNode<CVector4> copy = new CAnimatorNode<CVector4>();
+                copy.Time = helper.Translation[i].Time;
+                copy.Value = new CVector4(helper.Rotation[i].Value);
+                copy.OutTangent = new CVector4(helper.Rotation[i].OutTangent);
+                copy.InTangent = new CVector4(helper.Rotation[i].InTangent);
+                b.Rotation.Add(copy);
+            }
+            for (int i = 0; i < helper.Scaling.Count; i++)
+            {
+                CAnimatorNode<CVector3> copy = new CAnimatorNode<CVector3>();
+                copy.Time = helper.Scaling[i].Time;
+                copy.Value = new CVector3(helper.Scaling[i].Value);
+                copy.OutTangent = new CVector3(helper.Scaling[i].OutTangent);
+                copy.InTangent = new CVector3(helper.Scaling[i].InTangent);
+                b.Scaling.Add(copy);
+            }
+            return b;
+         }
     }
 }

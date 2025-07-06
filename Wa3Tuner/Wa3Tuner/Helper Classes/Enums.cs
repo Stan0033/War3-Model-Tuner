@@ -90,6 +90,8 @@ namespace Wa3Tuner.Helper_Classes
         Translate,
         Rotate,
         Scale,
+       
+
         DragUV_U,
         DragUV_V,
         Inset,
@@ -100,6 +102,7 @@ namespace Wa3Tuner.Helper_Classes
         Extend, // move 
         Widen,
         Sculpt,
+        SculptPersonal,
         ExpandNarrow,//edge
         Bevel,
         DistanceX,

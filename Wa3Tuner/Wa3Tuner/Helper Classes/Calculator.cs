@@ -4707,5 +4707,25 @@ namespace Wa3Tuner
             }
         }
 
+        internal static CVector3[] GetCeilingBurningPoints(CExtent extent)
+        {
+            CVector3 min = extent.Min;
+            CVector3 max = extent.Max;
+
+            float insetFactor = 0.1f; // 10% inward from each edge
+
+            float insetX = (max.X - min.X) * insetFactor;
+            float insetY = (max.Y - min.Y) * insetFactor;
+            float ceilingZ = max.Z;
+
+            CVector3 first = new CVector3(min.X + insetX, min.Y + insetY, ceilingZ); // bottom-left inset
+            CVector3 second = new CVector3(max.X - insetX, min.Y + insetY, ceilingZ); // bottom-right inset
+            CVector3 third = new CVector3(max.X - insetX, max.Y - insetY, ceilingZ); // top-right inset
+            CVector3 fourth = new CVector3(min.X + insetX, max.Y - insetY, ceilingZ); // top-left inset
+
+            return new CVector3[] { first, second, third, fourth };
+        }
+
+
     }
 }

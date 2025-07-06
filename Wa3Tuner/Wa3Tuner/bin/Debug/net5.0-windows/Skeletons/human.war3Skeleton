@@ -1,0 +1,26 @@
+Overhead Ref
+Root_h
+-Origin Ref
+-Hips_bone
+--LeftHip
+---LeftKnee
+----LeftAnkle
+-----Foot Left Ref
+--RightHip
+---RightKnee
+----RightAnkle
+-----Foot Right Ref
+-Chest
+--Chest Ref
+--Spine
+---Neck
+----Head
+-----Head Ref
+--LeftShoulder
+---LeftElbow
+----LeftWrist
+-----Hand Left Ref
+--RightShoulder
+---RightElbow
+----RightWrist
+-----Hand Right Ref

@@ -13,6 +13,7 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\copy
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Create Sphere.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createextrudedpolygon.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\createnode.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\CreateSkeleton_window.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\debug_console_w.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\DistanceSelector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\DrawShape.xaml;;
@@ -22,13 +23,16 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Expl
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Extent Orientation Selector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ExtentSelector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\FlattenSide.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\gadeduplicator.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Generate Keyframe in Range.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\geoset import manager.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\GeosetExtents.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\GeosetGroupViewer.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\geoset_data_editor.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Geoset_Selection.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\geoVisibilitiesKeyword.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Gradual Keyframe Maker.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Gradual Visibility Maker.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\howmodel.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ImageViewer.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ImportGeoset.xaml;;
@@ -48,6 +52,7 @@ FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\mode
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\MPQBrowser.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Multiselector.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\newsequence.xaml;;
+FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\NodePresets.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Nodes_Renamer.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\NoKeyframesActions.xaml;;
 FC:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\ObjImporter.xaml;;

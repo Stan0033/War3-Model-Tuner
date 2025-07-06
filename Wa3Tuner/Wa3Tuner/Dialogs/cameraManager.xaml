@@ -54,7 +54,7 @@
                 <Button Name="AnimatedPositionButton" Click="SetAnimatedPos" Content="Animated Position" Margin="5" Width="120" />
                 <Button Name="AnimatedTargetButton" Click="SetAniamtedTar" Content="Animated Target" Margin="5" Width="120" />
            </StackPanel>
-            <Button Name="RotationButton" Content="Rotation" Click="SetRotationTarget" Margin="5" Width="120" />
+            <Button Name="RotationButton" Content="Animated Rotation (Roll)" Click="SetRotationTarget" Margin="5" Width="140" />
         </StackPanel>
     </Grid>
 </Window>
