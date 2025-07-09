@@ -907,7 +907,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                             <RowDefinition Height="40"/>
                                         </Grid.RowDefinitions>
                                         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.ColumnSpan="2"/>
-                                        <TextBlock Text="Which node do you animate?" FontWeight="Black"  Background="LightGray" TextAlignment="Center" 
+                                        <TextBlock Text="1. Which node do you animate?" FontWeight="Black"  Background="LightGray" TextAlignment="Center" 
                           Grid.Row="1" Grid.ColumnSpan="2"      />
                                         <ListBox Name="List_Nodes_Animator" SelectionMode="Single" 
                                                  SelectionChanged="SelectedSEquenceInAnimator"
@@ -949,7 +949,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                                 </ContextMenu>
                                             </ListBox.ContextMenu>
                                         </ListBox>
-                                        <TextBlock Text="In whch sequence?"  FontWeight="Black"   Background="LightGray" TextAlignment="Center" 
+                                        <TextBlock Text="2. In whch sequence?"  FontWeight="Black"   Background="LightGray" TextAlignment="Center" 
                           Grid.Row="3" Grid.ColumnSpan="2"  Grid.RowSpan="2"      />
                                         <ListBox Name="List_Sequences_Animator" SelectionChanged="SelectedSEquenceInAnimator" 
                         Grid.Row="4" Background="LightGray" Grid.ColumnSpan="2" >
@@ -973,7 +973,7 @@ VerticalContentAlignment="Top" BorderBrush="LightGray">
                                                 </ContextMenu>
                                             </ListBox.ContextMenu>
                                         </ListBox>
-                                        <TextBlock Text="Which keyframe of that sequence?"  FontWeight="Black"    Background="LightGray" TextAlignment="Center"
+                                        <TextBlock Text="3. Which keyframe of that sequence?"  FontWeight="Black"    Background="LightGray" TextAlignment="Center"
                           Grid.Row="5" Grid.ColumnSpan="2"    />
                                         <ListBox Name="List_Keyframes_Animator" SelectionChanged="SelectedKeyframeInAnimator" 
                         Grid.Row="6"
@@ -1814,14 +1814,14 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                                 <TextBlock Name="LabelDisplayInfo" />
                             </ScrollViewer>
                             <StackPanel VerticalAlignment="Top" Grid.Column="1">
-                                <Button Cursor="Hand"  Click="showunanimatedseq">Which sequences are not animated?</Button>
-                                <Button Cursor="Hand"  Click="ShowUnAnimatedGeometryInfo">Which sequences don't have animated geometry?</Button>
-                                <Button Cursor="Hand"  Click="show_w25">Which sequences don't have animated bones?</Button>
-                                <Button Cursor="Hand"  Click="show_w24">Which sequences don't have animated nodes?</Button>
-                                <Button Cursor="Hand"  Click="whichnodesnotanimated">Which bones are not animated?</Button>
-                                <Button Cursor="Hand"  Click="CopySQData">Show me all keyframes</Button>
-                                <Button Cursor="Hand"  Click="ShowGaps">show me sequence gaps up to 999,999</Button>
-                                <Button Cursor="Hand"  Click="tellModelExxtent">What is the model's actual extent?</Button>
+                                <Button Cursor="Hand"  Click="showunanimatedseq" FontSize="16">Which sequences are not animated?</Button>
+                                <Button Cursor="Hand"  Click="ShowUnAnimatedGeometryInfo" FontSize="16">Which sequences don't have animated geometry?</Button>
+                                <Button Cursor="Hand"  Click="show_w25" FontSize="16">Which sequences don't have animated bones?</Button>
+                                <Button Cursor="Hand"  Click="show_w24" FontSize="16">Which sequences don't have animated nodes?</Button>
+                                <Button Cursor="Hand"  Click="whichnodesnotanimated" FontSize="16">Which bones are not animated?</Button>
+                                <Button Cursor="Hand"  Click="CopySQData" FontSize="16">Show me all keyframes</Button>
+                                <Button Cursor="Hand"  Click="ShowGaps" FontSize="16">show me sequence gaps up to 999,999</Button>
+                                <Button Cursor="Hand"  Click="tellModelExxtent" FontSize="16">What is the model's actual extent?</Button>
                             </StackPanel>
                         </Grid>
                     </TabItem>

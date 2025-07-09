@@ -3,7 +3,7 @@ EmissionRate: 50
 Speed: 50
 Variation: 50
 Latitude: 0
-Width: 0
+Width: 50
 Length: 50
 Gravity: 0
 Texture: Textures\Flame4.blp

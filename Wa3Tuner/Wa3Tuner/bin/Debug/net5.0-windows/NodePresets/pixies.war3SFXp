@@ -1,10 +1,5 @@
 [emitter2]
 EmissionRate: 42
-EmissionRate: 42
-EmissionRate: 42
-EmissionRate: 0
-EmissionRate: 0
-EmissionRate: 42
 Texture: Textures\Yellow_Star_Dim.blp
 Filtermode: Additive
 Unshaded: True

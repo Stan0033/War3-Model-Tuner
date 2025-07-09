@@ -4278,7 +4278,7 @@ namespace Wa3Tuner
             return CurrentModel.GeosetAnimations[index];
         }
 
-        private void RefreshGeosetAnimationsList()
+        public void RefreshGeosetAnimationsList()
         {
             List_GeosetAnims.Items.Clear();
             foreach (CGeosetAnimation ga in CurrentModel.GeosetAnimations)

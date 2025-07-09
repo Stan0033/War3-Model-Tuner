@@ -31,6 +31,8 @@ namespace Wa3Tuner.Dialogs
         private List<CGeoset> Gradual = new List<CGeoset>();
         private List<CGeoset> All = new List<CGeoset>();
         private string question = "?";
+        private bool pause = false; 
+
         public Gradual_Visibility_Maker(CModel m, MainWindow main)
         {
             InitializeComponent();
@@ -41,20 +43,24 @@ namespace Wa3Tuner.Dialogs
         public void Work(CModel model)
         {
           Model = model;
+            
             if (Model.Sequences.Count == 0)
             {
                 MessageBox.Show("There are no sequences"); Hide();
                 return;
             }
+            SelectedSequence = Model.Sequences[0];
+          
             if (Model.Geosets.Count  <=2)
             {
                 MessageBox.Show("At least 2 geosets must be present"); Hide();
                 return;
             }
+            pause = true;
             ClearAll();
             All.AddRange(model.Geosets.ObjectList);
             FillSequences();
-            
+            pause = false;
            REfreshAll();
 
 
@@ -99,7 +105,7 @@ namespace Wa3Tuner.Dialogs
             }
             if (listGeosets.Items.Count != 0)
             {
-                MessageBox.Show("All geosets must be categorized");return;
+                MessageBox.Show("All availsble geosets must be categorized");return;
             }
             if (listGeosetsOrder.Items.Count  <= 1)
             {
@@ -114,9 +120,15 @@ namespace Wa3Tuner.Dialogs
 
         private void CreateGradualVisibility(bool visible)
         {
-           
-            int initialDelay = int.TryParse(InputDelay.Text, out initialDelay) ? initialDelay : 0;
-            if (initialDelay < 0) initialDelay = 0;
+            bool ValuesValid = CheckValidDelay();
+            if (!ValuesValid)
+            {
+                MessageBox.Show("Invalid or negative starting and/or ending delay input");
+                return;
+            }
+            int initialDelay = int.Parse(InputDelay.Text);
+            int finalDelay  =int.Parse(InputDelay2.Text);
+            
 
             int visibility = visible ? 1 : 0;
             int counterVisibility = visible ? 0 : 1;
@@ -129,37 +141,13 @@ namespace Wa3Tuner.Dialogs
 
             int start = SelectedSequence.IntervalStart;
             int end = SelectedSequence.IntervalEnd;
-            
+
             int totalGapTime = (Gradual.Count - 1) * EstimatedGap;
             int lastGeosetTime = start + initialDelay + totalGapTime;
 
-            if (lastGeosetTime >  end)
+            if (lastGeosetTime > end - finalDelay)
             {
-                MessageBox.Show("Initial delay and spacing leave insufficient room for all geosets.");
-                return;
-            }
-
-            if (Gradual.Count == 2)
-            {
-                int visibleTime1 = start + initialDelay;
-                int visibleTime2 = visibleTime1 + EstimatedGap;
-
-                CGeosetAnimation ga1 = GetGeosetAnimationForGeoset(Gradual[0]);
-                CGeosetAnimation ga2 = GetGeosetAnimationForGeoset(Gradual[1]);
-
-                if (ga1.Alpha.Static) ga1.Alpha.MakeAnimated();
-                if (ga2.Alpha.Static) ga2.Alpha.MakeAnimated();
-
-                AddKeyframe(ga1, start, counterVisibility);
-                AddKeyframe(ga1, visibleTime1, visibility);
-                CreateOrSetEndingKeyframe(ga1, end, visibility);
-
-                AddKeyframe(ga2, start, counterVisibility);
-                AddKeyframe(ga2, visibleTime2, visibility);
-                CreateOrSetEndingKeyframe(ga2, end, visibility);
-
-                AddAllMissingSEquencesToGeosetAnimations();
-                MessageBox.Show("Created!");
+                MessageBox.Show("Initial + final delay and spacing leave insufficient room for all geosets.");
                 return;
             }
 
@@ -170,25 +158,39 @@ namespace Wa3Tuner.Dialogs
                 if (ga.Alpha.Static) ga.Alpha.MakeAnimated();
 
                 int timeToSet = start + initialDelay + i * EstimatedGap;
+                int endKeyframeTime = end - finalDelay;
 
-                // Always add the start keyframe, even if it overlaps
-                AddKeyframe(ga, start, counterVisibility);
+                // Safety: Ensure visibility end time isn't before visibility start
+                if (endKeyframeTime < timeToSet)
+                    endKeyframeTime = timeToSet;
 
-                // Avoid double-keyframe if timeToSet == start
-                if (timeToSet != start)
-                    AddKeyframe(ga, timeToSet, visibility);
+                // Hidden at start if there's a delay
+                if (timeToSet > start)
+                    AddKeyframe(ga, start, counterVisibility);
 
-                CreateOrSetEndingKeyframe(ga, end, visibility);
+                AddKeyframe(ga, timeToSet, visibility);
+                CreateOrSetEndingKeyframe(ga, endKeyframeTime, visibility);
             }
 
             AddAllMissingSEquencesToGeosetAnimations();
             MessageBox.Show("Created!");
+            InputDelay.Text = initialDelay.ToString();
+            InputDelay2.Text = finalDelay.ToString();
         }
 
+        private bool CheckValidDelay()
+        {
+            int nu1, nu2 = -1;
+            bool n1 = int.TryParse(InputDelay2.Text ,out nu1);
+            bool n2 = int.TryParse(InputDelay2.Text ,out nu2);
+
+           
+            return n1 && n1 && nu1 >= 0 && nu2 >=0;
+        }
 
         private void CreateOrSetEndingKeyframe(CGeosetAnimation ga, int ending, int value)
         {
-            CAnimatorNode<float> last = ga.Alpha.FirstOrDefault(X => X.Time == ending);
+            CAnimatorNode<float>? last = ga.Alpha.FirstOrDefault(X => X.Time == ending);
             if (last == null)
             {
                 CAnimatorNode<float> created = new CAnimatorNode<float> { Time = ending, Value = value };
@@ -277,13 +279,22 @@ namespace Wa3Tuner.Dialogs
             RefreshGradualGeosets();
             REfreshAll();
             RefreshEstimatedGap();
+
         }
         private void REfreshAll()
         {
             int index = listGeosets.SelectedIndex;
             listGeosets.Items.Clear();
             foreach (var item in All) {
-                listGeosets.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+                if (item.Name.Length > 0)
+                {
+                    listGeosets.Items.Add(new ListBoxItem() { Content = $"{item.ObjectId} ({item.Name})" });
+                }
+                else
+                {
+                    listGeosets.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+                }
+               
             }
             if (index >= 0) { listGeosets.SelectedIndex = index; }
             Label_All.Text = $"Available geosets ({All.Count})";
@@ -299,6 +310,7 @@ namespace Wa3Tuner.Dialogs
             RefreshGradualGeosets();
             listGeosets.Items.Clear();
             RefreshEstimatedGap();
+            RefreshAll_Label();
         }
 
         private void RefreshEstimatedGap()
@@ -335,7 +347,13 @@ namespace Wa3Tuner.Dialogs
             All.Clear();
            RefreshALWAYSGeosets();
             listGeosets.Items.Clear();
+            RefreshAll_Label();
 
+        }
+
+        private void RefreshAll_Label()
+        {
+            Label_All.Text = $"Available geosets ({All.Count})";
         }
 
         private void moveup(object sender, RoutedEventArgs e)
@@ -371,7 +389,17 @@ namespace Wa3Tuner.Dialogs
             listGeosetsOrder.Items.Clear();
             foreach (var item in Gradual)
             {
-                listGeosetsOrder.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+
+                if (item.Name.Length > 0)
+                {
+                    listGeosetsOrder.Items.Add(new ListBoxItem() { Content = $"{item.ObjectId} ({item.Name})" });
+                }
+                else
+                {
+                    listGeosetsOrder.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+                }
+
+               
             }
             if (index >= 0)
             {
@@ -385,7 +413,17 @@ namespace Wa3Tuner.Dialogs
             listGeosetsAlways.Items.Clear();
             foreach (var item in ALWAYS)
             {
-                listGeosetsAlways.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+
+                if (item.Name.Length > 0)
+                {
+                    listGeosetsAlways.Items.Add(new ListBoxItem() { Content = $"{item.ObjectId} ({item.Name})" });
+                }
+                else
+                {
+                    listGeosetsAlways.Items.Add(new ListBoxItem() { Content = item.ObjectId });
+                }
+
+                
             }
             if (index >= 0)
             {
@@ -437,8 +475,15 @@ namespace Wa3Tuner.Dialogs
 
         private void list_sequences_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (pause) return;
             SelectedSequence = Model.Sequences[ list_sequences.SelectedIndex];
             RefreshEstimatedGap();
+        }
+
+        private void nverse(object sender, RoutedEventArgs e)
+        {
+            Gradual.Reverse();
+            RefreshGradualGeosets();
         }
     }
 }

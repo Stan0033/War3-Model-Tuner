@@ -22,17 +22,19 @@
             <RadioButton  Content="Gradual invisibility" />
             <TextBlock Text="Do, in sequence:" Margin="5"/>
             <ListBox Name="list_sequences" Height="100" SelectionChanged="list_sequences_SelectionChanged"/>
-            <TextBlock Text="Initial delay (ms):"/>
+            <TextBlock Text="Starting delay (ms):"/>
             <TextBox Name="InputDelay" Text="0" Padding="2"/>
+            <TextBlock Text="Ending delay (ms):"/>
+            <TextBox Name="InputDelay2" Text="0" Padding="2"/>
             <Button Click="ok" Margin="20" Content="Finalize" FontSize="24"/>
         </StackPanel>
         <StackPanel Grid.Column="1">
             <TextBlock Text="Available geosets" Name="Label_All"/>
             <ListBox Name="listGeosets" Height="200"/>
-            <Button Content="Add to gradual visibility" Click="add_grad_gradual" Padding="5"/>
-            <Button Content="Add to always visible" Click="add_grad_v" Padding="5"/>
-            <Button Content="Add ALL to gradual visibility" Click="add_grad_gradual_all" Padding="5"/>
-            <Button Content="Add ALL to always visible" Click="add_grad_v_all" Padding="5"/>
+            <Button Content="Move to gradual visibility" Click="add_grad_gradual" Padding="5"/>
+            <Button Content="Move to always visible" Click="add_grad_v" Padding="5"/>
+            <Button Content="Move ALL to gradual visibility" Click="add_grad_gradual_all" Padding="5" Margin="0,10,0,0"/>
+            <Button Content="Move ALL to always visible" Click="add_grad_v_all" Padding="5"/>
         </StackPanel>
         <StackPanel Grid.Column="2">
             <TextBlock Text="always visible geosets:" Name="Label_Always"/>
@@ -46,6 +48,7 @@
             <ListBox Name="listGeosetsOrder" Height="200"/>
             <Button Content="Move up" Click="moveup" Padding="5"/>
             <Button Content="Move down" Click="movedown" Padding="5"/>
+            <Button Content="Reverse" Click="nverse" Padding="5"/>
             <Button Content="Return" Click="return_from_2" Margin="0,20,0,0" Padding="5"/>
             <Button Content="Return ALL" Click="return_from_2_all" Padding="5"/>
             <StackPanel Margin="5">

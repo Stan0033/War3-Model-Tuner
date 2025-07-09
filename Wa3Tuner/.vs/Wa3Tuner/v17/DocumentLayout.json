@@ -3,20 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\miniuv.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\miniuv.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\about_w.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\about_w.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\gradual visibility maker.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\gradual visibility maker.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -39,50 +27,15 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "MiniUV.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\MiniUV.xaml.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\MiniUV.xaml.cs",
-              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\MiniUV.xaml.cs",
-              "RelativeToolTip": "Wa3Tuner\\Dialogs\\MiniUV.xaml.cs",
-              "ViewState": "AgIAAD8AAAAAAAAAAAASwEcAAAA6AAAAAAAAAA==",
+              "Title": "Gradual Visibility Maker.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\Gradual Visibility Maker.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\Gradual Visibility Maker.xaml.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\Gradual Visibility Maker.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\Dialogs\\Gradual Visibility Maker.xaml.cs",
+              "ViewState": "AgIAAFwAAAAAAAAAAAAjwGsAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-05T13:49:33.842Z",
+              "WhenOpened": "2025-07-08T19:14:08.155Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
-              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
-              "ViewState": "AgIAANIQAAAAAAAAAAAkwN8QAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-05T13:44:12.601Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
-              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
-              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-07-05T13:44:13.569Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "about_w.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\about_w.xaml.cs",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\about_w.xaml.cs",
-              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\about_w.xaml.cs",
-              "RelativeToolTip": "Wa3Tuner\\Dialogs\\about_w.xaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAqAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-04T20:28:00.749Z"
             }
           ]
         },
