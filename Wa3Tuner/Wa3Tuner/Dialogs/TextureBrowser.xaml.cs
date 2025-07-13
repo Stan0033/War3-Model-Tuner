@@ -114,6 +114,7 @@ namespace Wa3Tuner
                     Main_Window.RefreshTexturesList();
                     Main_Window.RefreshLayersTextureList();
                     Main_Window.SelectedLayer(null, null);
+                    Main_Window. GiveTexturesToNodesWithout();
                 }
             }
             else
@@ -157,6 +158,7 @@ namespace Wa3Tuner
                     Main_Window.RefreshTexturesList();
                     Main_Window.RefreshLayersTextureList();
                     Main_Window.SelectedLayer(null, null);
+                    Main_Window.GiveTexturesToNodesWithout();
                 }
             }
             else

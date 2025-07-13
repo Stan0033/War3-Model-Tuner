@@ -28,7 +28,7 @@
         <CheckBox Name="Check_parent" Content="Place under selected node" Grid.Row="2"/>
         <ListBox Name="List_Type"  Grid.Row="1" Grid.Column="1" SelectedIndex="0" SelectionMode="Single">
             <ListBox.Items>
-                <ListBoxItem ToolTip="Vertices hould only be attached to bones! Bonnes deform vertices when anmated, creating animation in sequences">Bone</ListBoxItem>
+                <ListBoxItem ToolTip="Vertices should only be attached to bones! Bones deform vertices when their transformatons change, creating animation in sequences">Bone</ListBoxItem>
                 <ListBoxItem ToolTip="Use to hold other nodes. Does no contain additional properties">Helper</ListBoxItem>
                 <ListBoxItem ToolTip="Used for determining in-game how selection insteracts with the model">Collision Shape</ListBoxItem>
                 <ListBoxItem ToolTip="Illuminates surroundings">Light</ListBoxItem>

@@ -344,3 +344,5 @@ C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\NodePresets.baml
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\CreateSkeleton_window.g.cs
 C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\CreateSkeleton_window.baml
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MultipleNodeMover.g.cs
+C:\Users\stan0\Documents\GitHub\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\MultipleNodeMover.baml

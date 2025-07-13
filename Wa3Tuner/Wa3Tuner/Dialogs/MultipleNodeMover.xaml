@@ -1,0 +1,29 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.MultipleNodeMover"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        KeyDown="Window_KeyDown"
+        
+        WindowStartupLocation="CenterScreen"
+        Background="LightGray"
+        Title="Multiple Nodes Mover" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition  Height="30"/>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Move these selected nodes under..."/>
+        <TextBlock Text="This selected node" Grid.Row="1"/>
+        <ListBox x:Name="list1" Grid.Column="0" Grid.Row="1" SelectionMode="Multiple"/>
+        <ListBox x:Name="list2" Grid.Column="1" Grid.Row="1"/>
+        <Button Grid.Row="2" Grid.Column="1" Content="Finalize" Click="ok"/>
+    </Grid>
+</Window>

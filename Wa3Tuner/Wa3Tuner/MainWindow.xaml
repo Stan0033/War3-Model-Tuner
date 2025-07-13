@@ -313,6 +313,7 @@
                     <sharpGL1:OpenGLControl  RenderTrigger="Manual" Grid.Row="1"
                                             Name="Scene_ViewportGL"      Background="Black"
                                             Initialized="InitializeSharpGL"
+                                             RenderContextType="FBO"
                                             OpenGLDraw="DrawScene" Grid.ColumnSpan="2"  />
                     <Canvas Name="Canvas_Grid_Overlay"  Grid.Column="0"   Grid.Row="1"
                             Background="Transparent" Grid.ColumnSpan="2" 
@@ -1349,6 +1350,7 @@ to the second sequence, sync their times.
                                 <MenuItem Header="Move">
                                     <MenuItem Header="Move to root" Click="movetoroot"/>
                                     <MenuItem Header="Move under node..." Click="movetargetnodeundernode"/>
+                                    <MenuItem Header="Move multiple under node..." Click="movemultipleUnderNode"/>
                                     <MenuItem Header="Swap locations in tree" Click="swapnodesintree"/>
                                 </MenuItem>
                                 <MenuItem Header="Duplicate" Click="duplicatenode"/>

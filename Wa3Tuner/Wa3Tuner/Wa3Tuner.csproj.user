@@ -85,6 +85,9 @@
     <Compile Update="Dialogs\model_starter.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\MultipleNodeMover.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\NodePresets.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

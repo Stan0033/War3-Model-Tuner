@@ -68,6 +68,7 @@ namespace Wa3Tuner
         //--------------------------------------------------------------------------------
 
         private bool CanDrag = false;
+        private bool MustRefresh = false;
         private bool MaximizeOnStart = false;
         private float ZoomIncrement = 1;
         private bool OptimizeOnSave = false;
@@ -154,7 +155,10 @@ namespace Wa3Tuner
             PlayTimer.Enabled = false;
             PlayTimer.Elapsed += PlayTimer_Cycle;
         }
-
+        private void RefreshViewport()
+        {
+            if (MustRefresh == false) return;
+        }
 
         private void PlayTimer_Cycle(object? sender, ElapsedEventArgs e)
         {
@@ -2965,6 +2969,7 @@ namespace Wa3Tuner
                             }
                         }
                         CurrentModel.Textures.Remove(texture);
+                        GiveTexturesToNodesWithout();
                     }
                 }
                 else
@@ -6032,8 +6037,42 @@ namespace Wa3Tuner
                 RefreshNodesTree();
                 RefreshSequencesList_Paths();
                 RefreshPath_ModelNodes_List();
+                GiveTexturesToNodesWithout();
             }
         }
+
+        public void GiveTexturesToNodesWithout()
+        {
+            if (CurrentModel.Textures.Count == 0)
+            {
+                foreach (var node in CurrentModel.Nodes)
+                {
+                    if (node is CParticleEmitter2 e)
+                    {
+                        if (e.Texture.Object != null)
+                        {
+                            e.Texture.Detach();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (var node in CurrentModel.Nodes)
+                {
+                    if (node is CParticleEmitter2 e)
+                    {
+                        if (e.Texture.Object == null)
+                        {
+                            e.Texture.Attach(CurrentModel.Textures[0]);
+                        }
+                    }
+                }
+            }
+              
+            
+        }
+
         private void flattengeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 0)
@@ -6641,6 +6680,8 @@ namespace Wa3Tuner
                 CurrentModel.Textures.Add(textue);
                 RefreshTexturesList();
                 RefreshLayersTextureList(); SetSaved(false);
+                GiveTexturesToNodesWithout();
+                GiveTexturesToNodesWithout();
             }
             else { MessageBox.Show("There is already TC Texture"); }
         }
@@ -7025,6 +7066,7 @@ namespace Wa3Tuner
         }
         private void findTexture(object? sender, RoutedEventArgs? e)
         {
+         
             if (TextureFinder == null) return;
             TextureFinder.ShowDialog();
         }
@@ -9082,6 +9124,7 @@ namespace Wa3Tuner
                     CurrentModel.Textures.Add(texture);
                     RefreshTexturesList();
                     RefreshLayersTextureList();
+                    GiveTexturesToNodesWithout();
                 }
                 else
                 {
@@ -12134,6 +12177,7 @@ namespace Wa3Tuner
                 RefreshLayersTextureList();
                 RefreshMaterialsList();
                 RefreshTexturesList();
+                GiveTexturesToNodesWithout();
                 SetSaved(false);
             }
         }
@@ -19917,6 +19961,7 @@ namespace Wa3Tuner
             texture.FileName = White;
             CurrentModel.Textures.Add(texture);
             RefreshTexturesList();
+            GiveTexturesToNodesWithout();
 
         }
 
@@ -19926,6 +19971,7 @@ namespace Wa3Tuner
             texture.FileName = Black;
             CurrentModel.Textures.Add(texture);
             RefreshTexturesList();
+            GiveTexturesToNodesWithout();
         }
 
         private void rig_SelectVerticesOfGeoset(object? sender, RoutedEventArgs? e)
@@ -21367,6 +21413,17 @@ namespace Wa3Tuner
             {
                 RefreshNodesTree();
             }
+        }
+
+        private void movemultipleUnderNode(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Nodes.Count < 2)
+            {
+                MessageBox.Show("At lesat 2 nodes must be present");return;
+            }
+            MultipleNodeMover m = new MultipleNodeMover(CurrentModel);
+            m.ShowDialog();
+            if (m.DialogResult == true) { RefreshNodesTree(); }
         }
     }
 }
