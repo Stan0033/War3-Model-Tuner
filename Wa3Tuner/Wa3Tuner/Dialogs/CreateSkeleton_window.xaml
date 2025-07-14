@@ -31,7 +31,13 @@
             <Button Click="create" Content="Create" Padding="5"/>
         </StackPanel>
         <StackPanel Grid.Column="1" Grid.Row="1">
-            <ListBox Name="ListLoaded" Height="200" SelectionChanged="Preview"/>
+            <ListBox Name="ListLoaded" Height="200" SelectionChanged="Preview">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Delete" Click="del"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
             <Button Click="load" Content="Create" Padding="10"/>
         </StackPanel>
         <TreeView Name="tree_preview" Grid.Column="2" Grid.Row="1"  />

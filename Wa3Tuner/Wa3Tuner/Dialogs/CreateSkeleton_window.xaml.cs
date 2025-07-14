@@ -386,5 +386,22 @@ Base_h
             return tree;
         }
 
+        private void del(object sender, RoutedEventArgs e)
+        {
+
+         
+            if (ListLoaded.SelectedItem != null)
+            {
+                int index = ListLoaded.SelectedIndex;
+                File.Delete(LoadedFiles[index]);
+                LoadedFiles.RemoveAt(index);
+                ListLoaded.Items.RemoveAt(index);
+               // LoadFiles(BaseDirectory);
+
+            }
+        }
+
+       
     }
-}
+    }
+
