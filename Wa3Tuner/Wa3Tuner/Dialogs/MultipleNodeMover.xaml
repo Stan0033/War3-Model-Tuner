@@ -22,7 +22,16 @@
         </Grid.RowDefinitions>
         <TextBlock Text="Move these selected nodes under..."/>
         <TextBlock Text="This selected node" Grid.Row="1"/>
-        <ListBox x:Name="list1" Grid.Column="0" Grid.Row="1" SelectionMode="Multiple"/>
+        <ListBox x:Name="list1" Grid.Column="0" Grid.Row="1" SelectionMode="Multiple">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Select all" Click="sall"/>
+                    <MenuItem Header="Unselect all" Click="unselect"/>
+                    <MenuItem Header="Select Reverse" Click="reverse"/>
+                   
+                </ContextMenu>
+            </ListBox.ContextMenu>
+           </ListBox>
         <ListBox x:Name="list2" Grid.Column="1" Grid.Row="1"/>
         <Button Grid.Row="2" Grid.Column="1" Content="Finalize" Click="ok"/>
     </Grid>

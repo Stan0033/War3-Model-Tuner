@@ -1349,8 +1349,12 @@ to the second sequence, sync their times.
                                 <MenuItem Header="Detach bone from geoset..." Click="DetachSelectedBoneFromGeoset"/>
                                 <MenuItem Header="Move">
                                     <MenuItem Header="Move to root" Click="movetoroot"/>
+                                    
                                     <MenuItem Header="Move under node..." Click="movetargetnodeundernode"/>
+                                    <Separator/>
+                                    <MenuItem Header="Move multiple to root..." Click="movetorootM"/>
                                     <MenuItem Header="Move multiple under node..." Click="movemultipleUnderNode"/>
+                                    <Separator/>
                                     <MenuItem Header="Swap locations in tree" Click="swapnodesintree"/>
                                 </MenuItem>
                                 <MenuItem Header="Duplicate" Click="duplicatenode"/>

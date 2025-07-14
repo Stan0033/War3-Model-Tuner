@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Wa3Tuner.Helper_Classes;
 
 namespace Wa3Tuner.Dialogs
 {
@@ -138,6 +139,24 @@ namespace Wa3Tuner.Dialogs
             }
             return false;
         }
+
+        private void sall(object sender, RoutedEventArgs e)
+        {
+            list1.SelectAll();
+
+        }
+
+        private void unselect(object sender, RoutedEventArgs e)
+        {
+            list1.SelectedItems.Clear();    
+        }
+
+        private void reverse(object sender, RoutedEventArgs e)
+        {
+          
+            ListboxHelper.ReverseListBoxSelection(list1);
+        }
+        
 
     }
 }

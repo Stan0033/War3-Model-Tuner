@@ -20,6 +20,7 @@ namespace Wa3Tuner
     {
         internal string? Selected;
         internal List<string> SelectedList = new List<string>();
+        internal List<int> SelectedIndexes = new List<int>();
         public Selector(List<string> ids, string title = "Selector", bool Multiselect = false)
         {
             
@@ -63,6 +64,13 @@ namespace Wa3Tuner
                         {
                             SelectedList.Add(x);
                         }
+                    }
+                }
+                for (int i = 0; i < box.Items.Count; i++)
+                {
+                    if (box.SelectedItems.Contains(box.Items[i]))
+                    {
+                        SelectedIndexes.Add(i);
                     }
                 }
             }

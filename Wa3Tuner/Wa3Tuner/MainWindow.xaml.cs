@@ -21425,6 +21425,39 @@ namespace Wa3Tuner
             m.ShowDialog();
             if (m.DialogResult == true) { RefreshNodesTree(); }
         }
+
+        private void movetorootM(object sender, RoutedEventArgs e)
+        {
+            if (CurrentModel.Nodes.Count <= 2) return;
+
+            var nestedNodes = CurrentModel.Nodes
+                .Where(x => x.Parent.Node != null)
+                .ToList();
+
+            if (nestedNodes.Count == 0)
+            {
+                MessageBox.Show("All nodes are at root");
+                return;
+            }
+
+            List<string> nodeNames = nestedNodes
+                .Select(x => $"{x.Name} ({x.GetType().Name})")
+                .ToList();
+
+            Selector s = new Selector(nodeNames, "Select Node", true);
+            s.ShowDialog();
+
+            if (s.DialogResult == true)
+            {
+                foreach (int index in s.SelectedIndexes)
+                {
+                    // Use the nestedNodes list to get the correct node
+                    nestedNodes[index].Parent.Detach();
+                }
+                RefreshNodesTree();
+            }
+        }
+
     }
 }
 
