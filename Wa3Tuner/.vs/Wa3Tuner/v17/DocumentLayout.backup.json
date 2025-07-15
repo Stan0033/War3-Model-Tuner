@@ -3,12 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\createskeleton_window.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\createskeleton_window.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\createskeleton_window.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\createskeleton_window.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\mergehelperboneoptons.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\mergehelperboneoptons.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|c:\\users\\stan0\\documents\\github\\war3-model-tuner\\wa3tuner\\wa3tuner\\dialogs\\createskeleton_window.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01167A63-886E-4F89-BEF3-B8294448F776}|Wa3Tuner\\Wa3Tuner.csproj|solutionrelative:wa3tuner\\dialogs\\createskeleton_window.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -25,32 +33,42 @@
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MergeHelperBoneOptons.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\MergeHelperBoneOptons.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\MergeHelperBoneOptons.xaml.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\MergeHelperBoneOptons.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\Dialogs\\MergeHelperBoneOptons.xaml.cs",
+              "ViewState": "AgIAAFcAAAAAAAAAAIAzwGgAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T12:15:42.696Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml.cs",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAPtTAAAAAAAAAAAjwA1UAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T12:14:52.48Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "CreateSkeleton_window.xaml.cs",
               "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml.cs",
               "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml.cs",
               "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml.cs",
               "RelativeToolTip": "Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml.cs",
-              "ViewState": "AgIAAHkBAAAAAAAAAAAswI0BAAAxAAAAAAAAAA==",
+              "ViewState": "AgIAAHkBAAAAAAAAAAAswIEBAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-14T01:19:30.121Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "CreateSkeleton_window.xaml",
-              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml",
-              "RelativeDocumentMoniker": "Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml",
-              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml",
-              "RelativeToolTip": "Wa3Tuner\\Dialogs\\CreateSkeleton_window.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-07-14T01:18:48.056Z",
               "EditorCaption": ""
             }
           ]
@@ -62,6 +80,39 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "5fc29842-7f3a-45cb-9ea2-ae61dbce34cd",
+        "Display": 0,
+        "X": 32,
+        "Y": 75,
+        "Width": 1306,
+        "Height": 766,
+        "WindowState": 0
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "Wa3Tuner\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\stan0\\Documents\\GitHub\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\MainWindow.xaml",
+              "RelativeToolTip": "Wa3Tuner\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-07-14T14:03:34.781Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -1,7 +1,7 @@
 ﻿using MdxLib.Model;
  
 using System.Collections.Generic;
- 
+using System.Linq;
 using System.Windows;
  
 using System.Windows.Input;
@@ -43,94 +43,121 @@ namespace Wa3Tuner.Dialogs
             }
             else
             {
-                // while (HasPairs())
-                // {
                 if (OwnerModel == null) return;
-                    for (int i = 0; i < OwnerModel.Nodes.Count; i++)
-                    {
-                        INode loopedParent = OwnerModel.Nodes[i];
-                        INode? child = GetOnlyBoneChildOfNode(loopedParent); if (child == null) { return; }
-                        if (child == null) continue;
+                bool mergedAny;
+                do
+                {
+                    mergedAny = false;
+                    List<(INode Parent, INode Child)> mergePairs = new();
 
-                        MergeHelperWithChild(loopedParent, child, false);
+                    foreach (INode parent in OwnerModel.Nodes)
+                    {
+                        if (parent is not CHelper) continue;
+
+                        // Find children of the helper node
+                        var children = OwnerModel.Nodes.Where(n => n.Parent?.Node == parent).ToList();
+                        if (children.Count != 1) continue;
+
+                        var child = children[0];
+                        if (child is CBone)
+                        {
+                            mergePairs.Add((parent, child));
+                        }
                     }
-               // }
-               
+
+                    foreach (var (parent, child) in mergePairs)
+                    {
+                        MergeHelperWithChild(parent, child, false);
+                        mergedAny = true;
+                    }
+
+                } while (mergedAny);
+
+
+
+
             }
+
             DialogResult = true;
         }
-        
+
+
         private void MergeHelperWithChild(INode? parentNode, INode? childNode, bool andNested)
-        {
-            if (parentNode == null) return; 
-            if (childNode == null) return;
-            if (OwnerModel == null) return;
-            // if the parentnode is helper
-            if (parentNode is CHelper == false) { return; }
-            if (childNode is CBone == false) {    return; }
-            INode parentOfParent = parentNode.Parent.Node;
-            var childrenOfChild = GetChildrenOfChild(childNode);
+            {
+                if (parentNode == null) return; 
+                if (childNode == null) return;
+                if (OwnerModel == null) return;
+                // if the parentnode is helper
+                if (parentNode is CHelper == false) { return; }
+                if (childNode is CBone == false) {    return; }
+                INode parentOfParent = parentNode.Parent.Node;
+                var childrenOfChild = GetChildrenOfChild(childNode);
             
             
 
-            CBone newBone = new CBone(OwnerModel);
-            newBone.Name = parentNode.Name;
-            newBone.PivotPoint = new MdxLib.Primitives.CVector3(parentNode.PivotPoint);
-            CBone? chldBone = childNode as CBone;
-            if (chldBone == null) {return; }
-            if (chldBone.Geoset.Object == null) {return; }
+                CBone newBone = new CBone(OwnerModel);
+                newBone.Name = parentNode.Name;
+                newBone.PivotPoint = new MdxLib.Primitives.CVector3(parentNode.PivotPoint);
+                CBone? chldBone = childNode as CBone;
+                if (chldBone == null) {return; }
+            if (chldBone.Geoset.Object != null)
+            {
+                newBone.Geoset.Attach(chldBone.Geoset.Object);
+            }
+            if (chldBone.GeosetAnimation.Object != null)
+            {
+                newBone.GeosetAnimation.Attach(chldBone.GeosetAnimation.Object);
+            }
+
             if (chldBone.Geoset.Object != null) { newBone.Geoset.Attach(chldBone.Geoset.Object); }
-            if (chldBone.GeosetAnimation.Object != null) { newBone.GeosetAnimation.Attach(chldBone.GeosetAnimation.Object); }
-            // Attach newBone correctly in the hierarchy
-            if (parentOfParent != null) newBone.Parent.Attach(parentOfParent);
-            // attach all chldren of the parent to the parent that had changed type
-            ReattachGeosetsUsingBoneToNewBone(childNode, newBone); // child is bone with vertices, parent is new bone
+                if (chldBone.GeosetAnimation.Object != null) { newBone.GeosetAnimation.Attach(chldBone.GeosetAnimation.Object); }
+                // Attach newBone correctly in the hierarchy
+                if (parentOfParent != null) newBone.Parent.Attach(parentOfParent);
+                // attach all chldren of the parent to the parent that had changed type
+                ReattachGeosetsUsingBoneToNewBone(childNode, newBone); // child is bone with vertices, parent is new bone
 
 
 
-            // Handle different options
-            if (c1.IsChecked == true) // Erase
-            {
-                // No need to transfer keyframes, newBone replaces the parent
-            }
-            else if (c2.IsChecked == true) // Preserve Parent
-            {
-                CopyKeyframes(parentNode, newBone);
-            }
-            else if (c3.IsChecked == true) // Preserve Child
-            {
-                CopyKeyframes(childNode, newBone);
-            }
-            else if (c4.IsChecked == true) // Preserve Bigger
-            {
-                CopyBiggerKeyframes(parentNode, childNode, newBone);
-            }
-
-            OwnerModel.Nodes.Remove(childNode);
-
-            // Attach all children of the old child to the newBone
-            foreach (INode child in childrenOfChild)
-            {
-                child.Parent?.Attach(newBone);
-            }
-            OwnerModel.Nodes.Remove(parentNode);
-            OwnerModel.Nodes.Remove(childNode);
-            OwnerModel.Nodes.Add(newBone);
-                if (AndNested)
+                // Handle different options
+                if (c1.IsChecked == true) // Erase
                 {
-                    if (childrenOfChild.Count == 1)
-                    {
-                        MergeHelperWithChild(newBone, childrenOfChild[0], andNested);
-                    }
+                    // No need to transfer keyframes, newBone replaces the parent
                 }
-            
+                else if (c2.IsChecked == true) // Preserve Parent
+                {
+                    CopyKeyframes(parentNode, newBone);
+                }
+                else if (c3.IsChecked == true) // Preserve Child
+                {
+                    CopyKeyframes(childNode, newBone);
+                }
+                else if (c4.IsChecked == true) // Preserve Bigger
+                {
+                    CopyBiggerKeyframes(parentNode, childNode, newBone);
+                }
+
+                OwnerModel.Nodes.Remove(childNode);
+
+                // Attach all children of the old child to the newBone
+                foreach (INode child in childrenOfChild)
+                {
+                    child.Parent?.Attach(newBone);
+                }
+                OwnerModel.Nodes.Remove(parentNode);
+                OwnerModel.Nodes.Remove(childNode);
+                OwnerModel.Nodes.Add(newBone);
             if (AndNested)
             {
-                if (childrenOfChild.Count == 1)
+                foreach (var grandChild in GetChildrenOfChild(newBone))
                 {
-                    MergeHelperWithChild(childNode, childrenOfChild[0], andNested);
+                    if (newBone is CBone && grandChild is CBone && OwnerModel.Nodes.Contains(grandChild))
+                    {
+                        MergeHelperWithChild(newBone, grandChild, andNested);
+                    }
                 }
             }
+
+
         }
 
         private List<INode> GetChildrenOfChild(INode childNode)

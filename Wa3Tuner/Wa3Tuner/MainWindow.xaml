@@ -1525,6 +1525,7 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                                     <MenuItem   Header="Other" Margin="5,0,5,0"   >
                                         <MenuItem Cursor="Hand"  Click="atmtag" Header="Apply this material to all geosets" Margin="5,0,5,0"  />
                                         <MenuItem Cursor="Hand"  Click="dmpg" Header="Duplicate material to one per geoset using it" Margin="5,0,5,0"  />
+                                        <MenuItem Cursor="Hand"  Click="RemoveAllUnusedMaterials" Header="Optimization: remove unused materials" Margin="5,0,5,0"  />
                                     </MenuItem>
                                 </ContextMenu>
                             </ListBox.ContextMenu>
@@ -1631,21 +1632,22 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                                     <MenuItem Cursor="Hand"  Click="importTexture_" Header="Import" />
                                     <MenuItem Header="New">
                                         <MenuItem Cursor="Hand"  Click="newtexturefrominput" Header="New from input..." />
+                                        <MenuItem Cursor="Hand"  Click="newFrolocalF" Header="New from local folder..." />
                                         <MenuItem Cursor="Hand"  Click="creatematerialfortargettexture" Header="Create material for this texture" />
                                         <MenuItem Cursor="Hand"  Click="createLayer" Header="Create layer with this texture for the selected material" />
                                         <MenuItem Cursor="Hand"  Click="creatematsforalltextures" Header="Create materials for all textures" />
                                         <MenuItem Cursor="Hand"  Click="createplane_t" Header="Create 3d plane for texture" />
                                         <MenuItem Cursor="Hand"  Click="createTextures" Header="Mass create textures from paths..." />
+                                        <Separator/>
+                                        <MenuItem Cursor="Hand"  Click="createTC" Header="Create Team color" />
+                                        <MenuItem Cursor="Hand"  Click="createTG" Header="Create Team glow" />
+                                        <MenuItem Cursor="Hand"  Click="createWhite" Header="Create White Texture" />
+                                        <MenuItem Cursor="Hand"  Click="createBlack" Header="Create Black Texture"  />
                                     </MenuItem>
                                     <MenuItem Cursor="Hand"  Click="ViewBig" Header="View in big" />
                                     <MenuItem Cursor="Hand"  Click="delTexture" Header="Delete" />
                                     <MenuItem Cursor="Hand"  Click="delTextureAndMaterials" Header="Delete texture and all materials using it" />
-                                    <MenuItem Header="Create">
-                                        <MenuItem Cursor="Hand"  Click="createTC" Header="Create Team color" />
-                                        <MenuItem Cursor="Hand"  Click="createTG" Header="Create Team glow" />
-                                        <MenuItem Cursor="Hand"  Click="createWhite" Header="White" />
-                                        <MenuItem Cursor="Hand"  Click="createBlack" Header="Black" />
-                                    </MenuItem>
+                                    
                                     <MenuItem Cursor="Hand"  Header="Whch geosets and nodes use this texture?" Click="TextureSpecialInfo" />
                                     <MenuItem  Header="Path" >
                                         <MenuItem Cursor="Hand"  Click="addw3imp" Header="Prepend War3Imported" />
@@ -1740,7 +1742,7 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                             <CheckBox Name="check_delOverlapping1"   >Delete fully overlapping triangles who share the same vertices</CheckBox>
                             <CheckBox Name="check_delOverlapping2"  >Delete fully overlapping triangles who share different vertices</CheckBox>
                             <CheckBox Name="check_mergevertices"   >Merge vertices with identical positions and texture positions</CheckBox>
-                            <CheckBox Name="Check_ClampUVs" Foreground="Green" FontStyle="Oblique">
+                            <CheckBox Name="Check_ClampUVs" Foreground="Green" FontStyle="Oblique" ToolTip="This might break uv mapping if some uv islands stretch beyong the 0-1 range, that's why I underlined it">
                                 <TextBlock>
                                     <Underline>
                                         Clamp all uv coordinates

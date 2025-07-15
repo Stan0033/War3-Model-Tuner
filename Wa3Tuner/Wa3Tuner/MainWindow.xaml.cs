@@ -380,7 +380,7 @@ namespace Wa3Tuner
                 CModel? temp = JsonFormat.Load(); if (temp == null) return;
                 if (temp != null) { CurrentModel = temp; }
             }
-
+            Pause = true;
             CurrentModel = TemporaryModel;
             MultiplyAlphasForEmitter2_MDL();
             RenameAllNodes();
@@ -400,6 +400,7 @@ namespace Wa3Tuner
             CParticleEmitter2? emitter = CurrentModel.Nodes[0] as CParticleEmitter2;
             if (Recents.Contains(FromFileName) == false) { Recents.Add(FromFileName); SaveRecents(); RefreshRecents(); }
             SetSaved(false);
+            Pause = false;
         }
 
         private void SetSaved(bool v)
@@ -21456,6 +21457,65 @@ namespace Wa3Tuner
                 }
                 RefreshNodesTree();
             }
+        }
+
+        private void newFrolocalF(object sender, RoutedEventArgs e)
+        {
+            if (File.Exists(CurrentSaveLocation)){
+                var files = GetLocalTextures(CurrentSaveFolder, "blp");
+                if (files.Count == 0)
+                {
+                    MessageBox.Show("No local blp files were found"); return;
+                }
+                else
+                {
+                    Selector s = new Selector( files,"local blp files", true);
+                    s.ShowDialog();
+                    if (s.DialogResult == true)
+                    {
+                        var list = s.SelectedIndexes;
+                        foreach (int i in list)
+                        {
+                            string path = files[i];
+                            string name = Path.GetFileName(path);
+                            if (CurrentModel.Textures.Any(x=>x.FileName == name)){
+                                MessageBox.Show($"{name} already exists in the list of textures");continue;
+                            }
+                            CTexture t = new CTexture(CurrentModel);
+                            t.FileName = name;
+                            CurrentModel.Textures.Add(t);
+
+                            RefreshTexturesList();
+                            RefreshLayersTextureList();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Current save location not found");return;
+            }
+        }
+
+        private List<string> GetLocalTextures(string folder, string fileExtension)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || string.IsNullOrWhiteSpace(fileExtension))
+                return new List<string>();
+
+            if (!Directory.Exists(folder))
+                return new List<string>();
+
+            string searchPattern = "*." + fileExtension.TrimStart('.');
+
+            return Directory.GetFiles(folder, searchPattern, SearchOption.TopDirectoryOnly).ToList();
+        }
+
+        private void RemoveAllUnusedMaterials(object sender, RoutedEventArgs e)
+        {
+            CurrentModel.Materials.ObjectList.RemoveAll(
+                material => !CurrentModel.Geosets.Any(geoset => geoset.Material.Object == material)
+            );
+            RefreshMaterialsList();
         }
 
     }

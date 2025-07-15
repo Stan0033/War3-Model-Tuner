@@ -47,4 +47,4 @@ Color_Edge_Selected=0.4862745, 0.9882353, 0, 1
 Color_Normals=1, 1, 0, 1
 NodeSize=15
 PathNodeSize=15
-VertexSize=15
+VertexSize=5
