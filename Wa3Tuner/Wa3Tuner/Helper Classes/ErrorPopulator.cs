@@ -12,7 +12,8 @@ namespace Wa3Tuner.Helper_Classes
 {
     public static class ErrorPopulator
     {
-
+       static Color severe = Color.FromArgb(255,219, 141, 46);
+        static Color warning = Color.FromArgb(255, 255, 213, 0);
         public static void ReportErrorsWithText(
        RichTextBox box,
        string unusedText,
@@ -26,13 +27,14 @@ namespace Wa3Tuner.Helper_Classes
                 string.IsNullOrEmpty(criticalText) && string.IsNullOrEmpty(errorText))
             {
                 var paragraph = new Paragraph(new Run("ALL OK."));
+                paragraph.Foreground = new SolidColorBrush(Colors.White);
                 box.Document.Blocks.Add(paragraph);
                 return;
             }
 
-            AddCategory(box, "Unused", Colors.Green, unusedText);
-            AddCategory(box, "Warning", Colors.Goldenrod, warningText);
-            AddCategory(box, "Severe", Colors.Orange, criticalText);
+            AddCategory(box, "Unused", Colors.LimeGreen, unusedText);
+            AddCategory(box, "Warning", warning, warningText);
+            AddCategory(box, "Severe", severe, criticalText);
             AddCategory(box, "Errors", Colors.Red, errorText);
         }
 
@@ -40,7 +42,9 @@ namespace Wa3Tuner.Helper_Classes
         private static void AddCategory(RichTextBox box, string title, Color color, string categoryText)
         {
             var titlePara = new Paragraph();
-
+            titlePara.FontSize = 16;
+            titlePara.FontWeight = FontWeights.Bold;
+            titlePara.Foreground = new SolidColorBrush(Colors.White);
             // Count non-empty lines in the category text
             int count = 0;
             if (!string.IsNullOrWhiteSpace(categoryText))
@@ -70,6 +74,7 @@ namespace Wa3Tuner.Helper_Classes
                 foreach (var line in lines)
                 {
                     var para = new Paragraph(new Run(line));
+                    para.Foreground = new SolidColorBrush(Colors.White);
                     box.Document.Blocks.Add(para);
                 }
             }

@@ -4726,6 +4726,13 @@ namespace Wa3Tuner
             return new CVector3[] { first, second, third, fourth };
         }
 
-
+        internal static float GetDistanceBetweenVectors(CVector3 centroid, CVector3 c)
+        {
+            // Calculate the Euclidean distance between two CVector3 points
+            float dx = centroid.X - c.X;
+            float dy = centroid.Y - c.Y;
+            float dz = centroid.Z - c.Z;
+            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
     }
 }

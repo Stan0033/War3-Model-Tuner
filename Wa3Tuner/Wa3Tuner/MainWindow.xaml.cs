@@ -2,59 +2,49 @@
 using MdxLib.Model;
 using MdxLib.Primitives;
 using SharpGL;
-
 using SharpGL.SceneGraph.Assets;
-
+using SharpGL.SceneGraph.Lighting;
+using SharpGL.SceneGraph.Raytracing;
 using SharpGL.WPF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-
 using W3_Texture_Finder;
 using Wa3Tuner.Dialogs;
 using Wa3Tuner.Helper_Classes;
 using Wa3Tuner.Helper_Classes.Parsers;
 
+using Whim_GEometry_Editor.Misc;
 using static Wa3Tuner.Helper_Classes.PathManager;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Image = System.Windows.Controls.Image;
-using Point = System.Windows.Point;
-using Size = System.Windows.Size;
 
-using Ray = Wa3Tuner.Helper_Classes.Ray;
-
-
-using System.Globalization;
-using System.Xml.Linq;
 using Path = System.IO.Path;
-using System.ComponentModel.DataAnnotations;
-using System.Windows.Controls.Primitives;
-using System.Collections;
-using SharpGL.SceneGraph.Primitives;
-using Whim_GEometry_Editor.Misc;
-using System.Windows.Documents;
+using Point = System.Windows.Point;
+using Ray = Wa3Tuner.Helper_Classes.Ray;
+using Size = System.Windows.Size;
 namespace Wa3Tuner
 {
 
@@ -81,6 +71,7 @@ namespace Wa3Tuner
         public CModel CurrentModel = new CModel();
         private string AppPath = AppDomain.CurrentDomain.BaseDirectory;
         private string IconsPath = "";
+        private int ErrorDisplayLimit = 5000;
         List<string> TeamColorPaths = new();
         List<string> TeamGlows = new();
         private ModifyMode modifyMode_current = ModifyMode.Translate;
@@ -389,6 +380,7 @@ namespace Wa3Tuner
             Optimizer.ArrangeGEosetAnimations(CurrentModel);
 
             Box_Errors.Document.Blocks.Clear();
+            Label_Errors.Text = string.Empty;
             LabelDisplayInfo.Text = "";
             CurrentSaveLocation = FromFileName;
             string? folder = Path.GetDirectoryName(CurrentSaveLocation);
@@ -3351,7 +3343,24 @@ namespace Wa3Tuner
 
             }
         }
-
+        private void SelectAffectedGeosets()
+        {
+            if (CurrentModel.Geosets.Count == 0) return;
+            Pause = true;
+            for (int i=0; i< CurrentModel.Geosets.Count; i++)
+            {
+                var geoset = CurrentModel.Geosets[i];
+                if (geoset.isSelected)
+                {
+                    ListGeosets.SelectedItems.Add(ListGeosets.Items[i]);
+                }
+                else
+                {
+                    ListGeosets.SelectedItems.Remove(ListGeosets.Items[i]);
+                }
+            }
+            Pause = false;
+        }
         private void MergeGeosets(object? sender, RoutedEventArgs? e)
         {
             if (ListGeosets.SelectedItems.Count > 1)
@@ -4326,7 +4335,7 @@ namespace Wa3Tuner
                 {
                     CurrentModel.Geosets.Add(DuplicateGeogeset(ge, CurrentModel));
                 }
-                RefreshRenderData(null,null);
+                RefreshRenderData(null, null);
                 Pause = false;
             }
             RefreshGeosetsList();
@@ -6070,8 +6079,8 @@ namespace Wa3Tuner
                     }
                 }
             }
-              
-            
+
+
         }
 
         private void flattengeosets(object? sender, RoutedEventArgs? e)
@@ -6509,17 +6518,31 @@ namespace Wa3Tuner
                 if (node is CBone) ListBonesRiggings.Items.Add(new ListBoxItem() { Content = node.Name });
             }
         }
+
         private async void ShowErrors()
         {
             ErrorChecker.CurrentModel = CurrentModel;
+            bool geoemtry = Check_GeometryCheck .IsChecked == true;
+            int delay = geoemtry ? 5000 : 15000;
+            var task = Task.Run(() => ErrorChecker.InspectAndReport(CurrentModel, ErrorDisplayLimit, Label_Errors, geoemtry));
+            var timeout = Task.Delay(delay); // 5-second timeout
 
-            // Generate string off the UI thread
-            string[] report = await Task.Run(() => ErrorChecker.InspectAndReport(CurrentModel));
+            var completed = await Task.WhenAny(task, timeout);
 
-            // Now back on UI thread: update the TextBox
-            ErrorPopulator.ReportErrorsWithText(Box_Errors, report[0], report[1], report[2], report[3]);
-
+            if (completed == task)
+            {
+                // Task finished in time
+                string[] report = await task;
+                ErrorPopulator.ReportErrorsWithText(Box_Errors, report[0], report[1], report[2], report[3]);
+            }
+            else
+            {
+                // Task timed out
+                ErrorPopulator.ReportErrorsWithText(Box_Errors, "Timeout", "", "", "");
+            }
         }
+
+
 
         private void EditGeosetViisibilities(object? sender, RoutedEventArgs? e)
         {
@@ -7067,7 +7090,7 @@ namespace Wa3Tuner
         }
         private void findTexture(object? sender, RoutedEventArgs? e)
         {
-         
+
             if (TextureFinder == null) return;
             TextureFinder.ShowDialog();
         }
@@ -7542,7 +7565,7 @@ namespace Wa3Tuner
                         break; // Exit once the desired node is found and selected
                 }
             }
-            ListOptions.SelectedIndex = 3;
+            ListOptions.SelectedIndex = 2;
         }
         private static bool SelectNodeByNameRecursive(TreeViewItem node, string name)
         {
@@ -9355,6 +9378,7 @@ namespace Wa3Tuner
             settings.AppendLine($"{nameof(MaximizeOnStart)}={MaximizeOnStart}");
             settings.AppendLine($"{nameof(ColorizeTransformations)}={ColorizeTransformations}");
             settings.AppendLine($"{nameof(RayCaster.MousePickRadius)}={RayCaster.MousePickRadius}");
+            settings.AppendLine($"{nameof(ErrorDisplayLimit)}={ErrorDisplayLimit}");
 
             // render settingsload
 
@@ -9422,6 +9446,14 @@ namespace Wa3Tuner
                 else if (parts[0] == nameof(MaximizeOnStart)) MaximizeOnStart = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(RenderSettings.RenderLighing)) RenderSettings.RenderLighing = bool.Parse(parts[1]);
                 else if (parts[0] == nameof(DefaultAuthor)) DefaultAuthor = parts[1];
+              /*  else if (parts[0] == nameof(ErrorDisplayLimit))
+                {
+
+                    ErrorDisplayLimit = int.Parse(parts[1]);
+                    if (ErrorDisplayLimit < 1) ErrorDisplayLimit = 5000;
+
+                   // Menuitem_ErrorLimit.Header = $"Error display limit: {ErrorDisplayLimit}";
+                }*/
                 else if (parts[0] == nameof(History.HistoryLimit))
                 {
 
@@ -9472,11 +9504,10 @@ namespace Wa3Tuner
 
         private static float[] GetTrio(string v)
         {
-            return v.Split(", ")
-                    .Select(float.Parse)
+            return v.Split(',')
+                    .Select(s => float.Parse(s.Trim(), CultureInfo.InvariantCulture))
                     .ToArray();
         }
-
 
         private void CheckAllSettings()
         {
@@ -19210,12 +19241,39 @@ namespace Wa3Tuner
 
         private void GrowSelection(object? sender, RoutedEventArgs? e)
         {
-            //unfinished
+            GeometrySelector.GrowSelection(CurrentModel, Tabs_Geosets.SelectedIndex);
+            if (Tabs_Geosets.SelectedIndex == 0)  SelectAffectedGeosets();
+            if (Tabs_Geosets.SelectedIndex == 2) SelectAffectedVertices();
+            if (Tabs_Geosets.SelectedIndex == 1) SelectAffectedTriangles();
+
         }
 
         private void ShrinkSelection(object? sender, RoutedEventArgs? e)
         {
-            //unfinished
+            GeometrySelector.ShrinkSelection(CurrentModel, Tabs_Geosets.SelectedIndex);
+            if (Tabs_Geosets.SelectedIndex == 0) SelectAffectedGeosets();
+            if (Tabs_Geosets.SelectedIndex == 2) SelectAffectedVertices();
+            if (Tabs_Geosets.SelectedIndex == 1) SelectAffectedTriangles();
+        }
+        private void SelectAffectedVertices()
+        {
+            return;
+            List<CGeosetVertex> Vertices = CurrentModel.Geosets.SelectMany(x => x.Vertices).ToList();
+            for (int i=0; i< Vertices.Count; i++)
+            {
+                if (Vertices[i].isSelected)
+                {
+                   
+                }
+                else
+                {
+
+                }
+            }
+        }
+        private void SelectAffectedTriangles()
+        {
+
         }
 
         private void alignx(object? sender, RoutedEventArgs? e)
@@ -21008,7 +21066,7 @@ namespace Wa3Tuner
                 {
                     if (BoneHasAttachedVertices(bone))
                     {
-                        MessageBox.Show("This bone has attached vertices. Reeattach them to another bone first");return;
+                        MessageBox.Show("This bone has attached vertices. Reeattach them to another bone first"); return;
                     }
                     var children = getChildrenOfNode(node);
                     CHelper h = NodeCloner.BoneToHelper(bone, CurrentModel);
@@ -21016,7 +21074,7 @@ namespace Wa3Tuner
                     CurrentModel.Nodes.Remove(node);
                     CurrentModel.Nodes.Add(h);
                     AddParentToNodes(children, h);
-                    if (parent!=null)  h.Parent.Attach(parent);
+                    if (parent != null) h.Parent.Attach(parent);
                     RefreshNodesTree();
                 }
                 else
@@ -21051,7 +21109,7 @@ namespace Wa3Tuner
             {
                 CAttachment att = new CAttachment(CurrentModel);
                 att.Name = "Overhead Ref";
-                att.PivotPoint = new CVector3(0,0,200);
+                att.PivotPoint = new CVector3(0, 0, 200);
                 CurrentModel.Nodes.Add(att);
                 RefreshNodesTree();
             }
@@ -21060,18 +21118,18 @@ namespace Wa3Tuner
         private void importcustomgeosetmanager(object sender, RoutedEventArgs e)
         {
             geoset_import_manager gm = new geoset_import_manager(CurrentModel);
-         
+
 
             if (gm.Closed == true) return;
             Pause = true;
             gm.ShowDialog();
             if (gm.DialogResult == true)
             {
-              
+
                 SetSaved(false);
                 refreshalllists(null, null);
                 CollectTexturesOpenGL();
-                
+
             }
             Pause = false;
         }
@@ -21085,8 +21143,8 @@ namespace Wa3Tuner
                 if (i.ShowDialog() == true)
                 {
                     string given = i.Result;
-                    if (given.Length==0)
-                    { MessageBox.Show("Empty input");return; }
+                    if (given.Length == 0)
+                    { MessageBox.Show("Empty input"); return; }
                     string newPath = Path.Combine(path, given + ".tgeom");
                     if (File.Exists(newPath))
                     {
@@ -21095,14 +21153,14 @@ namespace Wa3Tuner
 
                     var g = GetSelectedGeosets();
                     GeosetExporter.ExportGeomergeCustom(CurrentModel, g[0], newPath);
-                     
+
                 }
             }
             else
             {
-                MessageBox.Show("Select a single geoset");return;
+                MessageBox.Show("Select a single geoset"); return;
             }
-                
+
         }
 
         private void gradualgvm(object sender, RoutedEventArgs e)
@@ -21128,23 +21186,23 @@ namespace Wa3Tuner
             if (ListNodes.SelectedItem != null)
             {
                 var node = GetSelectedNode();
-               string SourceDirectory= Path.Combine(AppHelper.Local, "NodePresets");
+                string SourceDirectory = Path.Combine(AppHelper.Local, "NodePresets");
                 string givenName = string.Empty;
                 Input i = new Input("", "Name?");
                 i.ShowDialog();
                 if (i.DialogResult == true)
                 {
                     givenName = i.Result;
-                    if (PresetNameExists(givenName, SourceDirectory  ))
+                    if (PresetNameExists(givenName, SourceDirectory))
                     {
-                        MessageBox.Show(" preset with that name exists");return;
+                        MessageBox.Show(" preset with that name exists"); return;
                     }
                 }
                 if (node != null)
                 {
                     NodePresetHandler.Save(node, givenName, SourceDirectory);
                 }
-               
+
             }
         }
 
@@ -21212,25 +21270,26 @@ namespace Wa3Tuner
         {
             if (ListNodes.SelectedItem == null)
             {
-                MessageBox.Show("Select a node");return;
+                MessageBox.Show("Select a node"); return;
 
             }
             var node = GetSelectedNode();
-                if (node is CBone bone)
+            if (node is CBone bone)
             {
                 var bones = CurrentModel.Nodes.Where(x => x is CBone).ToList();
-                    if (bones.Count <= 1)
+                if (bones.Count <= 1)
                 {
-                    MessageBox.Show("at least two bones must be present");return;
+                    MessageBox.Show("at least two bones must be present"); return;
                 }
                 bones.Remove(bone);
                 List<string> names = bones.Select(x => x.Name).ToList();
                 Selector s = new Selector(names, "swap with which bone?");
                 s.ShowDialog();
-                    if (s.DialogResult == true){
+                if (s.DialogResult == true)
+                {
 
                     string? name = s.Selected;
-                    if (name == null) { MessageBox.Show("null selected string");return; }
+                    if (name == null) { MessageBox.Show("null selected string"); return; }
 
                     CBone selected = CurrentModel.Nodes.FirstOrDefault(x => x.Name == name) as CBone;
                     if (selected == null) { MessageBox.Show("null bone"); return; }
@@ -21304,10 +21363,11 @@ namespace Wa3Tuner
                 }
                 else
                 {
-                    MessageBox.Show("EaCh selected geoset msut have only one matrix group for this command to work");return;                }
+                    MessageBox.Show("EaCh selected geoset msut have only one matrix group for this command to work"); return;
+                }
             }
             {
-                MessageBox.Show("Select exactly 2 geosets");return;
+                MessageBox.Show("Select exactly 2 geosets"); return;
             }
         }
 
@@ -21315,8 +21375,8 @@ namespace Wa3Tuner
         {
             List<INode> nodes1 = new List<INode>();
             List<INode> nodes2 = new List<INode>();
-             foreach (var node in geosets[0].Groups[0].Nodes)   nodes1.Add(node.Node.Node);
-               foreach (var node in geosets[1].Groups[0].Nodes)   nodes2.Add(node.Node.Node);
+            foreach (var node in geosets[0].Groups[0].Nodes) nodes1.Add(node.Node.Node);
+            foreach (var node in geosets[1].Groups[0].Nodes) nodes2.Add(node.Node.Node);
 
             geosets[0].Groups[0].Nodes.Clear();
             geosets[1].Groups[0].Nodes.Clear();
@@ -21335,7 +21395,7 @@ namespace Wa3Tuner
                 geosets[0].Groups[0].Nodes.Add(gnode);
             }
 
-          
+
         }
 
         private bool GeosetsHAveONEGROup(List<CGeoset> geosets)
@@ -21357,9 +21417,9 @@ namespace Wa3Tuner
         {
             if (ListGeosets.SelectedItems.Count == 1)
             {
-              INode[] nodes=  HandleSpriteAttachments();
+                INode[] nodes = HandleSpriteAttachments();
                 var g = GetSelectedGeosets()[0];
-               var extent= Calculator.GetExtent(g);
+                var extent = Calculator.GetExtent(g);
                 CVector3[] positions = Calculator.GetCeilingBurningPoints(extent);
                 nodes[0].PivotPoint = new CVector3(positions[0]);
                 nodes[1].PivotPoint = new CVector3(positions[1]);
@@ -21420,7 +21480,7 @@ namespace Wa3Tuner
         {
             if (CurrentModel.Nodes.Count < 2)
             {
-                MessageBox.Show("At lesat 2 nodes must be present");return;
+                MessageBox.Show("At lesat 2 nodes must be present"); return;
             }
             MultipleNodeMover m = new MultipleNodeMover(CurrentModel);
             m.ShowDialog();
@@ -21461,7 +21521,8 @@ namespace Wa3Tuner
 
         private void newFrolocalF(object sender, RoutedEventArgs e)
         {
-            if (File.Exists(CurrentSaveLocation)){
+            if (File.Exists(CurrentSaveLocation))
+            {
                 var files = GetLocalTextures(CurrentSaveFolder, "blp");
                 if (files.Count == 0)
                 {
@@ -21469,7 +21530,7 @@ namespace Wa3Tuner
                 }
                 else
                 {
-                    Selector s = new Selector( files,"local blp files", true);
+                    Selector s = new Selector(files, "local blp files", true);
                     s.ShowDialog();
                     if (s.DialogResult == true)
                     {
@@ -21478,8 +21539,9 @@ namespace Wa3Tuner
                         {
                             string path = files[i];
                             string name = Path.GetFileName(path);
-                            if (CurrentModel.Textures.Any(x=>x.FileName == name)){
-                                MessageBox.Show($"{name} already exists in the list of textures");continue;
+                            if (CurrentModel.Textures.Any(x => x.FileName == name))
+                            {
+                                MessageBox.Show($"{name} already exists in the list of textures"); continue;
                             }
                             CTexture t = new CTexture(CurrentModel);
                             t.FileName = name;
@@ -21493,7 +21555,7 @@ namespace Wa3Tuner
             }
             else
             {
-                MessageBox.Show("Current save location not found");return;
+                MessageBox.Show("Current save location not found"); return;
             }
         }
 
@@ -21518,7 +21580,29 @@ namespace Wa3Tuner
             RefreshMaterialsList();
         }
 
+        private void SetErrorLimit(object sender, RoutedEventArgs e)
+        {
+            Input i = new Input(ErrorDisplayLimit.ToString(), "Error display limit");
+            i.ShowDialog();
+            if (i.DialogResult == true)
+            {
+                if (int.TryParse(i.Result, out int limit))
+                {
+                    if (limit < 1)
+                    {
+                        MessageBox.Show("Limit must be at least 1");
+                        return;
+                    }
+                    ErrorDisplayLimit = limit;
+                    SaveSettings();
+                    //Menuitem_ErrorLimit.Header = $"Error display limit: {ErrorDisplayLimit}";
+                }
+                else
+                {
+                    MessageBox.Show("Invalid number");
+                }
+            }
+        }
     }
 }
 
- 

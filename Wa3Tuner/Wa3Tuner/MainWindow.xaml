@@ -98,6 +98,7 @@
                 <MenuItem Header="Start app maximized" Name="Menuitem_Maximize" IsCheckable="True"  Click="SetFullScreenMode"/>
                 <MenuItem Header="Colorize sequences and nodes with ther transformations" Name="Menuitem_colorize" IsCheckable="True"  Click="setColorize"/>
                 <MenuItem Header="Allow transforming by dragging with the RMB in the viewport" IsChecked="True" Name="Menuitem_allowDrag" IsCheckable="True"  Click="setDrag"/>
+                <!-- <MenuItem Header="Maximum allowed errors displayed in the error check: 5000"   Name="Menuitem_ErrorLimit"   Click="SetErrorLimit"/>  -->
             </MenuItem>
             <MenuItem Header="View">
                 <MenuItem Header="Top" Click="view_top"/>
@@ -179,8 +180,8 @@
                 <MenuItem Header="Select all" InputGestureText="Ctrl+A" Click="selectAall"/>
                 <MenuItem Header="Deselect all" InputGestureText="Space" Click="unselectAll"/>
                 <MenuItem Header="Select inverse"  InputGestureText="Ctrl+A" Click="selectInverse"/>
-                <MenuItem Header="Grow" Click="GrowSelection" IsEnabled="False"/>
-                <MenuItem Header="Shrink" Click="ShrinkSelection" IsEnabled="False"/>
+                <MenuItem Header="Grow" Click="GrowSelection" IsEnabled="True"/>
+                <MenuItem Header="Shrink" Click="ShrinkSelection" IsEnabled="True"/>
                 <MenuItem Name="selectionItemClear" Header="Select mode: Clear and select" IsCheckable="True" IsChecked="True"  Checked="SetSelectionMode1" Unchecked="SetSelectionMode1"/>
                 <MenuItem Name="selectionItemAdd" Header="Select mode: Add to selection" IsCheckable="True" Checked="SetSelectionMode2" Unchecked="SetSelectionMode2"/>
                 <MenuItem Name="selectionItemRemove" Header="Select mode: Remove from selection" IsCheckable="True" Checked="SetSelectionMode3" Unchecked="SetSelectionMode3"/>
@@ -1811,7 +1812,7 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                 </Grid>
             </TabItem>
             <TabItem Header="Inspector" HorizontalAlignment="Right"  Background="LightGray"   Width="65">
-                <TabControl Name="TC_Inspector" SelectionChanged="ChangedInspector">
+                <TabControl Name="TC_Inspector" SelectionChanged="ChangedInspector"  Background="LightGray">
                     <TabItem Header="Info">
                         <Grid Background="LightGray">
                             <Grid.ColumnDefinitions>
@@ -1834,14 +1835,18 @@ Any geometry, particles, or attachments linked to this bone will move or rotate 
                         </Grid>
                     </TabItem>
                     <TabItem Header="Check for errors">
-                        <Grid>
+                        <Grid  Background="LightGray">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="25"/>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="20"/>
+                                <RowDefinition Height="20"/>
                                 <RowDefinition/>
                             </Grid.RowDefinitions>
-                            <Button Content="Generate report" Click="GenerateReport" FontSize="16" Cursor="Hand" FontWeight="DemiBold"/>
-                            <RichTextBox Name="Box_Errors" IsReadOnly="True" Grid.Row="1" 
-                                     Background="LightGray"  VerticalScrollBarVisibility="Visible"/>
+                            <Button Content="Generate report" Click="GenerateReport" FontSize="18" Cursor="Hand" FontWeight="Bold"/>
+                            <CheckBox Name="Check_GeometryCheck" Grid.Row="1" Content="Also check overlapping triangles (Can take longer time! Especially for models with big geometries!)"/>
+                            <TextBlock Grid.Row="2" Name="Label_Errors" FontSize="14" FontWeight="Bold" Foreground="Red" Text=""/> 
+                            <RichTextBox Name="Box_Errors" IsReadOnly="True" Grid.Row="3" 
+                                     Background="Black"  VerticalScrollBarVisibility="Visible"/>
                         </Grid>
                     </TabItem>
                 </TabControl>

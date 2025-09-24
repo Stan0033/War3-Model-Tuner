@@ -381,8 +381,9 @@ namespace W3_Texture_Finder
         }
         private static void LoadDataBrowserLists(string Archive, List<string> list_blp)
         {
-            string searched = "(listfile)";
-
+            string searched =  "(listfile)" ;
+            
+         
             try
             {
                 using (MpqArchive mpqArchive = MpqArchive.Open(Archive))
