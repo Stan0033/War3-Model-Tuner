@@ -208,6 +208,14 @@
           }
         }
       },
+      "WindowsAPICodePack-Core/1.1.2": {
+        "runtime": {
+          "lib/Microsoft.WindowsAPICodePack.dll": {
+            "assemblyVersion": "1.1.2.0",
+            "fileVersion": "1.1.2.0"
+          }
+        }
+      },
       "WpfScreenHelper/0.3.0": {
         "runtime": {
           "lib/net40/WpfScreenHelper.dll": {
@@ -316,6 +324,13 @@
       "sha512": "sha512-vkwhrhok4d0dsK8ERWYoDrfGXWRIydm6XjHna/WT8xwt3RsZn7wKsVyisT1AgzKDA2dfZm2ILVKOcpeswvSYEg==",
       "path": "war3net.io.mpq/5.6.1",
       "hashPath": "war3net.io.mpq.5.6.1.nupkg.sha512"
+    },
+    "WindowsAPICodePack-Core/1.1.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-tGEkicg61OvHHuFyD4Vu8H4R0q5H1dlpN6fqjdYG+MGIp16znEVo/I+LhMTx3nKpM46reCcE6oC8fJqVJix2Bg==",
+      "path": "windowsapicodepack-core/1.1.2",
+      "hashPath": "windowsapicodepack-core.1.1.2.nupkg.sha512"
     },
     "WpfScreenHelper/0.3.0": {
       "type": "package",

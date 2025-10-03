@@ -1,0 +1,69 @@
+﻿<Window x:Class="Wa3Tuner.Dialogs.Batch_Texture_Renamer"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wa3Tuner.Dialogs"
+        mc:Ignorable="d"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        
+        WindowStartupLocation="CenterScreen"
+        Title="Batch Texture Renamer" Height="450" Width="850">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Folder Selection -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Label Content="Work with the models in folder:" VerticalAlignment="Center"/>
+            <TextBox Name="txtFolderPath" Width="300" Margin="5,0,0,0" IsReadOnly="True" Background="LightGray"/>
+            <Button Name="btnBrowseFolder" Content="Browse" Width="75" Margin="5,0,0,0" Click="BtnBrowseFolder_Click"/>
+            <Button Name="btnClear" Content="Clear" Width="75" Margin="5,0,0,0" Click="clearModels" ToolTip="Remove the loaded folder path and clear the models from the memory"/>
+            <Button Name="btnPeek" Content="Peek" Width="75" Margin="5,0,0,0" Click="peek"/>
+            <TextBlock Name="txtSelectedFolder" VerticalAlignment="Center" Margin="10,0,0,0" Text="Found: 0"/>
+        </StackPanel>
+       
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <!-- 1. Replace Texture -->
+           
+            <Separator Margin="0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <Label Content="Target string:" VerticalAlignment="Center"/>
+                <TextBox Name="tsxtOriginal" Width="200" Margin="5,0"/>
+                <Label Content="replacement:" VerticalAlignment="Center" Margin="5,0"/>
+                <TextBox Name="txtReplacement" Width="200" Margin="5,0" IsEnabled="False"/>
+                <Button Content="set war3MapImported" Width="125" Margin="5,0" Click="SetWar3Imported"/>
+                <Button Name="btnReplaceTextureName" Content="Execute" Width="75" Margin="5,0" Click="BtnReplaceTextureName_Click"/>
+                <!-- 2. Add prefix to texture paths -->
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <RadioButton Name="checkName" Content="in filename" IsChecked="True"  Margin="10,0"/>
+                <RadioButton Name="checkPath" Content="in path" Margin="10,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <RadioButton Name="checkSuffix" Content="in suffix" IsChecked="True"  Margin="10,0"/>
+                <RadioButton Name="checkPrefix" Content="in prefix" Margin="10,0"/>
+                <RadioButton Name="checkall" Content="whole string" Margin="10,0" Checked="checkall_Checked"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <RadioButton Name="checkAdd" Content="add" IsChecked="True"  Margin="10,0"/>
+                <RadioButton Name="checkRemove" Content="remove" Margin="10,0"/>
+                <RadioButton Name="checkReplace" Content="replace" Margin="10,0"/>
+            </StackPanel>
+
+            <Separator Margin="0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,5"/>
+            <Button Content="Strip all texture paths to filename" Width="200" Margin="5,0,0,0" Click="stipallPaths" HorizontalAlignment="Left" Padding="10"/>
+
+        </StackPanel>
+
+        <!-- Status / Log -->
+        <TextBox Name="txtLog" Grid.Row="2" IsReadOnly="True" Background="LightGray" BorderThickness="1" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" />
+    </Grid>
+</Window>

@@ -565,3 +565,8 @@ D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\refint\Wa
 D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.pdb
 D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Wa3Tuner.genruntimeconfig.cache
 D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\ref\Wa3Tuner.dll
+D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Batch_Texture_Renamer.g.cs
+D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\bin\Debug\net5.0-windows\Microsoft.WindowsAPICodePack.dll
+D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\Batch_Texture_Renamer.baml
+D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\stringContainer.g.cs
+D:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\obj\Debug\net5.0-windows\Dialogs\stringContainer.baml

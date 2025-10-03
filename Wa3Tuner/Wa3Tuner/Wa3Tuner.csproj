@@ -7,6 +7,7 @@
     <ApplicationIcon>tune.ico</ApplicationIcon>
     <FileVersion>1.3.3</FileVersion>
     <AssemblyVersion>1.3.3</AssemblyVersion>
+    <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="bin\**" />
@@ -37,6 +38,7 @@
     <PackageReference Include="dsafa.WpfColorPicker" Version="1.3.0" />
     <PackageReference Include="War3Net.Drawing.Blp" Version="5.6.1" />
     <PackageReference Include="War3Net.IO.Mpq" Version="5.6.1" />
+    <PackageReference Include="WindowsAPICodePack-Core" Version="1.1.2" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MdxLib">

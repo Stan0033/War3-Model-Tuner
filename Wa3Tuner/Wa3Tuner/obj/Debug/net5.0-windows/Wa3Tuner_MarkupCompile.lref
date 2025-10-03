@@ -3,6 +3,7 @@
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\about_w.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\axis_picker.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\axis_selector.xaml;;
+FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Batch_Texture_Renamer.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\bigTextContaienr.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Bone Influence Editor.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Boolean_Window.xaml;;
@@ -90,4 +91,5 @@ FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\import_nodes_choice.
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_EditAttachment.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_editbone_data.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Swap Sequences Selector.xaml;;
+FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\stringContainer.xaml;;
 

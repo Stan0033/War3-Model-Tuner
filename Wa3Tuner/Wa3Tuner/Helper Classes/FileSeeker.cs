@@ -2,10 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms;
+
 using System.Windows;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+
 
 namespace Wa3Tuner.Helper_Classes
 {
@@ -394,5 +397,18 @@ namespace Wa3Tuner.Helper_Classes
 
             return null;
         }
+
+     
+internal static string BrowseForFolder()
+    {
+        using var dlg = new FolderBrowserDialog
+        {
+            Description = "Select a folder",
+            UseDescriptionForTitle = true
+        };
+
+        return dlg.ShowDialog() == DialogResult.OK ? dlg.SelectedPath :  "";
     }
+
+}
 }

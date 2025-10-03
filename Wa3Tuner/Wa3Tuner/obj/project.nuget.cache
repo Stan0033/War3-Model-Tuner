@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "HJxTEHRF5+w=",
+  "dgSpecHash": "PZuv0XkLOxY=",
   "success": true,
   "projectFilePath": "D:\\_Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
   "expectedPackageFiles": [
@@ -18,6 +18,7 @@
     "C:\\Users\\stan0033\\.nuget\\packages\\war3net.drawing.blp\\5.6.1\\war3net.drawing.blp.5.6.1.nupkg.sha512",
     "C:\\Users\\stan0033\\.nuget\\packages\\war3net.io.compression\\5.6.1\\war3net.io.compression.5.6.1.nupkg.sha512",
     "C:\\Users\\stan0033\\.nuget\\packages\\war3net.io.mpq\\5.6.1\\war3net.io.mpq.5.6.1.nupkg.sha512",
+    "C:\\Users\\stan0033\\.nuget\\packages\\windowsapicodepack-core\\1.1.2\\windowsapicodepack-core.1.1.2.nupkg.sha512",
     "C:\\Users\\stan0033\\.nuget\\packages\\wpfscreenhelper\\0.3.0\\wpfscreenhelper.0.3.0.nupkg.sha512"
   ],
   "logs": [
@@ -29,6 +30,18 @@
       "warningLevel": 1,
       "filePath": "D:\\_Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
       "libraryId": "Dsafa.WpfColorPicker",
+      "targetGraphs": [
+        "net5.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Package 'WindowsAPICodePack-Core 1.1.2' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net5.0-windows7.0'. This package may not be fully compatible with your project.",
+      "projectPath": "D:\\_Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
+      "warningLevel": 1,
+      "filePath": "D:\\_Github\\War3-Model-Tuner\\Wa3Tuner\\Wa3Tuner\\Wa3Tuner.csproj",
+      "libraryId": "WindowsAPICodePack-Core",
       "targetGraphs": [
         "net5.0-windows7.0"
       ]

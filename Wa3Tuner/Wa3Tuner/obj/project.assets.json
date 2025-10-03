@@ -270,6 +270,15 @@
           }
         }
       },
+      "WindowsAPICodePack-Core/1.1.2": {
+        "type": "package",
+        "compile": {
+          "lib/Microsoft.WindowsAPICodePack.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.WindowsAPICodePack.dll": {}
+        }
+      },
       "WpfScreenHelper/0.3.0": {
         "type": "package",
         "compile": {
@@ -645,6 +654,19 @@
         "war3net.io.mpq.nuspec"
       ]
     },
+    "WindowsAPICodePack-Core/1.1.2": {
+      "sha512": "tGEkicg61OvHHuFyD4Vu8H4R0q5H1dlpN6fqjdYG+MGIp16znEVo/I+LhMTx3nKpM46reCcE6oC8fJqVJix2Bg==",
+      "type": "package",
+      "path": "windowsapicodepack-core/1.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.WindowsAPICodePack.dll",
+        "lib/Microsoft.WindowsAPICodePack.xml",
+        "windowsapicodepack-core.1.1.2.nupkg.sha512",
+        "windowsapicodepack-core.nuspec"
+      ]
+    },
     "WpfScreenHelper/0.3.0": {
       "sha512": "9PfW5alD+uKUK1r3T89rACifeRf+adJ8Zrx7rMivjUYUugDXSDnSSKA6gVh/mq7aW4zMyj/S0Du3+SIcJYX61w==",
       "type": "package",
@@ -663,6 +685,7 @@
     "net5.0-windows7.0": [
       "War3Net.Drawing.Blp >= 5.6.1",
       "War3Net.IO.Mpq >= 5.6.1",
+      "WindowsAPICodePack-Core >= 1.1.2",
       "dsafa.WpfColorPicker >= 1.3.0"
     ]
   },
@@ -724,6 +747,10 @@
             "target": "Package",
             "version": "[5.6.1, )"
           },
+          "WindowsAPICodePack-Core": {
+            "target": "Package",
+            "version": "[1.1.2, )"
+          },
           "dsafa.WpfColorPicker": {
             "target": "Package",
             "version": "[1.3.0, )"
@@ -744,7 +771,7 @@
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           },
-          "Microsoft.WindowsDesktop.App.WPF": {
+          "Microsoft.WindowsDesktop.App": {
             "privateAssets": "none"
           }
         },
@@ -759,6 +786,16 @@
       "warningLevel": 1,
       "message": "Package 'Dsafa.WpfColorPicker 1.3.0' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net5.0-windows7.0'. This package may not be fully compatible with your project.",
       "libraryId": "Dsafa.WpfColorPicker",
+      "targetGraphs": [
+        "net5.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'WindowsAPICodePack-Core 1.1.2' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net5.0-windows7.0'. This package may not be fully compatible with your project.",
+      "libraryId": "WindowsAPICodePack-Core",
       "targetGraphs": [
         "net5.0-windows7.0"
       ]

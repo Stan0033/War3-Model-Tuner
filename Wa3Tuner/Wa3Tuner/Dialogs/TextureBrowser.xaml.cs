@@ -211,6 +211,7 @@ namespace Wa3Tuner
                 {
                     if (item.ToLower().Contains(searched))  FindItemListBox.Items.Add(new ListBoxItem() { Content = item });
                 }
+                Title = $"Texture Browser - {FindItemListBox.Items.Count} results for '{searched}'";
             }
         }
 

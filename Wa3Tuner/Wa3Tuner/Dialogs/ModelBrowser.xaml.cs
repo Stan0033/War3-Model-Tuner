@@ -57,6 +57,7 @@ namespace Wa3Tuner
                             Data.Items.Add(new ListBoxItem() { Content = item });
                         }
                     }
+                    Title = $"Model Browser - {Data.Items.Count} Results for \"{quiry}\"";
                 }
                 else
                 {

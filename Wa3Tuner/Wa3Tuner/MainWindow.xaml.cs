@@ -21603,6 +21603,12 @@ namespace Wa3Tuner
                 }
             }
         }
+
+        private void call_batch_text_Renamer(object sender, RoutedEventArgs e)
+        {
+            Batch_Texture_Renamer btr = new Batch_Texture_Renamer(CurrentSaveLocation);
+            btr.ShowDialog();
+        }
     }
 }
 

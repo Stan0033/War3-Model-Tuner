@@ -264,6 +264,7 @@
                     <MenuItem Header="Batch Convert Image-&gt;BLP" Click="batch_images"/>
                     <MenuItem Header="Batch Optimize based on selected optimizations in optimizer..." Click="batch_optimize"/>
                     <MenuItem Header="Standalone OBJ Batch converter" Click="stobj"/>
+                    <MenuItem Header="Batch texture renamer" Click="call_batch_text_Renamer"/>
                 </MenuItem>
                 <MenuItem Header="Text Colorizer for game tooltips" Click="textColorizer"/>
                 <MenuItem Header="Loading Screen Maker" Click="lsmak"/>

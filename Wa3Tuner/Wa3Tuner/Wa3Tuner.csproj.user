@@ -13,6 +13,9 @@
     <Compile Update="Dialogs\axis_picker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\Batch_Texture_Renamer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\bigTextContaienr.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -161,6 +164,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\SpreadVerticesIWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\stringContainer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Dialogs\TextColorizer_Window.xaml.cs">
