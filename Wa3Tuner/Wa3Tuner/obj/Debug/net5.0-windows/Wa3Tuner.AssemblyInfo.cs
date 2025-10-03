@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Wa3Tuner")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.3.4")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+120870947bc417c0e83e6da5bd1c72b1d01c351a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+316be2e9a583b2badc96c42d084388cb55062ad8")]
 [assembly: System.Reflection.AssemblyProductAttribute("Wa3Tuner")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Wa3Tuner")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.3.4")]

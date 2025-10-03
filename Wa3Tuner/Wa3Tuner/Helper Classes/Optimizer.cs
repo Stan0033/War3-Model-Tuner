@@ -4790,7 +4790,7 @@ namespace Wa3Tuner
         {
             foreach (CGlobalSequence gs in Model.GlobalSequences.ToList())
             {
-                if (gs.Duration == 0)
+                if (gs.Duration <= 0)
                 {
                     Model.GlobalSequences.Remove(gs);
                 }
