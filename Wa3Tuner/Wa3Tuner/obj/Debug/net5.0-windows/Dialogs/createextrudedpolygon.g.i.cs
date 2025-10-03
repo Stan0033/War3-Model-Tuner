@@ -134,7 +134,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.3;component/dialogs/createextrudedpolygon.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.4;component/dialogs/createextrudedpolygon.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\createextrudedpolygon.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

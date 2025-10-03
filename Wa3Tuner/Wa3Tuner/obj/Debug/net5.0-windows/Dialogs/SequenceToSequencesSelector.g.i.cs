@@ -78,7 +78,7 @@ namespace Wa3Tuner.Dialogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.3;component/dialogs/sequencetosequencesselector.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.4;component/dialogs/sequencetosequencesselector.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\SequenceToSequencesSelector.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

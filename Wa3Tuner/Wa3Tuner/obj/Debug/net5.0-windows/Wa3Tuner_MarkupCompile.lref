@@ -74,6 +74,7 @@ FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Shatter animation maker.x
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\Snap Selector 2d.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SnapSettingsWindow.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\SpreadVerticesIWindow.xaml;;
+FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\stringContainer.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextColorizer_Window.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextureBrowser.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\TextViewer.xaml;;
@@ -91,5 +92,4 @@ FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\import_nodes_choice.
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_EditAttachment.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Node Dialogs\window_editbone_data.xaml;;
 FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Swap Sequences Selector.xaml;;
-FD:\_Github\War3-Model-Tuner\Wa3Tuner\Wa3Tuner\Dialogs\stringContainer.xaml;;
 

@@ -142,7 +142,7 @@ namespace Wa3Tuner.Dialogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.3;component/dialogs/model_starter.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.4;component/dialogs/model_starter.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\model_starter.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

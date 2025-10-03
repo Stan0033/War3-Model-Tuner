@@ -70,7 +70,7 @@ namespace Wa3Tuner {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.3;component/dialogs/modelbrowser.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.4;component/dialogs/modelbrowser.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\ModelBrowser.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

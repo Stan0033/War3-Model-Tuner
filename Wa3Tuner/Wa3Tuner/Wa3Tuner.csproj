@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>tune.ico</ApplicationIcon>
-    <FileVersion>1.3.3</FileVersion>
-    <AssemblyVersion>1.3.3</AssemblyVersion>
+    <FileVersion>1.3.4</FileVersion>
+    <AssemblyVersion>1.3.4</AssemblyVersion>
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>

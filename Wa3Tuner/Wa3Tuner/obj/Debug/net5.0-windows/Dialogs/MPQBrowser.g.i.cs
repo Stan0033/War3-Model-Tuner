@@ -62,7 +62,7 @@ namespace Wa3Tuner.Dialogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.3;component/dialogs/mpqbrowser.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Wa3Tuner;V1.3.4;component/dialogs/mpqbrowser.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\MPQBrowser.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
